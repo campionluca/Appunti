@@ -1,0 +1,405 @@
+\chapter{Transazioni e Controllo della Concorrenza}
+
+\section*{Introduzione}
+Una transazione è un'unità di lavoro atomica che raggruppa una o più operazioni SQL. Le transazioni garantiscono la consistenza del database anche in caso di errori o guasti. Questo capitolo presenta i concetti ACID, comandi di controllo delle transazioni (START, COMMIT, ROLLBACK, SAVEPOINT) e i livelli di isolamento per gestire la concorrenza.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere il concetto di transazione e la sua importanza
+    \item Comprendere le proprietà ACID
+    \item Usare i comandi START TRANSACTION, COMMIT, ROLLBACK
+    \item Usare SAVEPOINT per rollback parziali
+    \item Comprendere i livelli di isolamento (READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE)
+    \item Gestire anomalie di concorrenza (dirty read, non-repeatable read, phantom read)
+    \item Identificare e risolvere deadlock
+    \item Configurare e monitorare transazioni
+\end{itemize}
+
+\section{Proprietà ACID}
+
+Le proprietà ACID garantiscono che le transazioni siano affidabili e mantengono la integrità del database.
+
+\begin{description}
+    \item[\textbf{Atomicità (Atomicity)}] Una transazione è "tutto o nulla". O tutte le operazioni vengono completate (COMMIT), o nessuna (ROLLBACK). Non può esistere uno stato intermedio.
+
+    \item[\textbf{Coerenza (Consistency)}] Le transazioni portano il database da uno stato coerente a un altro. Non è possibile violare vincoli di integrità (PK, FK, CHECK).
+
+    \item[\textbf{Isolamento (Isolation)}] Le transazioni concorrenti non si interferiscono. Ogni transazione vede il database come se fosse l'unica in esecuzione.
+
+    \item[\textbf{Durabilità (Durability)}] Una volta che una transazione è COMMIT, i dati sono permanentemente salvati, anche in caso di crash o blackout.
+\end{description}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio ACID]
+Un trasferimento di denaro tra conti:
+\begin{enumerate}
+    \item \textbf{Atomicità}: Debito dal conto A E credito nel conto B avvengono insieme. Se uno fallisce, entrambi falliscono.
+    \item \textbf{Coerenza}: Il totale di denaro nei due conti rimane costante prima e dopo il trasferimento.
+    \item \textbf{Isolamento}: Altre transazioni non vedono lo stato intermedio (A diminuito, B non ancora aumentato).
+    \item \textbf{Durabilità}: Dopo COMMIT, il trasferimento è permanente anche se il server crasha un secondo dopo.
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Comandi di Controllo Transazioni}
+
+\subsection{START TRANSACTION}
+
+Inizia una nuova transazione. Tutte le operazioni successive fanno parte della transazione finché non viene COMMIT o ROLLBACK.
+
+\begin{lstlisting}[language=SQL, caption=Sintassi START TRANSACTION]
+START TRANSACTION;
+-- Oppure in alcuni DBMS:
+BEGIN TRANSACTION;
+BEGIN;
+\end{lstlisting}
+
+\subsection{COMMIT}
+
+COMMIT salva permanentemente tutte le modifiche della transazione nel database.
+
+\begin{lstlisting}[language=SQL, caption=Esempio COMMIT]
+START TRANSACTION;
+
+-- Operazione 1: Aggiornare saldo cliente
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+
+-- Operazione 2: Registrare la transazione
+INSERT INTO movimento (idCliente, tipo, importo, data)
+VALUES (1, 'Prelievo', 100, NOW());
+
+-- Se tutto è corretto, salvare permanentemente
+COMMIT;
+
+-- Dopo COMMIT, i dati sono permanenti
+SELECT saldo FROM cliente WHERE idCliente = 1;  -- saldo ridotto di 100
+\end{lstlisting}
+
+\subsection{ROLLBACK}
+
+ROLLBACK annulla tutte le modifiche della transazione. Il database torna allo stato prima di START TRANSACTION.
+
+\begin{lstlisting}[language=SQL, caption=Esempio ROLLBACK]
+START TRANSACTION;
+
+-- Operazione 1
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+
+-- Operazione 2
+INSERT INTO movimento (idCliente, tipo, importo, data)
+VALUES (1, 'Prelievo', 100, NOW());
+
+-- Se si verifica un errore o vuoi annullare
+ROLLBACK;
+
+-- Dopo ROLLBACK, i dati tornano allo stato precedente
+SELECT saldo FROM cliente WHERE idCliente = 1;  -- saldo invariato
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: ROLLBACK è Definitivo]
+Una volta che eseguito ROLLBACK, le modifiche sono perse per sempre. Non è possibile "undo del ROLLBACK".
+\end{tcolorbox}
+
+\subsection{SAVEPOINT}
+
+SAVEPOINT crea un punto di salvataggio all'interno di una transazione. Permette di fare ROLLBACK parziale fino a quel punto, mantenendo le operazioni precedenti.
+
+\begin{lstlisting}[language=SQL, caption=Sintassi SAVEPOINT]
+SAVEPOINT nome_savepoint;
+
+-- Fare rollback fino a un savepoint
+ROLLBACK TO SAVEPOINT nome_savepoint;
+
+-- Rilasciare un savepoint (liberare memoria)
+RELEASE SAVEPOINT nome_savepoint;
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption=Esempio SAVEPOINT]
+START TRANSACTION;
+
+-- Operazione 1: Debito dal cliente
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+INSERT INTO movimento VALUES (1, 'Prelievo', 100, NOW());
+
+-- Creare un savepoint
+SAVEPOINT dopo_prelievo;
+
+-- Operazione 2: Credito al cliente 2
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 2;
+
+-- Se si verifica un errore con il cliente 2
+-- Fare rollback solo all'ultima operazione
+ROLLBACK TO SAVEPOINT dopo_prelievo;
+
+-- Il prelievo dal cliente 1 rimane
+-- Ma il credito al cliente 2 è annullato
+
+-- Riprovare l'operazione 2 con cliente diverso
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 3;
+INSERT INTO movimento VALUES (3, 'Credito', 100, NOW());
+
+-- Se tutto è corretto, salvare permanentemente
+COMMIT;
+\end{lstlisting}
+
+\section{Livelli di Isolamento}
+
+Il livello di isolamento determina come le transazioni concorrenti interagiscono. Un isolamento più alto garantisce meno anomalie, ma riduce le prestazioni.
+
+\subsection{Anomalie di Concorrenza}
+
+Prima di descrivere i livelli, ecco le anomalie che possono verificarsi:
+
+\begin{description}
+    \item[\textbf{Dirty Read}] Una transazione legge dati non ancora committati scritti da un'altra transazione. Se quella transazione fa ROLLBACK, i dati letti erano "sporchi".
+
+    \item[\textbf{Non-Repeatable Read}] Una transazione legge la stessa riga due volte e ottiene risultati diversi perché un'altra transazione ha modificato i dati nel mezzo.
+
+    \item[\textbf{Phantom Read}] Una transazione legge un insieme di righe due volte e ottiene risultati diversi perché un'altra transazione ha inserito/eliminato righe nel mezzo.
+\end{description}
+
+\subsection{Livelli di Isolamento in SQL}
+
+\subsubsection{READ UNCOMMITTED}
+
+Livello di isolamento più basso. Una transazione può leggere dati non ancora committati (dirty read).
+
+\begin{lstlisting}[language=SQL, caption=READ UNCOMMITTED]
+-- Impostare il livello di isolamento
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+START TRANSACTION;
+
+-- Lettura "sporca": legge dati non committati
+SELECT saldo FROM cliente WHERE idCliente = 1;
+
+COMMIT;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: READ UNCOMMITTED è Rischioso]
+Questo livello è molto pericoloso per dati critici (finanze, inventario). Usa solo in scenari dove precisione non è critica (report, cache).
+\end{tcolorbox}
+
+\subsubsection{READ COMMITTED}
+
+Livello intermedio. Una transazione legge solo dati committati, evitando dirty read. Ma permite non-repeatable read e phantom read.
+
+\begin{lstlisting}[language=SQL, caption=READ COMMITTED]
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+START TRANSACTION;
+
+-- Legge solo dati committati
+SELECT saldo FROM cliente WHERE idCliente = 1;
+
+-- Altra transazione potrebbe modificare il saldo nel frattempo
+SELECT saldo FROM cliente WHERE idCliente = 1;  -- Potrebbe essere diverso
+
+COMMIT;
+\end{lstlisting}
+
+\subsubsection{REPEATABLE READ}
+
+Una transazione legge gli stessi dati sempre allo stesso modo durante la transazione. Evita dirty read e non-repeatable read, ma permite phantom read (inserimenti/eliminazioni di nuove righe).
+
+\begin{lstlisting}[language=SQL, caption=REPEATABLE READ]
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+START TRANSACTION;
+
+-- Prima lettura
+SELECT COUNT(*) FROM ordine WHERE idCliente = 1;  -- Es: 5
+
+-- Altra transazione inserisce un nuovo ordine
+SELECT COUNT(*) FROM ordine WHERE idCliente = 1;  -- Ancora 5 (phantom read possibile se cambiano colonne)
+
+COMMIT;
+\end{lstlisting}
+
+\subsubsection{SERIALIZABLE}
+
+Livello di isolamento più alto. Le transazioni si comportano come se fossero eseguite in sequenza (serialmente), non concorrentemente.
+
+\begin{lstlisting}[language=SQL, caption=SERIALIZABLE]
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+START TRANSACTION;
+
+-- Nessuna anomalia: dirty read, non-repeatable read, phantom read
+SELECT saldo FROM cliente WHERE idCliente = 1;
+
+-- ... altre operazioni ...
+
+COMMIT;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Trade-off: Isolamento vs Prestazioni]
+\begin{itemize}
+    \item READ UNCOMMITTED: Massime prestazioni, rischio massimo di anomalie
+    \item READ COMMITTED: Buon compromesso, livello di default in molti DBMS
+    \item REPEATABLE READ: Isolamento quasi completo, piccolo calo prestazioni
+    \item SERIALIZABLE: Massimo isolamento, prestazioni minime (possibili deadlock)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Impostare il Livello di Isolamento}
+
+\begin{lstlisting}[language=SQL, caption=Impostare Livello di Isolamento]
+-- Impostare per la sessione attuale
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- Impostare per una transazione specifica (MySQL 5.7+)
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+START TRANSACTION;
+-- ... operazioni ...
+COMMIT;
+
+-- Visualizzare il livello attuale
+SELECT @@transaction_isolation;
+
+-- Impostare globalmente (richiede SUPER privilege)
+SET GLOBAL transaction_isolation='READ-COMMITTED';
+\end{lstlisting}
+
+\section{Deadlock}
+
+Un deadlock si verifica quando due o più transazioni si bloccano reciprocamente, aspettando risorse che l'altra transazione detiene. Nessuna può procedere.
+
+\subsection{Causa Comune di Deadlock}
+
+\begin{lstlisting}[language=SQL, caption=Scenario Deadlock]
+-- Transazione 1
+START TRANSACTION;
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+-- Aspetta il lock su cliente 2
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 2;
+COMMIT;
+
+-- Transazione 2 (parallelamente)
+START TRANSACTION;
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 2;
+-- Aspetta il lock su cliente 1 (DEADLOCK!)
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 1;
+COMMIT;
+\end{lstlisting}
+
+\subsection{Evitare Deadlock}
+
+\begin{lstlisting}[language=SQL, caption=Strategie per Evitare Deadlock]
+-- Strategie 1: Sempre aggiornare le righe nello stesso ordine
+-- Transazione 1 e 2: aggiornare sempre cliente 1 prima di cliente 2
+START TRANSACTION;
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;  -- Sempre prima
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 2;  -- Sempre dopo
+COMMIT;
+
+-- Strategia 2: Usare timeout per il lock
+SET innodb_lock_wait_timeout = 5;  -- Timeout dopo 5 secondi
+
+-- Strategia 3: Usare transaction_isolation più bassa (se accettabile)
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- Strategia 4: Minimizzare la durata della transazione
+START TRANSACTION;
+-- Fare il meno possibile
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+COMMIT;  -- Rilasciare i lock il prima possibile
+\end{lstlisting}
+
+\subsection{Gestire Deadlock in Applicazione}
+
+\begin{lstlisting}[language=SQL, caption=Gestione Deadlock in Pseudocodice]
+-- Pseudocodice per gestire deadlock
+MAX_RETRIES = 3
+retry_count = 0
+
+WHILE retry_count < MAX_RETRIES:
+    TRY:
+        START TRANSACTION
+        -- Operazioni
+        UPDATE cliente SET saldo = ... WHERE idCliente = 1
+        UPDATE cliente SET saldo = ... WHERE idCliente = 2
+        COMMIT
+        BREAK  -- Successo, esci dal loop
+    EXCEPT Deadlock:
+        retry_count += 1
+        ROLLBACK
+        WAIT(random(1, 5) seconds)  -- Attendi con backoff casuale
+    EXCEPT OTHER_ERROR:
+        ROLLBACK
+        RAISE error
+
+IF retry_count >= MAX_RETRIES:
+    RAISE "Deadlock non risolto dopo 3 tentativi"
+\end{lstlisting}
+
+\section{Monitoraggio Transazioni}
+
+\subsection{Visualizzare Transazioni Attive}
+
+\begin{lstlisting}[language=SQL, caption=Monitorare Transazioni Active]
+-- Visualizzare tutti i processi in esecuzione
+SHOW PROCESSLIST;
+
+-- Dettagli completi
+SHOW FULL PROCESSLIST;
+
+-- Mostrare solo transazioni lunghe
+SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST
+WHERE TIME > 300  -- Più di 5 minuti
+AND COMMAND != 'Sleep';
+
+-- Visualizzare transazioni InnoDB
+SELECT * FROM INFORMATION_SCHEMA.INNODB_TRX;
+
+-- Visualizzare lock InnoDB
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCKS;
+\end{lstlisting}
+
+\subsection{Terminare Transazioni}
+
+\begin{lstlisting}[language=SQL, caption=Terminare Transazioni o Processi]
+-- Terminare un processo specifico
+KILL 123;  -- Dove 123 è l'ID del processo
+
+-- Terminare tutti i processi di un utente
+KILL QUERY 456;  -- Termina solo la query, non la connessione
+
+-- Script per killare processi lunghi
+SELECT CONCAT('KILL ', ID, ';')
+FROM INFORMATION_SCHEMA.PROCESSLIST
+WHERE TIME > 300 AND COMMAND != 'Sleep';
+\end{lstlisting}
+
+\section{Transazioni Implicite vs Esplicite}
+
+\subsection{Modalità Autocommit}
+
+La modalità autocommit determina se i comandi SQL sono automaticamente committati.
+
+\begin{lstlisting}[language=SQL, caption=Autocommit]
+-- Visualizzare stato autocommit
+SELECT @@autocommit;  -- 1 = attivo, 0 = disattivo
+
+-- Disattivare autocommit (transazioni esplicite)
+SET autocommit = 0;
+
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+-- Modifica non è ancora salvata finché non fai COMMIT
+COMMIT;
+
+-- Attivare autocommit (transazioni implicite)
+SET autocommit = 1;
+
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+-- Modifica è automaticamente salvata immediatamente
+\end{lstlisting}
+
+\section{Riepilogo Concetti Chiave}
+
+\begin{description}
+    \item[\textbf{Transazione}] Unità di lavoro atomica che raggruppa una o più operazioni SQL.
+    \item[\textbf{ACID}] Proprietà che garantiscono affidabilità: Atomicità, Coerenza, Isolamento, Durabilità.
+    \item[\textbf{COMMIT}] Comando che salva permanentemente le modifiche della transazione.
+    \item[\textbf{ROLLBACK}] Comando che annulla tutte le modifiche della transazione.
+    \item[\textbf{SAVEPOINT}] Punto di salvataggio per rollback parziale all'interno di una transazione.
+    \item[\textbf{Livello di Isolamento}] Grado in cui le transazioni sono isolate l'una dall'altra.
+    \item[\textbf{Deadlock}] Situazione in cui due transazioni aspettano reciprocamente, bloccandosi a vicenda.
+    \item[\textbf{Dirty Read}] Anomalia: leggere dati non committati.
+    \item[\textbf{Non-Repeatable Read}] Anomalia: leggere dati diversi nella stessa transazione.
+    \item[\textbf{Phantom Read}] Anomalia: ottenere risultati diversi per lo stesso query a causa di inserimenti/eliminazioni.
+\end{description}

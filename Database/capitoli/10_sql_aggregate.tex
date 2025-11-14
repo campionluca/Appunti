@@ -1,0 +1,386 @@
+\chapter{SQL Aggregate - COUNT, SUM, AVG, MIN, MAX}
+
+\section*{Introduzione}
+Le funzioni di aggregazione calcolano valori singoli da un insieme di righe. Sono essenziali per analisi, report e sintesi dei dati. Questo capitolo presenta COUNT, SUM, AVG, MIN, MAX con GROUP BY e HAVING per elaborazioni complesse.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere le funzioni di aggregazione di base
+    \item Usare COUNT per contare righe
+    \item Usare SUM per somme
+    \item Usare AVG, MIN, MAX per media, minimo, massimo
+    \item Raggruppare dati con GROUP BY
+    \item Filtrare gruppi con HAVING
+    \item Combinare aggregazioni in query complesse
+    \item Gestire NULL nelle aggregazioni
+    \item Usare DISTINCT con funzioni di aggregazione
+\end{itemize}
+
+\section{Funzioni di Aggregazione di Base}
+
+\subsection{COUNT}
+
+COUNT conta il numero di righe o di valori non NULL.
+
+\begin{lstlisting}[language=SQL, caption=COUNT]
+-- Contare tutte le righe
+SELECT COUNT(*) AS totalClienti FROM cliente;
+
+-- Contare valori non NULL di una colonna
+SELECT COUNT(email) AS clientiConEmail FROM cliente;
+
+-- Contare valori distinti
+SELECT COUNT(DISTINCT città) AS numCittà FROM cliente;
+
+-- Contare con condizione
+SELECT COUNT(*) AS clientiAttivi FROM cliente WHERE stato = 'Attivo';
+\end{lstlisting}
+
+\subsection{SUM}
+
+SUM calcola la somma di una colonna numerica.
+
+\begin{lstlisting}[language=SQL, caption=SUM]
+-- Somma totale di tutti gli ordini
+SELECT SUM(totale) AS totalVendite FROM ordine;
+
+-- Somma con condizione
+SELECT SUM(totale) AS vendite2023 FROM ordine WHERE YEAR(dataOrdine) = 2023;
+
+-- SUM restituisce NULL se nessuna riga (usa COALESCE)
+SELECT COALESCE(SUM(totale), 0) AS totalOrdini FROM ordine WHERE stato = 'Cancellato';
+\end{lstlisting}
+
+\subsection{AVG}
+
+AVG calcola la media di una colonna numerica.
+
+\begin{lstlisting}[language=SQL, caption=AVG]
+-- Media prezzo prodotti
+SELECT AVG(prezzo) AS prezzoMedio FROM prodotto;
+
+-- Media ordini per cliente
+SELECT AVG(totale) AS importoMedio FROM ordine WHERE stato = 'Completato';
+
+-- Media con rounding
+SELECT ROUND(AVG(prezzo), 2) AS prezzoMedio FROM prodotto WHERE categoria = 'Elettronica';
+\end{lstlisting}
+
+\subsection{MIN e MAX}
+
+MIN e MAX trovano il valore minimo e massimo.
+
+\begin{lstlisting}[language=SQL, caption=MIN e MAX]
+-- Prezzo più basso e più alto
+SELECT
+    MIN(prezzo) AS prezzoMin,
+    MAX(prezzo) AS prezzoMax
+FROM prodotto;
+
+-- Cliente con ordine più recente
+SELECT MAX(dataOrdine) AS ultimoOrdine FROM ordine;
+
+-- Data primo cliente registrato
+SELECT MIN(dataRegistrazione) AS primoCliente FROM cliente;
+
+-- Data cliente più recente e numero giorni da oggi
+SELECT
+    MAX(dataRegistrazione) AS clientePiuRecente,
+    DATEDIFF(CURDATE(), MAX(dataRegistrazione)) AS giorniDaOggi
+FROM cliente;
+\end{lstlisting}
+
+\section{GROUP BY - Raggruppamento}
+
+GROUP BY raggruppa righe per uno o più attributi e applica funzioni di aggregazione a ogni gruppo.
+
+\subsection{Sintassi}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi GROUP BY]
+SELECT colonna_gruppo, AGGREGAZIONE(colonna)
+FROM tabella
+WHERE condizioni_filtro
+GROUP BY colonna_gruppo
+ORDER BY ...;
+\end{lstlisting}
+
+\subsection{Esempio semplice}
+
+\begin{lstlisting}[language=SQL, caption=GROUP BY semplice]
+-- Vendite per ogni cliente
+SELECT
+    idCliente,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalSpeso,
+    AVG(totale) AS importoMedio
+FROM ordine
+GROUP BY idCliente;
+\end{lstlisting}
+
+\subsection{GROUP BY su più colonne}
+
+\begin{lstlisting}[language=SQL, caption=GROUP BY multiplo]
+-- Vendite per città e anno
+SELECT
+    YEAR(dataOrdine) AS anno,
+    c.città,
+    COUNT(*) AS numOrdini,
+    SUM(o.totale) AS totalVendite
+FROM ordine o
+JOIN cliente c ON o.idCliente = c.idCliente
+GROUP BY YEAR(o.dataOrdine), c.città
+ORDER BY anno DESC, totalVendite DESC;
+\end{lstlisting}
+
+\subsection{GROUP BY con funzioni di data}
+
+\begin{lstlisting}[language=SQL, caption=GROUP BY con date]
+-- Vendite per mese
+SELECT
+    DATE_TRUNC('month', dataOrdine) AS mese,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalVendite
+FROM ordine
+GROUP BY DATE_TRUNC('month', dataOrdine);
+
+-- Alternativa MySQL (senza DATE_TRUNC)
+SELECT
+    DATE_FORMAT(dataOrdine, '%Y-%m') AS mese,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalVendite
+FROM ordine
+GROUP BY DATE_FORMAT(dataOrdine, '%Y-%m')
+ORDER BY mese DESC;
+\end{lstlisting}
+
+\subsection{Errore comune: colonne non raggruppate}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errore: Colonne non in GROUP BY}
+\begin{lstlisting}[language=SQL]
+-- Errore in SQL stretto (MySQL con ONLY_FULL_GROUP_BY)
+SELECT idCliente, nome, SUM(totale) FROM ordine
+GROUP BY idCliente;
+-- Errore: nome non è in GROUP BY
+
+-- Corretto
+SELECT idCliente, MAX(nome) AS nome, SUM(totale) FROM ordine
+GROUP BY idCliente;
+\end{lstlisting}
+
+Tutte le colonne SELECT devono essere in GROUP BY o in una funzione di aggregazione.
+\end{tcolorbox}
+
+\section{HAVING - Filtro su Aggregazioni}
+
+HAVING filtra i GRUPPI basato su condizioni di aggregazione. È come WHERE, ma per i risultati di GROUP BY.
+
+\subsection{Sintassi}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi HAVING]
+SELECT colonna_gruppo, AGGREGAZIONE(colonna)
+FROM tabella
+GROUP BY colonna_gruppo
+HAVING condizioni_su_aggregazioni
+ORDER BY ...;
+\end{lstlisting}
+
+\subsection{Differenza WHERE vs HAVING}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=WHERE vs HAVING]
+\begin{itemize}
+    \item \textbf{WHERE}: filtra le RIGHE prima di GROUP BY
+    \item \textbf{HAVING}: filtra i GRUPPI dopo GROUP BY
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Esempi}
+
+\begin{lstlisting}[language=SQL, caption=HAVING]
+-- Clienti che hanno speso più di 1000 euro
+SELECT
+    idCliente,
+    SUM(totale) AS totalSpeso
+FROM ordine
+GROUP BY idCliente
+HAVING SUM(totale) > 1000
+ORDER BY totalSpeso DESC;
+
+-- Clienti con più di 5 ordini
+SELECT
+    idCliente,
+    COUNT(*) AS numOrdini
+FROM ordine
+GROUP BY idCliente
+HAVING COUNT(*) > 5;
+
+-- Categorie con prezzo medio superiore a 50 euro
+SELECT
+    categoria,
+    AVG(prezzo) AS prezzoMedio,
+    COUNT(*) AS numProdotti
+FROM prodotto
+GROUP BY categoria
+HAVING AVG(prezzo) > 50
+ORDER BY prezzoMedio DESC;
+\end{lstlisting}
+
+\subsection{WHERE e HAVING insieme}
+
+\begin{lstlisting}[language=SQL, caption=WHERE e HAVING insieme]
+-- Clienti di Milano che hanno speso più di 500 euro nel 2023
+SELECT
+    c.idCliente,
+    c.nome,
+    SUM(o.totale) AS totalSpeso
+FROM ordine o
+JOIN cliente c ON o.idCliente = c.idCliente
+WHERE c.città = 'Milano'           -- Filtra prima di GROUP BY
+    AND YEAR(o.dataOrdine) = 2023
+GROUP BY c.idCliente, c.nome
+HAVING SUM(o.totale) > 500         -- Filtra dopo GROUP BY
+ORDER BY totalSpeso DESC;
+\end{lstlisting}
+
+\section{DISTINCT con Aggregazioni}
+
+\subsection{COUNT(DISTINCT)}
+
+Conta valori unici di una colonna.
+
+\begin{lstlisting}[language=SQL, caption=COUNT(DISTINCT)]
+-- Numero di città diverse dove abitano i clienti
+SELECT COUNT(DISTINCT città) AS numCittà FROM cliente;
+
+-- Numero di categorie di prodotti ordinati
+SELECT COUNT(DISTINCT categoria) AS numCategorie
+FROM ordine_prodotto op
+JOIN prodotto p ON op.idProdotto = p.idProdotto;
+\end{lstlisting}
+
+\subsection{SUM(DISTINCT) e AVG(DISTINCT)}
+
+\begin{lstlisting}[language=SQL, caption=SUM(DISTINCT) e AVG(DISTINCT)]
+-- Somma dei prezzi unici (ogni prezzo conta una sola volta)
+SELECT SUM(DISTINCT prezzo) AS sommaPrezziUnici FROM prodotto;
+
+-- Media dei prezzi unici
+SELECT AVG(DISTINCT prezzo) AS mediaPreziUnici FROM prodotto;
+\end{lstlisting}
+
+\section{Funzioni Avanzate di Aggregazione}
+
+\subsection{GROUP_CONCAT}
+
+Concatena i valori di una colonna per ogni gruppo (MySQL).
+
+\begin{lstlisting}[language=SQL, caption=GROUP_CONCAT]
+-- Elencare i prodotti ordinati per ogni cliente
+SELECT
+    c.nome,
+    GROUP_CONCAT(p.nome SEPARATOR ', ') AS prodottiOrdinati
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+LEFT JOIN ordine_prodotto op ON o.idOrdine = op.idOrdine
+LEFT JOIN prodotto p ON op.idProdotto = p.idProdotto
+GROUP BY c.idCliente, c.nome;
+\end{lstlisting}
+
+\subsection{Aggregazioni condizionali}
+
+Usare CASE dentro le aggregazioni per logica condizionale.
+
+\begin{lstlisting}[language=SQL, caption=Aggregazioni condizionali]
+-- Contare ordini completati e cancellati separatamente
+SELECT
+    COUNT(*) AS totalOrdini,
+    SUM(CASE WHEN stato = 'Completato' THEN 1 ELSE 0 END) AS ordinCompletati,
+    SUM(CASE WHEN stato = 'Cancellato' THEN 1 ELSE 0 END) AS ordiniCancellati
+FROM ordine;
+
+-- Vendite per stato
+SELECT
+    SUM(CASE WHEN stato = 'Completato' THEN totale ELSE 0 END) AS venditeCmpl,
+    SUM(CASE WHEN stato = 'Spedito' THEN totale ELSE 0 END) AS venditeSpedite,
+    SUM(CASE WHEN stato = 'Pendente' THEN totale ELSE 0 END) AS venditePercetti
+FROM ordine;
+\end{lstlisting}
+
+\section{NULL nelle Aggregazioni}
+
+Le funzioni di aggregazione ignorano i NULL.
+
+\begin{lstlisting}[language=SQL, caption=NULL in aggregazioni]
+-- Conteggio con NULL
+SELECT
+    COUNT(*) AS totalRighe,           -- Conta tutti (incluso NULL)
+    COUNT(telefono) AS righeConTelefono  -- Conta solo non-NULL
+FROM cliente;
+
+-- Risultato: se 100 clienti, 10 senza telefono
+-- totalRighe = 100, righeConTelefono = 90
+
+-- SUM ignora NULL
+SELECT SUM(sconto) FROM cliente;
+-- I clienti senza sconto (NULL) non contribuiscono alla somma
+\end{lstlisting}
+
+\section{Esempio Completo: Report Vendite}
+
+\begin{lstlisting}[language=SQL, caption=Report completo con aggregazioni]
+-- Report vendite mensili per ogni categoria
+SELECT
+    DATE_FORMAT(o.dataOrdine, '%Y-%m') AS mese,
+    p.categoria,
+    COUNT(DISTINCT o.idOrdine) AS numOrdini,
+    SUM(op.quantita) AS totalQuantita,
+    SUM(op.quantita * op.prezzo_unitario) AS totalVendite,
+    AVG(op.prezzo_unitario) AS prezzoMedio,
+    MIN(op.prezzo_unitario) AS prezzoMin,
+    MAX(op.prezzo_unitario) AS prezzoMax
+FROM ordine o
+JOIN ordine_prodotto op ON o.idOrdine = op.idOrdine
+JOIN prodotto p ON op.idProdotto = p.idProdotto
+WHERE o.stato IN ('Completato', 'Spedito')
+GROUP BY DATE_FORMAT(o.dataOrdine, '%Y-%m'), p.categoria
+HAVING SUM(op.quantita * op.prezzo_unitario) > 1000
+ORDER BY mese DESC, totalVendite DESC;
+\end{lstlisting}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item \textbf{COUNT}: conta righe o valori non-NULL
+    \item \textbf{SUM}: somma colonne numeriche
+    \item \textbf{AVG, MIN, MAX}: media, minimo, massimo
+    \item \textbf{GROUP BY}: raggruppa dati per una o più colonne
+    \item \textbf{HAVING}: filtra i gruppi (applicato dopo GROUP BY)
+    \item \textbf{WHERE}: filtra le righe (applicato prima di GROUP BY)
+    \item \textbf{DISTINCT}: conta o somma solo valori unici
+    \item Le aggregazioni ignorano NULL
+    \item Combina con JOIN per aggregazioni multi-tabella
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Scrivi una query per contare il numero totale di ordini e il numero di ordini completati.
+
+    \item Calcola il totale speso, la media e il massimo importo di ordini per ogni cliente. Ordina per totale speso decrescente.
+
+    \item Usa GROUP BY per trovare quali categorie di prodotti hanno vendite superiori a 5000 euro. Mostra categoria, numero prodotti, e totale vendite.
+
+    \item Scrivi una query con WHERE e HAVING: trova clienti di Milano che hanno fatto più di 3 ordini nel 2023.
+
+    \item Usa COUNT(DISTINCT) per trovare quanti clienti diversi hanno ordinato ogni prodotto.
+
+    \item Crea un report che mostra, per ogni mese del 2023, il numero di ordini, il totale vendite, la media ordine e il numero di clienti unici.
+
+    \item Usa aggregazioni condizionali (CASE) per mostrare, per ogni categoria, il numero di prodotti attivi e inattivi.
+
+    \item Spiega perché la seguente query dà errore e corriggila:
+    \begin{lstlisting}[language=SQL]
+SELECT idCliente, nome, COUNT(*) FROM ordine GROUP BY idCliente;
+    \end{lstlisting}
+\end{enumerate}

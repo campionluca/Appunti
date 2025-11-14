@@ -1,0 +1,354 @@
+\chapter{SQL DML - SELECT}
+
+\section*{Introduzione}
+DML (Data Manipulation Language) è il linguaggio SQL per interrogare e manipolare i dati. Il comando SELECT è il più importante e potente di DML, permettendo di recuperare dati da una o più tabelle con filtri, ordinamenti e proiezioni sofisticate.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Scrivere query SELECT di base
+    \item Filtrare dati con WHERE
+    \item Ordinare risultati con ORDER BY
+    \item Limitare risultati con LIMIT
+    \item Usare funzioni di aggregazione (COUNT, SUM, AVG, MIN, MAX)
+    \item Raggruppare dati con GROUP BY
+    \item Filtrare gruppi con HAVING
+    \item Usare alias per colonne e tabelle
+    \item Scrivere query sub-SELECT (subquery)
+\end{itemize}
+
+\section{Sintassi SELECT di Base}
+
+\subsection{Sintassi generale}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi SELECT]
+SELECT [DISTINCT] colonna1, colonna2, ...
+FROM tabella1
+WHERE condizioni
+ORDER BY colonna [ASC|DESC]
+LIMIT numero_righe;
+\end{lstlisting}
+
+\subsection{Selezionare tutte le colonne}
+
+\begin{lstlisting}[language=SQL, caption=Selezionare tutte le colonne]
+-- Seleziona tutte le colonne
+SELECT * FROM cliente;
+
+-- Limita ai primi 10 risultati
+SELECT * FROM cliente LIMIT 10;
+\end{lstlisting}
+
+\subsection{Selezionare colonne specifiche}
+
+\begin{lstlisting}[language=SQL, caption=Selezionare colonne specifiche]
+SELECT idCliente, nome, cognome, email FROM cliente;
+\end{lstlisting}
+
+\subsection{Alias per colonne}
+
+\begin{lstlisting}[language=SQL, caption=Alias per colonne]
+-- Renominare colonne nel risultato
+SELECT
+    idCliente AS ID,
+    nome AS Nome,
+    email AS 'Indirizzo Email'
+FROM cliente;
+\end{lstlisting}
+
+\section{WHERE - Filtri}
+
+Il WHERE filtra le righe in base a condizioni.
+
+\subsection{Operatori di confronto}
+
+\begin{lstlisting}[language=SQL, caption=Operatori di confronto]
+-- Uguaglianza
+SELECT * FROM cliente WHERE stato = 'Attivo';
+
+-- Diverso
+SELECT * FROM cliente WHERE stato != 'Inattivo';
+SELECT * FROM cliente WHERE stato <> 'Inattivo';
+
+-- Maggiore/minore
+SELECT * FROM ordine WHERE totale > 100.00;
+SELECT * FROM ordine WHERE totale <= 50.00;
+
+-- BETWEEN (inclusivo)
+SELECT * FROM ordine WHERE dataOrdine BETWEEN '2023-01-01' AND '2023-12-31';
+\end{lstlisting}
+
+\subsection{Operatori logici}
+
+\begin{lstlisting}[language=SQL, caption=Operatori logici AND, OR, NOT]
+-- AND: tutte le condizioni devono essere vere
+SELECT * FROM cliente
+WHERE stato = 'Attivo' AND città = 'Milano';
+
+-- OR: almeno una condizione deve essere vera
+SELECT * FROM cliente
+WHERE città = 'Milano' OR città = 'Roma';
+
+-- NOT: negazione
+SELECT * FROM cliente
+WHERE NOT stato = 'Inattivo';
+\end{lstlisting}
+
+\subsection{IN e NOT IN}
+
+\begin{lstlisting}[language=SQL, caption=Operatori IN e NOT IN]
+-- IN: verifica se il valore è in un elenco
+SELECT * FROM ordine
+WHERE stato IN ('Spedito', 'Consegnato');
+
+-- NOT IN: verifica se il valore NON è in un elenco
+SELECT * FROM ordine
+WHERE stato NOT IN ('Cancellato', 'Rifiutato');
+\end{lstlisting}
+
+\subsection{LIKE - Pattern matching}
+
+\begin{lstlisting}[language=SQL, caption=LIKE per pattern matching]
+-- % rappresenta 0 o più caratteri, _ rappresenta un carattere singolo
+
+-- Nome che inizia con 'M'
+SELECT * FROM cliente WHERE nome LIKE 'M%';
+
+-- Nome che finisce con 'o'
+SELECT * FROM cliente WHERE nome LIKE '%o';
+
+-- Email che contiene 'gmail'
+SELECT * FROM cliente WHERE email LIKE '%gmail%';
+
+-- Parola di esattamente 5 caratteri
+SELECT * FROM cliente WHERE nome LIKE '_____';
+
+-- Case-insensitive (dipende dal collation)
+SELECT * FROM cliente WHERE nome LIKE 'mario%';
+\end{lstlisting}
+
+\subsection{IS NULL e IS NOT NULL}
+
+\begin{lstlisting}[language=SQL, caption=NULL in WHERE]
+-- Valori NULL
+SELECT * FROM cliente WHERE telefono IS NULL;
+
+-- Valori non NULL
+SELECT * FROM cliente WHERE telefono IS NOT NULL;
+
+-- Nota: = NULL non funziona! Usare IS NULL
+SELECT * FROM cliente WHERE telefono = NULL;  -- Restituisce 0 righe!
+\end{lstlisting}
+
+\section{ORDER BY - Ordinamento}
+
+Ordina i risultati in base a una o più colonne.
+
+\begin{lstlisting}[language=SQL, caption=ORDER BY]
+-- Ordinamento ascendente (default)
+SELECT * FROM ordine ORDER BY dataOrdine ASC;
+
+-- Ordinamento discendente
+SELECT * FROM ordine ORDER BY dataOrdine DESC;
+
+-- Ordinamento su più colonne
+SELECT * FROM cliente
+ORDER BY città ASC, cognome ASC, nome ASC;
+
+-- Ordinamento per numero di colonna (sconsigliato)
+SELECT nome, cognome, email FROM cliente
+ORDER BY 2, 1;  -- Ordina per colonna 2 (cognome), poi colonna 1 (nome)
+\end{lstlisting}
+
+\section{LIMIT - Limitazione Risultati}
+
+Limita il numero di righe restituite.
+
+\begin{lstlisting}[language=SQL, caption=LIMIT]
+-- Primi 10 risultati
+SELECT * FROM cliente LIMIT 10;
+
+-- 10 risultati a partire dal 20° (offset=20, limit=10)
+SELECT * FROM cliente LIMIT 20, 10;
+
+-- Sintassi alternativa
+SELECT * FROM cliente LIMIT 10 OFFSET 20;
+
+-- Ultimi 5 clienti registrati
+SELECT * FROM cliente
+ORDER BY dataRegistrazione DESC
+LIMIT 5;
+\end{lstlisting}
+
+\section{DISTINCT - Eliminare Duplicati}
+
+Restituisce solo valori unici.
+
+\begin{lstlisting}[language=SQL, caption=DISTINCT]
+-- Tutte le città
+SELECT DISTINCT città FROM cliente;
+
+-- Combinazione unica di città e stato
+SELECT DISTINCT città, stato FROM cliente;
+
+-- Contare città distinte
+SELECT COUNT(DISTINCT città) FROM cliente;
+\end{lstlisting}
+
+\section{Funzioni di Stringa}
+
+\begin{lstlisting}[language=SQL, caption=Funzioni di stringa]
+-- Lunghezza stringa
+SELECT nome, LENGTH(nome) AS lunghezza FROM cliente;
+
+-- Concatenazione
+SELECT CONCAT(nome, ' ', cognome) AS nomeCompleto FROM cliente;
+
+-- Maiuscolo/minuscolo
+SELECT UPPER(nome), LOWER(cognome) FROM cliente;
+
+-- Substring
+SELECT SUBSTRING(email, 1, POSITION('@' IN email) - 1) AS username FROM cliente;
+
+-- Sostituzione
+SELECT REPLACE(email, 'gmail.com', 'email.com') FROM cliente;
+
+-- Trim (rimuove spazi)
+SELECT TRIM(nome) FROM cliente;
+\end{lstlisting}
+
+\section{Funzioni di Data}
+
+\begin{lstlisting}[language=SQL, caption=Funzioni di data]
+-- Data odierna
+SELECT CURDATE() AS oggi;
+SELECT CURRENT_DATE() AS oggi;
+
+-- Data e ora attuali
+SELECT NOW() AS adesso;
+SELECT CURRENT_TIMESTAMP() AS adesso;
+
+-- Estrarre parti della data
+SELECT
+    YEAR(dataOrdine) AS anno,
+    MONTH(dataOrdine) AS mese,
+    DAY(dataOrdine) AS giorno
+FROM ordine;
+
+-- Differenza tra date (in giorni)
+SELECT
+    idOrdine,
+    DATEDIFF(CURDATE(), dataOrdine) AS giorni_passati
+FROM ordine;
+
+-- Aggiungere giorni a una data
+SELECT DATE_ADD(CURDATE(), INTERVAL 7 DAY) AS tra_una_settimana;
+SELECT DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AS tra_un_mese;
+
+-- Formato data
+SELECT DATE_FORMAT(dataOrdine, '%d/%m/%Y') FROM ordine;
+\end{lstlisting}
+
+\section{Funzioni Numeriche}
+
+\begin{lstlisting}[language=SQL, caption=Funzioni numeriche]
+-- Arrotondamento
+SELECT ROUND(prezzo, 2) FROM prodotto;
+
+-- Arrotondamento per difetto/eccesso
+SELECT FLOOR(prezzo), CEIL(prezzo) FROM prodotto;
+
+-- Valore assoluto
+SELECT ABS(-10);
+
+-- Potenza
+SELECT POWER(2, 3);  -- 2^3 = 8
+
+-- Radice quadrata
+SELECT SQRT(16);  -- 4
+
+-- Modulo (resto divisione)
+SELECT MOD(10, 3);  -- 1
+\end{lstlisting}
+
+\section{Subquery (Sub-SELECT)}
+
+Una subquery è una query dentro un'altra query.
+
+\begin{lstlisting}[language=SQL, caption=Subquery in WHERE]
+-- Trovare clienti che hanno fatto ordini superiori alla media
+SELECT *
+FROM cliente
+WHERE idCliente IN (
+    SELECT idCliente FROM ordine WHERE totale > (
+        SELECT AVG(totale) FROM ordine
+    )
+);
+
+-- Trovare prodotti con prezzo superiore al prezzo medio della categoria
+SELECT *
+FROM prodotto p1
+WHERE prezzo > (
+    SELECT AVG(prezzo) FROM prodotto p2
+    WHERE p2.categoria = p1.categoria
+);
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption=Subquery in SELECT]
+-- Aggiungere il numero di ordini accanto a ogni cliente
+SELECT
+    idCliente,
+    nome,
+    (SELECT COUNT(*) FROM ordine o WHERE o.idCliente = c.idCliente) AS numOrdini
+FROM cliente c;
+\end{lstlisting}
+
+\section{Esempio Completo}
+
+\begin{lstlisting}[language=SQL, caption=Query complessa]
+-- Trovare i 5 clienti più attivi del 2023
+-- ordinati per numero di ordini decrescente
+SELECT
+    c.idCliente,
+    c.nome,
+    c.cognome,
+    COUNT(o.idOrdine) AS numOrdini,
+    SUM(o.totale) AS totalSpeso
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+    AND YEAR(o.dataOrdine) = 2023
+WHERE c.stato = 'Attivo'
+GROUP BY c.idCliente, c.nome, c.cognome
+ORDER BY numOrdini DESC
+LIMIT 5;
+\end{lstlisting}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item \textbf{SELECT} recupera dati da tabelle
+    \item \textbf{WHERE} filtra righe in base a condizioni
+    \item \textbf{ORDER BY} ordina risultati (ASC/DESC)
+    \item \textbf{LIMIT} limita il numero di righe
+    \item \textbf{DISTINCT} elimina duplicati
+    \item \textbf{Funzioni} (stringa, data, numero) trasformano i dati
+    \item \textbf{Subquery} permettono query annidate
+    \item Combinare clausole per query sofisticate
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Scrivi una query per trovare tutti i clienti della città di 'Milano' registrati negli ultimi 30 giorni, ordinati per cognome.
+
+    \item Scrivi una query per elencare prodotti il cui prezzo è tra 50 e 100 euro, escludendo la categoria 'Saldi'.
+
+    \item Conta quanti ordini sono stati fatti da cliente 'id=5' e mostra il numero come colonna 'NumOrdini'.
+
+    \item Usa una subquery per trovare i clienti che hanno speso più della media totale di tutti gli ordini.
+
+    \item Scrivi una query che mostra, per ogni cliente: nome, cognome, numero di ordini effettuati, importo totale speso, ordinato per importo totale decrescente. Usa LEFT JOIN se necessario.
+
+    \item Estrai da una tabella 'articolo' gli articoli con titolo che contiene 'Database' (case-insensitive), creati nel 2023 o successivamente, ordinati per data di creazione.
+\end{enumerate}

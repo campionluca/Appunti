@@ -1,0 +1,343 @@
+\chapter{Modello Logico - Modello Relazionale}
+
+\section*{Introduzione}
+Il modello logico traduce il modello concettuale (diagrammi ER) in un modello implementabile nei DBMS. Il modello relazionale organizza i dati in tabelle (relazioni) con colonne (attributi) e righe (tuple). Questo capitolo presenta la struttura del modello relazionale, le chiavi e i vincoli di integrità.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere la struttura del modello relazionale
+    \item Tradurre diagrammi ER in tabelle relazionali
+    \item Definire e utilizzare chiavi primarie e esterne
+    \item Comprendere i vincoli di integrità referenziale
+    \item Applicare le regole di trasformazione ER-relazionale
+    \item Progettare schemi logici corretti
+\end{itemize}
+
+\section{Il Modello Relazionale}
+
+\subsection{Componenti fondamentali}
+Il modello relazionale è basato su tre concetti chiave:
+
+\begin{description}
+    \item[\textbf{Relazione (Tabella)}] Una collezione di tuple (righe) con lo stesso insieme di attributi (colonne).
+    \item[\textbf{Attributo (Colonna)}] Una proprietà della relazione con un nome e un dominio (tipo di dato).
+    \item[\textbf{Tupla (Riga)}] Un record che contiene un valore per ogni attributo.
+\end{description}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Tabella Cliente]
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{idCliente} & \textbf{nome} & \textbf{cognome} & \textbf{email} \\
+\hline
+1 & Luigi & Rossi & luigi@email.com \\
+2 & Maria & Bianchi & maria@email.com \\
+3 & Giovanni & Verdi & giovanni@email.com \\
+\hline
+\end{tabular}
+
+Ogni riga è una tupla, ogni colonna è un attributo.
+\end{center}
+\end{tcolorbox}
+
+\subsection{Dominio di un attributo}
+Ogni attributo ha un \textbf{dominio}, cioè l'insieme di valori che può assumere.
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Esempio: Domini]
+\begin{itemize}
+    \item \texttt{idCliente}: dominio = interi positivi (1, 2, 3, \ldots)
+    \item \texttt{nome}: dominio = stringhe di caratteri (fino a 100 caratteri)
+    \item \texttt{dataIscrizione}: dominio = date (formato YYYY-MM-DD)
+    \item \texttt{saldo}: dominio = numeri decimali positivi
+\end{itemize}
+\end{tcolorbox}
+
+\section{Chiavi nel Modello Relazionale}
+
+\subsection{Chiave Primaria}
+Una \textbf{chiave primaria} è un attributo (o insieme di attributi) che:
+\begin{itemize}
+    \item Identifica univocamente ogni tupla della relazione
+    \item Non può contenere valori NULL
+    \item Non può avere duplicati
+\end{itemize}
+
+\begin{lstlisting}[language=SQL, caption=Dichiarazione di chiave primaria]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+\end{lstlisting}
+
+\subsection{Chiave Candidata}
+Una \textbf{chiave candidata} è un attributo che potrebbe essere chiave primaria. Una relazione può avere più chiavi candidate, ma solo una viene scelta come primaria.
+
+\begin{tcolorbox}[colback=orange!10, colframe=orange!60, title=Nota: Chiavi candidate}
+Tabella Cliente:
+\begin{itemize}
+    \item \texttt{idCliente}: chiave candidata (univoca, non nulla)
+    \item \texttt{email}: chiave candidata (univoca, non nulla)
+    \item Sceglieremo \texttt{idCliente} come primaria
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Chiave Esterna}
+Una \textbf{chiave esterna} è un attributo (o insieme di attributi) che referenzia la chiave primaria di un'altra relazione. Crea il collegamento tra tabelle.
+
+\begin{lstlisting}[language=SQL, caption=Dichiarazione di chiave esterna]
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY,
+    dataOrdine DATE NOT NULL,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+\end{lstlisting}
+
+\subsection{Chiave Composta}
+Una chiave può essere formata da più attributi.
+
+\begin{lstlisting}[language=SQL, caption=Chiave composta come chiave primaria]
+CREATE TABLE ordine_prodotto (
+    idOrdine INT NOT NULL,
+    idProdotto INT NOT NULL,
+    quantita INT NOT NULL,
+    PRIMARY KEY (idOrdine, idProdotto),
+    FOREIGN KEY (idOrdine) REFERENCES ordine(idOrdine),
+    FOREIGN KEY (idProdotto) REFERENCES prodotto(idProdotto)
+);
+\end{lstlisting}
+
+\section{Vincoli di Integrità}
+
+\subsection{Vincolo di dominio}
+Ogni valore di un attributo deve appartenere al dominio definito.
+
+\begin{lstlisting}[language=SQL, caption=Vincoli di dominio]
+CREATE TABLE prodotto (
+    idProdotto INT PRIMARY KEY,
+    nome VARCHAR(200) NOT NULL,      -- Non null
+    prezzo DECIMAL(8, 2) NOT NULL,   -- Numero con 2 decimali
+    categoria ENUM('Elettronica', 'Libri', 'Abbigliamento'),
+    quantitaDisponibile INT CHECK (quantitaDisponibile >= 0)
+);
+\end{lstlisting}
+
+\subsection{Vincolo di unicità}
+Un attributo (o insieme di attributi) può avere solo valori unici (o nulli).
+
+\begin{lstlisting}[language=SQL, caption=Vincolo di unicità]
+CREATE TABLE utente (
+    idUtente INT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    dataRegistrazione DATE DEFAULT CURDATE()
+);
+\end{lstlisting}
+
+\subsection{Vincolo di chiave primaria}
+Garantisce l'univocità e l'obbligatorietà (NOT NULL).
+
+\subsection{Vincolo di chiave esterna e integrità referenziale}
+La chiave esterna assicura che ogni valore riferisca effettivamente un'entità in un'altra relazione.
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: Violazione di integrità referenziale]
+Se in ordine abbiamo \texttt{idCliente = 5}, questo \texttt{idCliente} DEVE esistere in cliente. Altrimenti il DBMS rifiuta l'inserimento.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=SQL, caption=Azioni su integrità referenziale]
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+        ON DELETE CASCADE      -- Elimina ordini se cliente è eliminato
+        ON UPDATE CASCADE      -- Aggiorna idCliente se cambia in cliente
+);
+\end{lstlisting}
+
+\section{Trasformazione da ER a Modello Relazionale}
+
+\subsection{Regola 1: Entità singole}
+Ogni entità diventa una tabella. Gli attributi della tabella sono i rispettivi attributi dell'entità. La chiave primaria dell'entità diventa chiave primaria della tabella.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Entità Cliente]
+\textbf{ER}: Entità Cliente con attributi (idCliente, nome, cognome, email)
+
+\textbf{Relazionale}:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE
+);
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Regola 2: Relazione 1:N}
+Il lato N contiene una chiave esterna che referenzia la chiave primaria del lato 1.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Cliente (1) - Ordine (N)}
+\textbf{ER}: Cliente effettua Ordine (1:N)
+
+\textbf{Relazionale}:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY,
+    dataOrdine DATE NOT NULL,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Regola 3: Relazione 1:1}
+Esiste una chiave esterna in una delle due tabelle. Generalmente nel lato con partecipazione opzionale.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Dipendente (1) - Ufficio (1)]
+\textbf{ER}: Dipendente lavora in Ufficio (1:1)
+
+\textbf{Relazionale}:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE dipendente (
+    idDipendente INT PRIMARY KEY,
+    nome VARCHAR(100),
+    idUfficio INT UNIQUE,
+    FOREIGN KEY (idUfficio) REFERENCES ufficio(idUfficio)
+);
+
+CREATE TABLE ufficio (
+    idUfficio INT PRIMARY KEY,
+    posizione VARCHAR(100)
+);
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Regola 4: Relazione N:M}
+Si crea una \textbf{tabella di giunzione} (o tabella di associazione) con chiavi esterne che referenziano entrambe le entità. La chiave primaria è la combinazione delle due chiavi esterne.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Studente (N) - Corso (M)]
+\textbf{ER}: Studente segue Corso (N:M)
+
+\textbf{Relazionale}:
+\begin{lstlisting}[language=SQL]
+CREATE TABLE studente (
+    idStudente INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+CREATE TABLE corso (
+    idCorso INT PRIMARY KEY,
+    titolo VARCHAR(100)
+);
+
+-- Tabella di giunzione
+CREATE TABLE iscrizione (
+    idStudente INT NOT NULL,
+    idCorso INT NOT NULL,
+    dataIscrizione DATE DEFAULT CURDATE(),
+    PRIMARY KEY (idStudente, idCorso),
+    FOREIGN KEY (idStudente) REFERENCES studente(idStudente),
+    FOREIGN KEY (idCorso) REFERENCES corso(idCorso)
+);
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Schema Logico Completo: E-commerce}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=0.8, node distance=4cm]
+        % Cliente
+        \node[draw, rectangle, minimum width=3cm, minimum height=2cm] (cliente) {
+            \textbf{cliente}\\
+            \hline
+            idCliente (PK)\\
+            nome\\
+            cognome\\
+            email (UNIQUE)
+        };
+
+        % Ordine
+        \node[draw, rectangle, right=of cliente, minimum width=3cm, minimum height=2cm] (ordine) {
+            \textbf{ordine}\\
+            \hline
+            idOrdine (PK)\\
+            dataOrdine\\
+            totale\\
+            idCliente (FK)
+        };
+
+        % Prodotto
+        \node[draw, rectangle, below=of ordine, minimum width=3cm, minimum height=2cm] (prodotto) {
+            \textbf{prodotto}\\
+            \hline
+            idProdotto (PK)\\
+            nome\\
+            prezzo\\
+            categoria
+        };
+
+        % Ordine_Prodotto
+        \node[draw, rectangle, left=of prodotto, minimum width=3cm, minimum height=2cm] (ord_prod) {
+            \textbf{ordine\_prodotto}\\
+            \hline
+            idOrdine (FK, PK)\\
+            idProdotto (FK, PK)\\
+            quantita
+        };
+
+        % Relazioni
+        \draw[->] (cliente.east) -- (ordine.west);
+        \draw[->] (ordine.south) -- (ord_prod.north);
+        \draw[->] (prodotto.west) -- (ord_prod.east);
+    \end{tikzpicture}
+    \caption{Schema relazionale per un e-commerce (PK=Primary Key, FK=Foreign Key)}
+\end{figure}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item Una \textbf{relazione} è una tabella con attributi e tuple
+    \item La \textbf{chiave primaria} identifica univocamente ogni tupla
+    \item La \textbf{chiave esterna} collega tabelle diverse mantenendo l'integrità referenziale
+    \item I \textbf{vincoli di integrità} garantiscono la coerenza dei dati
+    \item Le relazioni N:M richiedono una \textbf{tabella di giunzione}
+    \item Ogni diagramma ER viene tradotto sistematicamente in tabelle relazionali
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Crea lo schema logico (CREATE TABLE) per il diagramma ER della biblioteca dell'esercizio del capitolo precedente.
+
+    \item Quali azioni dovrebbero accadere se un cliente viene eliminato da una tabella cliente e ha più ordini? Spiega le opzioni ON DELETE.
+
+    \item Progetta uno schema relazionale per un sistema ospedaliero con: Pazienti, Medici, Appuntamenti, Ospedali, Reparti. Includi vincoli e cardinalità.
+
+    \item Identifica chiavi primarie, chiavi candidate e chiavi esterne nel seguente DDL:
+    \begin{lstlisting}[language=SQL]
+CREATE TABLE impiegato (
+    matricola INT PRIMARY KEY,
+    nome VARCHAR(100),
+    dipartimento VARCHAR(50),
+    stipendio DECIMAL(10, 2)
+);
+CREATE TABLE progetto (
+    codice INT PRIMARY KEY,
+    titolo VARCHAR(100),
+    responsabile INT,
+    FOREIGN KEY (responsabile) REFERENCES impiegato(matricola)
+);
+    \end{lstlisting}
+
+    \item Trasforma il seguente diagramma ER in schema relazionale: Azienda ha Sedi. Una Sede ha più Dipendenti. Un Dipendente appartiene a una Sede. Un Dipendente gestisce Progetti. Un Progetto è gestito da un Dipendente. Un Progetto ha più Risorse. Una Risorsa è utilizzata da più Progetti.
+\end{enumerate}

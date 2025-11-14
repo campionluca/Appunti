@@ -1,0 +1,392 @@
+\chapter{SQL DDL - Definizione dei Dati}
+
+\section*{Introduzione}
+DDL (Data Definition Language) è il linguaggio SQL per definire la struttura del database. Consente di creare, modificare e eliminare tabelle, indici, viste e altri oggetti dello schema. Questo capitolo presenta i principali comandi DDL: CREATE, ALTER, DROP.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Creare tabelle con tipi di dati appropriati
+    \item Definire vincoli (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, DEFAULT)
+    \item Modificare strutture di tabelle esistenti (ALTER TABLE)
+    \item Eliminare tabelle, colonne, indici (DROP)
+    \item Creare e gestire indici
+    \item Definire chiavi esterne con azioni ON DELETE e ON UPDATE
+    \item Usare tipi di dati appropriati per i dati
+\end{itemize}
+
+\section{Tipi di Dati in MySQL}
+
+\subsection{Tipi numerici}
+
+\begin{description}
+    \item[\textbf{INT}] Numero intero a 4 byte. Range: -2.147.483.648 a 2.147.483.647
+    \item[\textbf{SMALLINT}] Numero intero a 2 byte. Range: -32.768 a 32.767
+    \item[\textbf{BIGINT}] Numero intero a 8 byte. Per numeri molto grandi
+    \item[\textbf{DECIMAL(p,s)}] Numero decimale con precisione (p) e scala (s). Es: DECIMAL(10,2)
+    \item[\textbf{FLOAT, DOUBLE}] Numeri decimali in virgola mobile. Meno precisi di DECIMAL
+    \item[\textbf{TINYINT}] Numero intero a 1 byte. Range: -128 a 127 (o 0-255 se UNSIGNED)
+\end{description}
+
+\subsection{Tipi stringa}
+
+\begin{description}
+    \item[\textbf{CHAR(n)}] Stringa a lunghezza fissa di n caratteri. Spreca spazio se la stringa è più breve
+    \item[\textbf{VARCHAR(n)}] Stringa a lunghezza variabile fino a n caratteri. Efficiente
+    \item[\textbf{TEXT}] Stringa di lunghezza variabile lunga (fino a 4 GB)
+    \item[\textbf{BLOB}] Dati binari (immagini, file)
+    \item[\textbf{ENUM}] Stringa da un set predefinito. Es: ENUM('Attivo', 'Inattivo')
+\end{description}
+
+\subsection{Tipi data/ora}
+
+\begin{description}
+    \item[\textbf{DATE}] Data in formato YYYY-MM-DD
+    \item[\textbf{TIME}] Ora in formato HH:MM:SS
+    \item[\textbf{DATETIME}] Data e ora in formato YYYY-MM-DD HH:MM:SS
+    \item[\textbf{TIMESTAMP}] Data e ora con timestamp Unix. Auto-aggiornamento
+    \item[\textbf{YEAR}] Anno in formato YYYY
+\end{description}
+
+\section{CREATE TABLE}
+
+Il comando CREATE TABLE crea una nuova tabella con i relativi attributi e vincoli.
+
+\subsection{Sintassi base}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi CREATE TABLE]
+CREATE TABLE nome_tabella (
+    nome_attributo tipo [vincoli],
+    nome_attributo tipo [vincoli],
+    ...
+);
+\end{lstlisting}
+
+\subsection{Esempio semplice}
+
+\begin{lstlisting}[language=SQL, caption=Creazione tabella Cliente]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    dataRegistrazione DATE DEFAULT CURDATE(),
+    saldo DECIMAL(10, 2) DEFAULT 0.00
+);
+\end{lstlisting}
+
+\subsection{Vincoli}
+
+\subsubsection{PRIMARY KEY}
+Identifica univocamente ogni riga. Non può essere NULL e deve essere unico.
+
+\begin{lstlisting}[language=SQL, caption=PRIMARY KEY]
+CREATE TABLE studente (
+    matricola INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+-- O alternativamente
+CREATE TABLE studente (
+    matricola INT,
+    nome VARCHAR(100),
+    PRIMARY KEY (matricola)
+);
+
+-- Chiave primaria composta
+CREATE TABLE iscrizione (
+    idStudente INT,
+    idCorso INT,
+    voto INT,
+    PRIMARY KEY (idStudente, idCorso)
+);
+\end{lstlisting}
+
+\subsubsection{FOREIGN KEY}
+Referenzia la chiave primaria di un'altra tabella. Garantisce l'integrità referenziale.
+
+\begin{lstlisting}[language=SQL, caption=FOREIGN KEY]
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY AUTO_INCREMENT,
+    dataOrdine DATE NOT NULL,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+
+-- Con azioni su DELETE e UPDATE
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY AUTO_INCREMENT,
+    dataOrdine DATE NOT NULL,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+        ON DELETE CASCADE        -- Elimina ordini se cliente è eliminato
+        ON UPDATE CASCADE        -- Aggiorna idCliente se cambia
+);
+\end{lstlisting}
+
+\subsubsection{UNIQUE}
+Garantisce che i valori di un attributo siano unici (ma possono essere NULL).
+
+\begin{lstlisting}[language=SQL, caption=Vincolo UNIQUE]
+CREATE TABLE utente (
+    idUtente INT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+\end{lstlisting}
+
+\subsubsection{NOT NULL}
+L'attributo deve avere sempre un valore.
+
+\begin{lstlisting}[language=SQL, caption=Vincolo NOT NULL]
+CREATE TABLE prodotto (
+    idProdotto INT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    descrizione TEXT,           -- Può essere NULL
+    prezzo DECIMAL(10, 2) NOT NULL
+);
+\end{lstlisting}
+
+\subsubsection{CHECK}
+Garantisce che i valori soddisfino una condizione.
+
+\begin{lstlisting}[language=SQL, caption=Vincolo CHECK]
+CREATE TABLE conto (
+    idConto INT PRIMARY KEY,
+    saldo DECIMAL(10, 2),
+    -- Saldo non può essere negativo
+    CHECK (saldo >= 0)
+);
+
+CREATE TABLE corso (
+    idCorso INT PRIMARY KEY,
+    nome VARCHAR(100),
+    maxStudenti INT,
+    minStudenti INT,
+    -- Minimo <= Massimo
+    CHECK (minStudenti <= maxStudenti)
+);
+\end{lstlisting}
+
+\subsubsection{DEFAULT}
+Assegna un valore di default se non specificato.
+
+\begin{lstlisting}[language=SQL, caption=Vincolo DEFAULT]
+CREATE TABLE articolo (
+    idArticolo INT PRIMARY KEY,
+    titolo VARCHAR(200) NOT NULL,
+    stato VARCHAR(20) DEFAULT 'Bozza',
+    dataCreazione DATETIME DEFAULT CURRENT_TIMESTAMP,
+    visualizzazioni INT DEFAULT 0
+);
+\end{lstlisting}
+
+\subsubsection{AUTO_INCREMENT}
+Genera automaticamente valori incrementali per una colonna (tipicamente chiave primaria).
+
+\begin{lstlisting}[language=SQL, caption=AUTO_INCREMENT]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100),
+    email VARCHAR(100)
+);
+-- Primo cliente inserito avrà idCliente=1, secondo idCliente=2, etc.
+\end{lstlisting}
+
+\section{ALTER TABLE}
+
+Il comando ALTER TABLE modifica la struttura di una tabella esistente.
+
+\subsection{Aggiungere una colonna}
+
+\begin{lstlisting}[language=SQL, caption=Aggiungere una colonna]
+ALTER TABLE cliente ADD COLUMN telefono VARCHAR(20);
+
+-- Aggiungere con vincoli
+ALTER TABLE cliente ADD COLUMN dataNascita DATE DEFAULT NULL;
+
+-- Aggiungere in posizione specifica
+ALTER TABLE cliente ADD COLUMN indirizzo VARCHAR(200) AFTER nome;
+\end{lstlisting}
+
+\subsection{Modificare una colonna}
+
+\begin{lstlisting}[language=SQL, caption=Modificare una colonna]
+-- Cambiare tipo di dato
+ALTER TABLE cliente MODIFY COLUMN telefono VARCHAR(50);
+
+-- Cambiare nome della colonna
+ALTER TABLE cliente CHANGE COLUMN telefono cellulare VARCHAR(20);
+
+-- Aggiungere vincolo NOT NULL
+ALTER TABLE cliente MODIFY COLUMN email VARCHAR(100) NOT NULL;
+\end{lstlisting}
+
+\subsection{Eliminare una colonna}
+
+\begin{lstlisting}[language=SQL, caption=Eliminare una colonna]
+ALTER TABLE cliente DROP COLUMN fax;
+\end{lstlisting}
+
+\subsection{Aggiungere vincoli}
+
+\begin{lstlisting}[language=SQL, caption=Aggiungere vincoli]
+-- Aggiungere PRIMARY KEY
+ALTER TABLE cliente ADD PRIMARY KEY (idCliente);
+
+-- Aggiungere UNIQUE
+ALTER TABLE cliente ADD CONSTRAINT uq_email UNIQUE (email);
+
+-- Aggiungere CHECK
+ALTER TABLE cliente ADD CONSTRAINT ck_eta CHECK (eta >= 18);
+
+-- Aggiungere FOREIGN KEY
+ALTER TABLE ordine ADD CONSTRAINT fk_cliente
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente);
+\end{lstlisting}
+
+\subsection{Rinominare una tabella}
+
+\begin{lstlisting}[language=SQL, caption=Rinominare una tabella]
+ALTER TABLE cliente RENAME TO customer;
+\end{lstlisting}
+
+\section{DROP}
+
+Il comando DROP elimina oggetti del database.
+
+\subsection{DROP TABLE}
+
+\begin{lstlisting}[language=SQL, caption=Eliminare una tabella]
+-- Elimina la tabella cliente
+DROP TABLE cliente;
+
+-- Elimina solo se esiste (evita errore se non esiste)
+DROP TABLE IF EXISTS cliente;
+
+-- Eliminare più tabelle
+DROP TABLE ordine, prodotto, cliente;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: DROP è irreversibile]
+DROP TABLE elimina completamente la tabella e tutti i dati. Non c'è possibilità di recuperarli (a meno che non sia stato fatto un backup). Usa sempre IF EXISTS per sicurezza.
+\end{tcolorbox}
+
+\subsection{DROP COLUMN}
+
+\begin{lstlisting}[language=SQL, caption=Eliminare una colonna]
+ALTER TABLE cliente DROP COLUMN numeroFax;
+\end{lstlisting}
+
+\subsection{DROP INDEX}
+
+\begin{lstlisting}[language=SQL, caption=Eliminare un indice]
+DROP INDEX idx_email ON cliente;
+\end{lstlisting}
+
+\section{CREATE INDEX}
+
+\subsection{Creare indici}
+
+\begin{lstlisting}[language=SQL, caption=Creare indici]
+-- Indice semplice
+CREATE INDEX idx_email ON cliente(email);
+
+-- Indice composito (su più colonne)
+CREATE INDEX idx_cliente_data ON ordine(idCliente, dataOrdine);
+
+-- Indice UNIQUE
+CREATE UNIQUE INDEX idx_codice_prodotto ON prodotto(codice);
+\end{lstlisting}
+
+\subsection{Eliminare indici}
+
+\begin{lstlisting}[language=SQL, caption=Eliminare indici]
+DROP INDEX idx_email ON cliente;
+\end{lstlisting}
+
+\section{Esempio Completo: Schema Biblioteca}
+
+\begin{lstlisting}[language=SQL, caption=Schema completo per una biblioteca]
+-- Tabella Autori
+CREATE TABLE autore (
+    idAutore INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    nazionalita VARCHAR(50),
+    dataAnniversario DATE
+);
+
+-- Tabella Libri
+CREATE TABLE libro (
+    idLibro INT PRIMARY KEY AUTO_INCREMENT,
+    titolo VARCHAR(200) NOT NULL,
+    idAutore INT NOT NULL,
+    anno_pubblicazione INT CHECK (anno_pubblicazione > 1000),
+    genere VARCHAR(50),
+    prezzo DECIMAL(10, 2) DEFAULT 0,
+    quantita_disponibile INT DEFAULT 0,
+    FOREIGN KEY (idAutore) REFERENCES autore(idAutore)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+);
+
+-- Tabella Membri
+CREATE TABLE membro (
+    idMembro INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    dataIscrizione DATE DEFAULT CURDATE(),
+    stato ENUM('Attivo', 'Sospeso') DEFAULT 'Attivo'
+);
+
+-- Tabella Prestiti
+CREATE TABLE prestito (
+    idPrestito INT PRIMARY KEY AUTO_INCREMENT,
+    idLibro INT NOT NULL,
+    idMembro INT NOT NULL,
+    dataPrestito DATE DEFAULT CURDATE(),
+    dataReso DATE,
+    FOREIGN KEY (idLibro) REFERENCES libro(idLibro),
+    FOREIGN KEY (idMembro) REFERENCES membro(idMembro),
+    CHECK (dataReso IS NULL OR dataReso >= dataPrestito)
+);
+
+-- Creare indici per query frequenti
+CREATE INDEX idx_libro_autore ON libro(idAutore);
+CREATE INDEX idx_prestito_libro ON prestito(idLibro);
+CREATE INDEX idx_prestito_membro ON prestito(idMembro);
+CREATE INDEX idx_membro_email ON membro(email);
+\end{lstlisting}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item \textbf{CREATE TABLE} definisce la struttura della tabella con attributi e vincoli
+    \item I \textbf{vincoli} (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL, DEFAULT) garantiscono integrità
+    \item \textbf{ALTER TABLE} modifica tabelle esistenti (aggiunta, modifica, eliminazione colonne)
+    \item \textbf{DROP} elimina tabelle, colonne, indici (irreversibile!)
+    \item Scegliere \textbf{tipi di dati appropriati} ottimizza spazio e velocità
+    \item \textbf{Indici} accelerano ricerche e devono essere creati strategicamente
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Crea una tabella \texttt{dipendente} con: idDipendente (INT, chiave primaria, auto-incremento), nome (VARCHAR), cognome (VARCHAR), stipendio (DECIMAL, >= 0), dipartimento (VARCHAR, default 'Non assegnato'), dataAssunzione (DATE, default data odierna).
+
+    \item Modifica la tabella precedente aggiungendo una colonna \texttt{email} (VARCHAR, UNIQUE, NOT NULL).
+
+    \item Crea una tabella \texttt{reparto} e un'associazione con \texttt{dipendente} tramite FOREIGN KEY. La cancellazione di un reparto non deve eliminare i dipendenti.
+
+    \item Progetta l'intero schema DDL per un sistema ospedaliero con: Ospedali, Reparti, Pazienti, Medici, Appuntamenti, con tutti i vincoli appropriati.
+
+    \item Crea indici appropriati per le seguenti query frequenti:
+    \begin{lstlisting}[language=SQL]
+SELECT * FROM ordine WHERE idCliente = ? AND stato = 'Spedito';
+SELECT * FROM prodotto WHERE categoria = ?;
+SELECT * FROM cliente WHERE email = ?;
+    \end{lstlisting}
+\end{enumerate}

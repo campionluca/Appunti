@@ -1,0 +1,281 @@
+\chapter{Normalizzazione del Database}
+
+\section*{Introduzione}
+La normalizzazione è un processo sistematico per organizzare i dati eliminando ridondanze e anomalie. Attraverso forme normali progressive (1NF, 2NF, 3NF, BCNF), garantiamo un design del database efficiente, coerente e facile da mantenere.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere il concetto di dipendenza funzionale
+    \item Applicare le regole della prima forma normale (1NF)
+    \item Applicare le regole della seconda forma normale (2NF)
+    \item Applicare le regole della terza forma normale (3NF)
+    \item Comprendere la forma normale di Boyce-Codd (BCNF)
+    \item Identificare e risolvere anomalie di inserimento, aggiornamento e cancellazione
+\end{itemize}
+
+\section{Dipendenze Funzionali}
+
+\subsection{Definizione}
+Una \textbf{dipendenza funzionale} (DF) X -> Y fra due insiemi di attributi X e Y di una relazione R significa che, se due tuple hanno gli stessi valori per gli attributi in X, allora devono avere gli stessi valori per gli attributi in Y.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Dipendenza funzionale]
+Relazione: Studente(idStudente, nome, email, idCorso, nomeCorso)
+
+Dipendenze funzionali:
+\begin{itemize}
+    \item \texttt{idStudente} -> \texttt{nome, email}: dato uno studente, c'è un solo nome e email
+    \item \texttt{idCorso} -> \texttt{nomeCorso}: dato un corso, c'è un solo nome
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Chiave primaria e dipendenze}
+Se un attributo è parte della chiave primaria, determina funzionalmente tutti gli altri attributi della relazione.
+
+\section{Anomalie nei Database non normalizzati}
+
+\subsection{Anomalia di inserimento}
+Non è possibile inserire dati fino a quando non sono disponibili tutti i dati della chiave primaria.
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Anomalia di inserimento]
+Tabella: Corso(idCorso, nomeCorsso, idDocente, nomeDocente)
+
+Non posso inserire un docente che non insegna ancora nessun corso perché \texttt{idCorso} è parte della chiave primaria.
+\end{tcolorbox}
+
+\subsection{Anomalia di aggiornamento}
+Aggiornare un valore può richiedere di aggiornare più tuple, rischiando inconsistenze.
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Anomalia di aggiornamento]
+Tabella: Studente(idStudente, nome, idFacoltà, nomeFacoltà)
+
+Se cambio il nome della Facoltà da ``Ingegneria'' a ``Ingegneria e Architettura'', devo aggiornare tutte le righe degli studenti di quella facoltà. Se dimentico una riga, il database diventa inconsistente.
+\end{tcolorbox}
+
+\subsection{Anomalia di cancellazione}
+Cancellare un dato può comportare la perdita di informazioni non correlate.
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Anomalia di cancellazione]
+Tabella: Fornitore_Prodotto(idFornitore, nomeFornitore, idProdotto, nomeProdotto)
+
+Se cancello l'ultimo prodotto fornito da un fornitore, perdo anche i dati del fornitore dal database.
+\end{tcolorbox}
+
+\section{Prima Forma Normale (1NF)}
+
+La forma normale più basilare: \textbf{una relazione è in 1NF se tutti gli attributi contengono solo valori atomici} (non divisibili).
+
+\subsection{Requisiti}
+\begin{itemize}
+    \item Nessun attributo può contenere liste o insiemi di valori
+    \item Nessun attributo ripetuto
+    \item Ogni riga deve avere lo stesso numero di colonne
+    \item Nessun gruppo ripetuto
+\end{itemize}
+
+\subsection{Esempio di violazione 1NF}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Non è in 1NF}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{idStudente} & \textbf{nome} & \textbf{corsi} \\
+\hline
+1 & Mario & Matematica, Fisica, Chimica \\
+2 & Luigi & Matematica, Biologia \\
+\hline
+\end{tabular}
+
+L'attributo \texttt{corsi} contiene valori non atomici (liste).
+\end{center}
+\end{tcolorbox}
+
+\subsection{Correzione: Applicare 1NF}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Esempio: In 1NF}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{idStudente} & \textbf{nome} & \textbf{corso} \\
+\hline
+1 & Mario & Matematica \\
+1 & Mario & Fisica \\
+1 & Mario & Chimica \\
+2 & Luigi & Matematica \\
+2 & Luigi & Biologia \\
+\hline
+\end{tabular}
+
+Oppure creare una tabella separata per gli inscritti ai corsi (relazione N:M).
+\end{center}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=SQL, caption=DDL in 1NF con tabella di giunzione]
+CREATE TABLE studente (
+    idStudente INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+CREATE TABLE corso (
+    idCorso INT PRIMARY KEY,
+    nomeCors VARCHAR(100)
+);
+
+CREATE TABLE iscrizione (
+    idStudente INT NOT NULL,
+    idCorso INT NOT NULL,
+    PRIMARY KEY (idStudente, idCorso),
+    FOREIGN KEY (idStudente) REFERENCES studente(idStudente),
+    FOREIGN KEY (idCorso) REFERENCES corso(idCorso)
+);
+\end{lstlisting}
+
+\section{Seconda Forma Normale (2NF)}
+
+Una relazione è in 2NF se:
+\begin{enumerate}
+    \item È in 1NF
+    \item \textbf{Ogni attributo non-chiave è dipendente dalla chiave primaria completa}, non solo da parte di essa.
+\end{enumerate}
+
+\textbf{Problema}: Dipendenza parziale. Un attributo non-chiave dipende solo da una parte della chiave primaria.
+
+\subsection{Esempio di violazione 2NF}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Non è in 2NF}
+Tabella: Iscrizione(idStudente, idCorso, nomeCors, voto)
+
+\textbf{Chiave primaria}: (idStudente, idCorso)
+
+\textbf{Problema}: \texttt{nomeCors} dipende solo da \texttt{idCorso}, non dalla chiave completa. Questa è una dipendenza parziale.
+\end{tcolorbox}
+
+\subsection{Correzione: Applicare 2NF}
+
+\begin{lstlisting}[language=SQL, caption=DDL in 2NF]
+CREATE TABLE studente (
+    idStudente INT PRIMARY KEY,
+    nome VARCHAR(100)
+);
+
+CREATE TABLE corso (
+    idCorso INT PRIMARY KEY,
+    nomeCors VARCHAR(100)
+);
+
+-- Ora in 2NF: nomeCors è in tabella corso, non in iscrizione
+CREATE TABLE iscrizione (
+    idStudente INT NOT NULL,
+    idCorso INT NOT NULL,
+    voto INT,
+    PRIMARY KEY (idStudente, idCorso),
+    FOREIGN KEY (idStudente) REFERENCES studente(idStudente),
+    FOREIGN KEY (idCorso) REFERENCES corso(idCorso)
+);
+\end{lstlisting}
+
+\section{Terza Forma Normale (3NF)}
+
+Una relazione è in 3NF se:
+\begin{enumerate}
+    \item È in 2NF
+    \item \textbf{Nessun attributo non-chiave dipende da un altro attributo non-chiave}.
+\end{enumerate}
+
+\textbf{Problema}: Dipendenza transitiva. Un attributo non-chiave dipende funzionalmente da un altro attributo non-chiave.
+
+\subsection{Esempio di violazione 3NF}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: Non è in 3NF}
+Tabella: Ordine(idOrdine, dataOrdine, idCliente, nomeCliente, indirizzo)
+
+\textbf{Dipendenze funzionali}:
+\begin{itemize}
+    \item \texttt{idOrdine} -> \texttt{dataOrdine, idCliente, nomeCliente, indirizzo}
+    \item \texttt{idCliente} -> \texttt{nomeCliente, indirizzo} (dipendenza transitiva!)
+\end{itemize}
+
+\texttt{nomeCliente} e \texttt{indirizzo} dipendono da \texttt{idCliente}, non direttamente da \texttt{idOrdine}.
+\end{tcolorbox}
+
+\subsection{Correzione: Applicare 3NF}
+
+\begin{lstlisting}[language=SQL, caption=DDL in 3NF]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY,
+    nomeCliente VARCHAR(100),
+    indirizzo VARCHAR(200)
+);
+
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY,
+    dataOrdine DATE,
+    idCliente INT NOT NULL,
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+\end{lstlisting}
+
+\section{Forma Normale di Boyce-Codd (BCNF)}
+
+Una relazione è in BCNF se:
+\begin{itemize}
+    \item Per ogni dipendenza funzionale X -> Y, X è una chiave candidata.
+\end{itemize}
+
+BCNF è una forma più stringente di 3NF. La maggior parte dei database in 3NF è già in BCNF.
+
+\subsection{Esempio di violazione BCNF}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempio: In 3NF ma non in BCNF}
+Tabella: Professore_Corso(idProfessore, idCorso, orario)
+
+\textbf{Chiave primaria}: (idProfessore, idCorso)
+
+\textbf{Dipendenza funzionale}: (idProfessore, idCorso) -> orario (OK)
+
+Ma se esiste anche: idCorso -> orario (tutti i corsi hanno un orario fisso)
+
+Allora idCorso determina orario, ma idCorso non è una chiave candidata. Violazione BCNF!
+\end{tcolorbox}
+
+\section{Procedura di Normalizzazione}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Passi di normalizzazione]
+\begin{enumerate}
+    \item \textbf{Identifica dipendenze funzionali}: Quali attributi determinano quali altri.
+    \item \textbf{Applica 1NF}: Assicura valori atomici.
+    \item \textbf{Applica 2NF}: Elimina dipendenze parziali.
+    \item \textbf{Applica 3NF}: Elimina dipendenze transitive.
+    \item \textbf{Applica BCNF}: Se necessario, per relazioni più complesse.
+\end{enumerate}
+\end{tcolorbox}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item Una \textbf{dipendenza funzionale} X -> Y significa che X determina Y
+    \item La \textbf{1NF} richiede valori atomici (no liste)
+    \item La \textbf{2NF} elimina dipendenze parziali dalla chiave primaria
+    \item La \textbf{3NF} elimina dipendenze transitive tra attributi non-chiave
+    \item La \textbf{BCNF} è una versione più stringente di 3NF
+    \item La normalizzazione riduce ridondanze e anomalie
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Identifica tutte le dipendenze funzionali nella seguente tabella:
+    Libro(idLibro, titolo, autore, idAutore, nazionaleAutore, genere, prezzo)
+
+    \item La seguente tabella è in 1NF? Se no, normalizza:
+    Impiegato(matricola, nome, skills)  [skills contiene ``Java, Python, SQL'']
+
+    \item La seguente tabella è in 2NF? Se no, normalizza:
+    Voto(idStudente, nomeStudente, idCorso, nomeCorso, voto)
+
+    \item La seguente tabella è in 3NF? Se no, normalizza:
+    Ospedale(idOspedale, nomeOspedale, città, idRepartimento, nomeRepartimento, idMedico, nomeMedico)
+
+    \item Progetta uno schema completamente normalizzato (3NF) per un sistema di prenotazioni alberghiere con: Hotel, Stanze, Clienti, Prenotazioni. Includi vincoli appropriati.
+\end{enumerate}

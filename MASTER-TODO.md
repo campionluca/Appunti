@@ -17,11 +17,12 @@
 | **Java (Quarta)** | 10+App | ✅ | Build warnings | ✅ 18 | MEDIA | 2025-11-30 |
 | **PHP** | 7+ | ✅ | In sviluppo | ✅ 15 | MEDIA | 2025-11-28 |
 | **Python (Quinta)** | 18+App | ✅ | In progresso | ✅ 41 | ALTA | 2025-11-20 |
+| **Database** | 13+App | ⏳ | Nuovo corso | ⏳ 0 | MEDIA | 2025-12-05 |
 
-**Legenda**: ✅=Completo | 🟡=In progresso | ❌=Assente | ⚠️=Attenzione
+**Legenda**: ✅=Completo | 🟡=In progresso | ❌=Assente | ⏳=In creazione | ⚠️=Attenzione
 
 ### 🤖 Descrittori AI - Status Generale
-**Totale descrittori generati**: 104 (tutti i 5 corsi)
+**Totale descrittori generati**: 104 (5 corsi completati, Database in pianificazione)
 - **C**: 15 descriptors (Language Basics, Control, Pointers, Functions)
 - **HTMLCSS**: 15 descriptors (HTML, CSS, SCSS, JavaScript)
 - **Java**: 18 descriptors (OOP, Design Patterns, GUI, Lambda)
@@ -205,7 +206,17 @@
 **Tempo totale**: ~8 ore di generazione automatizzata
 **Qualità**: Alta (esempi commentati, best practices, common mistakes, learning objectives)
 
+### 📚 Nuovo Corso Database (14 Novembre)
+✅ **[DB-SETUP-COMPLETE]** Creato nuovo corso completo Database e SQL
+  - 13 capitoli + appendice + bibliografia (16 file .tex)
+  - 6,000+ righe LaTeX, 78+ esercizi, 150+ query SQL
+  - Argomenti: DBMS, modelli ER/relazionale/fisico, normalizzazione, SQL completo
+  - Documentazione: README.md, TODO.md, PIANO_SVILUPPO.md
+  - Stato: ⏳ Da compilare PDF, da generare descrittori AI (20-25 pianificati)
+  - Deadline: 2025-12-05
+
 ### Cronologia Recente
+- 2025-11-14: **📚 Creato nuovo corso Database** (13 capitoli, 6K righe, 78 esercizi, SQL completo)
 - 2025-11-14: **🤖 Descrittori AI completati per tutti i 5 corsi** (104 totali: C=15, HTMLCSS=15, Java=18, PHP=15, Python=41)
 - 2025-11-14: Consolidamento post-execution: Python PDF ✅, Java CONTENT-01 ✅, status aggiornati
 - 2025-11-14: Creato README.md principale repository con panoramica completa

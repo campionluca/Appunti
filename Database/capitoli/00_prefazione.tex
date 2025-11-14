@@ -1,0 +1,123 @@
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{A chi si rivolge questo manuale}
+
+Questi appunti sono stati pensati per studenti di istituti tecnici e professionali che si avvicinano per la prima volta al mondo dei database e del linguaggio SQL. Il percorso è strutturato per accompagnare progressivamente dalla teoria alla pratica, dalla progettazione concettuale all'implementazione fisica di un database.
+
+\section*{Struttura del corso}
+
+Il corso è organizzato in 13 capitoli che coprono l'intero ciclo di vita di un database:
+
+\textbf{Parte I - Teoria e Modellazione} (Capitoli 1-5)
+\begin{itemize}
+    \item Introduzione ai DBMS e ai sistemi informativi
+    \item Modellazione concettuale con diagrammi Entity-Relationship
+    \item Modello logico relazionale e algebra relazionale
+    \item Normalizzazione per garantire integrità dei dati
+    \item Progettazione fisica e ottimizzazione
+\end{itemize}
+
+\textbf{Parte II - Linguaggio SQL} (Capitoli 6-12)
+\begin{itemize}
+    \item DDL: creazione e gestione strutture dati
+    \item DML: interrogazione e manipolazione dati
+    \item Query complesse con join e subquery
+    \item Funzioni aggregate e raggruppamenti
+    \item Gestione transazioni e concorrenza
+\end{itemize}
+
+\textbf{Parte III - Pratica} (Capitolo 13 + Appendice)
+\begin{itemize}
+    \item Esercizi completi di progettazione e implementazione
+    \item Casi di studio reali
+    \item Soluzioni commentate
+\end{itemize}
+
+\section*{Prerequisiti}
+
+Per affrontare questo corso è consigliabile avere:
+\begin{itemize}
+    \item Conoscenze base di informatica e algoritmi
+    \item Familiarità con la rappresentazione dei dati
+    \item Capacità di ragionamento logico e problem solving
+    \item (Opzionale) Conoscenza di un linguaggio di programmazione
+\end{itemize}
+
+\section*{Strumenti necessari}
+
+\textbf{Software consigliato}:
+\begin{itemize}
+    \item \textbf{MySQL/MariaDB}: DBMS relazionale open source
+    \item \textbf{MySQL Workbench}: Tool grafico per progettazione e query
+    \item \textbf{phpMyAdmin}: Interfaccia web per gestione database
+    \item \textbf{DBeaver}: Client universale multi-database
+    \item \textbf{SQLite}: Database embedded per esercitazioni rapide
+\end{itemize}
+
+\textbf{Tool di modellazione}:
+\begin{itemize}
+    \item \textbf{draw.io}: Diagrammi ER online gratuiti
+    \item \textbf{MySQL Workbench}: Modellazione integrata
+    \item \textbf{Lucidchart}: Diagrammi professionali
+\end{itemize}
+
+\section*{Come studiare}
+
+Per ottenere il massimo da questi appunti:
+
+\begin{enumerate}
+    \item \textbf{Leggi attentamente la teoria}: Ogni concetto è spiegato con esempi e diagrammi
+    \item \textbf{Disegna i diagrammi}: La modellazione si impara praticando
+    \item \textbf{Scrivi le query SQL}: Digita personalmente ogni query, non copiare
+    \item \textbf{Testa sul database}: Crea database di prova e verifica i risultati
+    \item \textbf{Risolvi gli esercizi}: Prova autonomamente prima di vedere le soluzioni
+    \item \textbf{Progetta casi reali}: Applica i concetti a scenari del mondo reale
+\end{enumerate}
+
+\begin{nota}
+Questo manuale segue lo standard \textbf{SQL ANSI/ISO} con focus su \textbf{MySQL} per gli esempi pratici. La maggior parte delle query funziona su tutti i DBMS relazionali (PostgreSQL, SQL Server, Oracle) con minime modifiche.
+\end{nota}
+
+\section*{Convenzioni tipografiche}
+
+Nel testo vengono utilizzate le seguenti convenzioni:
+
+\begin{itemize}
+    \item \texttt{Codice SQL}: Comandi e query in carattere monospace
+    \item \textbf{Parole chiave SQL}: In grassetto nelle spiegazioni (SELECT, WHERE)
+    \item \textit{Nomi di tabelle/attributi}: In corsivo per riferimenti (Studente, nome)
+    \item Box colorati: Attenzioni, Note, Errori Comuni, Esempi
+\end{itemize}
+
+\section*{Sito web e risorse}
+
+Materiale aggiuntivo disponibile su:
+\begin{itemize}
+    \item Repository GitHub: \url{https://github.com/campionluca/Appunti}
+    \item Database di esempio scaricabili
+    \item Script SQL per esercitazioni
+    \item Soluzioni interattive
+\end{itemize}
+
+\section*{Ringraziamenti}
+
+Si ringrazia l'Istituto Tecnico Antonio Scarpa per il supporto nella realizzazione di questo materiale didattico.
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Prof. Luca Campion}\\
+Novembre 2025
+\end{flushright}
+
+\section*{Note sulla versione}
+
+\textbf{Versione 1.0} - Novembre 2025
+\begin{itemize}
+    \item Prima release completa
+    \item 13 capitoli + appendice soluzioni
+    \item Coverage SQL: DDL, DML, DCL, TCL
+    \item Esempi MySQL 8.0+
+    \item Diagrammi ER con TikZ
+\end{itemize}

@@ -1,0 +1,204 @@
+% main.tex - Appunti Database e SQL
+\documentclass[a4paper,11pt,oneside]{book}
+
+% Pacchetti essenziali
+\usepackage[italian]{babel}
+\usepackage{fontspec}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{tikz-er2}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{titling}
+\usetikzlibrary{shapes,arrows,arrows.meta,positioning,trees,shadows,fit,shapes.multipart,er}
+
+% Configurazione pagina
+\geometry{margin=2.5cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Configurazione Listings per SQL
+\lstdefinelanguage{SQL}{
+    keywords={SELECT, FROM, WHERE, INSERT, INTO, VALUES, UPDATE, SET, DELETE,
+              CREATE, TABLE, DROP, ALTER, PRIMARY, KEY, FOREIGN, REFERENCES,
+              JOIN, INNER, LEFT, RIGHT, OUTER, ON, AS, AND, OR, NOT, NULL,
+              UNIQUE, INDEX, DATABASE, USE, SHOW, DESCRIBE, INT, VARCHAR,
+              CHAR, DATE, DATETIME, TEXT, FLOAT, DOUBLE, DECIMAL, BOOLEAN,
+              AUTO_INCREMENT, DEFAULT, CHECK, CONSTRAINT, ORDER, BY, GROUP,
+              HAVING, DISTINCT, COUNT, SUM, AVG, MIN, MAX, LIKE, IN, BETWEEN,
+              IS, EXISTS, ALL, ANY, UNION, INTERSECT, EXCEPT, CASE, WHEN, THEN,
+              ELSE, END, VIEW, TRIGGER, PROCEDURE, FUNCTION, BEGIN, COMMIT,
+              ROLLBACK, TRANSACTION, GRANT, REVOKE},
+    sensitive=false,
+    morecomment=[l]{--},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]',
+    morestring=[b]"
+}
+
+\lstset{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black!30},
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)},
+    xleftmargin=15pt,
+    xrightmargin=15pt,
+    float=htbp,
+    aboveskip=15pt,
+    belowskip=15pt
+}
+
+% Box Colorati per Note Speciali
+\newtcolorbox{attenzione}{
+    colback=yellow!10,
+    colframe=orange!80,
+    title=Attenzione,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{nota}{
+    colback=blue!5,
+    colframe=blue!60,
+    title=Nota,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{errore}{
+    colback=red!5,
+    colframe=red!60,
+    title=Errore Comune,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{esempio}{
+    colback=green!5,
+    colframe=green!60,
+    title=Esempio,
+    fonttitle=\bfseries
+}
+
+% Configurazione hyperref
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=green,
+    pdftitle={Appunti Database e SQL},
+    pdfauthor={Prof. Luca Campion},
+    pdfsubject={Database, DBMS, SQL, Modellazione Dati},
+    pdfkeywords={database, sql, dbms, er, relazionale, normalizzazione}
+}
+
+% Header e Footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{Database e SQL}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\begin{document}
+
+%=============================================================================
+% FRONTMATTER
+%=============================================================================
+\frontmatter
+
+\title{
+    \Huge\textbf{Appunti di Database e SQL}\\[1cm]
+    \Large{DBMS, Modellazione Dati e Linguaggio SQL}
+}
+\author{Prof. Luca Campion}
+\date{Anno Scolastico 2025-2026\\[0.5cm]Istituto Tecnico Antonio Scarpa}
+
+\maketitle
+
+\tableofcontents
+\listoffigures
+\lstlistoflistings
+
+%=============================================================================
+% MAINMATTER
+%=============================================================================
+\mainmatter
+
+% Prefazione
+\include{capitoli/00_prefazione}
+
+% Capitolo 01: Introduzione ai Database e DBMS
+\include{capitoli/01_introduzione_dbms}
+
+% Capitolo 02: Modello Concettuale (Entity-Relationship)
+\include{capitoli/02_modello_concettuale}
+
+% Capitolo 03: Modello Logico Relazionale
+\include{capitoli/03_modello_logico}
+
+% Capitolo 04: Normalizzazione
+\include{capitoli/04_normalizzazione}
+
+% Capitolo 05: Modello Fisico e Implementazione
+\include{capitoli/05_modello_fisico}
+
+% Capitolo 06: SQL - Fondamenti e DDL
+\include{capitoli/06_sql_ddl}
+
+% Capitolo 07: SQL - DML (Query SELECT)
+\include{capitoli/07_sql_dml_select}
+
+% Capitolo 08: SQL - DML (INSERT, UPDATE, DELETE)
+\include{capitoli/08_sql_dml_modifiche}
+
+% Capitolo 09: SQL - Join e Query Complesse
+\include{capitoli/09_sql_join}
+
+% Capitolo 10: SQL - Funzioni Aggregate e Raggruppamento
+\include{capitoli/10_sql_aggregate}
+
+% Capitolo 11: SQL - Subquery e Viste
+\include{capitoli/11_sql_subquery_viste}
+
+% Capitolo 12: Transazioni e Concorrenza
+\include{capitoli/12_transazioni}
+
+% Capitolo 13: Esercizi Completi
+\include{capitoli/13_esercizi}
+
+%=============================================================================
+% BACKMATTER
+%=============================================================================
+\backmatter
+
+% Appendice con soluzioni esercizi
+\include{capitoli/appendice_soluzioni}
+
+% Bibliografia
+\include{capitoli/99_bibliografia}
+
+\end{document}

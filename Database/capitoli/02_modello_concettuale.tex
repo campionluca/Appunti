@@ -1,0 +1,231 @@
+\chapter{Modello Concettuale - Diagrammi ER}
+
+\section*{Introduzione}
+Il modello Entità-Relazione (ER) è uno strumento per rappresentare la struttura logica dei dati indipendentemente dall'implementazione fisica. Questo capitolo presenta i diagrammi ER, le entità, gli attributi e le relazioni con le loro cardinalità.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere i componenti del modello ER
+    \item Disegnare entità e attributi
+    \item Identificare e modellare relazioni tra entità
+    \item Comprendere la cardinalità delle relazioni
+    \item Applicare le chiavi primarie e esterne nel modello concettuale
+    \item Tradurre requisiti aziendali in diagrammi ER
+\end{itemize}
+
+\section{Componenti del Modello ER}
+
+\subsection{Entità}
+Un'\textbf{entità} è un oggetto del mondo reale di interesse per il sistema informativo. Rappresenta una classe di oggetti con proprietà comuni.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Entità]
+Entità: \textbf{Cliente}, \textbf{Prodotto}, \textbf{Ordine}, \textbf{Dipendente}
+
+Ogni entità rappresenta un concetto del dominio aziendale.
+\end{tcolorbox}
+
+Nel diagramma ER, un'entità è rappresentata come un rettangolo.
+
+\subsection{Attributi}
+Un \textbf{attributo} è una proprietà di un'entità. Descrive caratteristiche specifiche dell'entità.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Attributi]
+Entità \textbf{Cliente} ha attributi:
+\begin{itemize}
+    \item \texttt{idCliente} (identificativo univoco)
+    \item \texttt{nome}
+    \item \texttt{cognome}
+    \item \texttt{email}
+    \item \texttt{dataRegistrazione}
+\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Tipi di attributi}
+\begin{description}
+    \item[\textbf{Semplice}] Non è scomponibile (es. \texttt{email})
+    \item[\textbf{Composto}] Scomponibile in attributi più piccoli (es. \texttt{indirizzo} = \texttt{via, numero, città, CAP})
+    \item[\textbf{Univoco/Chiave}] Identifica univocamente l'entità (es. \texttt{idCliente})
+    \item[\textbf{Opzionale}] Può non avere un valore (es. \texttt{numeroCellulare})
+    \item[\textbf{Multivalore}] Può assumere più valori (es. \texttt{telefoni} di una ditta)
+\end{description}
+
+\subsection{Relazioni}
+Una \textbf{relazione} (o associazione) descrive come due o più entità interagiscono tra loro.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Relazioni]
+\begin{itemize}
+    \item Un \textbf{Cliente} \textit{effettua} un \textbf{Ordine}
+    \item Un \textbf{Ordine} \textit{contiene} \textbf{Prodotti}
+    \item Un \textbf{Dipendente} \textit{lavora in} un \textbf{Dipartimento}
+\end{itemize}
+\end{tcolorbox}
+
+\section{Cardinalità delle Relazioni}
+
+La \textbf{cardinalità} specifica quanti elementi di un'entità possono essere correlati con elementi dell'altra entità.
+
+\subsection{Tipi di cardinalità}
+
+\begin{description}
+    \item[\textbf{1:1 (uno a uno)}] Ogni elemento di A è associato a esattamente un elemento di B e viceversa.
+    \item[\textbf{1:N (uno a molti)}] Ogni elemento di A è associato a uno o più elementi di B, ma ogni elemento di B è associato a un solo elemento di A.
+    \item[\textbf{N:M (molti a molti)}] Ogni elemento di A può essere associato a più elementi di B e viceversa.
+    \item[\textbf{0..1}] Opzionale: da zero a uno
+    \item[\textbf{1..N}] Obbligatorio: da uno a molti
+\end{description}
+
+\subsection{Esempio 1: Relazione 1:1}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        % Entità
+        \node[draw, rectangle, minimum width=2cm] (persona) {Persona};
+        \node[draw, rectangle, right=3cm of persona, minimum width=2cm] (passaporto) {Passaporto};
+
+        % Relazione
+        \draw (persona.east) -- node[above] {possiede} (passaporto.west);
+
+        % Cardinalità
+        \node[above left] at (persona.east) {1};
+        \node[above right] at (passaporto.west) {1};
+    \end{tikzpicture}
+    \caption{Una persona possiede esattamente un passaporto}
+\end{figure}
+
+Una persona può avere un solo passaporto e ogni passaporto appartiene a una sola persona.
+
+\subsection{Esempio 2: Relazione 1:N}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        % Entità
+        \node[draw, rectangle, minimum width=2cm] (cliente) {Cliente};
+        \node[draw, rectangle, right=3cm of cliente, minimum width=2cm] (ordine) {Ordine};
+
+        % Relazione
+        \draw (cliente.east) -- node[above] {effettua} (ordine.west);
+
+        % Cardinalità
+        \node[above left] at (cliente.east) {1};
+        \node[above right] at (ordine.west) {N};
+    \end{tikzpicture}
+    \caption{Un cliente può effettuare molti ordini}
+\end{figure}
+
+Un cliente può fare molti ordini, ma ogni ordine è fatto da un solo cliente.
+
+\subsection{Esempio 3: Relazione N:M}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+        % Entità
+        \node[draw, rectangle, minimum width=2cm] (studente) {Studente};
+        \node[draw, rectangle, right=3cm of studente, minimum width=2cm] (corso) {Corso};
+
+        % Relazione
+        \draw (studente.east) -- node[above] {segue} (corso.west);
+
+        % Cardinalità
+        \node[above left] at (studente.east) {N};
+        \node[above right] at (corso.west) {M};
+    \end{tikzpicture}
+    \caption{Uno studente segue molti corsi e un corso è seguito da molti studenti}
+\end{figure}
+
+Uno studente può seguire più corsi e ogni corso può avere più studenti.
+
+\section{Diagramma ER Completo: Sistema di Vendita Online}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[scale=1, node distance=3cm]
+        % Entità Cliente
+        \node[draw, rectangle, minimum width=2.5cm, minimum height=1.5cm] (cliente) {
+            \textbf{Cliente}\\
+            \hline
+            idCliente\\
+            nome\\
+            cognome\\
+            email
+        };
+
+        % Entità Ordine
+        \node[draw, rectangle, right=of cliente, minimum width=2.5cm, minimum height=1.5cm] (ordine) {
+            \textbf{Ordine}\\
+            \hline
+            idOrdine\\
+            dataOrdine\\
+            totale
+        };
+
+        % Entità Prodotto
+        \node[draw, rectangle, below=of ordine, minimum width=2.5cm, minimum height=1.5cm] (prodotto) {
+            \textbf{Prodotto}\\
+            \hline
+            idProdotto\\
+            nome\\
+            prezzo\\
+            categoria
+        };
+
+        % Relazioni
+        \draw (cliente.east) -- node[above] {effettua\\1:N} (ordine.west);
+        \draw (ordine.south) -- node[right] {contiene\\N:M} (prodotto.north);
+    \end{tikzpicture}
+    \caption{Diagramma ER semplificato per un e-commerce}
+\end{figure}
+
+\section{Chiavi nel Modello ER}
+
+\subsection{Chiave Primaria}
+La \textbf{chiave primaria} è un attributo (o insieme di attributi) che identifica univocamente ogni istanza dell'entità. Non può essere nulla e deve essere univoca.
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Esempio: Chiave Primaria]
+Entità \textbf{Cliente}:
+\begin{itemize}
+    \item \textbf{idCliente} è la chiave primaria (numero univoco assegnato a ogni cliente)
+    \item Anche \textbf{email} potrebbe essere chiave primaria (ogni cliente ha un'email unica)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Chiave Esterna}
+Una \textbf{chiave esterna} è un attributo che riferisce la chiave primaria di un'altra entità, creando un collegamento.
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Esempio: Chiave Esterna]
+Entità \textbf{Ordine}:
+\begin{itemize}
+    \item \textbf{idOrdine} è la chiave primaria
+    \item \textbf{idCliente} è una chiave esterna (riferisce la chiave primaria di Cliente)
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item Un'\textbf{entità} rappresenta una classe di oggetti del dominio
+    \item Un \textbf{attributo} descrive una proprietà dell'entità
+    \item Una \textbf{relazione} collega due o più entità
+    \item La \textbf{cardinalità} specifica il numero di associazioni (1:1, 1:N, N:M)
+    \item La \textbf{chiave primaria} identifica univocamente l'entità
+    \item La \textbf{chiave esterna} crea il collegamento tra entità
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Disegna un diagramma ER per una biblioteca con le entità: Libro, Autore, Membro, Prestito. Includi attributi appropriati e cardinalità.
+
+    \item Spiega la differenza tra cardinalità 1:N e N:M con due esempi concreti diversi da quelli del capitolo.
+
+    \item Un'università ha Studenti, Corsi e Professori. Quali sono le relazioni tra questi? Quale cardinalità?
+
+    \item Identifica la chiave primaria e le chiavi esterne nel diagramma dell'e-commerce presentato nel capitolo.
+
+    \item Trasforma il seguente requisito aziendale in un diagramma ER:
+    ``Una società ha Dipartimenti. Ogni Dipartimento ha più Dipendenti. Un Dipendente lavora in un solo Dipartimento. Un Dipendente gestisce Progetti. Un Progetto può essere gestito da un solo Dipendente. Un Progetto coinvolge più Dipendenti.''
+\end{enumerate}
