@@ -2,7 +2,236 @@
 \chapter*{Prefazione}
 \addcontentsline{toc}{chapter}{Prefazione}
 
-Questi appunti di PHP adottano una struttura modulare allineata agli altri corsi.
-L’obiettivo è fornire spiegazioni tecniche accessibili, esempi pratici e
-rimandi incrociati, con attenzione a sicurezza, affidabilità e manutenzione.
+\section*{A chi è rivolto questo manuale}
 
+Questo manuale di PHP è pensato per studenti di istituti tecnici superiori che hanno già acquisito competenze di base in HTML, CSS e programmazione (C o Java). Il corso fornisce una solida base per lo sviluppo web backend, con particolare enfasi su sicurezza, best practices e integrazione con database.
+
+PHP (Hypertext Preprocessor) è uno dei linguaggi più utilizzati nel web development, alimentando oltre il 75\% dei siti web dinamici inclusi WordPress, Facebook, Wikipedia e milioni di applicazioni aziendali.
+
+\section*{Prerequisiti}
+
+Prima di affrontare questo corso è necessario avere:
+
+\begin{itemize}
+    \item Conoscenza di HTML e CSS
+    \item Nozioni di base di programmazione (variabili, cicli, funzioni)
+    \item Familiarità con il concetto client-server
+    \item Comprensione dei database relazionali (consigliato)
+\end{itemize}
+
+\section*{Obiettivi del corso}
+
+Al termine del corso lo studente sarà in grado di:
+
+\begin{enumerate}
+    \item \textbf{Sviluppare applicazioni web dinamiche}: Form, autenticazione, gestione sessioni
+    \item \textbf{Interagire con database}: Query MySQL/MySQLi, CRUD operations, prepared statements
+    \item \textbf{Implementare sicurezza web}: Protezione da OWASP Top 10, validazione input, prevenzione XSS/SQL Injection
+    \item \textbf{Gestire file e upload}: Manipolazione file, validazione upload, storage sicuro
+    \item \textbf{Utilizzare tecniche avanzate}: Cookie, sessioni, header HTTP, redirect
+    \item \textbf{Applicare best practices}: Codice manutenibile, error handling, logging
+\end{enumerate}
+
+\section*{Perché PHP?}
+
+\textbf{Vantaggi di PHP}:
+\begin{itemize}
+    \item \textbf{Facilità di apprendimento}: Sintassi intuitiva per chi conosce C/Java
+    \item \textbf{Ampia diffusione}: Hosting economico, vasta community, abbondanza risorse
+    \item \textbf{Integrazione database}: Supporto nativo MySQL, PostgreSQL, SQLite
+    \item \textbf{Framework potenti}: Laravel, Symfony, CodeIgniter
+    \item \textbf{CMS popolari}: WordPress, Drupal, Joomla basati su PHP
+    \item \textbf{Performance}: PHP 7/8 ha migliorato drasticamente velocità e efficienza
+\end{itemize}
+
+\textbf{Applicazioni reali}:
+\begin{itemize}
+    \item Siti web dinamici e portali
+    \item E-commerce (Magento, WooCommerce)
+    \item Sistemi di gestione contenuti (CMS)
+    \item API REST per applicazioni mobile
+    \item Pannelli di amministrazione
+    \item Sistemi di autenticazione e autorizzazione
+\end{itemize}
+
+\section*{Struttura del manuale}
+
+Il libro è organizzato in moduli progressivi:
+
+\begin{description}
+    \item[Parte I --- Fondamenti] Form HTML, POST/GET, validazione input, array
+    \item[Parte II --- Gestione Stato] Cookie, sessioni, autenticazione utenti
+    \item[Parte III --- File e Upload] Manipolazione file, upload sicuro, validazione
+    \item[Parte IV --- Database] MySQLi, prepared statements, CRUD, sicurezza
+    \item[Parte V --- Sicurezza] OWASP Top 10, XSS, CSRF, SQL Injection, best practices
+\end{description}
+
+\section*{Strumenti utilizzati}
+
+Per seguire il corso è necessario disporre di:
+
+\subsection*{Ambiente di sviluppo locale}
+
+\textbf{Opzione 1: XAMPP} (consigliato per Windows)
+\begin{itemize}
+    \item Apache web server
+    \item PHP 7.4+ o 8.x
+    \item MySQL/MariaDB
+    \item phpMyAdmin
+    \item Download: \url{https://www.apachefriends.org/}
+\end{itemize}
+
+\textbf{Opzione 2: MAMP} (macOS)
+\begin{itemize}
+    \item Simile a XAMPP, ottimizzato per Mac
+    \item Download: \url{https://www.mamp.info/}
+\end{itemize}
+
+\textbf{Opzione 3: LAMP Stack} (Linux)
+\begin{verbatim}
+sudo apt update
+sudo apt install apache2 php libapache2-mod-php mysql-server
+sudo systemctl start apache2
+sudo systemctl start mysql
+\end{verbatim}
+
+\subsection*{Editor e IDE}
+
+\begin{itemize}
+    \item \textbf{VS Code} con estensioni:
+    \begin{itemize}
+        \item PHP Intelephense
+        \item PHP Debug
+        \item MySQL (per query)
+    \end{itemize}
+    \item \textbf{PHPStorm}: IDE professionale (licenza studenti gratuita)
+    \item \textbf{Sublime Text} con Package Control
+    \item \textbf{Notepad++} (opzione base)
+\end{itemize}
+
+\subsection*{Strumenti di testing}
+
+\begin{itemize}
+    \item \textbf{Browser DevTools}: Chrome/Firefox Developer Tools
+    \item \textbf{Postman}: Testing API e richieste HTTP
+    \item \textbf{XAMPP Control Panel}: Gestione servizi Apache/MySQL
+    \item \textbf{phpMyAdmin}: Interfaccia web per MySQL
+\end{itemize}
+
+\section*{Convenzioni tipografiche}
+
+\begin{itemize}
+    \item \texttt{\<?php echo "codice"; ?\>} --- Codice PHP inline
+    \item \textbf{Variabile \$\_POST} --- Termini tecnici importanti
+    \item \emph{SQL Injection} --- Concetti di sicurezza
+\end{itemize}
+
+\begin{attenzione}
+Il codice presentato include commenti su vulnerabilità e best practices di sicurezza. Prestare massima attenzione ai warning su XSS, SQL Injection e CSRF.
+\end{attenzione}
+
+\section*{Focus sulla Sicurezza}
+
+Questo corso dedica ampio spazio alla sicurezza web, coprendo:
+
+\begin{itemize}
+    \item \textbf{OWASP Top 10 2021}: Le 10 vulnerabilità più critiche
+    \item \textbf{Input Validation}: Sanitizzazione e validazione input utente
+    \item \textbf{Output Encoding}: Prevenzione XSS con htmlspecialchars()
+    \item \textbf{Prepared Statements}: Protezione da SQL Injection
+    \item \textbf{CSRF Tokens}: Prevenzione Cross-Site Request Forgery
+    \item \textbf{Secure Sessions}: Gestione sicura sessioni utente
+    \item \textbf{File Upload Security}: Validazione tipo, dimensione, path traversal
+    \item \textbf{Password Hashing}: Uso di password\_hash() e password\_verify()
+\end{itemize}
+
+\section*{Metodologia didattica}
+
+Ogni capitolo segue questa struttura:
+\begin{enumerate}
+    \item \textbf{Introduzione teorica}: Spiegazione del concetto
+    \item \textbf{Esempi vulnerabili}: Codice insicuro con spiegazione dei rischi
+    \item \textbf{Esempi sicuri}: Versione corretta con best practices
+    \item \textbf{Esercizi guidati}: Problemi con soluzione passo-passo
+    \item \textbf{Esercizi proposti}: Sfide per consolidare l'apprendimento
+    \item \textbf{Checklist sicurezza}: Verifica punti critici
+\end{enumerate}
+
+\section*{Versione PHP}
+
+Il corso copre PHP 7.4+ e PHP 8.x, evidenziando:
+\begin{itemize}
+    \item Nuove feature PHP 8: Named arguments, union types, match expression
+    \item Deprecazioni e breaking changes
+    \item Best practices per codice moderno e manutenibile
+\end{itemize}
+
+\section*{Supporto e risorse}
+
+\begin{itemize}
+    \item \textbf{Documentazione ufficiale}: \url{https://www.php.net/docs.php}
+    \item \textbf{OWASP}: \url{https://owasp.org/}
+    \item \textbf{PHP The Right Way}: \url{https://phptherightway.com/}
+    \item \textbf{Stack Overflow}: Tag [php]
+    \item \textbf{W3Schools PHP Tutorial}: \url{https://www.w3schools.com/php/}
+\end{itemize}
+
+\section*{Progetti pratici}
+
+Il corso include progetti applicativi reali:
+\begin{itemize}
+    \item Sistema di login/registrazione sicuro
+    \item Gestionale CRUD (Create, Read, Update, Delete)
+    \item Form di contatto con validazione
+    \item Upload e gestione immagini
+    \item Mini-blog con commenti
+    \item Carrello e-commerce base
+\end{itemize}
+
+\section*{Certificazioni e sbocchi}
+
+Competenze PHP aprono opportunità professionali:
+\begin{itemize}
+    \item \textbf{Web Developer} (full-stack o backend)
+    \item \textbf{WordPress Developer}
+    \item \textbf{Laravel Developer}
+    \item \textbf{Security Analyst} (penetration testing)
+    \item \textbf{DevOps Engineer} (deployment, CI/CD)
+\end{itemize}
+
+Certificazioni rilevanti:
+\begin{itemize}
+    \item Zend Certified PHP Engineer
+    \item Laravel Certification
+    \item OWASP Web Security Certification
+\end{itemize}
+
+\section*{Note per i docenti}
+
+Il materiale è strutturato per:
+\begin{itemize}
+    \item 40-60 ore di lezione (teoria + laboratorio)
+    \item Approccio hands-on con esercitazioni pratiche
+    \item Enfasi su sicurezza e best practices industria
+    \item Preparazione a scenari reali e progetti aziendali
+\end{itemize}
+
+\section*{Ringraziamenti}
+
+Si ringraziano:
+\begin{itemize}
+    \item La community OWASP per le linee guida di sicurezza
+    \item Gli studenti delle classi precedenti per feedback e suggerimenti
+    \item I contributori open-source di PHP e dei framework
+\end{itemize}
+
+\vspace{1cm}
+
+\begin{center}
+\textit{Buono studio e... sviluppa in sicurezza!}\\
+Gli autori
+\end{center}
+
+\begin{nota}
+\textbf{Disclaimer}: Gli esempi di codice vulnerabile sono presentati esclusivamente a scopo didattico per comprendere le vulnerabilità. Non utilizzare mai codice insicuro in produzione.
+\end{nota}

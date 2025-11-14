@@ -1,7 +1,490 @@
 % 01_Introduzione (PHP)
 \chapter{Introduzione a PHP}
 
-PHP è un linguaggio lato server usato per elaborare richieste HTTP e generare
-risposte. In questo capitolo presentiamo ambienti di esecuzione, superglobali,
-gestione errori e panoramica del ciclo richiesta/risposta.
+\section{Cos'è PHP?}
 
+\begin{definizione}
+\textbf{PHP} (PHP: Hypertext Preprocessor) è un linguaggio di scripting \emph{server-side} open-source, progettato specificamente per lo sviluppo web. Il codice PHP viene eseguito sul server e genera HTML inviato al browser del client.
+\end{definizione}
+
+\subsection{Caratteristiche principali}
+
+\begin{itemize}
+    \item \textbf{Server-side}: Il codice viene eseguito sul server, non sul client
+    \item \textbf{Open Source}: Gratuito, con vasta community e documentazione
+    \item \textbf{Cross-platform}: Funziona su Windows, Linux, macOS
+    \item \textbf{Database integration}: Supporto nativo per MySQL, PostgreSQL, SQLite, Oracle
+    \item \textbf{Sintassi C-like}: Familiare per chi conosce C, Java, JavaScript
+    \item \textbf{Loosely typed}: Tipi di variabili determinati automaticamente (PHP < 7.4) o con type hints (PHP 7.4+)
+\end{itemize}
+
+\subsection{Storia e versioni}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Versione} & \textbf{Anno} & \textbf{Innovazioni principali} \\
+\midrule
+PHP 3 & 1998 & Prima versione moderna \\
+PHP 4 & 2000 & Engine Zend, sessioni native \\
+PHP 5 & 2004 & OOP migliorato, PDO, MySQLi \\
+PHP 7 & 2015 & Performance 2x, type hints, null coalescing \\
+PHP 8.0 & 2020 & JIT compiler, union types, named arguments \\
+PHP 8.1 & 2021 & Enums, readonly properties, fibers \\
+PHP 8.2 & 2022 & Readonly classes, deprecazioni \\
+PHP 8.3 & 2023 & Typed class constants, json\_validate() \\
+\bottomrule
+\end{tabular}
+\caption{Evoluzione versioni PHP}
+\end{table}
+
+\begin{nota}
+Questo corso si concentra su \textbf{PHP 7.4+} e \textbf{PHP 8.x}, evidenziando le differenze quando rilevanti. PHP 5.6 e precedenti sono deprecati e insicuri.
+\end{nota}
+
+\section{Architettura Client-Server}
+
+\subsection{Modello tradizionale (statico)}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    box/.style={rectangle, draw, fill=blue!20, text width=3cm, align=center, minimum height=1cm}
+]
+    \node[box] (client) {Browser\\(Client)};
+    \node[box, right=of client] (server) {Web Server\\Apache/Nginx};
+
+    \draw[->, thick] (client) -- node[above] {GET page.html} (server);
+    \draw[->, thick] (server) -- node[below] {HTML statico} (client);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Modello dinamico con PHP}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    box/.style={rectangle, draw, fill=blue!20, text width=2.5cm, align=center, minimum height=0.8cm}
+]
+    \node[box] (client) {Browser};
+    \node[box, right=of client] (server) {Apache};
+    \node[box, right=of server, fill=green!20] (php) {PHP\\Interpreter};
+    \node[box, below=of php, fill=yellow!20] (db) {MySQL\\Database};
+
+    \draw[->, thick] (client) -- node[above, font=\small] {GET page.php} (server);
+    \draw[->, thick] (server) -- node[above, font=\small] {Esegui} (php);
+    \draw[<->, thick] (php) -- node[right, font=\small] {Query} (db);
+    \draw[->, thick] (php) -- node[below, font=\small] {HTML} (server);
+    \draw[->, thick] (server) -- node[below, font=\small] {HTML} (client);
+\end{tikzpicture}
+\end{center}
+
+\textbf{Flusso di esecuzione}:
+\begin{enumerate}
+    \item Browser richiede \texttt{page.php} al server
+    \item Apache riconosce estensione \texttt{.php} e invoca interprete PHP
+    \item PHP esegue lo script, interagisce con database se necessario
+    \item PHP genera HTML dinamico
+    \item Apache invia HTML al browser
+    \item Browser visualizza la pagina (non vede mai il codice PHP)
+\end{enumerate}
+
+\section{Ambiente di esecuzione}
+
+\subsection{Stack LAMP/WAMP/MAMP}
+
+\begin{description}
+    \item[L/W/M] Linux / Windows / macOS (sistema operativo)
+    \item[A] Apache (web server)
+    \item[M] MySQL o MariaDB (database)
+    \item[P] PHP (linguaggio server-side)
+\end{description}
+
+\subsection{Installazione XAMPP (Windows/macOS/Linux)}
+
+\begin{enumerate}
+    \item Download da \url{https://www.apachefriends.org/}
+    \item Installazione guidata
+    \item Avviare XAMPP Control Panel
+    \item Start Apache e MySQL
+    \item Verificare: navigare a \url{http://localhost}
+\end{enumerate}
+
+\subsection{Configurazione di base}
+
+\textbf{File principali XAMPP}:
+\begin{itemize}
+    \item \texttt{htdocs/}: Document root (metti qui i file .php)
+    \item \texttt{php.ini}: Configurazione PHP
+    \item \texttt{httpd.conf}: Configurazione Apache
+    \item \texttt{phpMyAdmin/}: Interfaccia web MySQL
+\end{itemize}
+
+\textbf{Modifiche consigliate in php.ini}:
+\begin{lstlisting}[language=bash]
+; Abilita visualizzazione errori (solo development!)
+display_errors = On
+error_reporting = E_ALL
+
+; Limiti upload
+upload_max_filesize = 20M
+post_max_size = 25M
+
+; Timezone
+date.timezone = "Europe/Rome"
+
+; Estensioni comuni
+extension=mysqli
+extension=pdo_mysql
+extension=mbstring
+extension=openssl
+\end{lstlisting}
+
+\section{Primo programma PHP}
+
+\subsection{Hello World}
+
+Creare file \texttt{htdocs/hello.php}:
+
+\begin{lstlisting}[language=PHP]
+<?php
+// Primo script PHP
+echo "Hello, World!";
+?>
+\end{lstlisting}
+
+Navigare a: \url{http://localhost/hello.php}
+
+\textbf{Output nel browser}: \texttt{Hello, World!}
+
+\subsection{Sintassi base}
+
+\begin{itemize}
+    \item \textbf{Tag apertura/chiusura}: \texttt{<?php ... ?>}
+    \item \textbf{Istruzioni}: Terminano con \texttt{;}
+    \item \textbf{Commenti}:
+\begin{lstlisting}[language=PHP]
+// Commento singola riga
+# Alternativa commento singola riga
+/* Commento
+   multi-riga */
+\end{lstlisting}
+    \item \textbf{Case sensitivity}:
+    \begin{itemize}
+        \item Variabili: case-sensitive (\texttt{\$var} ≠ \texttt{\$Var})
+        \item Funzioni/classi: case-insensitive (\texttt{ECHO} = \texttt{echo})
+    \end{itemize}
+\end{itemize}
+
+\subsection{Embedding in HTML}
+
+PHP può essere mescolato con HTML:
+
+\begin{lstlisting}[language=PHP]
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pagina dinamica</title>
+</head>
+<body>
+    <h1>Benvenuto</h1>
+    <?php
+        $nome = "Mario";
+        $ora = date("H:i:s");
+        echo "<p>Ciao, $nome!</p>";
+        echo "<p>Sono le ore $ora</p>";
+    ?>
+</body>
+</html>
+\end{lstlisting}
+
+\textbf{Output}:
+\begin{verbatim}
+Benvenuto
+Ciao, Mario!
+Sono le ore 14:35:22
+\end{verbatim}
+
+\section{Output in PHP}
+
+\subsection{echo vs print}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Caratteristica} & \textbf{echo} & \textbf{print} \\
+\midrule
+Valore ritorno & Nessuno & Ritorna 1 \\
+Parametri multipli & Sì & No \\
+Velocità & Leggermente più veloce & Più lento \\
+Uso comune & Molto frequente & Raro \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{esempio}
+\begin{lstlisting}[language=PHP]
+<?php
+// echo - preferito
+echo "Hello";
+echo "Hello", " ", "World"; // Multipli parametri
+
+// print
+print "Hello";
+$result = print "Hello"; // $result = 1
+
+// echo con parentesi (opzionale)
+echo("Hello");
+?>
+\end{lstlisting}
+\end{esempio}
+
+\subsection{var\_dump() e print\_r()}
+
+Utili per debugging:
+
+\begin{lstlisting}[language=PHP]
+<?php
+$array = [1, 2, 3, "test"];
+
+// var_dump: mostra tipo e valore
+var_dump($array);
+// Output: array(4) { [0]=> int(1) [1]=> int(2) ... }
+
+// print_r: più leggibile
+print_r($array);
+// Output: Array ( [0] => 1 [1] => 2 [2] => 3 [3] => test )
+?>
+\end{lstlisting}
+
+\section{Variabili}
+
+\subsection{Dichiarazione}
+
+\begin{lstlisting}[language=PHP]
+<?php
+// Le variabili iniziano con $
+$nome = "Mario";
+$eta = 25;
+$altezza = 1.75;
+$studente = true;
+
+// No dichiarazione tipo necessaria (loosely typed)
+$var = 10;        // int
+$var = "testo";   // ora string
+$var = 3.14;      // ora float
+?>
+\end{lstlisting}
+
+\subsection{Tipi di dati}
+
+\begin{itemize}
+    \item \textbf{Scalari}:
+    \begin{itemize}
+        \item \texttt{int}: Numeri interi
+        \item \texttt{float/double}: Numeri decimali
+        \item \texttt{string}: Stringhe
+        \item \texttt{bool}: true/false
+    \end{itemize}
+    \item \textbf{Composti}:
+    \begin{itemize}
+        \item \texttt{array}: Array
+        \item \texttt{object}: Oggetti
+    \end{itemize}
+    \item \textbf{Speciali}:
+    \begin{itemize}
+        \item \texttt{NULL}: Valore nullo
+        \item \texttt{resource}: Riferimenti risorse esterne
+    \end{itemize}
+\end{itemize}
+
+\subsection{Type juggling e casting}
+
+PHP converte automaticamente i tipi:
+
+\begin{lstlisting}[language=PHP]
+<?php
+$x = "10";      // string
+$y = 5;         // int
+$z = $x + $y;   // 15 (int) - auto-conversione!
+
+// Casting esplicito
+$num = (int)"42";           // int 42
+$str = (string)123;         // string "123"
+$bool = (bool)"";           // false
+$float = (float)"3.14";     // float 3.14
+?>
+\end{lstlisting}
+
+\begin{attenzione}
+Type juggling può causare bug sottili! PHP 7.4+ supporta \emph{type hints} per dichiarazioni esplicite.
+\end{attenzione}
+
+\section{Superglobali}
+
+\begin{definizione}
+Le \textbf{superglobali} sono array predefiniti disponibili in ogni scope, contenenti informazioni su richieste HTTP, server, sessioni, etc.
+\end{definizione}
+
+\subsection{Principali superglobali}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Superglobale} & \textbf{Contenuto} \\
+\midrule
+\texttt{\$\_GET} & Parametri URL (query string) \\
+\texttt{\$\_POST} & Dati inviati via POST (form) \\
+\texttt{\$\_REQUEST} & Combinazione GET, POST, COOKIE \\
+\texttt{\$\_SERVER} & Informazioni server e headers HTTP \\
+\texttt{\$\_SESSION} & Variabili di sessione \\
+\texttt{\$\_COOKIE} & Cookie HTTP \\
+\texttt{\$\_FILES} & File caricati via upload \\
+\texttt{\$\_ENV} & Variabili d'ambiente \\
+\texttt{\$GLOBALS} & Tutte le variabili globali \\
+\bottomrule
+\end{tabular}
+\caption{Superglobali PHP}
+\end{table}
+
+\begin{esempio}
+\begin{lstlisting}[language=PHP]
+<?php
+// URL: page.php?nome=Mario&eta=25
+
+echo $_GET['nome'];  // "Mario"
+echo $_GET['eta'];   // "25"
+
+// Informazioni server
+echo $_SERVER['REQUEST_METHOD'];  // "GET"
+echo $_SERVER['HTTP_USER_AGENT']; // Browser info
+echo $_SERVER['REMOTE_ADDR'];     // IP client
+?>
+\end{lstlisting}
+\end{esempio}
+
+\section{Gestione errori}
+
+\subsection{Livelli di errori}
+
+\begin{itemize}
+    \item \textbf{E\_ERROR}: Errori fatali (script termina)
+    \item \textbf{E\_WARNING}: Warning (script continua)
+    \item \textbf{E\_NOTICE}: Notice (possibili problemi)
+    \item \textbf{E\_PARSE}: Errori di sintassi
+    \item \textbf{E\_ALL}: Tutti gli errori
+\end{itemize}
+
+\subsection{Configurazione}
+
+\begin{lstlisting}[language=PHP]
+<?php
+// Development: mostra tutti gli errori
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Production: log errori, non mostrare
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', '/path/to/error.log');
+?>
+\end{lstlisting}
+
+\subsection{Try-Catch (PHP 5+)}
+
+\begin{lstlisting}[language=PHP]
+<?php
+try {
+    $file = fopen("nonexistent.txt", "r");
+    if (!$file) {
+        throw new Exception("File non trovato!");
+    }
+    // Operazioni sul file
+    fclose($file);
+} catch (Exception $e) {
+    echo "Errore: " . $e->getMessage();
+} finally {
+    // Eseguito sempre
+    echo "Cleanup completato";
+}
+?>
+\end{lstlisting}
+
+\section{Ciclo richiesta/risposta HTTP}
+
+\subsection{Anatomia di una richiesta HTTP}
+
+\begin{verbatim}
+GET /page.php?id=10 HTTP/1.1
+Host: www.example.com
+User-Agent: Mozilla/5.0
+Accept: text/html
+Cookie: session=abc123
+\end{verbatim}
+
+\subsection{Anatomia di una risposta HTTP}
+
+\begin{verbatim}
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Set-Cookie: user=Mario; Path=/
+Content-Length: 1234
+
+<!DOCTYPE html>
+<html>...
+\end{verbatim}
+
+\subsection{Metodi HTTP principali}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llp{5cm}}
+\toprule
+\textbf{Metodo} & \textbf{Scopo} & \textbf{Uso PHP} \\
+\midrule
+GET & Recuperare dati & Form con \texttt{method="get"}, link \\
+POST & Inviare dati & Form con \texttt{method="post"} \\
+PUT & Aggiornare risorsa & API REST \\
+DELETE & Eliminare risorsa & API REST \\
+\bottomrule
+\end{tabular}
+\caption{Metodi HTTP}
+\end{table}
+
+\section{Esercizi}
+
+\begin{esercizio}[1.1]
+Creare uno script PHP che stampa la data e ora corrente in formato italiano.
+\end{esercizio}
+
+\begin{esercizio}[1.2]
+Scrivere uno script che riceve il nome dall'URL (\texttt{?nome=Mario}) e stampa "Benvenuto, [nome]!". Gestire il caso in cui il parametro è assente.
+\end{esercizio}
+
+\begin{esercizio}[1.3]
+Verificare la versione di PHP installata usando \texttt{phpinfo()} o \texttt{phpversion()}.
+\end{esercizio}
+
+\begin{esercizio}[1.4]
+Creare una pagina che mostra le prime 10 variabili di \texttt{\$\_SERVER} usando un ciclo.
+\end{esercizio}
+
+\begin{esercizio}[1.5]
+Sperimentare con type juggling: sommare stringa "10" + intero 5 e spiegare il risultato.
+\end{esercizio}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item PHP è un linguaggio server-side per web development
+    \item Richiede stack LAMP/WAMP con Apache, MySQL, PHP
+    \item Script PHP embedded in HTML con \texttt{<?php ... ?>}
+    \item Superglobali (\texttt{\$\_GET}, \texttt{\$\_POST}, \texttt{\$\_SERVER}) forniscono accesso a richieste HTTP
+    \item Type juggling automatico ma attenzione ai bug
+    \item Gestione errori essenziale (development vs production)
+\end{itemize}
