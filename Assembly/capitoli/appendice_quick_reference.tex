@@ -1,0 +1,270 @@
+\chapter{Quick Reference}
+
+\section{Registri 8086}
+
+\subsection{General Purpose (16 bit)}
+
+\begin{tabular}{ll}
+\textbf{AX} & Accumulatore (AH + AL) \\
+\textbf{BX} & Base (BH + BL) \\
+\textbf{CX} & Contatore (CH + CL) \\
+\textbf{DX} & Dati (DH + DL) \\
+\end{tabular}
+
+\subsection{Puntatore e Indice}
+
+\begin{tabular}{ll}
+\textbf{SP} & Stack Pointer \\
+\textbf{BP} & Base Pointer \\
+\textbf{SI} & Source Index \\
+\textbf{DI} & Destination Index \\
+\textbf{IP} & Instruction Pointer \\
+\end{tabular}
+
+\subsection{Segmento}
+
+\begin{tabular}{ll}
+\textbf{CS} & Code Segment \\
+\textbf{DS} & Data Segment \\
+\textbf{SS} & Stack Segment \\
+\textbf{ES} & Extra Segment \\
+\end{tabular}
+
+\section{Flag Register}
+
+\begin{tabular}{lll}
+\textbf{Bit} & \textbf{Nome} & \textbf{Descrizione} \\
+0 & CF & Carry Flag \\
+2 & PF & Parity Flag \\
+4 & AF & Auxiliary Carry \\
+6 & ZF & Zero Flag \\
+7 & SF & Sign Flag \\
+8 & TF & Trap Flag \\
+9 & IF & Interrupt Flag \\
+10 & DF & Direction Flag \\
+11 & OF & Overflow Flag \\
+\end{tabular}
+
+\section{Modalità Indirizzamento}
+
+\begin{lstlisting}
+MOV AX, 1234h          ; Immediate
+MOV AX, BX             ; Register
+MOV AX, [1000h]        ; Direct
+MOV AX, [BX]           ; Register Indirect
+MOV AX, [BX+4]         ; Based
+MOV AX, [SI+4]         ; Indexed
+MOV AX, [BX+SI+4]      ; Based Indexed
+\end{lstlisting}
+
+\section{Istruzioni per Categoria}
+
+\subsection{Trasferimento Dati}
+
+\begin{lstlisting}
+MOV dest, src          ; Move
+XCHG op1, op2          ; Exchange
+LEA reg, mem           ; Load Effective Address
+PUSH operando          ; Push to stack
+POP operando           ; Pop from stack
+IN AL/AX, porta        ; Input from port
+OUT porta, AL/AX       ; Output to port
+XLAT                   ; Translate
+\end{lstlisting}
+
+\subsection{Aritmetiche}
+
+\begin{lstlisting}
+ADD dest, src          ; Addition
+ADC dest, src          ; Add with carry
+SUB dest, src          ; Subtraction
+SBB dest, src          ; Subtract with borrow
+INC operando           ; Increment
+DEC operando           ; Decrement
+MUL operando           ; Unsigned multiply
+IMUL operando          ; Signed multiply
+DIV operando           ; Unsigned divide
+IDIV operando          ; Signed divide
+NEG operando           ; Negate
+CMP op1, op2           ; Compare
+\end{lstlisting}
+
+\subsection{Logiche}
+
+\begin{lstlisting}
+AND dest, src          ; Logical AND
+OR dest, src           ; Logical OR
+XOR dest, src          ; Logical XOR
+NOT operando           ; Logical NOT
+TEST op1, op2          ; Test (AND without save)
+SHL dest, count        ; Shift left
+SHR dest, count        ; Shift right
+SAL dest, count        ; Arithmetic shift left
+SAR dest, count        ; Arithmetic shift right
+ROL dest, count        ; Rotate left
+ROR dest, count        ; Rotate right
+RCL dest, count        ; Rotate through carry left
+RCR dest, count        ; Rotate through carry right
+\end{lstlisting}
+
+\subsection{Controllo Flusso}
+
+\begin{lstlisting}
+JMP label              ; Unconditional jump
+JE/JZ label            ; Jump if equal/zero
+JNE/JNZ label          ; Jump if not equal/zero
+JG/JNLE label          ; Jump if greater (signed)
+JGE/JNL label          ; Jump if >= (signed)
+JL/JNGE label          ; Jump if less (signed)
+JLE/JNG label          ; Jump if <= (signed)
+JA/JNBE label          ; Jump if above (unsigned)
+JAE/JNB label          ; Jump if >= (unsigned)
+JB/JNAE label          ; Jump if below (unsigned)
+JBE/JNA label          ; Jump if <= (unsigned)
+LOOP label             ; Loop (decrement CX)
+CALL procedura         ; Call procedure
+RET                    ; Return
+INT numero             ; Software interrupt
+\end{lstlisting}
+
+\subsection{Stringhe}
+
+\begin{lstlisting}
+MOVSB/MOVSW            ; Move string
+LODSB/LODSW            ; Load string
+STOSB/STOSW            ; Store string
+CMPSB/CMPSW            ; Compare string
+SCASB/SCASW            ; Scan string
+REP                    ; Repeat prefix
+REPE/REPZ              ; Repeat while equal
+REPNE/REPNZ            ; Repeat while not equal
+CLD                    ; Clear direction flag
+STD                    ; Set direction flag
+\end{lstlisting}
+
+\section{Interrupt DOS (INT 21h)}
+
+\begin{lstlisting}
+MOV AH, 01h
+INT 21h                ; Input character (AL)
+
+MOV AH, 02h
+MOV DL, char
+INT 21h                ; Output character
+
+MOV AH, 09h
+MOV DX, OFFSET msg
+INT 21h                ; Print string ($-terminated)
+
+MOV AH, 4Ch
+INT 21h                ; Exit program
+\end{lstlisting}
+
+\section{Interrupt BIOS}
+
+\subsection{INT 10h (Video)}
+
+\begin{lstlisting}
+MOV AH, 00h
+MOV AL, mode
+INT 10h                ; Set video mode
+
+MOV AH, 0Eh
+MOV AL, char
+INT 10h                ; Teletype output
+\end{lstlisting}
+
+\subsection{INT 16h (Keyboard)}
+
+\begin{lstlisting}
+MOV AH, 00h
+INT 16h                ; Read key (AL=ASCII, AH=scan)
+\end{lstlisting}
+
+\section{Struttura Programma .COM}
+
+\begin{lstlisting}
+ORG 100h               ; DOS PSP = 256 byte
+
+start:
+    MOV AH, 09h
+    MOV DX, OFFSET msg
+    INT 21h
+
+    MOV AH, 4Ch
+    INT 21h
+
+msg DB 'Hello$'
+\end{lstlisting}
+
+\section{Struttura Programma .EXE}
+
+\begin{lstlisting}
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+msg DB 'Hello$'
+
+.CODE
+main PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    MOV AH, 09h
+    MOV DX, OFFSET msg
+    INT 21h
+
+    MOV AH, 4Ch
+    INT 21h
+main ENDP
+
+END main
+\end{lstlisting}
+
+\section{Calcolo Indirizzo Fisico}
+
+\[
+\text{Fisico} = (\text{Segmento} \times 16) + \text{Offset}
+\]
+
+\section{Tabella ASCII (estratto)}
+
+\begin{tabular}{llll}
+\textbf{Dec} & \textbf{Hex} & \textbf{Char} & \textbf{Descrizione} \\
+0 & 00h & NUL & Null \\
+7 & 07h & BEL & Bell \\
+8 & 08h & BS & Backspace \\
+9 & 09h & TAB & Horizontal Tab \\
+10 & 0Ah & LF & Line Feed \\
+13 & 0Dh & CR & Carriage Return \\
+32 & 20h & SPACE & Spazio \\
+48-57 & 30h-39h & 0-9 & Cifre \\
+65-90 & 41h-5Ah & A-Z & Maiuscole \\
+97-122 & 61h-7Ah & a-z & Minuscole \\
+\end{tabular}
+
+\section{Scan Code Tastiera (estratto)}
+
+\begin{tabular}{ll}
+\textbf{Scan Code} & \textbf{Tasto} \\
+01h & ESC \\
+1Ch & Enter \\
+39h & Spazio \\
+3Bh-44h & F1-F10 \\
+48h & Freccia su \\
+50h & Freccia giù \\
+4Bh & Freccia sinistra \\
+4Dh & Freccia destra \\
+\end{tabular}
+
+\section{Porte I/O Comuni}
+
+\begin{tabular}{ll}
+\textbf{Porta} & \textbf{Descrizione} \\
+20h-21h & PIC (8259) Master \\
+40h-43h & PIT (8253/8254) Timer \\
+60h, 64h & Tastiera (8042) \\
+3F8h-3FFh & COM1 (UART) \\
+378h-37Fh & LPT1 (Parallela) \\
+\end{tabular}

@@ -1,0 +1,161 @@
+\chapter{Sistema di Interrupt}
+
+\section{Introduzione agli Interrupt}
+
+Gli interrupt permettono al processore di rispondere a eventi esterni o richiedere servizi di sistema.
+
+\section{Tipi di Interrupt}
+
+\subsection{Hardware Interrupts}
+
+Generati da dispositivi esterni (tastiera, timer, disco).
+
+\subsection{Software Interrupts}
+
+Invocati da programma con istruzione \texttt{INT}.
+
+\subsection{Exceptions}
+
+Generati dal processore (divisione per zero, overflow).
+
+\section{Interrupt Vector Table (IVT)}
+
+Tabella a indirizzo 0000:0000 contenente 256 vettori di 4 byte (CS:IP).
+
+\begin{lstlisting}
+; Vettore interrupt n a indirizzo n*4
+; Offset = n * 4
+; Segmento = n * 4 + 2
+\end{lstlisting}
+
+\section{Interrupt DOS (INT 21h)}
+
+\subsection{Funzione 01h: Input carattere con echo}
+
+\begin{lstlisting}
+MOV AH, 01h
+INT 21h            ; AL = carattere letto
+\end{lstlisting}
+
+\subsection{Funzione 02h: Output carattere}
+
+\begin{lstlisting}
+MOV AH, 02h
+MOV DL, 'A'
+INT 21h            ; Stampa 'A'
+\end{lstlisting}
+
+\subsection{Funzione 09h: Stampa stringa}
+
+\begin{lstlisting}
+.DATA
+msg DB 'Hello World$'
+
+.CODE
+MOV AH, 09h
+MOV DX, OFFSET msg
+INT 21h
+\end{lstlisting}
+
+\subsection{Funzione 4Ch: Termina programma}
+
+\begin{lstlisting}
+MOV AH, 4Ch
+MOV AL, 0          ; Exit code
+INT 21h
+\end{lstlisting}
+
+\section{Interrupt BIOS}
+
+\subsection{INT 10h: Video Services}
+
+\begin{lstlisting}
+; Funzione 0Eh: Teletype output
+MOV AH, 0Eh
+MOV AL, 'X'
+MOV BH, 0          ; Page number
+INT 10h
+
+; Funzione 00h: Set video mode
+MOV AH, 00h
+MOV AL, 03h        ; Modo testo 80x25
+INT 10h
+\end{lstlisting}
+
+\subsection{INT 16h: Keyboard Services}
+
+\begin{lstlisting}
+; Funzione 00h: Legge tasto
+MOV AH, 00h
+INT 16h            ; AL = ASCII, AH = scan code
+\end{lstlisting}
+
+\subsection{INT 13h: Disk Services}
+
+\begin{lstlisting}
+; Funzione 02h: Legge settori
+MOV AH, 02h
+MOV AL, 1          ; Numero settori
+MOV CH, 0          ; Cilindro
+MOV CL, 1          ; Settore
+MOV DH, 0          ; Testina
+MOV DL, 00h        ; Drive (0=A:, 80h=HD)
+MOV BX, OFFSET buffer
+INT 13h
+\end{lstlisting}
+
+\section{Gestione Custom Interrupt}
+
+\begin{lstlisting}
+; Installare handler personalizzato per INT 60h
+install_handler PROC
+    CLI                ; Disabilita interrupt
+    PUSH DS
+
+    ; Calcola indirizzo IVT: 60h * 4 = 180h
+    XOR AX, AX
+    MOV DS, AX
+    MOV BX, 180h
+
+    ; Salva vecchio handler
+    MOV AX, [BX]
+    MOV old_offset, AX
+    MOV AX, [BX+2]
+    MOV old_segment, AX
+
+    ; Installa nuovo handler
+    MOV word ptr [BX], OFFSET my_handler
+    MOV [BX+2], CS
+
+    POP DS
+    STI                ; Riabilita interrupt
+    RET
+install_handler ENDP
+
+my_handler PROC
+    ; Codice handler
+    IRET
+my_handler ENDP
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{esercizio}[10.1]
+Scrivere un programma che legge un carattere e lo stampa 10 volte.
+\end{esercizio}
+
+\begin{esercizio}[10.2]
+Implementare una funzione per stampare un numero decimale usando INT 21h.
+\end{esercizio}
+
+\begin{esercizio}[10.3]
+Spiegare la differenza tra INT, CALL e JMP.
+\end{esercizio}
+
+\begin{esercizio}[10.4]
+Scrivere codice per cambiare il colore del testo usando INT 10h.
+\end{esercizio}
+
+\begin{esercizio}[10.5]
+Implementare un semplice handler per INT 60h che incrementa un contatore.
+\end{esercizio}

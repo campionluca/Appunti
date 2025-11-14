@@ -1,0 +1,202 @@
+\chapter{Progetti Applicativi}
+
+\section{Progetto 1: Calcolatrice a 16 bit}
+
+Implementare una calcolatrice che supporta +, -, *, / su numeri interi.
+
+\begin{lstlisting}
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+msg1 DB 'Inserisci primo numero: $'
+msg2 DB 'Inserisci operatore (+,-,*,/): $'
+msg3 DB 'Inserisci secondo numero: $'
+result_msg DB 'Risultato: $'
+num1 DW ?
+num2 DW ?
+operator DB ?
+
+.CODE
+main PROC
+    MOV AX, @DATA
+    MOV DS, AX
+
+    ; Input primo numero
+    MOV AH, 09h
+    MOV DX, OFFSET msg1
+    INT 21h
+    CALL read_number
+    MOV num1, AX
+
+    ; Input operatore
+    MOV AH, 09h
+    MOV DX, OFFSET msg2
+    INT 21h
+    MOV AH, 01h
+    INT 21h
+    MOV operator, AL
+
+    ; Input secondo numero
+    MOV AH, 09h
+    MOV DX, OFFSET msg3
+    INT 21h
+    CALL read_number
+    MOV num2, AX
+
+    ; Esegui operazione
+    MOV AL, operator
+    CMP AL, '+'
+    JE do_add
+    CMP AL, '-'
+    JE do_sub
+    CMP AL, '*'
+    JE do_mul
+    CMP AL, '/'
+    JE do_div
+
+do_add:
+    MOV AX, num1
+    ADD AX, num2
+    JMP display
+
+do_sub:
+    MOV AX, num1
+    SUB AX, num2
+    JMP display
+
+do_mul:
+    MOV AX, num1
+    MUL num2
+    JMP display
+
+do_div:
+    MOV AX, num1
+    XOR DX, DX
+    DIV num2
+    JMP display
+
+display:
+    CALL print_number
+
+    MOV AH, 4Ch
+    INT 21h
+main ENDP
+
+; Procedura per leggere numero decimale
+read_number PROC
+    ; ... implementazione ...
+    RET
+read_number ENDP
+
+; Procedura per stampare numero
+print_number PROC
+    ; ... implementazione ...
+    RET
+print_number ENDP
+
+END main
+\end{lstlisting}
+
+\section{Progetto 2: Ordinamento Array}
+
+Bubble sort su array di 10 numeri.
+
+\begin{lstlisting}
+.DATA
+array DW 64, 34, 25, 12, 22, 11, 90, 88, 45, 50
+size DW 10
+
+.CODE
+bubble_sort PROC
+    MOV CX, size
+    DEC CX             ; n-1 passate
+
+outer_loop:
+    PUSH CX
+    MOV SI, 0
+    MOV CX, size
+    DEC CX
+
+inner_loop:
+    MOV AX, array[SI]
+    CMP AX, array[SI+2]
+    JLE no_swap
+
+    ; Scambia
+    XCHG AX, array[SI+2]
+    MOV array[SI], AX
+
+no_swap:
+    ADD SI, 2
+    LOOP inner_loop
+
+    POP CX
+    LOOP outer_loop
+
+    RET
+bubble_sort ENDP
+\end{lstlisting}
+
+\section{Progetto 3: Editor di Testo Semplice}
+
+Editor di testo minimale con buffer di 256 caratteri.
+
+\section{Progetto 4: Gioco Snake}
+
+Snake in modalità testo 80x25.
+
+\section{Progetto 5: Bootloader}
+
+Bootloader minimale che stampa un messaggio.
+
+\begin{lstlisting}
+[ORG 0x7C00]
+[BITS 16]
+
+start:
+    MOV AX, 0x07C0
+    MOV DS, AX
+    MOV ES, AX
+
+    MOV AH, 0x0E       ; Teletype
+    MOV SI, msg
+
+print_loop:
+    LODSB
+    OR AL, AL
+    JZ done
+    INT 0x10
+    JMP print_loop
+
+done:
+    CLI
+    HLT
+
+msg DB 'Bootloader avviato!', 13, 10, 0
+
+TIMES 510-($-$$) DB 0
+DW 0xAA55              ; Boot signature
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{esercizio}[12.1]
+Completare il progetto calcolatrice implementando read\_number e print\_number.
+\end{esercizio}
+
+\begin{esercizio}[12.2]
+Modificare bubble sort per ordinamento decrescente.
+\end{esercizio}
+
+\begin{esercizio}[12.3]
+Implementare Quick Sort ricorsivo.
+\end{esercizio}
+
+\begin{esercizio}[12.4]
+Scrivere un bootloader che legge un settore dal disco.
+\end{esercizio}
+
+\begin{esercizio}[12.5]
+Creare un semplice shell DOS-like con comandi DIR, TYPE, EXIT.
+\end{esercizio}

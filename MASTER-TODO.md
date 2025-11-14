@@ -18,6 +18,7 @@
 | **PHP** | 7+ | ✅ | In sviluppo | ✅ 15 | MEDIA | 2025-11-28 |
 | **Python (Quinta)** | 18+App | ✅ | In progresso | ✅ 41 | ALTA | 2025-11-20 |
 | **Database** | 13+App | ⏳ | Nuovo corso | ⏳ 0 | MEDIA | 2025-12-05 |
+| **Assembly 8086** | 13+App | ⏳ | Nuovo corso | ⏳ 0 | MEDIA | 2025-12-25 |
 
 **Legenda**: ✅=Completo | 🟡=In progresso | ❌=Assente | ⏳=In creazione | ⚠️=Attenzione
 
@@ -216,6 +217,7 @@
   - Deadline: 2025-12-05
 
 ### Cronologia Recente
+- 2025-11-14: **💾 Creato nuovo corso Assembly 8086** (13 capitoli, 6K righe, 80+ esercizi, 150+ esempi codice)
 - 2025-11-14: **📚 Creato nuovo corso Database** (13 capitoli, 6K righe, 78 esercizi, SQL completo)
 - 2025-11-14: **🤖 Descrittori AI completati per tutti i 5 corsi** (104 totali: C=15, HTMLCSS=15, Java=18, PHP=15, Python=41)
 - 2025-11-14: Consolidamento post-execution: Python PDF ✅, Java CONTENT-01 ✅, status aggiornati

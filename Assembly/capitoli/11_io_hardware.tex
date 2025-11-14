@@ -1,0 +1,230 @@
+\chapter{I/O e Interfacciamento Hardware}
+
+\section{Introduzione}
+
+L'8086 comunica con periferiche tramite porte I/O a 16 bit (65536 porte possibili).
+
+\section{Istruzioni I/O}
+
+\subsection{IN e OUT}
+
+\begin{lstlisting}
+; I/O fisso (porta 0-255)
+IN AL, porta
+OUT porta, AL
+
+; I/O variabile (porta in DX)
+MOV DX, porta
+IN AL, DX
+OUT DX, AL
+\end{lstlisting}
+
+\section{Programmable Interrupt Controller (8259)
+
+}
+
+\subsection{Porte del PIC}
+
+\begin{itemize}
+    \item \textbf{20h}: Registro comando (Master PIC)
+    \item \textbf{21h}: Registro maschera interrupt (IMR)
+    \item \textbf{A0h}: Slave PIC comando
+    \item \textbf{A1h}: Slave PIC maschera
+\end{itemize}
+
+\begin{lstlisting}
+; Disabilitare interrupt tastiera (IRQ1)
+IN AL, 21h         ; Legge IMR
+OR AL, 02h         ; Setta bit 1
+OUT 21h, AL        ; Scrive IMR
+
+; Riabilitare
+IN AL, 21h
+AND AL, 0FDh       ; Azzera bit 1
+OUT 21h, AL
+\end{lstlisting}
+
+\section{Programmable Interval Timer (8253/8254)}
+
+\subsection{Porte del PIT}
+
+\begin{itemize}
+    \item \textbf{40h}: Canale 0 (system timer)
+    \item \textbf{41h}: Canale 1
+    \item \textbf{42h}: Canale 2 (speaker)
+    \item \textbf{43h}: Control word
+\end{itemize}
+
+\begin{esempio}
+Generare beep con speaker:
+\begin{lstlisting}
+; Frequenza = 1193180 / divisore
+; Per 1000 Hz: divisore = 1193
+
+MOV AL, 0B6h       ; Control word
+OUT 43h, AL
+
+MOV AX, 1193
+OUT 42h, AL        ; Byte basso
+MOV AL, AH
+OUT 42h, AL        ; Byte alto
+
+; Abilita speaker
+IN AL, 61h
+OR AL, 03h
+OUT 61h, AL
+
+; Attendi...
+
+; Disabilita speaker
+IN AL, 61h
+AND AL, 0FCh
+OUT 61h, AL
+\end{lstlisting}
+\end{esempio}
+
+\section{Porta Parallela (LPT)}
+
+\subsection{Porte LPT1}
+
+\begin{itemize}
+    \item \textbf{378h}: Data port (8 bit output)
+    \item \textbf{379h}: Status port (5 bit input)
+    \item \textbf{37Ah}: Control port
+\end{itemize}
+
+\begin{lstlisting}
+; Invia byte alla stampante
+MOV DX, 378h
+MOV AL, 'A'
+OUT DX, AL
+
+; Strobe
+MOV DX, 37Ah
+MOV AL, 0Dh
+OUT DX, AL
+MOV AL, 0Ch
+OUT DX, AL
+\end{lstlisting}
+
+\section{Porta Seriale (COM)}
+
+\subsection{UART 8250/16550}
+
+Porte COM1 (base 3F8h):
+\begin{itemize}
+    \item \textbf{3F8h}: Data register (RBR/THR)
+    \item \textbf{3F9h}: Interrupt Enable Register (IER)
+    \item \textbf{3FAh}: Interrupt ID Register (IIR)
+    \item \textbf{3FBh}: Line Control Register (LCR)
+    \item \textbf{3FCh}: Modem Control Register (MCR)
+    \item \textbf{3FDh}: Line Status Register (LSR)
+    \item \textbf{3FEh}: Modem Status Register (MSR)
+\end{itemize}
+
+\begin{esempio}
+Inizializzare COM1 a 9600 baud, 8N1:
+\begin{lstlisting}
+; Divisore per 9600 baud: 115200 / 9600 = 12
+
+MOV DX, 3FBh       ; LCR
+MOV AL, 80h        ; DLAB = 1
+OUT DX, AL
+
+MOV DX, 3F8h       ; DLL
+MOV AL, 12
+OUT DX, AL
+
+MOV DX, 3F9h       ; DLM
+MOV AL, 0
+OUT DX, AL
+
+MOV DX, 3FBh       ; LCR
+MOV AL, 03h        ; 8N1, DLAB=0
+OUT DX, AL
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Trasmettere byte su COM1:
+\begin{lstlisting}
+send_byte PROC
+    ; AL = byte da inviare
+    PUSH DX
+    PUSH AX
+
+wait_ready:
+    MOV DX, 3FDh   ; LSR
+    IN AL, DX
+    TEST AL, 20h   ; THRE bit
+    JZ wait_ready
+
+    POP AX
+    MOV DX, 3F8h   ; THR
+    OUT DX, AL
+
+    POP DX
+    RET
+send_byte ENDP
+\end{lstlisting}
+\end{esempio}
+
+\section{Tastiera (8042)}
+
+\subsection{Porte tastiera}
+
+\begin{itemize}
+    \item \textbf{60h}: Data port
+    \item \textbf{64h}: Status/Command port
+\end{itemize}
+
+\begin{lstlisting}
+; Leggi scan code
+IN AL, 60h
+
+; Verifica buffer pieno
+IN AL, 64h
+TEST AL, 01h       ; Output buffer full
+JZ no_key
+IN AL, 60h         ; Leggi dato
+
+no_key:
+\end{lstlisting}
+
+\section{VGA (Video Graphics Array)}
+
+\subsection{Accesso diretto a memoria video}
+
+Modo testo 80x25: buffer a B800:0000
+
+\begin{lstlisting}
+; Scrivere 'A' rosso su sfondo nero in posizione (0,0)
+MOV AX, 0B800h
+MOV ES, AX
+MOV DI, 0
+MOV AH, 04h        ; Attributo: rosso
+MOV AL, 'A'
+MOV ES:[DI], AX
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{esercizio}[11.1]
+Scrivere codice per generare un beep di 2 secondi a 440 Hz (nota LA).
+\end{esercizio}
+
+\begin{esercizio}[11.2]
+Implementare una funzione per leggere un carattere da COM1.
+\end{esercizio}
+
+\begin{esercizio}[11.3]
+Scrivere una stringa direttamente in memoria video VGA.
+\end{esercizio}
+
+\begin{esercizio}[11.4]
+Spiegare la differenza tra I/O mapped e memory mapped.
+\end{esercizio}
+
+\begin{esercizio}[11.5]
+Implementare un delay preciso usando il PIT.
+\end{esercizio}

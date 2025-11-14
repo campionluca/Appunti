@@ -1,0 +1,101 @@
+\chapter{Istruzioni Logiche e Bit Manipulation}
+
+\section{Istruzioni Logiche}
+
+\subsection{AND}
+\begin{lstlisting}
+AND dest, src      ; dest = dest AND src (bit a bit)
+\end{lstlisting}
+
+Uso: mascherare bit, testare bit, azzerare bit.
+
+\begin{esempio}
+\begin{lstlisting}
+MOV AL, 11001101b
+AND AL, 00001111b  ; AL = 00001101b (maschera nibble basso)
+\end{lstlisting}
+\end{esempio}
+
+\subsection{OR}
+\begin{lstlisting}
+OR dest, src       ; dest = dest OR src
+\end{lstlisting}
+
+Uso: impostare bit a 1.
+
+\subsection{XOR}
+\begin{lstlisting}
+XOR dest, src      ; dest = dest XOR src
+\end{lstlisting}
+
+Uso: toggle bit, azzerare registro.
+
+\begin{lstlisting}
+XOR AX, AX         ; Azzeramento veloce (AX = 0)
+\end{lstlisting}
+
+\subsection{NOT}
+\begin{lstlisting}
+NOT operando       ; Complemento a uno (inverte tutti i bit)
+\end{lstlisting}
+
+\subsection{TEST}
+\begin{lstlisting}
+TEST op1, op2      ; Esegue AND e imposta flag (senza salvare)
+\end{lstlisting}
+
+\section{Shift e Rotate}
+
+\subsection{SHL/SHR --- Shift Logico}
+\begin{lstlisting}
+SHL dest, count    ; Shift left (moltiplicazione per 2^count)
+SHR dest, count    ; Shift right (divisione per 2^count)
+\end{lstlisting}
+
+\subsection{SAL/SAR --- Shift Aritmetico}
+\begin{lstlisting}
+SAL dest, count    ; Come SHL
+SAR dest, count    ; Preserva bit di segno
+\end{lstlisting}
+
+\subsection{ROL/ROR --- Rotate}
+\begin{lstlisting}
+ROL dest, count    ; Rotate left (bit escono e rientrano)
+ROR dest, count    ; Rotate right
+\end{lstlisting}
+
+\subsection{RCL/RCR --- Rotate through Carry}
+\begin{lstlisting}
+RCL dest, count    ; Rotate left includendo CF
+RCR dest, count    ; Rotate right includendo CF
+\end{lstlisting}
+
+\begin{esempio}
+Moltiplicazione veloce per 8:
+\begin{lstlisting}
+MOV AX, 5
+SHL AX, 3          ; AX = 5 * 8 = 40
+\end{lstlisting}
+\end{esempio}
+
+\section{Esercizi}
+
+\begin{esercizio}[6.1]
+Azzerare i bit 0, 2, 4 di AL usando AND.
+\end{esercizio}
+
+\begin{esercizio}[6.2]
+Impostare i bit 3, 5, 7 di BL usando OR.
+\end{esercizio}
+
+\begin{esercizio}[6.3]
+Testare se il bit 6 di AL è 1 usando TEST.
+\end{esercizio}
+
+\begin{esercizio}[6.4]
+Moltiplicare AX per 16 usando shift.
+\end{esercizio}
+
+\begin{esercizio}[6.5]
+Spiegare la differenza tra SHR e SAR con numeri negativi.
+\end{esercizio}
