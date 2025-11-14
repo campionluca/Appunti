@@ -10,15 +10,25 @@
 
 ## 📊 Stato Generale Tutti i Corsi (14 Novembre 2025)
 
-| Corso | Capitoli | PDF | Stato | Priorità | Deadline |
-|-------|----------|-----|-------|----------|----------|
-| **C (Terza)** | 11+App | ✅ | Completo | BASSA | — |
-| **HTMLCSS** | 12 | ✅ | Completo | BASSA | — |
-| **Java (Quarta)** | 10+App | ✅ | Build warnings | MEDIA | 2025-11-30 |
-| **PHP** | 7+ | ✅ | In sviluppo | MEDIA | 2025-11-28 |
-| **Python (Quinta)** | 18+App | ✅ | In progresso | ALTA | 2025-11-20 |
+| Corso | Capitoli | PDF | Stato | Descrittori AI | Priorità | Deadline |
+|-------|----------|-----|-------|----------------|----------|----------|
+| **C (Terza)** | 11+App | ✅ | Completo | ✅ 15 | BASSA | — |
+| **HTMLCSS** | 12 | ✅ | Completo | ✅ 15 | BASSA | — |
+| **Java (Quarta)** | 10+App | ✅ | Build warnings | ✅ 18 | MEDIA | 2025-11-30 |
+| **PHP** | 7+ | ✅ | In sviluppo | ✅ 15 | MEDIA | 2025-11-28 |
+| **Python (Quinta)** | 18+App | ✅ | In progresso | ✅ 41 | ALTA | 2025-11-20 |
 
 **Legenda**: ✅=Completo | 🟡=In progresso | ❌=Assente | ⚠️=Attenzione
+
+### 🤖 Descrittori AI - Status Generale
+**Totale descrittori generati**: 104 (tutti i 5 corsi)
+- **C**: 15 descriptors (Language Basics, Control, Pointers, Functions)
+- **HTMLCSS**: 15 descriptors (HTML, CSS, SCSS, JavaScript)
+- **Java**: 18 descriptors (OOP, Design Patterns, GUI, Lambda)
+- **PHP**: 15 descriptors (Security OWASP Top 10, Web Development)
+- **Python**: 41 descriptors (Pythonic idioms, 17 categorie, NAO Robotics)
+
+**Status**: ✅ COMPLETATI TUTTI (14 Novembre 2025)
 
 ---
 
@@ -154,8 +164,51 @@
   - Java: status specificato "Build warnings" (non più generico "Build issues")
   - Documentati task completati con date e note
 
+### 🤖 Descrittori AI - Tutti i Corsi (14 Novembre)
+✅ **[AI-DESC-C]** Descrittori C completati
+  - 15 concept descriptors: Language Basics (5), Control (4), Pointers (3), Functions (2)
+  - 7 esempi commentati integrati
+  - File: C_DESCRIPTORS_REPORT.json, C_COVERAGE_ANALYSIS.md, C_CONCEPT_IDS.md
+  - Status: ✅ COMPLETATO
+
+✅ **[AI-DESC-HTMLCSS]** Descrittori HTMLCSS completati
+  - 15 descriptors: HTML (4), CSS (4), SCSS (2), JavaScript (3), Accessibilità (2)
+  - Coverage: ~95% dei 12 capitoli
+  - File: HTMLCSS_DESCRIPTORS_REPORT.json, HTMLCSS_COVERAGE_ANALYSIS.md
+  - Status: ✅ COMPLETATO
+
+✅ **[AI-DESC-JAVA]** Descrittori Java OOP completati
+  - 18 descriptors: 4 pilastri OOP, 3 design patterns (MVC, Observer, Iterator)
+  - Copertura: 10/10 capitoli (100%)
+  - File: JAVA_DESCRIPTORS_REPORT.json, JAVA_COVERAGE_ANALYSIS.md, JAVA_CONCEPT_IDS.md
+  - Status: ✅ COMPLETATO
+
+✅ **[AI-DESC-PHP]** Descrittori PHP Sicurezza completati
+  - 15 security descriptors con OWASP Top 10 2021 (10/10 categorie, 88% score)
+  - Pattern unsafe vs safe documentati
+  - File: PHP_DESCRIPTORS_REPORT.json, PHP_COVERAGE_ANALYSIS.md
+  - Status: ✅ COMPLETATO
+
+✅ **[AI-DESC-PYTHON]** Descrittori Python Pythonic completati
+  - 41 descriptors in 17 categorie (più alto numero!)
+  - 14 idiomi Pythonic documentati (comprehension, with, decorators, generators)
+  - File: PYTHON_DESCRIPTORS_REPORT.json, PYTHON_COVERAGE_ANALYSIS.md, create_python_descriptors.py
+  - Status: ✅ COMPLETATO
+
+✅ **[AI-DESC-MD-UPDATE]** Aggiornati tutti i file MD (README, TODO, PIANO_SVILUPPO)
+  - C, HTMLCSS, Java, PHP, Python: tutti sincronizzati
+  - Sezioni "🤖 Descrittori AI" aggiunte a tutti i README
+  - Metriche e statistiche documentate
+  - Status: ✅ COMPLETATO
+
+**Totale descrittori**: 104 (15+15+18+15+41)
+**Tempo totale**: ~8 ore di generazione automatizzata
+**Qualità**: Alta (esempi commentati, best practices, common mistakes, learning objectives)
+
 ### Cronologia Recente
+- 2025-11-14: **🤖 Descrittori AI completati per tutti i 5 corsi** (104 totali: C=15, HTMLCSS=15, Java=18, PHP=15, Python=41)
 - 2025-11-14: Consolidamento post-execution: Python PDF ✅, Java CONTENT-01 ✅, status aggiornati
+- 2025-11-14: Creato README.md principale repository con panoramica completa
 - 2025-11-13: Struttura PHP allineata a Java; aggiornate inclusioni `main.tex`
 - 2025-11-12: Consolidamento sessioni/upload PHP; hardening form e CSRF
 - 2025-11-11: Python: introduzioni ampliate, moduli NAO aggiunti, PDF compilato

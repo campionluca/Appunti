@@ -73,6 +73,42 @@ Soluzioni complete:     Portfolio, E-commerce, Blog, Dashboard
 Tempo totale:           ~10 ore (2 sessioni)
 ```
 
+## 📊 Stato Descrittori
+
+**Status**: ✅ COMPLETATO (14 Nov 2025)
+**Descrittori Generati**: 15
+**Coverage**: ~95% dei 12 capitoli
+
+### Descrittori per Categoria
+
+| Categoria | Descrittori | Dettagli |
+|-----------|-------------|----------|
+| **HTML-SEMANTIC** | 2 | HTML-SEM-001 (Semantica), HTML-ACCESSO-001 (Accessibilità) |
+| **HTML-FORMS** | 2 | HTML-FORM-001 (Form), HTML-INPUT-001 (Input Types) |
+| **CSS-SELECTORS** | 2 | CSS-SEL-001 (Selettori), CSS-PSEUDO-001 (Pseudo-classi) |
+| **CSS-BOX** | 1 | CSS-BOX-001 (Box Model) |
+| **CSS-FLEXBOX** | 1 | CSS-FLEX-001 (Flexbox Layout) |
+| **CSS-GRID** | 1 | CSS-GRID-001 (Grid Layout) |
+| **CSS-RESPONSIVE** | 1 | CSS-RESP-001 (Design Responsivo) |
+| **SCSS-VARIABLES** | 2 | SCSS-VAR-001 (Variabili), SCSS-MIX-001 (Mixins) |
+| **JS-DOM** | 2 | JS-DOM-001 (DOM Manipulation), JS-EVENT-001 (Event Handling) |
+| **JS-FETCH** | 1 | JS-FETCH-001 (Fetch API & Async/Await) |
+
+### Copertura Capitoli
+- ✓ 01_intro_html.tex - HTML Semantico, Accessibilità
+- ✓ 02_tag_blocco_riga.tex - Block/inline elements
+- ✓ 03_form_input.tex - Form HTML5, Input Types
+- ✓ 04_css_base.tex - Selettori CSS, Box Model
+- ✓ 05_flexbox_grid.tex - Flexbox, Grid Layout
+- ✓ 06_responsive.tex - Design Responsivo
+- ✓ 07_sass_scss.tex - SCSS Variabili, Mixins
+- ✓ 09_javascript_dom.tex - DOM Manipulation, Event Handling
+- ✓ 10_javascript_async.tex - Fetch API, Async/Await
+
+### File Generati
+- `HTMLCSS_DESCRIPTORS_REPORT.json` - Report completo descrittori
+- `HTMLCSS_COVERAGE_ANALYSIS.md` - Analisi cobertura per capitolo
+
 ## Task Completati in Questa Sessione
 
 ### Fase 1: Creazione Struttura

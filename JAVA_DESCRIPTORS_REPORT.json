@@ -1,520 +1,518 @@
 {
-  "metadata": {
-    "corso": "Programmazione Java - 4° Anno",
-    "anno_scolastico": "2025-2026",
-    "data_generazione": "2025-11-14",
-    "versione": "1.0",
-    "totale_descriptors": 48,
-    "capitoli_analizzati": 10,
-    "lingue": ["italiano"],
-    "formato_esempi": "Java con commenti dettagliati"
+  "course_name": "Java - Programmazione Orientata agli Oggetti",
+  "version": "2.0 - Enhanced with OOP Theory",
+  "last_updated": "2025-11-14",
+  "total_descriptors": 18,
+  "focus_areas": [
+    "OOP Principles",
+    "Design Patterns",
+    "Best Practices",
+    "Comparison with C"
+  ],
+  "coverage": {
+    "chapters_analyzed": 10,
+    "main_chapters": [
+      "00_classi_oggetti_ereditarieta",
+      "01_stream_buffer",
+      "02_interfacce_classi_astratte",
+      "03_eccezioni",
+      "04_arraylist",
+      "05_interfacce_grafiche",
+      "06_model_view_controller",
+      "07_lambda_expressions"
+    ],
+    "pages_covered": "280-300 estimated",
+    "oop_focus": true,
+    "design_patterns_covered": [
+      "MVC",
+      "Observer",
+      "Singleton",
+      "Factory"
+    ]
   },
-
-  "categories": {
-    "JAVA-OOP": {
-      "nome": "Programmazione Orientata agli Oggetti",
-      "descrizione": "Fondamenti OOP in Java: classi, oggetti, ereditarietà, polimorfismo e package",
-      "capitoli_riferimento": ["00_classi_oggetti_ereditarieta"],
-      "total_concepts": 12
-    },
-    "JAVA-STREAM": {
-      "nome": "Stream e Buffer I/O",
-      "descrizione": "Gestione input/output con stream di byte e caratteri, serializzazione",
-      "capitoli_riferimento": ["01_stream_buffer"],
-      "total_concepts": 8
-    },
-    "JAVA-INTERFACE": {
-      "nome": "Interfacce e Classi Astratte",
-      "descrizione": "Astrazione, interfacce, classi astratte e polimorfismo avanzato",
-      "capitoli_riferimento": ["02_interfacce_classi_astratte"],
-      "total_concepts": 6
-    },
-    "JAVA-EXCEPTION": {
-      "nome": "Gestione Eccezioni",
-      "descrizione": "Error handling, try-catch-finally, eccezioni checked e unchecked",
-      "capitoli_riferimento": ["03_eccezioni"],
-      "total_concepts": 6
-    },
-    "JAVA-COLLECTION": {
-      "nome": "ArrayList e Collections",
-      "descrizione": "Collezioni dinamiche, generics, autoboxing/unboxing",
-      "capitoli_riferimento": ["04_arraylist"],
-      "total_concepts": 7
-    },
-    "JAVA-GUI": {
-      "nome": "Interfacce Grafiche Swing",
-      "descrizione": "GUI con Swing, componenti, layout manager ed eventi",
-      "capitoli_riferimento": ["05_interfacce_grafiche"],
-      "total_concepts": 6
-    },
-    "JAVA-MVC": {
-      "nome": "Pattern Model-View-Controller",
-      "descrizione": "Architettura MVC per separazione delle responsabilità",
-      "capitoli_riferimento": ["06_model_view_controller"],
-      "total_concepts": 3
-    },
-    "JAVA-LAMBDA": {
-      "nome": "Lambda Expressions",
-      "descrizione": "Programmazione funzionale con lambda expressions",
-      "capitoli_riferimento": ["07_lambda_expressions"],
-      "total_concepts": 4
-    }
-  },
-
-  "descriptors": [
+  "concept_descriptors": [
     {
       "concept_id": "JAVA-OOP-001",
-      "category": "JAVA-OOP",
-      "topic": "Classi e Oggetti",
-      "difficulty_level": "base",
-      "explanation": "Una classe è un modello o progetto che definisce le caratteristiche (attributi) e i comportamenti (metodi) di un tipo di oggetto. Un oggetto è un'istanza concreta di una classe, creata in memoria con l'operatore 'new'. Gli attributi rappresentano lo stato dell'oggetto, mentre i metodi definiscono le azioni che può compiere.",
-      "code_example": "// Definizione della classe Persona\npublic class Persona {\n    // Attributi privati (incapsulamento)\n    private String nome;\n    private String cognome;\n    private int eta;\n    \n    // Costruttore con parametri per inizializzare gli attributi\n    public Persona(String nome, String cognome, int eta) {\n        this.nome = nome;        // 'this' riferisce l'attributo dell'istanza\n        this.cognome = cognome;  // 'nome' è il parametro del costruttore\n        this.eta = eta;\n    }\n    \n    // Metodo per stampare le informazioni della persona\n    public void stampaInfo() {\n        System.out.println(nome + \" \" + cognome + \", \" + eta + \" anni\");\n    }\n    \n    // Metodo che verifica se la persona è maggiorenne\n    public boolean isMaggiorenne() {\n        return eta >= 18;\n    }\n}\n\n// Utilizzo della classe\npublic class TestPersona {\n    public static void main(String[] args) {\n        // Creazione di oggetti (istanze della classe Persona)\n        Persona p1 = new Persona(\"Mario\", \"Rossi\", 25);\n        Persona p2 = new Persona(\"Laura\", \"Bianchi\", 17);\n        \n        // Invocazione di metodi sugli oggetti\n        p1.stampaInfo();  // Output: Mario Rossi, 25 anni\n        \n        if (p2.isMaggiorenne()) {\n            System.out.println(\"Laura è maggiorenne\");\n        } else {\n            System.out.println(\"Laura è minorenne\");\n        }\n    }\n}",
-      "learning_objectives": [
-        "Comprendere la differenza tra classe e oggetto",
-        "Dichiarare classi con attributi e metodi",
-        "Creare istanze di classi usando 'new'",
-        "Utilizzare 'this' per riferire attributi di istanza"
-      ],
+      "topic": "Classi e Oggetti - Fondamenti OOP",
+      "category": "Object-Oriented Programming",
+      "difficulty_level": "beginner",
+      "explanation": "Una CLASSE è un modello (blueprint) che definisce attributi e metodi. Un OGGETTO è un'istanza concreta creata con 'new'. L'incapsulamento protegge i dati con modificatori di accesso (private, public, protected). La parola 'this' riferisce l'istanza corrente.",
+      "code_example": "// Classe modello per Studente\npublic class Studente {\n    private String matricola;\n    private String nome;\n    private double media;\n\n    public Studente(String matricola, String nome, double media) {\n        this.matricola = matricola;\n        this.nome = nome;\n        this.media = media;\n    }\n\n    public double getMedia() { return media; }\n    public void setMedia(double m) {\n        if (m >= 0.0 && m <= 10.0) this.media = m;\n    }\n}",
       "common_mistakes": [
-        "Confondere la classe (modello) con l'oggetto (istanza concreta)",
-        "Dimenticare l'operatore 'new' per creare oggetti",
-        "Accedere direttamente ad attributi privati dall'esterno della classe",
-        "Non usare 'this' quando parametri e attributi hanno lo stesso nome"
+        "Non usare 'this'",
+        "Attributi public",
+        "No validazione setter"
       ],
       "best_practices": [
-        "Dichiarare attributi come 'private' per incapsulamento",
-        "Usare nomi descrittivi per classi (PascalCase) e metodi (camelCase)",
-        "Fornire costruttori per inizializzare correttamente gli oggetti",
-        "Usare 'this' per chiarezza anche quando non strettamente necessario"
+        "Attributi private",
+        "PascalCase classi",
+        "Validazione input"
       ],
-      "related_concepts": ["JAVA-OOP-002", "JAVA-OOP-003", "JAVA-OOP-005"]
+      "learning_objectives": [
+        "Differenza classe-oggetto",
+        "Usare this",
+        "Getter/setter"
+      ],
+      "related_concepts": [
+        "JAVA-INHERITANCE-001",
+        "JAVA-STATIC-001"
+      ]
     },
-
     {
-      "concept_id": "JAVA-OOP-002",
-      "category": "JAVA-OOP",
-      "topic": "Costruttori e Overloading",
-      "difficulty_level": "base",
-      "explanation": "I costruttori sono metodi speciali invocati automaticamente alla creazione di un oggetto. Devono avere lo stesso nome della classe e non hanno tipo di ritorno. L'overloading permette di definire più costruttori (o metodi) con lo stesso nome ma firme diverse (numero, tipo o ordine dei parametri).",
-      "code_example": "public class Persona {\n    private String nome;\n    private String cognome;\n    private int eta;\n    \n    // Costruttore completo con tutti i parametri\n    public Persona(String nome, String cognome, int eta) {\n        this.nome = nome;\n        this.cognome = cognome;\n        this.eta = eta;\n    }\n    \n    // Costruttore senza parametri (overloading)\n    // Richiama il costruttore completo con valori di default\n    public Persona() {\n        this(\"Sconosciuto\", \"Sconosciuto\", 0);\n    }\n    \n    // Costruttore con solo nome e cognome (overloading)\n    // Imposta età a 0 come default\n    public Persona(String nome, String cognome) {\n        this(nome, cognome, 0);\n    }\n}\n\n// Esempio di overloading con metodi normali\npublic class Calcolatrice {\n    // Somma due interi\n    public int calcola(int a, int b) {\n        return a + b;\n    }\n    \n    // Somma tre interi (overloading: numero diverso di parametri)\n    public int calcola(int a, int b, int c) {\n        return a + b + c;\n    }\n    \n    // Somma due double (overloading: tipo diverso di parametri)\n    public double calcola(double a, double b) {\n        return a + b;\n    }\n}\n\n// Utilizzo\npublic class Test {\n    public static void main(String[] args) {\n        // Uso dei diversi costruttori\n        Persona p1 = new Persona(\"Mario\", \"Rossi\", 30);\n        Persona p2 = new Persona(\"Laura\", \"Bianchi\");  // eta = 0\n        Persona p3 = new Persona();  // tutti valori di default\n        \n        // Uso dell'overloading dei metodi\n        Calcolatrice calc = new Calcolatrice();\n        System.out.println(calc.calcola(5, 3));      // calcola(int, int)\n        System.out.println(calc.calcola(5, 3, 2));   // calcola(int, int, int)\n        System.out.println(calc.calcola(5.5, 3.2));  // calcola(double, double)\n    }\n}",
-      "learning_objectives": [
-        "Comprendere il ruolo dei costruttori nell'inizializzazione",
-        "Implementare costruttori con diversi parametri",
-        "Usare 'this()' per chiamare altri costruttori",
-        "Applicare l'overloading a costruttori e metodi"
-      ],
+      "concept_id": "JAVA-STATIC-001",
+      "topic": "Membri Statici - Metodi e Attributi di Classe",
+      "category": "Object-Oriented Programming",
+      "difficulty_level": "intermediate",
+      "explanation": "Elementi STATICI appartengono alla CLASSE, non all'istanza. Condivisi da tutti gli oggetti. Utili per utility methods (Math.pow) e costanti (PI). Metodi static non possono accedere membri di istanza.",
+      "code_example": "public class Studente {\n    private static int contatore = 0;\n    public static final double MEDIA_MIN = 6.0;\n\n    private int id;\n\n    public Studente() {\n        contatore++;\n        this.id = contatore;\n    }\n\n    public static int getTotale() {\n        return contatore;\n    }\n}\n\n// Uso: Studente.getTotale() senza creare oggetto",
       "common_mistakes": [
-        "Dare un tipo di ritorno al costruttore (diventa un metodo normale)",
-        "Dimenticare che l'overloading richiede firme diverse, non solo tipo di ritorno diverso",
-        "Non mettere 'this()' come prima istruzione del costruttore",
-        "Confondere overloading (stessa classe) con override (ereditarietà)"
+        "Accedere 'this' da static",
+        "Confondere static/instance"
       ],
       "best_practices": [
-        "Fornire un costruttore di default per flessibilità",
-        "Usare 'this()' per evitare duplicazione di codice tra costruttori",
-        "Mettere il costruttore più completo in cima e farlo richiamare dagli altri",
-        "Validare i parametri nei costruttori per garantire stato consistente"
+        "Costanti: static final",
+        "Utility: metodi static"
       ],
-      "related_concepts": ["JAVA-OOP-001", "JAVA-OOP-005"]
+      "learning_objectives": [
+        "Differenza static/instance",
+        "Contatori statici"
+      ],
+      "related_concepts": [
+        "JAVA-OOP-001",
+        "JAVA-FINAL-001"
+      ]
     },
-
     {
-      "concept_id": "JAVA-OOP-003",
-      "category": "JAVA-OOP",
-      "topic": "Getter, Setter e Incapsulamento",
-      "difficulty_level": "base",
-      "explanation": "L'incapsulamento è un principio OOP che nasconde i dettagli implementativi rendendo gli attributi privati. I getter (accessors) permettono di leggere i valori, i setter (mutators) di modificarli. Questo controllo centralizzato permette validazione e protezione dei dati.",
-      "code_example": "public class Studente {\n    // Attributi privati - non accessibili direttamente dall'esterno\n    private String matricola;\n    private String nome;\n    private double media;\n    \n    public Studente(String matricola, String nome, double media) {\n        this.matricola = matricola;\n        this.nome = nome;\n        this.media = media;\n    }\n    \n    // GETTER: restituiscono il valore di un attributo\n    // Convenzione: getNomeAttributo()\n    public String getMatricola() {\n        return matricola;\n    }\n    \n    public String getNome() {\n        return nome;\n    }\n    \n    public double getMedia() {\n        return media;\n    }\n    \n    // SETTER: impostano il valore di un attributo\n    // Convenzione: setNomeAttributo(tipo valore)\n    // Possono includere validazione\n    public void setMatricola(String matricola) {\n        this.matricola = matricola;\n    }\n    \n    public void setNome(String nome) {\n        this.nome = nome;\n    }\n    \n    // Setter con validazione: accetta solo medie tra 0 e 10\n    public void setMedia(double media) {\n        if (media >= 0.0 && media <= 10.0) {\n            this.media = media;\n        } else {\n            System.out.println(\"Errore: Media non valida (deve essere 0-10)\");\n        }\n    }\n    \n    // Getter per booleani usa convenzione isNomeAttributo()\n    public boolean isPromosso() {\n        return media >= 6.0;\n    }\n}\n\n// Utilizzo\npublic class TestStudente {\n    public static void main(String[] args) {\n        Studente s = new Studente(\"A001\", \"Mario Rossi\", 7.0);\n        \n        // Accesso tramite getter (lettura)\n        System.out.println(\"Nome: \" + s.getNome());\n        System.out.println(\"Media: \" + s.getMedia());\n        \n        // Modifica tramite setter (scrittura)\n        s.setMedia(9.5);\n        System.out.println(\"Nuova media: \" + s.getMedia());\n        \n        // Il setter valida l'input\n        s.setMedia(12.0);  // Errore: valore non valido\n        System.out.println(\"Media dopo tentativo: \" + s.getMedia()); // Rimane 9.5\n        \n        // Verifica promozione\n        if (s.isPromosso()) {\n            System.out.println(s.getNome() + \" è promosso!\");\n        }\n    }\n}",
-      "learning_objectives": [
-        "Comprendere il principio di incapsulamento",
-        "Implementare getter e setter per attributi privati",
-        "Aggiungere validazione nei setter",
-        "Proteggere l'integrità dei dati della classe"
-      ],
+      "concept_id": "JAVA-INHERITANCE-001",
+      "topic": "Ereditarietà - Extends e Super",
+      "category": "Inheritance and Polymorphism",
+      "difficulty_level": "intermediate",
+      "explanation": "L'EREDITARIETÀ permette a una sottoclasse di acquisire membri da superclasse con 'extends'. Relazione 'is-a'. 'super()' chiama costruttore superclasse (prima istruzione). 'super.metodo()' accede versione superclasse. Java: ereditarietà singola.",
+      "code_example": "public class Veicolo {\n    protected String targa;\n\n    public Veicolo(String targa) {\n        this.targa = targa;\n    }\n\n    public void mostraInfo() {\n        System.out.println(\"Targa: \" + targa);\n    }\n}\n\npublic class Auto extends Veicolo {\n    private int posti;\n\n    public Auto(String targa, int posti) {\n        super(targa);  // Chiama costruttore Veicolo\n        this.posti = posti;\n    }\n\n    @Override\n    public void mostraInfo() {\n        super.mostraInfo();  // Chiama versione Veicolo\n        System.out.println(\"Posti: \" + posti);\n    }\n}",
       "common_mistakes": [
-        "Dichiarare attributi pubblici invece di usare getter/setter",
-        "Dimenticare la validazione nei setter",
-        "Esporre direttamente collezioni mutabili dai getter",
-        "Non seguire le convenzioni di naming (get/set/is)"
+        "Dimenticare super()",
+        "super() non prima",
+        "Override senza @Override"
       ],
       "best_practices": [
-        "Sempre attributi private, metodi public (quando appropriato)",
-        "Validare i dati nei setter prima di assegnarli",
-        "Per collezioni, restituire copie nei getter per proteggere lo stato interno",
-        "Usare 'is' per getter booleani invece di 'get'",
-        "Non creare setter se un attributo non dovrebbe essere modificabile"
+        "Usare @Override",
+        "super() sempre prima",
+        "protected per ereditarietà"
       ],
-      "related_concepts": ["JAVA-OOP-001", "JAVA-OOP-002"]
+      "learning_objectives": [
+        "Usare extends",
+        "super()",
+        "Override metodi"
+      ],
+      "related_concepts": [
+        "JAVA-OOP-001",
+        "JAVA-POLYMORPHISM-001"
+      ]
     },
-
     {
-      "concept_id": "JAVA-OOP-004",
-      "category": "JAVA-OOP",
-      "topic": "Ereditarietà e Superclassi",
-      "difficulty_level": "intermedio",
-      "explanation": "L'ereditarietà permette a una classe (sottoclasse) di acquisire attributi e metodi da un'altra classe (superclasse), stabilendo una relazione 'è un'. La parola chiave 'extends' implementa l'ereditarietà. 'super' permette di accedere a membri della superclasse.",
-      "code_example": "// SUPERCLASSE: definisce caratteristiche comuni a tutti i veicoli\npublic class Veicolo {\n    // Attributi protetti: accessibili nelle sottoclassi\n    protected String targa;\n    protected int annoImmatricolazione;\n    protected double velocitaMassima;\n    \n    // Costruttore della superclasse\n    public Veicolo(String targa, int anno, double vMax) {\n        this.targa = targa;\n        this.annoImmatricolazione = anno;\n        this.velocitaMassima = vMax;\n    }\n    \n    // Metodo che può essere riusato o sovrascritto\n    public void mostraInfo() {\n        System.out.println(\"Veicolo targa: \" + targa);\n        System.out.println(\"Anno: \" + annoImmatricolazione);\n        System.out.println(\"V.max: \" + velocitaMassima + \" km/h\");\n    }\n    \n    public double calcolaBollo() {\n        return 100.0;  // Calcolo base del bollo\n    }\n}\n\n// SOTTOCLASSE: specializza Veicolo aggiungendo caratteristiche specifiche\npublic class Auto extends Veicolo {\n    // Attributi specifici della sottoclasse Auto\n    private int numeroPosti;\n    private String alimentazione;\n    \n    // Costruttore: deve invocare il costruttore della superclasse\n    public Auto(String targa, int anno, double vMax, int posti, String alim) {\n        // super() chiama il costruttore della superclasse\n        // DEVE essere la prima istruzione\n        super(targa, anno, vMax);\n        this.numeroPosti = posti;\n        this.alimentazione = alim;\n    }\n    \n    // Override: ridefinisce il metodo della superclasse\n    @Override\n    public void mostraInfo() {\n        // Riusa il metodo della superclasse\n        super.mostraInfo();\n        // Aggiunge informazioni specifiche dell'Auto\n        System.out.println(\"Posti: \" + numeroPosti);\n        System.out.println(\"Alimentazione: \" + alimentazione);\n    }\n    \n    // Override con logica specializzata\n    @Override\n    public double calcolaBollo() {\n        double bolloBase = super.calcolaBollo();\n        // Auto elettriche hanno sconto 50%\n        if (alimentazione.equalsIgnoreCase(\"elettrica\")) {\n            return bolloBase * 0.5;\n        }\n        return bolloBase;\n    }\n    \n    // Metodo specifico della sottoclasse\n    public boolean isFamiliare() {\n        return numeroPosti >= 5;\n    }\n}\n\n// Utilizzo\npublic class TestEreditarieta {\n    public static void main(String[] args) {\n        // Creo un'Auto (che è anche un Veicolo)\n        Auto a = new Auto(\"AB123CD\", 2020, 180.0, 5, \"elettrica\");\n        \n        // Posso chiamare metodi ereditati e ridefiniti\n        a.mostraInfo();  // Usa la versione ridefinita in Auto\n        \n        System.out.println(\"Bollo: \" + a.calcolaBollo() + \" euro\");\n        \n        if (a.isFamiliare()) {\n            System.out.println(\"È un'auto familiare\");\n        }\n    }\n}",
-      "learning_objectives": [
-        "Implementare ereditarietà con 'extends'",
-        "Usare 'super()' per chiamare costruttori della superclasse",
-        "Ridefinire metodi con '@Override'",
-        "Comprendere la relazione 'è un' tra classi"
-      ],
+      "concept_id": "JAVA-POLYMORPHISM-001",
+      "topic": "Polimorfismo e Binding Dinamico",
+      "category": "Inheritance and Polymorphism",
+      "difficulty_level": "intermediate",
+      "explanation": "Il POLIMORFISMO permette a riferimento superclasse di puntare a oggetti sottoclasse. BINDING DINAMICO: JVM sceglie metodo a runtime in base al tipo reale. 'instanceof' verifica tipo runtime. Downcasting: conversione superclasse->sottoclasse.",
+      "code_example": "// Array polimorfo\nVeicolo[] parco = new Veicolo[3];\nparco[0] = new Auto(\"AB123\", 5);\nparco[1] = new Moto(\"EF456\", 600);\nparco[2] = new Auto(\"IJ789\", 4);\n\n// Binding dinamico: chiama versione corretta\nfor (Veicolo v : parco) {\n    v.mostraInfo();  // Auto o Moto in base al tipo reale\n}\n\n// instanceof e downcasting\nif (parco[0] instanceof Auto) {\n    Auto auto = (Auto) parco[0];\n    System.out.println(auto.getPosti());\n}",
       "common_mistakes": [
-        "Dimenticare di chiamare super() nel costruttore della sottoclasse",
-        "Non mettere super() come prima istruzione",
-        "Confondere override (ereditarietà) con overload (stessa classe)",
-        "Usare modificatori più restrittivi nell'override"
+        "Cast senza instanceof",
+        "Confondere tipo riferimento/oggetto"
       ],
       "best_practices": [
-        "Usare @Override per sicurezza (catch errori di battitura)",
-        "Attributi protected per condivisione con sottoclassi",
-        "Chiamare super.metodo() per estendere comportamento",
-        "Preferire composizione a ereditarietà quando non c'è relazione 'è un'"
+        "instanceof prima di cast",
+        "Sfruttare polimorfismo vs if-instanceof"
       ],
-      "related_concepts": ["JAVA-OOP-005", "JAVA-OOP-006"]
+      "learning_objectives": [
+        "Binding dinamico",
+        "instanceof",
+        "Downcasting sicuro"
+      ],
+      "related_concepts": [
+        "JAVA-INHERITANCE-001",
+        "JAVA-INTERFACE-001"
+      ]
     },
-
     {
-      "concept_id": "JAVA-OOP-005",
-      "category": "JAVA-OOP",
-      "topic": "Polimorfismo",
-      "difficulty_level": "intermedio",
-      "explanation": "Il polimorfismo ('molte forme') permette a un riferimento di superclasse di puntare a oggetti di qualsiasi sua sottoclasse. A runtime, viene eseguita la versione corretta del metodo in base al tipo reale dell'oggetto (binding dinamico). Questo rende il codice più generico e flessibile.",
-      "code_example": "// Gerarchia di classi per dimostrare il polimorfismo\npublic class Veicolo {\n    protected String targa;\n    \n    public Veicolo(String targa) {\n        this.targa = targa;\n    }\n    \n    public void mostraInfo() {\n        System.out.println(\"Veicolo: \" + targa);\n    }\n    \n    public double calcolaBollo() {\n        return 100.0;\n    }\n}\n\npublic class Auto extends Veicolo {\n    public Auto(String targa) {\n        super(targa);\n    }\n    \n    @Override\n    public double calcolaBollo() {\n        return 120.0;\n    }\n}\n\npublic class Moto extends Veicolo {\n    public Moto(String targa) {\n        super(targa);\n    }\n    \n    @Override\n    public double calcolaBollo() {\n        return 80.0;\n    }\n}\n\n// POLIMORFISMO IN AZIONE\npublic class GestioneParcoVeicoli {\n    public static void main(String[] args) {\n        // Array di tipo Veicolo può contenere Auto e Moto\n        // Questo è POLIMORFISMO: un riferimento di superclasse\n        // può puntare a oggetti di sottoclassi diverse\n        Veicolo[] parco = new Veicolo[3];\n        \n        parco[0] = new Auto(\"AB123CD\");     // Auto è un Veicolo\n        parco[1] = new Moto(\"EF456GH\");     // Moto è un Veicolo\n        parco[2] = new Auto(\"IJ789KL\");\n        \n        // Calcolo totale bolli in modo polimorfico\n        double totale = 0;\n        for (Veicolo v : parco) {\n            // BINDING DINAMICO: Java determina a RUNTIME\n            // quale versione di calcolaBollo() chiamare\n            // in base al tipo reale dell'oggetto (Auto o Moto)\n            double bollo = v.calcolaBollo();\n            totale += bollo;\n            \n            v.mostraInfo();\n            System.out.println(\"Bollo: \" + bollo + \" euro\\n\");\n        }\n        \n        System.out.println(\"Totale bolli: \" + totale + \" euro\");\n        \n        // instanceof: verificare il tipo reale a runtime\n        System.out.println(\"\\n--- Conteggio veicoli ---\");\n        int autoCount = 0;\n        int motoCount = 0;\n        \n        for (Veicolo v : parco) {\n            if (v instanceof Auto) {\n                autoCount++;\n            } else if (v instanceof Moto) {\n                motoCount++;\n            }\n        }\n        \n        System.out.println(\"Auto: \" + autoCount);\n        System.out.println(\"Moto: \" + motoCount);\n    }\n}",
-      "learning_objectives": [
-        "Comprendere il concetto di polimorfismo",
-        "Usare riferimenti di superclasse per oggetti di sottoclassi",
-        "Sfruttare il binding dinamico",
-        "Usare instanceof per verificare tipi a runtime"
-      ],
+      "concept_id": "JAVA-PACKAGE-001",
+      "topic": "Package e Organizzazione Codice",
+      "category": "Code Organization",
+      "difficulty_level": "beginner",
+      "explanation": "I PACKAGE raggruppano classi correlate. Sintassi 'package it.scuola.modelli;' prima istruzione. 'import' per usare classi altri package. Directory rispecchia gerarchia package. Previene conflitti nomi.",
+      "code_example": "// File: Studente.java\npackage it.scuola.gestionale.modelli;\n\npublic class Studente {\n    // Implementazione\n}\n\n// File: MainApp.java\npackage it.scuola.gestionale.app;\n\nimport it.scuola.gestionale.modelli.Studente;\n\npublic class MainApp {\n    public static void main(String[] args) {\n        Studente s = new Studente();\n    }\n}\n\n// Struttura directory:\n// src/it/scuola/gestionale/modelli/Studente.java\n// src/it/scuola/gestionale/app/MainApp.java",
       "common_mistakes": [
-        "Confondere tipo dichiarato con tipo reale dell'oggetto",
-        "Tentare di chiamare metodi specifici della sottoclasse su riferimento superclasse",
-        "Abusare di instanceof invece di usare polimorfismo puro",
-        "Non comprendere che il metodo eseguito dipende dall'oggetto reale"
+        "package non prima",
+        "Directory != package",
+        "import package vs classi"
       ],
       "best_practices": [
-        "Preferire polimorfismo a catene di if-instanceof",
-        "Usare tipo più generico possibile per riferimenti (programmazione a interfacce)",
-        "Sfruttare binding dinamico per codice estensibile",
-        "Casting solo quando strettamente necessario e dopo instanceof"
+        "Dominio inverso: it.azienda.progetto",
+        "Package per area funzionale"
       ],
-      "related_concepts": ["JAVA-OOP-004", "JAVA-INTERFACE-001", "JAVA-OOP-006"]
-    },
-
-    {
-      "concept_id": "JAVA-OOP-006",
-      "category": "JAVA-OOP",
-      "topic": "Metodi e Attributi Statici",
-      "difficulty_level": "intermedio",
-      "explanation": "Membri statici (attributi o metodi) appartengono alla classe, non a istanze specifiche. Sono condivisi da tutti gli oggetti e accessibili direttamente tramite nome classe. I metodi statici possono accedere solo a membri statici.",
-      "code_example": "public class Contatore {\n    // ATTRIBUTO STATICO: condiviso da tutte le istanze\n    // Esiste UNA SOLA copia in memoria per l'intera classe\n    private static int conteggioGlobale = 0;\n    \n    // ATTRIBUTO DI ISTANZA: ogni oggetto ha la sua copia\n    private int idIstanza;\n    \n    // Costruttore: eseguito per ogni nuovo oggetto\n    public Contatore() {\n        // Incrementa il contatore globale condiviso\n        conteggioGlobale++;\n        // Assegna ID univoco a questa istanza\n        this.idIstanza = conteggioGlobale;\n    }\n    \n    // METODO STATICO: appartiene alla classe\n    // - Si invoca su NomeClasse.metodo(), non su oggetto\n    // - Può accedere solo a membri statici\n    // - Non può usare 'this' (non c'è un'istanza)\n    public static int getConteggioGlobale() {\n        return conteggioGlobale;\n    }\n    \n    // METODO DI ISTANZA: appartiene all'oggetto\n    // - Si invoca su oggetto.metodo()\n    // - Può accedere sia a membri statici che di istanza\n    public int getIdIstanza() {\n        return idIstanza;\n    }\n    \n    // Metodo statico di utilità\n    public static void resetContatore() {\n        conteggioGlobale = 0;\n    }\n}\n\n// Classe di utilità matematica (tutti metodi statici)\npublic class MathUtils {\n    // Costante statica (public static final)\n    public static final double PI = 3.14159;\n    \n    // Metodo statico: calcolaAreaCerchio\n    // Non serve creare un oggetto MathUtils per usarlo\n    public static double calcolaAreaCerchio(double raggio) {\n        return PI * raggio * raggio;\n    }\n    \n    // Metodo statico: massimo tra due numeri\n    public static int max(int a, int b) {\n        return (a > b) ? a : b;\n    }\n}\n\n// Utilizzo\npublic class TestStatici {\n    public static void main(String[] args) {\n        // Contatore globale iniziale\n        System.out.println(\"Contatore: \" + Contatore.getConteggioGlobale()); // 0\n        \n        // Creazione di 3 oggetti Contatore\n        Contatore c1 = new Contatore();\n        Contatore c2 = new Contatore();\n        Contatore c3 = new Contatore();\n        \n        // Ogni oggetto ha un ID diverso (attributo di istanza)\n        System.out.println(\"ID c1: \" + c1.getIdIstanza());  // 1\n        System.out.println(\"ID c2: \" + c2.getIdIstanza());  // 2\n        System.out.println(\"ID c3: \" + c3.getIdIstanza());  // 3\n        \n        // Il contatore globale è condiviso (attributo statico)\n        System.out.println(\"Contatore finale: \" + Contatore.getConteggioGlobale()); // 3\n        \n        // Uso di metodi statici di utilità (senza creare oggetto)\n        double area = MathUtils.calcolaAreaCerchio(5.0);\n        System.out.println(\"Area cerchio: \" + area);\n        \n        int massimo = MathUtils.max(10, 20);\n        System.out.println(\"Massimo: \" + massimo);\n        \n        // Accesso a costante statica\n        System.out.println(\"Valore di PI: \" + MathUtils.PI);\n    }\n}",
       "learning_objectives": [
-        "Distinguere membri statici da membri di istanza",
-        "Usare metodi statici per funzionalità di utilità",
-        "Comprendere quando usare static",
-        "Creare costanti con 'public static final'"
+        "Dichiarare package",
+        "Import",
+        "Organizzare directory"
       ],
-      "common_mistakes": [
-        "Tentare di accedere a membri di istanza da metodi statici",
-        "Usare 'this' in metodi statici (errore di compilazione)",
-        "Abusare di static quando servono oggetti distinti",
-        "Confondere static con final"
-      ],
-      "best_practices": [
-        "Usare static per metodi di utilità senza stato (Math, Collections)",
-        "Usare static per contatori o risorse condivise",
-        "Costanti: sempre 'public static final' con nomi MAIUSCOLI",
-        "Evitare attributi statici mutabili quando possibile (problemi concorrenza)"
-      ],
-      "related_concepts": ["JAVA-OOP-001", "JAVA-OOP-003"]
+      "related_concepts": [
+        "JAVA-ACCESS-001",
+        "JAVA-CLASSPATH-001"
+      ]
     },
-
-    {
-      "concept_id": "JAVA-STREAM-001",
-      "category": "JAVA-STREAM",
-      "topic": "Concetti di Stream e Buffer",
-      "difficulty_level": "intermedio",
-      "explanation": "Uno stream è una sequenza di dati che fluisce da una sorgente a una destinazione. I buffer sono zone di memoria temporanea che accumulano dati prima di leggerli/scriverli, riducendo gli accessi al disco e migliorando le performance.",
-      "code_example": "import java.io.*;\n\n// Esempio completo: lettura file di testo con buffering\npublic class EsempioStreamBuffer {\n    public static void main(String[] args) {\n        // SENZA BUFFER: lento per file grandi\n        // Ogni read() accede al disco\n        try (FileReader fr = new FileReader(\"dati.txt\")) {\n            int carattere;\n            while ((carattere = fr.read()) != -1) {\n                System.out.print((char) carattere);\n            }\n        } catch (IOException e) {\n            System.out.println(\"Errore: \" + e.getMessage());\n        }\n        \n        System.out.println(\"\\n\\n--- Con buffering ---\");\n        \n        // CON BUFFER: veloce, riduce accessi al disco\n        // BufferedReader legge blocchi di dati in memoria\n        try (BufferedReader br = new BufferedReader(\n                new FileReader(\"dati.txt\"))) {\n            \n            String riga;\n            // readLine() legge righe intere dal buffer\n            while ((riga = br.readLine()) != null) {\n                System.out.println(riga);\n            }\n            \n        } catch (IOException e) {\n            System.out.println(\"Errore: \" + e.getMessage());\n        }\n    }\n}\n\n// Esempio: Scrittura con buffer\npublic class ScritturaTesto {\n    public static void main(String[] args) {\n        // BufferedWriter accumula dati in memoria\n        // e li scrive su disco in blocchi\n        try (BufferedWriter bw = new BufferedWriter(\n                new FileWriter(\"output.txt\"))) {\n            \n            bw.write(\"Prima riga di testo\");\n            bw.newLine();  // Separatore di riga portabile\n            bw.write(\"Seconda riga\");\n            bw.newLine();\n            bw.write(\"Terza riga\");\n            \n            // Alla chiusura, i dati nel buffer vengono\n            // scritti su disco (flush automatico)\n            \n        } catch (IOException e) {\n            System.out.println(\"Errore: \" + e.getMessage());\n        }\n    }\n}",
-      "learning_objectives": [
-        "Comprendere il concetto di stream come flusso di dati",
-        "Distinguere stream di byte da stream di caratteri",
-        "Capire come il buffering migliora le performance",
-        "Usare BufferedReader e BufferedWriter"
-      ],
-      "common_mistakes": [
-        "Leggere byte per byte senza buffer (molto lento)",
-        "Dimenticare di chiudere gli stream",
-        "Non gestire IOException",
-        "Usare stream di byte per file di testo (meglio stream di caratteri)"
-      ],
-      "best_practices": [
-        "Usare sempre buffering per file grandi",
-        "Preferire BufferedReader/Writer per file di testo",
-        "Usare try-with-resources per chiusura automatica",
-        "Usare newLine() invece di hardcodare \\n"
-      ],
-      "related_concepts": ["JAVA-STREAM-002", "JAVA-STREAM-003", "JAVA-EXCEPTION-002"]
-    },
-
-    {
-      "concept_id": "JAVA-STREAM-002",
-      "category": "JAVA-STREAM",
-      "topic": "Try-with-resources",
-      "difficulty_level": "intermedio",
-      "explanation": "Try-with-resources è un costrutto introdotto in Java 7 che garantisce la chiusura automatica delle risorse (stream, connessioni) anche in caso di eccezioni. Le risorse dichiarate nel try vengono chiuse automaticamente alla fine del blocco.",
-      "code_example": "import java.io.*;\n\n// Esempio: Try-with-resources per gestione automatica delle risorse\npublic class TryWithResourcesEsempio {\n    public static void main(String[] args) {\n        // MODO VECCHIO (prima di Java 7): verboso e soggetto a errori\n        BufferedReader br = null;\n        try {\n            br = new BufferedReader(new FileReader(\"file.txt\"));\n            String riga = br.readLine();\n            System.out.println(riga);\n        } catch (IOException e) {\n            e.printStackTrace();\n        } finally {\n            // Devi chiudere manualmente nel finally\n            try {\n                if (br != null) {\n                    br.close();\n                }\n            } catch (IOException e) {\n                e.printStackTrace();\n            }\n        }\n        \n        // MODO MODERNO: try-with-resources (da Java 7)\n        // Le risorse vengono chiuse AUTOMATICAMENTE\n        try (BufferedReader br2 = new BufferedReader(\n                new FileReader(\"file.txt\"))) {\n            \n            String riga;\n            while ((riga = br2.readLine()) != null) {\n                System.out.println(riga);\n            }\n            \n            // br2 viene chiuso automaticamente qui\n            // anche se si verifica un'eccezione\n            \n        } catch (IOException e) {\n            System.out.println(\"Errore: \" + e.getMessage());\n        }\n        \n        // RISORSE MULTIPLE: separate da punto e virgola\n        try (BufferedReader input = new BufferedReader(\n                new FileReader(\"input.txt\"));\n             BufferedWriter output = new BufferedWriter(\n                new FileWriter(\"output.txt\"))) {\n            \n            String riga;\n            while ((riga = input.readLine()) != null) {\n                output.write(riga);\n                output.newLine();\n            }\n            \n            // Entrambe le risorse vengono chiuse automaticamente\n            // nell'ordine INVERSO di dichiarazione\n            \n        } catch (IOException e) {\n            System.out.println(\"Errore: \" + e.getMessage());\n        }\n    }\n}\n\n// Classe personalizzata che può usare try-with-resources\n// Deve implementare AutoCloseable\npublic class MiaRisorsa implements AutoCloseable {\n    private String nome;\n    \n    public MiaRisorsa(String nome) {\n        this.nome = nome;\n        System.out.println(\"Apertura risorsa: \" + nome);\n    }\n    \n    public void usa() {\n        System.out.println(\"Uso risorsa: \" + nome);\n    }\n    \n    // Il metodo close() viene chiamato automaticamente\n    @Override\n    public void close() {\n        System.out.println(\"Chiusura risorsa: \" + nome);\n    }\n    \n    public static void main(String[] args) {\n        // Uso con try-with-resources\n        try (MiaRisorsa r = new MiaRisorsa(\"DB Connection\")) {\n            r.usa();\n        }  // close() chiamato automaticamente qui\n    }\n}",
-      "learning_objectives": [
-        "Usare try-with-resources per chiusura automatica",
-        "Gestire risorse multiple",
-        "Comprendere l'ordine di chiusura",
-        "Implementare AutoCloseable per risorse personalizzate"
-      ],
-      "common_mistakes": [
-        "Usare ancora try-finally manualmente (obsoleto)",
-        "Tentare di usare la risorsa dopo il blocco try",
-        "Non gestire IOException",
-        "Dimenticare che le risorse vengono chiuse in ordine inverso"
-      ],
-      "best_practices": [
-        "Sempre preferire try-with-resources a try-finally manuale",
-        "Dichiarare risorse nell'ordine di dipendenza",
-        "Implementare AutoCloseable per risorse custom",
-        "Usare per: file, connessioni DB, socket, scanner"
-      ],
-      "related_concepts": ["JAVA-STREAM-001", "JAVA-EXCEPTION-001"]
-    },
-
     {
       "concept_id": "JAVA-INTERFACE-001",
-      "category": "JAVA-INTERFACE",
-      "topic": "Interfacce",
-      "difficulty_level": "intermedio",
-      "explanation": "Un'interfaccia definisce un contratto: un insieme di metodi astratti che le classi devono implementare. Le interfacce permettono astrazione e polimorfismo. Una classe può implementare più interfacce (ereditarietà multipla di comportamento).",
-      "code_example": "// Interfaccia: definisce COSA fare, non COME\npublic interface Forma {\n    // Metodi astratti (implicitamente public abstract)\n    double calcolaArea();\n    double calcolaPerimetro();\n    \n    // Costanti (implicitamente public static final)\n    double PI = 3.14159;\n    \n    // Metodo default (da Java 8): ha implementazione\n    default void stampaInfo() {\n        System.out.println(\"Area: \" + calcolaArea());\n        System.out.println(\"Perimetro: \" + calcolaPerimetro());\n    }\n}\n\n// Classe che implementa l'interfaccia\npublic class Rettangolo implements Forma {\n    private double base;\n    private double altezza;\n    \n    public Rettangolo(double base, double altezza) {\n        this.base = base;\n        this.altezza = altezza;\n    }\n    \n    // DEVE implementare tutti i metodi astratti dell'interfaccia\n    @Override\n    public double calcolaArea() {\n        return base * altezza;\n    }\n    \n    @Override\n    public double calcolaPerimetro() {\n        return 2 * (base + altezza);\n    }\n}\n\npublic class Cerchio implements Forma {\n    private double raggio;\n    \n    public Cerchio(double raggio) {\n        this.raggio = raggio;\n    }\n    \n    @Override\n    public double calcolaArea() {\n        return Forma.PI * raggio * raggio;  // Usa costante dell'interfaccia\n    }\n    \n    @Override\n    public double calcolaPerimetro() {\n        return 2 * Forma.PI * raggio;\n    }\n}\n\n// POLIMORFISMO con interfacce\npublic class TestForme {\n    public static void main(String[] args) {\n        // Array di interfaccia può contenere oggetti di classi diverse\n        Forma[] forme = new Forma[3];\n        forme[0] = new Rettangolo(5, 3);\n        forme[1] = new Cerchio(2);\n        forme[2] = new Rettangolo(4, 4);\n        \n        // Tratto tutte le forme in modo uniforme\n        for (Forma f : forme) {\n            // Il metodo chiamato dipende dal tipo reale (binding dinamico)\n            f.stampaInfo();  // Usa metodo default\n            System.out.println(\"---\");\n        }\n    }\n}\n\n// EREDITARIETA MULTIPLA: una classe può implementare più interfacce\ninterface Disegnabile {\n    void disegna();\n}\n\ninterface Colorabile {\n    void setColore(String colore);\n    String getColore();\n}\n\n// Classe che implementa DUE interfacce\npublic class QuadratoColorato implements Forma, Colorabile {\n    private double lato;\n    private String colore;\n    \n    public QuadratoColorato(double lato, String colore) {\n        this.lato = lato;\n        this.colore = colore;\n    }\n    \n    // Implementa metodi di Forma\n    @Override\n    public double calcolaArea() {\n        return lato * lato;\n    }\n    \n    @Override\n    public double calcolaPerimetro() {\n        return 4 * lato;\n    }\n    \n    // Implementa metodi di Colorabile\n    @Override\n    public void setColore(String colore) {\n        this.colore = colore;\n    }\n    \n    @Override\n    public String getColore() {\n        return colore;\n    }\n}",
-      "learning_objectives": [
-        "Dichiarare e implementare interfacce",
-        "Usare interfacce per polimorfismo",
-        "Comprendere metodi default",
-        "Implementare interfacce multiple"
-      ],
+      "topic": "Interfacce - Contratti e Astrazione",
+      "category": "Abstraction and Interfaces",
+      "difficulty_level": "intermediate",
+      "explanation": "Un'INTERFACCIA definisce un contratto (metodi astratti) senza implementazione. Classi implementano interfacce con 'implements'. Una classe può implementare multiple interfacce (vs ereditarietà singola). Polimorfismo tramite interfacce.",
+      "code_example": "// Interfaccia: contratto\npublic interface Stampabile {\n    void stampa();  // Metodo astratto (no implementazione)\n    default void stampaDettagli() {  // Default method (Java 8+)\n        System.out.println(\"Dettagli generici\");\n    }\n}\n\n// Implementazione\npublic class Documento implements Stampabile {\n    private String titolo;\n\n    @Override\n    public void stampa() {\n        System.out.println(\"Stampo: \" + titolo);\n    }\n}\n\n// Polimorfismo via interfaccia\nStampabile s = new Documento();\ns.stampa();  // Binding dinamico",
       "common_mistakes": [
-        "Tentare di istanziare un'interfaccia con 'new'",
-        "Dimenticare di implementare tutti i metodi astratti",
-        "Non usare @Override quando si implementa",
-        "Confondere interfacce con classi astratte"
+        "implements vs extends",
+        "Dimenticare @Override"
       ],
       "best_practices": [
-        "Preferire interfacce a classi astratte per flessibilità",
-        "Nomi interfacce terminano spesso in -able (Comparable, Serializable)",
-        "Mantenere interfacce piccole e focalizzate (Interface Segregation)",
-        "Usare metodi default per evoluzione backward-compatible"
+        "Interfacce per API contracts",
+        "Naming: aggettivi (-able)"
       ],
-      "related_concepts": ["JAVA-INTERFACE-002", "JAVA-OOP-005"]
+      "learning_objectives": [
+        "Dichiarare interfacce",
+        "implements",
+        "Polimorfismo interfacce"
+      ],
+      "related_concepts": [
+        "JAVA-ABSTRACT-001",
+        "JAVA-POLYMORPHISM-001"
+      ]
     },
-
+    {
+      "concept_id": "JAVA-ABSTRACT-001",
+      "topic": "Classi Astratte vs Interfacce",
+      "category": "Abstraction and Interfaces",
+      "difficulty_level": "intermediate",
+      "explanation": "CLASSE ASTRATTA: non istanziabile, può avere metodi astratti e concreti, attributi, costruttori. INTERFACCIA: solo contratti (metodi astratti). Classe astratta per 'is-a' con codice comune, interfaccia per 'can-do' (capabilities).",
+      "code_example": "// Classe astratta: codice comune + metodi astratti\npublic abstract class Figura {\n    protected String colore;  // Attributo concreto\n\n    public Figura(String colore) {  // Costruttore\n        this.colore = colore;\n    }\n\n    public abstract double calcolaArea();  // Astratto\n\n    public void mostraColore() {  // Concreto\n        System.out.println(\"Colore: \" + colore);\n    }\n}\n\npublic class Cerchio extends Figura {\n    private double raggio;\n\n    public Cerchio(String colore, double r) {\n        super(colore);\n        this.raggio = r;\n    }\n\n    @Override\n    public double calcolaArea() {\n        return Math.PI * raggio * raggio;\n    }\n}\n\n// Figura f = new Figura(); // ERRORE: classe astratta!\nFigura c = new Cerchio(\"Rosso\", 5.0);  // OK",
+      "common_mistakes": [
+        "Istanziare classe astratta",
+        "Confondere abstract/interface"
+      ],
+      "best_practices": [
+        "Abstract per codice comune",
+        "Interface per contratti multipli"
+      ],
+      "learning_objectives": [
+        "Dichiarare classe astratta",
+        "Metodi astratti",
+        "abstract vs interface"
+      ],
+      "related_concepts": [
+        "JAVA-INTERFACE-001",
+        "JAVA-INHERITANCE-001"
+      ]
+    },
     {
       "concept_id": "JAVA-EXCEPTION-001",
-      "category": "JAVA-EXCEPTION",
-      "topic": "Try-Catch-Finally",
-      "difficulty_level": "base",
-      "explanation": "Il meccanismo try-catch-finally permette di gestire le eccezioni: try contiene codice rischioso, catch gestisce l'errore se si verifica, finally esegue codice che deve girare sempre (es. chiusura risorse). Questo previene crash del programma e permette recupero da errori.",
-      "code_example": "import java.io.*;\n\n// Esempio completo di gestione eccezioni\npublic class GestioneEccezioni {\n    \n    public static void main(String[] args) {\n        // ESEMPIO 1: Gestione divisione per zero\n        try {\n            int risultato = 10 / 0;  // Genera ArithmeticException\n            System.out.println(\"Risultato: \" + risultato);\n        } catch (ArithmeticException e) {\n            // Gestisce l'errore specifico\n            System.out.println(\"Errore: divisione per zero!\");\n            System.out.println(\"Dettaglio: \" + e.getMessage());\n        }\n        // Il programma continua invece di crashare\n        System.out.println(\"Programma continua...\\n\");\n        \n        // ESEMPIO 2: Catch multipli per diversi tipi di errori\n        String[] dati = {\"10\", \"20\", \"abc\", \"30\"};\n        for (String s : dati) {\n            try {\n                int numero = Integer.parseInt(s);  // Può lanciare NumberFormatException\n                int risultato = 100 / numero;      // Può lanciare ArithmeticException\n                System.out.println(\"100 / \" + numero + \" = \" + risultato);\n                \n            } catch (NumberFormatException e) {\n                // Gestisce formato numero non valido\n                System.out.println(\"'\" + s + \"' non è un numero valido\");\n                \n            } catch (ArithmeticException e) {\n                // Gestisce divisione per zero\n                System.out.println(\"Divisione per zero con: \" + s);\n                \n            } catch (Exception e) {\n                // Catch generico per altre eccezioni (sempre alla fine)\n                System.out.println(\"Errore generico: \" + e.getMessage());\n            }\n        }\n        \n        System.out.println();\n        \n        // ESEMPIO 3: Try-Catch-Finally per chiusura risorse\n        BufferedReader br = null;\n        try {\n            br = new BufferedReader(new FileReader(\"dati.txt\"));\n            String riga = br.readLine();\n            System.out.println(\"Prima riga: \" + riga);\n            \n        } catch (FileNotFoundException e) {\n            System.out.println(\"File non trovato: \" + e.getMessage());\n            \n        } catch (IOException e) {\n            System.out.println(\"Errore lettura: \" + e.getMessage());\n            \n        } finally {\n            // Il blocco finally viene SEMPRE eseguito,\n            // anche se c'è return nel try o catch\n            System.out.println(\"Chiusura risorse...\");\n            try {\n                if (br != null) {\n                    br.close();\n                }\n            } catch (IOException e) {\n                System.out.println(\"Errore chiusura: \" + e.getMessage());\n            }\n        }\n    }\n    \n    // Metodo che lancia eccezione\n    public static int dividi(int a, int b) {\n        if (b == 0) {\n            // Lancia esplicitamente un'eccezione\n            throw new ArithmeticException(\"Divisore non può essere zero\");\n        }\n        return a / b;\n    }\n}",
-      "learning_objectives": [
-        "Usare try-catch per gestire eccezioni",
-        "Gestire diversi tipi di eccezioni con catch multipli",
-        "Usare finally per cleanup delle risorse",
-        "Comprendere quando e perché gestire le eccezioni"
-      ],
+      "topic": "Gestione Eccezioni - Try-Catch-Finally",
+      "category": "Error Handling",
+      "difficulty_level": "intermediate",
+      "explanation": "Le ECCEZIONI gestiscono errori runtime. Try-catch cattura eccezioni. Finally esegue sempre (cleanup). Checked (obbligano try-catch o throws) vs Unchecked (RuntimeException). Throw per lanciare, throws per dichiarare.",
+      "code_example": "public class GestoreFile {\n    public void leggiFile(String path) {\n        try {\n            FileReader fr = new FileReader(path);\n            BufferedReader br = new BufferedReader(fr);\n            String linea = br.readLine();\n            System.out.println(linea);\n            br.close();\n        } catch (FileNotFoundException e) {\n            System.out.println(\"File non trovato: \" + e.getMessage());\n        } catch (IOException e) {\n            System.out.println(\"Errore I/O: \" + e.getMessage());\n        } finally {\n            System.out.println(\"Operazione completata\");\n        }\n    }\n\n    // Try-with-resources (Java 7+)\n    public void leggiFileModerno(String path) throws IOException {\n        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n            System.out.println(br.readLine());\n        }  // Auto-close br\n    }\n}",
       "common_mistakes": [
-        "Catch vuoti che nascondono errori",
-        "Ordine errato dei catch (generiche prima delle specifiche)",
-        "Non chiudere risorse nel finally",
-        "Catturare Exception generico quando serve specificità",
-        "Usare eccezioni per controllo di flusso normale"
+        "Catch generico Exception",
+        "Finally per return",
+        "Ignorare eccezioni"
       ],
       "best_practices": [
-        "Cattura solo eccezioni che puoi gestire significativamente",
-        "Ordine catch: da specifica a generica",
-        "Usa finally per cleanup, o meglio try-with-resources",
-        "Log informazioni complete per debugging",
-        "Fornisci messaggi di errore chiari e utili"
+        "Catch specifici",
+        "Try-with-resources",
+        "Log eccezioni"
       ],
-      "related_concepts": ["JAVA-EXCEPTION-002", "JAVA-EXCEPTION-003", "JAVA-STREAM-002"]
+      "learning_objectives": [
+        "try-catch-finally",
+        "Checked vs unchecked",
+        "Try-with-resources"
+      ],
+      "related_concepts": [
+        "JAVA-STREAM-001",
+        "JAVA-CUSTOM-EXCEPTION-001"
+      ]
     },
-
     {
-      "concept_id": "JAVA-COLLECTION-001",
-      "category": "JAVA-COLLECTION",
-      "topic": "ArrayList - Introduzione",
-      "difficulty_level": "base",
-      "explanation": "ArrayList è una collezione dinamica che si ridimensiona automaticamente. A differenza degli array, può crescere e ridursi. Usa generics per type safety. Internamente usa un array ridimensionabile.",
-      "code_example": "import java.util.ArrayList;\n\n// Esempio completo: uso base di ArrayList\npublic class IntroduzioneArrayList {\n    public static void main(String[] args) {\n        // DICHIARAZIONE con tipo generico (type safety)\n        ArrayList<String> nomi = new ArrayList<>();\n        \n        // AGGIUNTA elementi con add()\n        nomi.add(\"Mario\");\n        nomi.add(\"Laura\");\n        nomi.add(\"Giuseppe\");\n        System.out.println(\"Dopo aggiunte: \" + nomi);\n        // Output: [Mario, Laura, Giuseppe]\n        \n        // ACCESSO elementi con get(indice)\n        String primo = nomi.get(0);  // Indici partono da 0\n        System.out.println(\"Primo elemento: \" + primo);\n        \n        // MODIFICA elemento con set(indice, valore)\n        nomi.set(1, \"Anna\");  // Sostituisce \"Laura\" con \"Anna\"\n        System.out.println(\"Dopo modifica: \" + nomi);\n        \n        // INSERIMENTO in posizione specifica\n        nomi.add(1, \"Luca\");  // Inserisce a indice 1, sposta gli altri\n        System.out.println(\"Dopo inserimento: \" + nomi);\n        \n        // RIMOZIONE per indice\n        nomi.remove(0);  // Rimuove \"Mario\"\n        System.out.println(\"Dopo rimozione: \" + nomi);\n        \n        // RIMOZIONE per valore\n        nomi.remove(\"Giuseppe\");  // Rimuove la prima occorrenza\n        System.out.println(\"Dopo rimozione Giuseppe: \" + nomi);\n        \n        // DIMENSIONE con size()\n        System.out.println(\"Numero elementi: \" + nomi.size());\n        \n        // VERIFICA presenza con contains()\n        if (nomi.contains(\"Anna\")) {\n            System.out.println(\"Anna è nella lista\");\n        }\n        \n        // VERIFICA vuoto con isEmpty()\n        if (!nomi.isEmpty()) {\n            System.out.println(\"La lista non è vuota\");\n        }\n        \n        // ITERAZIONE con for-each\n        System.out.println(\"\\nIterazione elementi:\");\n        for (String nome : nomi) {\n            System.out.println(\"- \" + nome);\n        }\n        \n        // ITERAZIONE con for tradizionale (quando serve l'indice)\n        System.out.println(\"\\nCon indici:\");\n        for (int i = 0; i < nomi.size(); i++) {\n            System.out.println(i + \": \" + nomi.get(i));\n        }\n        \n        // PULIZIA completa con clear()\n        nomi.clear();\n        System.out.println(\"\\nDopo clear: \" + nomi);\n        System.out.println(\"È vuota? \" + nomi.isEmpty());\n    }\n}\n\n// AUTOBOXING: ArrayList con tipi primitivi\npublic class AutoboxingEsempio {\n    public static void main(String[] args) {\n        // ArrayList accetta solo OGGETTI, non primitivi\n        // Usa wrapper classes: Integer, Double, Boolean, Character\n        \n        ArrayList<Integer> numeri = new ArrayList<>();\n        \n        // AUTOBOXING: int -> Integer automaticamente\n        numeri.add(10);   // Java converte int in Integer\n        numeri.add(20);\n        numeri.add(30);\n        \n        // UNBOXING: Integer -> int automaticamente\n        int primo = numeri.get(0);  // Java converte Integer in int\n        int somma = numeri.get(0) + numeri.get(1);  // Unboxing automatico\n        \n        System.out.println(\"Primo: \" + primo);\n        System.out.println(\"Somma: \" + somma);\n    }\n}",
-      "learning_objectives": [
-        "Dichiarare ArrayList con generics",
-        "Usare metodi principali: add, get, set, remove",
-        "Iterare su ArrayList",
-        "Comprendere autoboxing/unboxing"
-      ],
+      "concept_id": "JAVA-STREAM-001",
+      "topic": "Stream e Buffer - File I/O",
+      "category": "File Input/Output",
+      "difficulty_level": "intermediate",
+      "explanation": "STREAM: flussi di dati byte (InputStream/OutputStream) o caratteri (Reader/Writer). BUFFER: memorizzazione temporanea per efficienza (BufferedReader/Writer). Try-with-resources per auto-close.",
+      "code_example": "import java.io.*;\n\npublic class FileManager {\n    // Lettura file con buffer\n    public void leggiFile(String path) throws IOException {\n        try (BufferedReader br = new BufferedReader(\n                new FileReader(path))) {\n            String linea;\n            while ((linea = br.readLine()) != null) {\n                System.out.println(linea);\n            }\n        }\n    }\n\n    // Scrittura file\n    public void scriviFile(String path, String contenuto)\n            throws IOException {\n        try (BufferedWriter bw = new BufferedWriter(\n                new FileWriter(path))) {\n            bw.write(contenuto);\n            bw.newLine();\n        }\n    }\n}",
       "common_mistakes": [
-        "IndexOutOfBoundsException: accedere a indice >= size()",
-        "Confondere size() con capacity (interna)",
-        "Modificare lista durante for-each (ConcurrentModificationException)",
-        "Usare == invece di equals() per confrontare oggetti",
-        "Dimenticare import java.util.ArrayList"
+        "Non chiudere stream",
+        "FileReader senza Buffer"
       ],
       "best_practices": [
-        "Sempre specificare tipo generico per type safety",
-        "Usare for-each quando non serve indice",
-        "Specificare capacità iniziale se si conosce la dimensione",
-        "Preferire List<String> a ArrayList<String> per dichiarazioni",
-        "Validare indici prima di accedere: if (i >= 0 && i < lista.size())"
+        "Try-with-resources",
+        "Buffer per performance"
       ],
-      "related_concepts": ["JAVA-COLLECTION-002", "JAVA-COLLECTION-003", "JAVA-OOP-001"]
+      "learning_objectives": [
+        "FileReader/Writer",
+        "BufferedReader/Writer",
+        "Try-with-resources"
+      ],
+      "related_concepts": [
+        "JAVA-EXCEPTION-001",
+        "JAVA-SERIALIZATION-001"
+      ]
     },
-
+    {
+      "concept_id": "JAVA-ARRAYLIST-001",
+      "topic": "ArrayList e Generics - Collezioni Dinamiche",
+      "category": "Collections and Generics",
+      "difficulty_level": "beginner",
+      "explanation": "ARRAYLIST: collezione dinamica ridimensionabile. GENERICS <T> per type safety. Metodi: add, remove, get, set, size. Autoboxing/unboxing per primitivi (int -> Integer).",
+      "code_example": "import java.util.ArrayList;\n\npublic class GestioneStudenti {\n    public static void main(String[] args) {\n        // Generics: type safety\n        ArrayList<String> nomi = new ArrayList<>();\n\n        // Metodi base\n        nomi.add(\"Mario\");\n        nomi.add(\"Anna\");\n        nomi.add(1, \"Luca\");  // Inserisce in posizione\n\n        System.out.println(nomi.get(0));  // Mario\n        System.out.println(nomi.size());  // 3\n\n        nomi.remove(\"Anna\");\n        nomi.set(0, \"Giuseppe\");\n\n        // Iterazione\n        for (String nome : nomi) {\n            System.out.println(nome);\n        }\n\n        // ArrayList di oggetti\n        ArrayList<Studente> classe = new ArrayList<>();\n        classe.add(new Studente(\"A001\", \"Mario\", 7.5));\n    }\n}",
+      "common_mistakes": [
+        "Raw type senza generics",
+        "IndexOutOfBounds",
+        "ConcurrentModification"
+      ],
+      "best_practices": [
+        "Sempre specificare <T>",
+        "Capacità iniziale se nota"
+      ],
+      "learning_objectives": [
+        "Dichiarare ArrayList<T>",
+        "add/remove/get",
+        "Iterare collezioni"
+      ],
+      "related_concepts": [
+        "JAVA-GENERICS-001",
+        "JAVA-ITERATOR-001"
+      ]
+    },
     {
       "concept_id": "JAVA-GUI-001",
-      "category": "JAVA-GUI",
-      "topic": "JFrame e Componenti Base",
-      "difficulty_level": "intermedio",
-      "explanation": "JFrame è la finestra principale in Swing. Contiene componenti come JButton, JLabel, JTextField. I componenti sono organizzati con Layout Manager. Gli eventi permettono di rispondere alle azioni dell'utente.",
-      "code_example": "import javax.swing.*;\nimport java.awt.*;\nimport java.awt.event.ActionEvent;\nimport java.awt.event.ActionListener;\n\n// Classe che estende JFrame per creare una finestra\npublic class FinestraBase extends JFrame {\n    // Componenti grafici (attributi privati)\n    private JLabel etichetta;\n    private JTextField campoTesto;\n    private JButton pulsante;\n    private JPanel pannello;\n    \n    // Costruttore: configura la finestra\n    public FinestraBase() {\n        // Configura proprietà della finestra (this = JFrame)\n        setTitle(\"La Mia Prima Finestra Swing\");\n        setSize(400, 200);  // Larghezza x Altezza in pixel\n        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // Chiude app quando si chiude finestra\n        setLocationRelativeTo(null);  // Centra la finestra sullo schermo\n        \n        // Crea componenti\n        etichetta = new JLabel(\"Inserisci il tuo nome:\");\n        campoTesto = new JTextField(20);  // 20 colonne\n        pulsante = new JButton(\"Saluta\");\n        \n        // ActionListener: risponde al click del pulsante\n        pulsante.addActionListener(new ActionListener() {\n            @Override\n            public void actionPerformed(ActionEvent e) {\n                // Legge il testo dal campo\n                String nome = campoTesto.getText();\n                if (!nome.isEmpty()) {\n                    // Mostra dialog con messaggio\n                    JOptionPane.showMessageDialog(\n                        FinestraBase.this,\n                        \"Ciao, \" + nome + \"!\",\n                        \"Saluto\",\n                        JOptionPane.INFORMATION_MESSAGE\n                    );\n                }\n            }\n        });\n        \n        // Crea pannello con Layout Manager\n        pannello = new JPanel();\n        pannello.setLayout(new FlowLayout());  // Componenti in fila\n        \n        // Aggiunge componenti al pannello\n        pannello.add(etichetta);\n        pannello.add(campoTesto);\n        pannello.add(pulsante);\n        \n        // Aggiunge pannello alla finestra\n        add(pannello);\n        \n        // Rende visibile la finestra\n        setVisible(true);\n    }\n    \n    public static void main(String[] args) {\n        // Crea e mostra la finestra nel thread della GUI\n        SwingUtilities.invokeLater(new Runnable() {\n            @Override\n            public void run() {\n                new FinestraBase();\n            }\n        });\n    }\n}\n\n// Esempio con BorderLayout (layout più comune)\npublic class FinestraBorderLayout extends JFrame {\n    public FinestraBorderLayout() {\n        setTitle(\"BorderLayout Demo\");\n        setSize(500, 400);\n        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);\n        \n        // BorderLayout divide la finestra in 5 aree:\n        // NORTH, SOUTH, EAST, WEST, CENTER\n        setLayout(new BorderLayout());\n        \n        JButton btnNord = new JButton(\"NORTH - Barra menu\");\n        JButton btnSud = new JButton(\"SOUTH - Barra stato\");\n        JButton btnEst = new JButton(\"EAST\");\n        JButton btnOvest = new JButton(\"WEST\");\n        JTextArea areaCentrale = new JTextArea(\"CENTER - Area principale\");\n        \n        // Aggiunge componenti nelle posizioni\n        add(btnNord, BorderLayout.NORTH);\n        add(btnSud, BorderLayout.SOUTH);\n        add(btnEst, BorderLayout.EAST);\n        add(btnOvest, BorderLayout.WEST);\n        add(new JScrollPane(areaCentrale), BorderLayout.CENTER);\n        \n        setVisible(true);\n    }\n    \n    public static void main(String[] args) {\n        SwingUtilities.invokeLater(() -> new FinestraBorderLayout());\n    }\n}",
-      "learning_objectives": [
-        "Creare finestre con JFrame",
-        "Usare componenti base: JButton, JLabel, JTextField",
-        "Organizzare componenti con Layout Manager",
-        "Gestire eventi con ActionListener"
-      ],
+      "topic": "Interfacce Grafiche - Swing Components",
+      "category": "Graphical User Interface",
+      "difficulty_level": "intermediate",
+      "explanation": "SWING: framework GUI Java. JFrame (finestra), JPanel (contenitore), JButton (pulsante), JLabel (etichetta). Layout Manager (BorderLayout, FlowLayout) per posizionamento componenti.",
+      "code_example": "import javax.swing.*;\nimport java.awt.*;\n\npublic class FinestraBase extends JFrame {\n    private JLabel etichetta;\n    private JButton pulsante;\n\n    public FinestraBase() {\n        setTitle(\"Applicazione Swing\");\n        setSize(400, 300);\n        setDefaultCloseOperation(EXIT_ON_CLOSE);\n\n        // Layout\n        setLayout(new BorderLayout());\n\n        // Componenti\n        etichetta = new JLabel(\"Benvenuto!\", SwingConstants.CENTER);\n        pulsante = new JButton(\"Clicca\");\n\n        // Aggiunta\n        add(etichetta, BorderLayout.CENTER);\n        add(pulsante, BorderLayout.SOUTH);\n\n        setVisible(true);\n    }\n\n    public static void main(String[] args) {\n        new FinestraBase();\n    }\n}",
       "common_mistakes": [
-        "Dimenticare setVisible(true) (finestra non appare)",
-        "Non usare SwingUtilities.invokeLater() (problemi threading)",
-        "Operazioni lunghe nell'event handler (blocca GUI)",
-        "Dimenticare setDefaultCloseOperation (app non termina)",
-        "Confondere add() della finestra con add() del pannello"
+        "Dimenticare setVisible(true)",
+        "Layout default errato"
       ],
       "best_practices": [
-        "Sempre estendere JFrame per finestre complesse",
-        "Usare BorderLayout per layout principali",
-        "Separare logica GUI da logica business (pattern MVC)",
-        "Validare input utente prima di processarlo",
-        "Usare lambda expressions per listener semplici"
+        "BorderLayout per organizzazione",
+        "setLocationRelativeTo(null) per centrare"
       ],
-      "related_concepts": ["JAVA-GUI-002", "JAVA-MVC-001", "JAVA-LAMBDA-001"]
+      "learning_objectives": [
+        "Creare JFrame",
+        "Aggiungere componenti",
+        "Layout Manager"
+      ],
+      "related_concepts": [
+        "JAVA-EVENT-001",
+        "JAVA-LAYOUT-001"
+      ]
     },
-
+    {
+      "concept_id": "JAVA-EVENT-001",
+      "topic": "Gestione Eventi - ActionListener",
+      "category": "Event-Driven Programming",
+      "difficulty_level": "intermediate",
+      "explanation": "EVENTI: azioni utente (click, tastiera). LISTENER: interfacce per gestire eventi (ActionListener, MouseListener). Pattern Observer: componente notifica listener registrati.",
+      "code_example": "import javax.swing.*;\nimport java.awt.event.*;\n\npublic class Contatore extends JFrame {\n    private JLabel lblContatore;\n    private JButton btnIncrementa;\n    private int contatore = 0;\n\n    public Contatore() {\n        setTitle(\"Contatore\");\n        setSize(300, 150);\n        setDefaultCloseOperation(EXIT_ON_CLOSE);\n        setLayout(new BorderLayout());\n\n        lblContatore = new JLabel(\"Click: 0\", SwingConstants.CENTER);\n        btnIncrementa = new JButton(\"Incrementa\");\n\n        // ActionListener - classe anonima\n        btnIncrementa.addActionListener(new ActionListener() {\n            @Override\n            public void actionPerformed(ActionEvent e) {\n                contatore++;\n                lblContatore.setText(\"Click: \" + contatore);\n            }\n        });\n\n        add(lblContatore, BorderLayout.CENTER);\n        add(btnIncrementa, BorderLayout.SOUTH);\n\n        setVisible(true);\n    }\n}",
+      "common_mistakes": [
+        "Listener non registrato",
+        "NullPointer su componenti"
+      ],
+      "best_practices": [
+        "Lambda per listener semplici",
+        "Inner class per complessi"
+      ],
+      "learning_objectives": [
+        "ActionListener",
+        "addActionListener",
+        "Pattern Observer"
+      ],
+      "related_concepts": [
+        "JAVA-GUI-001",
+        "JAVA-LAMBDA-001"
+      ]
+    },
     {
       "concept_id": "JAVA-MVC-001",
-      "category": "JAVA-MVC",
-      "topic": "Pattern Model-View-Controller",
-      "difficulty_level": "avanzato",
-      "explanation": "MVC separa l'applicazione in tre componenti: Model (dati e logica), View (interfaccia grafica), Controller (coordinamento). Questo migliora manutenibilità, testabilità e scalabilità separando le responsabilità.",
-      "code_example": "import java.util.ArrayList;\nimport java.util.List;\nimport javax.swing.*;\nimport java.awt.*;\nimport java.awt.event.ActionListener;\n\n// ========== MODEL: gestisce dati e logica business ==========\npublic class TodoModel {\n    private List<String> tasks;\n    \n    public TodoModel() {\n        tasks = new ArrayList<>();\n    }\n    \n    // Aggiunge task con validazione\n    public boolean addTask(String task) {\n        if (task == null || task.trim().isEmpty()) {\n            return false;\n        }\n        tasks.add(task.trim());\n        return true;\n    }\n    \n    // Rimuove task\n    public boolean removeTask(int index) {\n        if (index >= 0 && index < tasks.size()) {\n            tasks.remove(index);\n            return true;\n        }\n        return false;\n    }\n    \n    // Restituisce tutti i task\n    public List<String> getAllTasks() {\n        return new ArrayList<>(tasks);  // Copia per protezione\n    }\n    \n    public int getTaskCount() {\n        return tasks.size();\n    }\n}\n\n// ========== VIEW: gestisce interfaccia grafica ==========\npublic class TodoView extends JFrame {\n    private JTextArea areaTask;\n    private JTextField campoInput;\n    private JButton btnAggiungi;\n    private JButton btnCancella;\n    \n    public TodoView() {\n        setTitle(\"Todo List - Pattern MVC\");\n        setSize(400, 300);\n        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);\n        setLayout(new BorderLayout());\n        \n        // Area visualizzazione task\n        areaTask = new JTextArea();\n        areaTask.setEditable(false);\n        \n        // Campo input\n        campoInput = new JTextField();\n        btnAggiungi = new JButton(\"Aggiungi\");\n        btnCancella = new JButton(\"Cancella Tutto\");\n        \n        // Layout\n        JPanel panelTop = new JPanel(new BorderLayout());\n        panelTop.add(new JLabel(\"Nuovo task:\"), BorderLayout.WEST);\n        panelTop.add(campoInput, BorderLayout.CENTER);\n        panelTop.add(btnAggiungi, BorderLayout.EAST);\n        \n        add(panelTop, BorderLayout.NORTH);\n        add(new JScrollPane(areaTask), BorderLayout.CENTER);\n        add(btnCancella, BorderLayout.SOUTH);\n    }\n    \n    // Metodi per ottenere input dall'utente\n    public String getInputTask() {\n        return campoInput.getText();\n    }\n    \n    public void clearInput() {\n        campoInput.setText(\"\");\n    }\n    \n    // Aggiorna visualizzazione task\n    public void displayTasks(List<String> tasks) {\n        StringBuilder sb = new StringBuilder();\n        for (int i = 0; i < tasks.size(); i++) {\n            sb.append((i+1)).append(\". \").append(tasks.get(i)).append(\"\\n\");\n        }\n        areaTask.setText(sb.toString());\n    }\n    \n    // Registra listener (il Controller si registra qui)\n    public void addAggiungiListener(ActionListener listener) {\n        btnAggiungi.addActionListener(listener);\n    }\n    \n    public void addCancellaListener(ActionListener listener) {\n        btnCancella.addActionListener(listener);\n    }\n    \n    public void showError(String message) {\n        JOptionPane.showMessageDialog(this, message, \"Errore\", \n                                     JOptionPane.ERROR_MESSAGE);\n    }\n}\n\n// ========== CONTROLLER: coordina Model e View ==========\npublic class TodoController {\n    private TodoModel model;\n    private TodoView view;\n    \n    public TodoController(TodoModel model, TodoView view) {\n        this.model = model;\n        this.view = view;\n        \n        // Registra listener sugli eventi della View\n        view.addAggiungiListener(e -> aggiungiTask());\n        view.addCancellaListener(e -> cancellaTutti());\n        \n        // Inizializza la View\n        aggiornaView();\n    }\n    \n    // Gestisce aggiunta task\n    private void aggiungiTask() {\n        String task = view.getInputTask();\n        \n        // Delega al Model la logica\n        if (model.addTask(task)) {\n            view.clearInput();\n            aggiornaView();\n        } else {\n            view.showError(\"Inserisci un task valido!\");\n        }\n    }\n    \n    // Gestisce cancellazione\n    private void cancellaTutti() {\n        // In un'app reale, chiedere conferma\n        model = new TodoModel();  // Reset\n        aggiornaView();\n    }\n    \n    // Sincronizza View con Model\n    private void aggiornaView() {\n        view.displayTasks(model.getAllTasks());\n    }\n}\n\n// ========== MAIN: assembla i componenti MVC ==========\npublic class TodoApp {\n    public static void main(String[] args) {\n        SwingUtilities.invokeLater(() -> {\n            // Crea componenti MVC\n            TodoModel model = new TodoModel();\n            TodoView view = new TodoView();\n            TodoController controller = new TodoController(model, view);\n            \n            // Mostra la View\n            view.setVisible(true);\n        });\n    }\n}",
-      "learning_objectives": [
-        "Separare dati (Model) da interfaccia (View)",
-        "Coordinare componenti con Controller",
-        "Migliorare testabilità e manutenibilità",
-        "Applicare principio di separazione delle responsabilità"
-      ],
+      "topic": "Pattern MVC - Separazione Responsabilità",
+      "category": "Design Patterns",
+      "difficulty_level": "advanced",
+      "explanation": "MVC separa applicazione in: MODEL (dati + logica business, indipendente da GUI), VIEW (interfaccia grafica), CONTROLLER (coordina Model-View, gestisce eventi). Vantaggi: testabilità, manutenibilità, riusabilità.",
+      "code_example": "// MODEL: solo dati e logica\npublic class TodoModel {\n    private List<String> tasks = new ArrayList<>();\n\n    public boolean addTask(String task) {\n        if (task == null || task.trim().isEmpty()) return false;\n        tasks.add(task.trim());\n        return true;\n    }\n\n    public List<String> getAllTasks() {\n        return new ArrayList<>(tasks);\n    }\n}\n\n// VIEW: solo GUI\npublic class TodoView extends JFrame {\n    private JTextArea txtArea;\n    private JButton btnAdd;\n\n    public String getInput() {\n        return txtInput.getText();\n    }\n\n    public void displayTasks(List<String> tasks) {\n        txtArea.setText(String.join(\"\\n\", tasks));\n    }\n\n    public JButton getBtnAdd() { return btnAdd; }\n}\n\n// CONTROLLER: coordina Model e View\npublic class TodoController {\n    private TodoModel model;\n    private TodoView view;\n\n    public TodoController(TodoModel model, TodoView view) {\n        this.model = model;\n        this.view = view;\n\n        view.getBtnAdd().addActionListener(e -> {\n            String task = view.getInput();\n            if (model.addTask(task)) {\n                view.displayTasks(model.getAllTasks());\n            }\n        });\n    }\n}",
       "common_mistakes": [
-        "Mescolare logica business nella View",
-        "Model che dipende dalla View",
-        "Controller troppo complesso (God Object)",
-        "Non validare dati nel Model",
-        "Accesso diretto tra Model e View (devono passare per Controller)"
+        "Logica business in View",
+        "View accede Model direttamente"
       ],
       "best_practices": [
-        "Model completamente indipendente da GUI",
-        "View solo presentazione, nessuna logica business",
-        "Controller leggero, delega lavoro a Model",
-        "Model restituisce copie di collezioni (protezione)",
-        "Usare Observer pattern per notifiche Model->View"
+        "Model completamente indipendente",
+        "Controller coordina tutto"
       ],
-      "related_concepts": ["JAVA-GUI-001", "JAVA-OOP-001", "JAVA-COLLECTION-001"]
+      "learning_objectives": [
+        "Separare Model/View/Controller",
+        "Testare Model senza GUI"
+      ],
+      "related_concepts": [
+        "JAVA-GUI-001",
+        "JAVA-OBSERVER-001"
+      ]
     },
-
     {
       "concept_id": "JAVA-LAMBDA-001",
-      "category": "JAVA-LAMBDA",
-      "topic": "Lambda Expressions",
-      "difficulty_level": "intermedio",
-      "explanation": "Le lambda expressions sono funzioni anonime che semplificano il codice per implementare interfacce funzionali (con un solo metodo astratto). Rendono il codice più conciso rispetto alle classi anonime. Sintassi: (parametri) -> espressione",
-      "code_example": "import java.util.*;\nimport javax.swing.*;\nimport java.awt.*;\n\n// Interfaccia funzionale: ha UN SOLO metodo astratto\n@FunctionalInterface\ninterface Calcolatore {\n    int calcola(int a, int b);\n}\n\npublic class EsempioLambda {\n    public static void main(String[] args) {\n        // ===== SENZA LAMBDA: classe anonima (verboso) =====\n        Calcolatore sommaOld = new Calcolatore() {\n            @Override\n            public int calcola(int a, int b) {\n                return a + b;\n            }\n        };\n        \n        // ===== CON LAMBDA: sintassi concisa =====\n        // (parametri) -> espressione\n        Calcolatore somma = (a, b) -> a + b;\n        Calcolatore sottrazione = (a, b) -> a - b;\n        Calcolatore moltiplicazione = (a, b) -> a * b;\n        \n        // Uso\n        System.out.println(\"Somma: \" + somma.calcola(5, 3));  // 8\n        System.out.println(\"Sottrazione: \" + sottrazione.calcola(5, 3));  // 2\n        \n        // ===== LAMBDA CON COMPARATOR =====\n        List<String> nomi = new ArrayList<>();\n        nomi.add(\"Mario\");\n        nomi.add(\"Anna\");\n        nomi.add(\"Luca\");\n        nomi.add(\"Giulia\");\n        \n        // SENZA LAMBDA\n        Collections.sort(nomi, new Comparator<String>() {\n            @Override\n            public int compare(String s1, String s2) {\n                return s1.length() - s2.length();\n            }\n        });\n        \n        // CON LAMBDA (molto più leggibile)\n        Collections.sort(nomi, (s1, s2) -> s1.length() - s2.length());\n        System.out.println(\"Ordinati per lunghezza: \" + nomi);\n        \n        // Method reference (ancora più compatto)\n        Collections.sort(nomi, String::compareTo);\n        System.out.println(\"Ordinati alfabeticamente: \" + nomi);\n        \n        // ===== LAMBDA CON ACTIONLISTENER (GUI) =====\n        JFrame frame = new JFrame(\"Lambda Demo\");\n        frame.setSize(300, 150);\n        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);\n        frame.setLayout(new FlowLayout());\n        \n        JLabel label = new JLabel(\"Click: 0\");\n        JButton button = new JButton(\"Clicca\");\n        \n        // SENZA LAMBDA\n        /*\n        button.addActionListener(new ActionListener() {\n            private int count = 0;\n            @Override\n            public void actionPerformed(ActionEvent e) {\n                count++;\n                label.setText(\"Click: \" + count);\n            }\n        });\n        */\n        \n        // CON LAMBDA (più conciso)\n        final int[] count = {0};  // Array per variabile mutabile\n        button.addActionListener(e -> {\n            count[0]++;\n            label.setText(\"Click: \" + count[0]);\n        });\n        \n        frame.add(label);\n        frame.add(button);\n        frame.setVisible(true);\n        \n        // ===== LAMBDA CON PREDICATE (filtri) =====\n        List<Integer> numeri = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);\n        \n        // Filtra numeri pari\n        System.out.println(\"\\nNumeri pari:\");\n        filtra(numeri, n -> n % 2 == 0);\n        \n        // Filtra numeri > 5\n        System.out.println(\"\\nNumeri > 5:\");\n        filtra(numeri, n -> n > 5);\n    }\n    \n    // Metodo generico che accetta una lambda come filtro\n    public static <T> void filtra(List<T> lista, java.util.function.Predicate<T> condizione) {\n        for (T elemento : lista) {\n            if (condizione.test(elemento)) {\n                System.out.println(elemento);\n            }\n        }\n    }\n}\n\n// ===== VARIANTI SINTASSI LAMBDA =====\nclass VariantiSintassi {\n    public static void main(String[] args) {\n        // 1. Senza parametri\n        Runnable r1 = () -> System.out.println(\"Hello\");\n        \n        // 2. Un parametro (parentesi opzionali)\n        java.util.function.Consumer<String> print = s -> System.out.println(s);\n        \n        // 3. Più parametri (parentesi obbligatorie)\n        Comparator<Integer> comp = (a, b) -> a - b;\n        \n        // 4. Con tipo esplicito\n        Comparator<Integer> comp2 = (Integer a, Integer b) -> a.compareTo(b);\n        \n        // 5. Blocco di codice (parentesi graffe + return)\n        Comparator<String> comp3 = (s1, s2) -> {\n            int diff = s1.length() - s2.length();\n            return diff;\n        };\n        \n        // 6. Method reference\n        Comparator<String> comp4 = String::compareTo;\n    }\n}",
-      "learning_objectives": [
-        "Comprendere sintassi lambda: (params) -> expression",
-        "Usare lambda con interfacce funzionali",
-        "Semplificare codice rispetto a classi anonime",
-        "Applicare lambda a Comparator, ActionListener, Predicate"
-      ],
+      "topic": "Lambda Expressions - Programmazione Funzionale",
+      "category": "Functional Programming",
+      "difficulty_level": "advanced",
+      "explanation": "LAMBDA: funzione anonima sintattica. Sintassi: (parametri) -> espressione. Funzionano con interfacce funzionali (1 solo metodo astratto). Sostituiscono classi anonime verbose.",
+      "code_example": "import java.util.*;\n\npublic class EsempioLambda {\n    public static void main(String[] args) {\n        List<String> nomi = Arrays.asList(\"Mario\", \"Anna\", \"Luca\");\n\n        // Classe anonima (verbosa)\n        Collections.sort(nomi, new Comparator<String>() {\n            @Override\n            public int compare(String s1, String s2) {\n                return s1.length() - s2.length();\n            }\n        });\n\n        // Lambda (concisa)\n        Collections.sort(nomi, (s1, s2) -> s1.length() - s2.length());\n\n        // ActionListener con lambda\n        button.addActionListener(e ->\n            System.out.println(\"Cliccato!\"));\n\n        // Predicate con lambda\n        List<Integer> numeri = Arrays.asList(1, 2, 3, 4, 5);\n        numeri.removeIf(n -> n % 2 == 0);  // Rimuove pari\n    }\n}",
       "common_mistakes": [
-        "Tentare lambda con interfacce non funzionali (più metodi astratti)",
-        "Confondere lambda con method reference",
-        "Dimenticare parentesi quando ci sono più parametri",
-        "Non usare final/effectively final per variabili esterne",
-        "Abusare di lambda quando classe anonima è più chiara"
+        "Lambda su interfacce multi-metodo",
+        "Sintassi errata"
       ],
       "best_practices": [
-        "Usare lambda per codice conciso e leggibile",
-        "Preferire lambda a classi anonime per interfacce funzionali",
-        "Usare method reference quando possibile (più compatto)",
-        "Mantenere lambda brevi (< 3 righe)",
-        "Usare @FunctionalInterface per documentare intent"
+        "Usare per Comparator, ActionListener, Predicate"
       ],
-      "related_concepts": ["JAVA-INTERFACE-001", "JAVA-GUI-002", "JAVA-COLLECTION-002"]
+      "learning_objectives": [
+        "Sintassi lambda",
+        "Interfacce funzionali",
+        "Sostituire classi anonime"
+      ],
+      "related_concepts": [
+        "JAVA-EVENT-001",
+        "JAVA-STREAM-API-001"
+      ]
+    },
+    {
+      "concept_id": "JAVA-COMPARATOR-001",
+      "topic": "Comparator - Ordinamento Personalizzato",
+      "category": "Collections and Sorting",
+      "difficulty_level": "intermediate",
+      "explanation": "COMPARATOR: interfaccia per definire ordinamento personalizzato. Metodo compare(T o1, T o2): <0 (o1<o2), 0 (uguali), >0 (o1>o2). Collections.sort() accetta Comparator. Lambda per creare comparatori concisi.",
+      "code_example": "import java.util.*;\n\nclass Studente {\n    String nome;\n    double media;\n\n    public Studente(String nome, double media) {\n        this.nome = nome;\n        this.media = media;\n    }\n}\n\npublic class OrdinamentoStudenti {\n    public static void main(String[] args) {\n        List<Studente> classe = new ArrayList<>();\n        classe.add(new Studente(\"Mario\", 7.5));\n        classe.add(new Studente(\"Anna\", 8.2));\n        classe.add(new Studente(\"Luca\", 6.8));\n\n        // Ordinamento per media (decrescente) con lambda\n        classe.sort((s1, s2) ->\n            Double.compare(s2.media, s1.media));\n\n        // Ordinamento multiplo\n        classe.sort(Comparator.comparing(s -> s.nome)\n                              .thenComparing(s -> s.media));\n\n        classe.forEach(s ->\n            System.out.println(s.nome + \": \" + s.media));\n    }\n}",
+      "common_mistakes": [
+        "Ordine parametri sbagliato",
+        "compare() senza Double.compare"
+      ],
+      "best_practices": [
+        "Lambda per comparatori semplici",
+        "Comparator.comparing() per chaining"
+      ],
+      "learning_objectives": [
+        "Implementare Comparator",
+        "Collections.sort()",
+        "Ordinamenti multipli"
+      ],
+      "related_concepts": [
+        "JAVA-ARRAYLIST-001",
+        "JAVA-LAMBDA-001"
+      ]
+    },
+    {
+      "concept_id": "JAVA-ITERATOR-001",
+      "topic": "Iterator - Iterazione Sicura",
+      "category": "Collections and Iteration",
+      "difficulty_level": "intermediate",
+      "explanation": "ITERATOR: oggetto per iterare collezioni con rimozione sicura. Metodi: hasNext(), next(), remove(). Rimuove ConcurrentModificationException (vs for-each). Pattern Iterator per accesso sequenziale.",
+      "code_example": "import java.util.*;\n\npublic class EsempioIterator {\n    public static void main(String[] args) {\n        ArrayList<String> nomi = new ArrayList<>();\n        nomi.add(\"Mario\");\n        nomi.add(\"Anna\");\n        nomi.add(\"Luca\");\n\n        // Iterator per rimozione durante iterazione\n        Iterator<String> it = nomi.iterator();\n        while (it.hasNext()) {\n            String nome = it.next();\n            if (nome.equals(\"Anna\")) {\n                it.remove();  // Sicuro con Iterator\n            }\n        }\n\n        // For-each non può rimuovere\n        // for (String nome : nomi) {\n        //     nomi.remove(nome); // ConcurrentModificationException!\n        // }\n\n        System.out.println(nomi);  // [Mario, Luca]\n    }\n}",
+      "common_mistakes": [
+        "remove() senza next()",
+        "ConcurrentModification in for-each"
+      ],
+      "best_practices": [
+        "Iterator per rimozione",
+        "For-each per sola lettura"
+      ],
+      "learning_objectives": [
+        "Usare Iterator",
+        "hasNext/next/remove",
+        "Rimozione sicura"
+      ],
+      "related_concepts": [
+        "JAVA-ARRAYLIST-001",
+        "JAVA-FOREACH-001"
+      ]
+    },
+    {
+      "concept_id": "JAVA-GENERICS-001",
+      "topic": "Generics - Parametri di Tipo",
+      "category": "Type Safety and Reusability",
+      "difficulty_level": "advanced",
+      "explanation": "GENERICS: parametrizzazione tipi con <T>. Type safety a compile-time (vs cast runtime). Classi generiche riutilizzabili. Type erasure: info tipo rimossa a runtime. Bounded types: <T extends SuperClass>.",
+      "code_example": "// Classe generica\npublic class Box<T> {\n    private T contenuto;\n\n    public void set(T contenuto) {\n        this.contenuto = contenuto;\n    }\n\n    public T get() {\n        return contenuto;\n    }\n}\n\n// Bounded type parameter\npublic class NumericBox<T extends Number> {\n    private T valore;\n\n    public double getDouble() {\n        return valore.doubleValue();  // Number ha doubleValue()\n    }\n}\n\n// Utilizzo\npublic class TestGenerics {\n    public static void main(String[] args) {\n        // Type safety: compile-time check\n        Box<String> boxString = new Box<>();\n        boxString.set(\"Ciao\");\n        String s = boxString.get();  // No cast needed!\n\n        Box<Integer> boxInt = new Box<>();\n        boxInt.set(42);\n        // boxInt.set(\"test\"); // ERRORE COMPILAZIONE!\n\n        NumericBox<Double> nb = new NumericBox<>();\n        // NumericBox<String> err; // ERRORE: String non extends Number\n    }\n}",
+      "common_mistakes": [
+        "Raw types senza <>",
+        "Type erasure confusion",
+        "Generics con primitivi"
+      ],
+      "best_practices": [
+        "Sempre specificare tipo generico",
+        "Bounded types per vincoli"
+      ],
+      "learning_objectives": [
+        "Classi generiche <T>",
+        "Bounded types",
+        "Type safety"
+      ],
+      "related_concepts": [
+        "JAVA-ARRAYLIST-001",
+        "JAVA-COLLECTIONS-001"
+      ]
+    },
+    {
+      "concept_id": "JAVA-FINAL-001",
+      "topic": "Modificatore Final - Immutabilità",
+      "category": "Language Features",
+      "difficulty_level": "beginner",
+      "explanation": "FINAL: rende immutabile. Variabile final: valore non modificabile dopo inizializzazione. Metodo final: non può essere overridden. Classe final: non può essere estesa (String, Math). Costanti: static final.",
+      "code_example": "public class EsempioFinal {\n    // Costante di classe: static final\n    public static final double PI = 3.14159;\n    public static final String APP_NAME = \"MyApp\";\n\n    // Attributo final: inizializzato in costruttore\n    private final int id;\n    private final String nome;\n\n    public EsempioFinal(int id, String nome) {\n        this.id = id;    // Inizializzazione una sola volta\n        this.nome = nome;\n    }\n\n    // Metodo final: non può essere overridden\n    public final void metodoSicuro() {\n        System.out.println(\"Implementazione fissa\");\n    }\n}\n\n// Classe final: non può essere estesa\npublic final class ClasseImmutabile {\n    private final int valore;\n\n    public ClasseImmutabile(int valore) {\n        this.valore = valore;\n    }\n\n    public int getValore() { return valore; }\n    // public void setValore(int v) {} // NO setter per immutabilità\n}\n\n// Variabili locali final\npublic void metodo() {\n    final int MAX = 100;\n    // MAX = 200; // ERRORE COMPILAZIONE!\n}",
+      "common_mistakes": [
+        "final su riferimenti (oggetto mutabile)",
+        "Dimenticare inizializzazione final"
+      ],
+      "best_practices": [
+        "Costanti: static final MAIUSCOLO",
+        "Classi immutabili: final + no setter"
+      ],
+      "learning_objectives": [
+        "final per variabili/metodi/classi",
+        "Immutabilità",
+        "Costanti"
+      ],
+      "related_concepts": [
+        "JAVA-STATIC-001",
+        "JAVA-IMMUTABLE-001"
+      ]
     }
   ],
-
-  "code_examples_summary": {
-    "total_examples": 48,
-    "languages": ["Java"],
-    "comment_style": "Italiano dettagliato",
-    "naming_conventions": {
-      "classes": "PascalCase (es. Studente, GestoreFile)",
-      "methods": "camelCase (es. calcolaMedia, getNome)",
-      "constants": "UPPER_SNAKE_CASE (es. MAX_STUDENTI, PI)",
-      "packages": "lowercase.dot.separated (es. it.scuola.gestionale)"
-    },
-    "features": [
-      "Commenti passo-passo in italiano",
-      "Spiegazione del comportamento di ogni metodo invocato",
-      "Output atteso dove rilevante",
-      "Best practices OOP integrate",
-      "Esempi completi e compilabili"
-    ]
-  },
-
-  "learning_path": {
-    "beginner": [
-      "JAVA-OOP-001",
-      "JAVA-OOP-002",
-      "JAVA-OOP-003",
-      "JAVA-COLLECTION-001",
-      "JAVA-EXCEPTION-001"
-    ],
-    "intermediate": [
-      "JAVA-OOP-004",
-      "JAVA-OOP-005",
-      "JAVA-STREAM-001",
-      "JAVA-STREAM-002",
-      "JAVA-INTERFACE-001",
-      "JAVA-GUI-001",
-      "JAVA-LAMBDA-001"
-    ],
-    "advanced": [
-      "JAVA-OOP-006",
-      "JAVA-INTERFACE-002",
-      "JAVA-MVC-001",
-      "JAVA-EXCEPTION-003"
-    ]
-  },
-
-  "cross_references": {
-    "OOP_to_Collections": "Gli oggetti creati con classi OOP (JAVA-OOP-001) possono essere memorizzati in ArrayList (JAVA-COLLECTION-001)",
-    "Interfaces_to_Lambda": "Le interfacce funzionali (JAVA-INTERFACE-001) sono la base per lambda expressions (JAVA-LAMBDA-001)",
-    "Exceptions_to_Streams": "La gestione eccezioni (JAVA-EXCEPTION-001) è fondamentale per operazioni I/O (JAVA-STREAM-001)",
-    "OOP_to_MVC": "I principi OOP (ereditarietà, incapsulamento) sono applicati nel pattern MVC (JAVA-MVC-001)",
-    "GUI_to_MVC": "Le interfacce Swing (JAVA-GUI-001) costituiscono la View nel pattern MVC (JAVA-MVC-001)"
+  "theoretical_explanations": {
+    "oop_principles": {
+      "explanation": "La Programmazione Orientata agli Oggetti (OOP) è un paradigma di programmazione che organizza il software in oggetti che contengono dati (attributi) e codice (metodi). Java è un linguaggio fortemente orientato agli oggetti dove quasi tutto è un oggetto (eccetto tipi primitivi).",
+      "pillars": [
+        {
+          "name": "Astrazione",
+          "description": "Capacità di concentrarsi sugli aspetti essenziali ignorando dettagli irrilevanti",
+          "java_implementation": "Classi astratte (abstract class) e interfacce (interface)"
+        },
+        {
+          "name": "Incapsulamento",
+          "description": "Meccanismo che lega dati e metodi e nasconde dettagli implementativi",
+          "java_implementation": "Attributi private con metodi public getter/setter"
+        },
+        {
+          "name": "Ereditarietà",
+          "description": "Permette a una classe di acquisire proprietà di un'altra classe",
+          "java_implementation": "Parola chiave 'extends' per ereditarietà singola"
+        },
+        {
+          "name": "Polimorfismo",
+          "description": "Capacità di oggetti di classi diverse di rispondere allo stesso messaggio",
+          "java_implementation": "Override di metodi + binding dinamico"
+        }
+      ]
+    }
   }
 }

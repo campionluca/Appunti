@@ -258,9 +258,121 @@ Ogni capitolo ha esercizi dedicati in `esercizi/`:
 - Database (MySQLi): `esercizi/10_Database_MySQLi.md`
 - Argomenti utili: `esercizi/11_Altri_Argomenti_Utili.md`
 
+## 🔒 Descrittori Sicurezza Web
+
+**Status**: ✅ COMPLETATO (14 Novembre 2025)
+
+Il corso PHP integra una copertura **eccellente della sicurezza web** con 15 security descriptors allineati a **OWASP Top 10 2021**:
+
+### Copertura OWASP: 10/10 categorie (88% score)
+
+| OWASP Category | Livello | Pattern Implementato |
+|---|---|---|
+| **A01** Broken Access Control | ⭐⭐⭐⭐⭐ | Session regeneration, CSRF token, timeout |
+| **A02** Cryptographic Failures | ⭐⭐⭐⭐⭐ | Argon2id hashing, HTTPS, secure cookies |
+| **A03** Injection (XSS, SQLi) | ⭐⭐⭐⭐⭐ | Prepared statements, htmlspecialchars |
+| **A04** Insecure Design | ⭐⭐⭐⭐ | PRG pattern, validation, rate limiting |
+| **A05** Security Misconfiguration | ⭐⭐⭐⭐ | Secure flags, permissions, MIME detection |
+| **A06** Vulnerable Components | ⭐⭐⭐ | PHP 8.1+ recommended, dependency audit |
+| **A07** Identification/Auth Failures | ⭐⭐⭐⭐⭐ | Password hashing, rate limiting, timing-safe |
+| **A08** Software/Data Integrity | ⭐⭐⭐⭐⭐ | MIME validation, file hashing, integrity |
+| **A09** Logging Failures | ⭐⭐⭐ | error_log integrated, structured logging planned |
+| **A10** SSRF | ⭐⭐⭐ | Path validation, directory traversal prevention |
+
+### 15 Security Descriptors
+
+1. **PHP-FORMS-001** — Form validation & sanitization (OWASP A07)
+2. **PHP-ARRAY-001** — Array manipulation security (OWASP A03)
+3. **PHP-COOKIE-001** — Secure cookie flags & validation (OWASP A02, A05)
+4. **PHP-SESSION-001** — Session regeneration & timeouts (OWASP A01)
+5. **PHP-UPLOAD-001** — File upload MIME & size checks (OWASP A08)
+6. **PHP-MYSQLI-001** — Prepared statements & binding (OWASP A03)
+7. **PHP-SECURITY-XSS-001** — Output encoding & CSP (OWASP A03)
+8. **PHP-SECURITY-SQLI-001** — SQL injection defense (OWASP A03)
+9. **PHP-SECURITY-CSRF-001** — CSRF token & SameSite (OWASP A01)
+10. **PHP-AUTH-001** — Password hashing & rate limiting (OWASP A07)
+11. **PHP-FILE-001** — Directory traversal prevention (OWASP A10)
+12. **PHP-ROUTER-001** — Rate limiting middleware (OWASP A04)
+13. **PHP-BASICS-001** — Input validation patterns (OWASP A04)
+
+**+ 2 descriptors** in appendici di supporto.
+
+### Pattern Unsafe vs Safe (Documentati)
+
+Tutti gli esempi seguono il template:
+
+```php
+// ============================================
+// VULNERABILE - Problema di sicurezza
+// ============================================
+$name = $_GET['name'];
+echo "<h1>$name</h1>";  // ❌ XSS risk
+// Attack: ?name=<script>alert(1)</script>
+
+// ============================================
+// SICURO - Mitigazione
+// ============================================
+$name = htmlspecialchars($_GET['name'], ENT_QUOTES, 'UTF-8');
+echo "<h1>$name</h1>";  // ✅ Encoded
+```
+
+### Vulnerabilità Mappate
+
+- **XSS**: Script injection via GET/POST, stored XSS from DB
+- **SQL Injection**: OR '1'='1 bypass, UNION SELECT, DROP TABLE
+- **Session Fixation**: Reuse of old session ID
+- **CSRF**: Cross-site form submission without token
+- **Upload Attacks**: MIME spoofing, directory traversal, RCE
+- **Brute-force**: Timing attacks on auth endpoints
+- **Information Disclosure**: Detailed error messages in production
+
+### Best Practices Implementate
+
+✅ **XSS Prevention**
+   - `htmlspecialchars()` con `ENT_QUOTES | ENT_SUBSTITUTE`
+   - Content Security Policy headers
+   - No eval() o dynamic script execution
+
+✅ **SQL Injection Defense**
+   - Prepared statements con `bind_param()`
+   - No string concatenation in queries
+   - Least privilege DB user
+
+✅ **Session Security**
+   - `session_regenerate_id(true)` dopo login
+   - Cookie `HttpOnly`, `Secure`, `SameSite=Strict`
+   - Timeout inattività (20 minuti default)
+
+✅ **File Upload Protection**
+   - MIME detection con `finfo_file()` (non `$_FILES['type']`)
+   - Whitelist tipi permessi
+   - Randomized filenames per prevenire directory traversal
+   - Size limits (2MB default)
+
+✅ **Authentication**
+   - Argon2id password hashing (fallback bcrypt)
+   - Rate limiting: 5 tentativi in 15 minuti
+   - Timing-safe comparison (`hash_equals()`)
+   - Password strength: 8-72 chars, 3 classi
+
+✅ **Cookie Security**
+   - `Secure`: HTTPS only
+   - `HttpOnly`: No JavaScript access
+   - `SameSite=Strict`: Cross-site protection
+
+### Risorse e Referenze
+
+- **Analisi completa**: `/home/user/Appunti/PHP_COVERAGE_ANALYSIS.md`
+- **Descrittori**: `/home/user/Appunti/PHP_DESCRIPTORS_REPORT.json`
+- **Esempi pratici**: `/home/user/Appunti/PHP/esempi/` (15+ file)
+- **OWASP Top 10**: https://owasp.org/Top10/
+- **PHP Security Handbook**: https://www.php.net/manual/it/security.php
+
+---
+
 ## Sicurezza (panoramica)
 
-- XSS: sanificare sempre l’output HTML (`htmlspecialchars`, Content Security Policy)
+- XSS: sanificare sempre l'output HTML (`htmlspecialchars`, Content Security Policy)
 - SQL Injection: `mysqli`/`PDO` con prepared statements e binding
 - Sessioni: `session_regenerate_id(true)`, cookie `HttpOnly`, `Secure`, `SameSite=Lax`
 

@@ -125,22 +125,32 @@ python tools\check_build.py
 | Esempi ed esercizi | 🟡 In arricchimento (00–15 aggiornati) |
 | Soluzioni | 🟡 Bozza (Appendice creata) |
 | PDF principale | ✅ Compilato |
-| **Descrittori Python** | **🟡 IN PROGRESS** |
+| **Descrittori Python** | **✅ COMPLETATO** |
 
 ---
 
-## 🚧 Descrittori Python - In Sviluppo
+## ✅ Descrittori Python - Completato
 
-**Status**: 🟡 **IN PROGRESS**
+**Status**: ✅ **COMPLETATO** (14 Novembre 2025)
 
 Progetto per generare descrittori strutturati di concetti Python con coverage analysis.
 
-- **File report**: PYTHON_DESCRIPTORS_REPORT.json (pianificato per 2025-11-20)
-- **Categorie pianificate**: 18 aree tematiche (Basics, Control, Functions, Data Structures, OOP, GUI, Web, NAO Robotics)
-- **Target descrittori**: 20-25 descriptors strutturati
-- **Deadline**: 2025-11-20
+### Dati Reali Generati
+- **Descrittori generati**: 41 descriptors (vs 20-25 stimati)
+- **Categorie**: 17 aree tematiche
+- **Idiomi Pythonic documentati**: 14
+- **Livelli di difficoltà**:
+  - Beginner: 16 descriptors
+  - Intermediate: 21 descriptors
+  - Advanced: 4 descriptors
 
-### Categorie di Descrittori Pianificate
+### File Generati
+- **PYTHON_DESCRIPTORS_REPORT.json** — Report completo con 41 descrittori strutturati
+- **PYTHON_COVERAGE_ANALYSIS.md** — Analisi coverage per categoria
+- **create_python_descriptors.py** — Script di generazione automatica
+- **Data generazione**: 14 Novembre 2025
+
+### Categorie di Descrittori (17 Aree)
 1. Basics (variabili, tipi, operatori)
 2. Control Flow (if, for, while)
 3. Functions (def, argomenti, scope)
@@ -149,7 +159,8 @@ Progetto per generare descrittori strutturati di concetti Python con coverage an
 6. File I/O
 7. Error Handling
 8. Modules & Packages
-9-10. OOP Fundamentals & Advanced
+9. OOP Fundamentals
+10. OOP Advanced
 11. Decorators
 12. Iterators & Generators
 13. List Comprehensions
@@ -157,9 +168,8 @@ Progetto per generare descrittori strutturati di concetti Python con coverage an
 15. GUI Tkinter
 16. Web Flask
 17. Database SQLite
-18. NAO Robotics (NAOqi API)
 
-Per task di sviluppo dettagliati, consultare [TODO.md](TODO.md#-descrittori-python---in-sviluppo).
+Per dettagli consultare [TODO.md](TODO.md#-descrittori-python---completato).
 
 ---
 
