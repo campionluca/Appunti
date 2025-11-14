@@ -121,6 +121,54 @@ Elenco delle attività di sviluppo e manutenzione del progetto.
 
 ---
 
+## 🚧 Descrittori Python - In Sviluppo
+
+### Status: 🟡 IN PROGRESS
+- **Stato**: Pianificazione e preparazione infrastruttura
+- **File report**: PYTHON_DESCRIPTORS_REPORT.json (da generare)
+- **Categorie pianificate**: 18
+- **Descrittori target**: 20-25 descriptors
+- **Deadline**: 2025-11-20
+
+### Categorie Planificate per Descrittori
+1. **Basics** – Variabili, tipi di dato, operatori
+2. **Control Flow** – if, for, while, break, continue
+3. **Functions** – def, argomenti, return, scope
+4. **Data Structures** – list, tuple, dict, set
+5. **String Operations** – slice, metodi, formattazione
+6. **File I/O** – open, read, write, context managers
+7. **Error Handling** – try/except, finally, raise
+8. **Modules & Packages** – import, sys.path, __init__.py
+9. **OOP Fundamentals** – class, __init__, metodi
+10. **OOP Advanced** – ereditarietà, polimorfismo, property
+11. **Decorators** – @decorator, wrapping, functools
+12. **Iterators & Generators** – yield, range, enumerate
+13. **List Comprehensions** – sintassi, condizioni, annidamento
+14. **Lambda & Higher-Order** – lambda, map, filter, sorted
+15. **GUI Tkinter** – widgets, layout, event handling
+16. **Web Flask** – route, request, response, template
+17. **Database SQLite** – CREATE, SELECT, INSERT, UPDATE
+18. **NAO Robotics** – NAOqi, motion, vision API
+
+### Task Descrittori
+- [ ] **[PY-DESC-01]** Creare script generazione PYTHON_DESCRIPTORS_REPORT.json
+  - Stato: TODO | Tempo: 45 min
+  - Output: File JSON strutturato con 20-25 descrittori
+
+- [ ] **[PY-DESC-02]** Popolare descrittori per categorie 1-6 (Basics–I/O)
+  - Stato: TODO | Tempo: 1.5 ore
+
+- [ ] **[PY-DESC-03]** Popolare descrittori per categorie 7-12 (Error–Generator)
+  - Stato: TODO | Tempo: 1.5 ore
+
+- [ ] **[PY-DESC-04]** Popolare descrittori per categorie 13-18 (Comprehension–NAO)
+  - Stato: TODO | Tempo: 1.5 ore
+
+- [ ] **[PY-DESC-05]** Validare e testare descrittori (coverage analysis)
+  - Stato: TODO | Tempo: 30 min
+
+---
+
 ## 📊 Riepilogo Task
 
 | Categoria | Alta | Media | Bassa | Totale |
@@ -131,7 +179,8 @@ Elenco delle attività di sviluppo e manutenzione del progetto.
 | Refactoring | 0 | 0 | 2 | 2 |
 | Convenzioni | 0 | 5 | 0 | 5 |
 | Test | 0 | 2 | 0 | 2 |
-| **Totale** | **4** | **9** | **2** | **15** |
+| **Descrittori Python** | **0** | **5** | **0** | **5** |
+| **Totale** | **4** | **14** | **2** | **20** |
 
 ---
 

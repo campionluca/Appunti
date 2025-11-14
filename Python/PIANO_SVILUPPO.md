@@ -48,6 +48,9 @@ Moduli 11–15: GUI, Web, Database, Testing, Automazione.
 ### 🔹 Fase 4 — Robotica NAO (V6)
 Moduli 16–18: NAOqi, setup ambiente, API principali, movimento e visione.
 
+### 🔹 Fase 5 — Descrittori Python (In Parallel)
+Generazione di descrittori strutturati per concetti Python con coverage analysis.
+
 ---
 
 ## Template per modulo (LaTeX)
@@ -74,6 +77,63 @@ Checklist completamento:
 
 ---
 
+## Descrittori Python — Roadmap Dettagliata (Fase 5)
+
+**Status**: 🟡 IN PROGRESS | **Deadline**: 2025-11-20
+
+Progetto parallelo di generazione di descrittori strutturati per concetti Python con coverage analysis completa.
+
+### Obiettivi
+- Creare PYTHON_DESCRIPTORS_REPORT.json nella root repository
+- Definire 20-25 descrittori coperenti 18 categorie tematiche
+- Analizzare coverage tra moduli LaTeX e descrittori
+- Fornire base per future analisi di completamento
+
+### Categorie Pianificate
+| # | Categoria | Descrittori Stimati | Moduli Correlati |
+|---|-----------|-------------------|-----------------|
+| 1 | Basics | 2 | 00, 04 |
+| 2 | Control Flow | 2 | 01 |
+| 3 | Functions | 2 | 02 |
+| 4 | Data Structures | 2 | 03 |
+| 5 | String Operations | 1 | 04 |
+| 6 | File I/O | 1 | 05 |
+| 7 | Error Handling | 1 | 06 |
+| 8 | Modules & Packages | 1 | 07 |
+| 9 | OOP Fundamentals | 2 | 08 |
+| 10 | OOP Advanced | 1 | 08 |
+| 11 | Decorators | 1 | 09 |
+| 12 | Iterators & Generators | 1 | 09 |
+| 13 | List Comprehensions | 1 | 03 |
+| 14 | Lambda & Higher-Order | 1 | 02 |
+| 15 | GUI Tkinter | 1 | 11 |
+| 16 | Web Flask | 1 | 12 |
+| 17 | Database SQLite | 1 | 15 |
+| 18 | NAO Robotics | 1 | 16, 17, 18 |
+
+### Fase di Implementazione
+1. **Creazione infrastruttura** (0.75 ore)
+   - Script generazione PYTHON_DESCRIPTORS_REPORT.json
+   - Validazione struttura JSON
+
+2. **Popolamento descrittori** (4.5 ore)
+   - Categorie 1-6: Basics, Control, Functions, Data Structures, String, File I/O
+   - Categorie 7-12: Error, Modules, OOP (Fundamental & Advanced), Decorators, Iterators
+   - Categorie 13-18: Comprehensions, Lambda, GUI, Web, Database, NAO
+
+3. **Coverage Analysis & Testing** (0.5 ore)
+   - Validazione descrittori
+   - Analisi coverage tra moduli e descrittori
+   - Generazione report statistics
+
+### Deliverables Attesi
+- ✅ PYTHON_DESCRIPTORS_REPORT.json (20-25 descriptors)
+- ✅ PYTHON_COVERAGE_ANALYSIS.md (coverage report)
+- ✅ PYTHON_CONCEPT_IDS.md (mapping concetti-moduli)
+- ✅ Aggiornamento TODO.md e PIANO_SVILUPPO.md
+
+---
+
 ## Timeline indicativa
 
 | Fase | Periodo stimato | Output previsto |
@@ -81,6 +141,8 @@ Checklist completamento:
 | Fase 1 | 2–3 settimane | Basi del linguaggio |
 | Fase 2 | 3–4 settimane | Python intermedio |
 | Fase 3 | 3–5 settimane | Applicazioni pratiche |
+| Fase 4 | 2–3 settimane | Robotica NAO (V6) |
+| **Fase 5** | **1 settimana** (2025-11-14 a 2025-11-20) | **Descrittori Python + Coverage Analysis** |
 
 ---
 
