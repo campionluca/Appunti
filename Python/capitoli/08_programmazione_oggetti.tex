@@ -1,0 +1,119 @@
+% Modulo 08 — Programmazione a Oggetti (OOP)
+\chapter{Programmazione a Oggetti (OOP)}
+
+\section{Introduzione}
+Classi, oggetti, ereditarietà, incapsulamento e polimorfismo in Python.
+
+La descrizione chiarisce quando introdurre classi rispetto a funzioni e strutture dati, come modellare entità e relazioni e come usare metodi speciali per integrare con l'ecosistema Python. Accenniamo anche a \texttt{dataclasses} come alternativa leggera.
+
+Applicare correttamente OOP aiuta a organizzare sistemi complessi, isolare responsabilità e facilitare evoluzione e test.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Definire classi e metodi.
+  \item Usare ereditarietà e overriding.
+  \item Applicare proprietà e metodi speciali.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Metodi speciali]
+\texttt{\_\_init\_\_}, \texttt{\_\_repr\_\_}, \texttt{\_\_str\_\_}, \texttt{\_\_len\_\_}, ecc.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Principi di design OOP]
+- SRP: ogni classe deve avere una responsabilità chiara.
+- Composizione \textit{over} ereditarietà per flessibilità.
+- LSP: le sottoclassi devono rispettare i contratti della base.
+- Incapsula stato, esponi metodi chiari e invarianti.
+- Usa \texttt{dataclasses} per oggetti-dato semplici.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Classe base}
+\begin{lstlisting}
+class Punto:
+    def __init__(self, x, y):
+        self.x = x; self.y = y
+    def __repr__(self):
+        return f"Punto({self.x}, {self.y})"
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{\_\_init\_\_} inizializza lo stato; \texttt{\_\_repr\_\_} fornisce una rappresentazione utile al debug.
+- Evitare di mescolare responsabilità: la classe modella un punto, non gestisce I/O.
+- Per oggetti-dato, considerare \texttt{dataclasses} per ridurre boilerplate.
+\end{tcolorbox}
+
+\subsection{Ereditarietà}
+\begin{lstlisting}
+class Veicolo:
+    def muovi(self):
+        print("Mi muovo")
+
+class Auto(Veicolo):
+    def muovi(self):
+        print("Guido")
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{Auto} eredita da \texttt{Veicolo} e fa override di \texttt{muovi}.
+- Applicare LSP: la sottoclasse deve rispettare l'interfaccia/contratto della base.
+- Preferire composizione quando l'ereditarietà non rappresenta una relazione "è un".
+\end{tcolorbox}
+
+\subsection{Proprietà}
+\begin{lstlisting}
+class User:
+    def __init__(self, name):
+        self._name = name
+    @property
+    def name(self):
+        return self._name
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \verb|@property| espone un attributo calcolato/validato mantenendo un'interfaccia pulita.
+- L'underscore (\texttt{\_name}) indica convenzione di attributo "interno"; non è enforced.
+- Aggiungere setter solo se necessario per invarianti; altrimenti mantenere immutabilità.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Modellare entità di dominio (\texttt{Ordine}, \texttt{Prodotto}, \texttt{Utente}).
+- Adapter/Strategy per variare comportamento in runtime.
+- Value Object immutabili per sicurezza e testabilità.
+- Astrazioni per driver (DB, API) con implementazioni intercambiabili.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Implementa una classe \texttt{Rettangolo} con area e perimetro.
+  \item Crea gerarchia \texttt{Animale} $\rightarrow$ \texttt{Cane}/\texttt{Gatto} con override.
+  \item Usa \texttt{@property} per validare attributi.
+  \item Implementa un contenitore con metodi speciali di sequenza.
+  \item Aggiungi un metodo di classe per creare da stringa.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai applicato i concetti chiave di OOP in Python.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Modellazione di dominio (ordini, utenti, prodotti).
+- UI e componenti riutilizzabili con pattern OOP.
+- Estensioni e plugin tramite interfacce e astrazioni.
+- Testare comportamenti con polimorfismo/mocking.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+\item \textbf{Composizione vs ereditarietà}: privilegiare composizione per flessibilità; usare ereditarietà quando c'è una relazione “è un”.
+  \item \textbf{Dataclass}: generano boilerplate per classi di dati; controllare immutabilità con \verb|frozen=True|.
+  \item \textbf{Proprietà e incapsulamento}: \verb|@property| per interfacce pulite; validare invarianti.
+\item \textbf{Dunder methods}: implementare \verb|__repr__|, \verb|__eq__| e \verb|__hash__| in base all'identità del dominio.
+  \item \textbf{Type hints}: agevolano strumenti statici; mantenere annotazioni aggiornate e coerenti.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Progettazione} Definire responsabilità piccole e coese, evitare classi “tuttofare”. Integrare test di unità per gli invarianti principali.
+Consulta: \url{https://docs.python.org/3/tutorial/classes.html}.

@@ -1,0 +1,111 @@
+% Modulo 11 — GUI con Tkinter
+\chapter{GUI con Tkinter}
+
+\section{Introduzione}
+Creare interfacce grafiche desktop con Tkinter: finestre, widget e eventi.
+
+Questa descrizione spiega il ciclo di eventi, l'uso dei widget principali e come strutturare piccole applicazioni desktop rapidamente. Evidenziamo pratiche di layout e separazione tra logica e interfaccia.
+
+Tkinter è ideale per utility locali, strumenti didattici e prototipi che richiedono input/feedback immediati.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Creare una finestra e aggiungere widget.
+  \item Gestire eventi e callback.
+  \item Organizzare layout con \texttt{pack}/\texttt{grid}.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Event loop e layout]
+- Il loop di eventi gestisce input e aggiornamenti UI.
+- Scegli tra \texttt{pack}, \texttt{grid} e \texttt{place} consapevolmente.
+- Evita blocchi: delega lavoro pesante a thread/processi.
+- Separa logica dall'interfaccia (controller vs view).
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Finestra base}
+\begin{lstlisting}
+import tkinter as tk
+root = tk.Tk()
+root.title("Hello")
+tk.Label(root, text="Ciao!").pack()
+root.mainloop()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{Tk()} crea la finestra principale; \texttt{mainloop()} avvia il ciclo eventi.
+- I widget (\texttt{Label}, \texttt{Button}, ecc.) si posizionano con gestori di geometria.
+- Tenere la logica separata (controller) per testabilità e manutenzione.
+\end{tcolorbox}
+
+\subsection{Button e callback}
+\begin{lstlisting}
+import tkinter as tk
+def on_click():
+    print("Clicked")
+root = tk.Tk()
+tk.Button(root, text="Click", command=on_click).pack()
+root.mainloop()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- Le callback legano eventi UI a funzioni/metodi; evitare lavoro pesante nel thread GUI.
+- Per attività lunghe, usare thread/processi e comunicare lo stato alla UI.
+- Validare input e gestire errori senza bloccare l'interfaccia.
+\end{tcolorbox}
+
+\subsection{Layout grid}
+\begin{lstlisting}
+import tkinter as tk
+root = tk.Tk()
+tk.Label(root, text="Nome").grid(row=0, column=0)
+tk.Entry(root).grid(row=0, column=1)
+root.mainloop()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{grid} posiziona i widget in righe/colonne; utile per form.
+- Non mescolare \texttt{pack} e \texttt{grid} nello stesso container.
+- Pianificare layout responsivi e gestione del focus per UX migliore.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Tool desktop per gestione file o batch process.
+- Applicazioni didattiche con feedback immediato.
+- Pannelli di controllo per script di automazione.
+- Editor semplici con campi di input e validazioni.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Crea una calcolatrice semplice.
+  \item Implementa un form con validazione.
+  \item Aggiungi un menù e scorciatoie da tastiera.
+  \item Usa \texttt{grid} per un layout tabellare.
+  \item Mostra un dialog di file e stampa il percorso scelto.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai costruito GUI di base con Tkinter.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Utility desktop per gestione batch e file.
+- Prototipi didattici interattivi.
+- Pannelli controllo per script e servizi locali.
+- Piccole app form-based con validazioni.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Event loop}: Tk gestisce eventi e callback; evitare blocchi lunghi nel main thread.
+  \item \textbf{Geometry managers}: \verb|pack|, \verb|grid| e \verb|place|; scegliere coerentemente e non mescolarli sullo stesso container.
+  \item \textbf{Callback}: funzioni o metodi legati ai widget; gestire stato con oggetti per coesione.
+  \item \textbf{Threading}: operazioni I/O fuori dal thread GUI; comunicare con code o eventi pianificati.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Qualità} Separare logica della UI dalla logica applicativa; testare componenti in isolamento quando possibile.
+Consulta: \url{https://docs.python.org/3/library/tk.html}.

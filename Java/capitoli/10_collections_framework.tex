@@ -1,0 +1,605 @@
+% Capitolo 10 - Collections Framework: Set, Map, List
+\chapter{Collections Framework}
+\label{cap:collections_framework}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere la gerarchia del Collections Framework di Java
+    \item Utilizzare implementazioni di Set (HashSet, TreeSet, LinkedHashSet)
+    \item Utilizzare implementazioni di Map (HashMap, TreeMap, LinkedHashMap)
+    \item Comprendere le differenze tra List, Set e Map
+    \item Implementare Comparable e Comparator per ordinamento personalizzato
+    \item Usare Iterator per iterare su collezioni
+    \item Eseguire operazioni di ricerca e ordinamento su collezioni
+\end{itemize}
+
+\section{Gerarchia Collections Framework}
+
+Il \textbf{Collections Framework} è una suite di interfacce e classi per rappresentare e manipolare collezioni. Le interfacce principali sono \texttt{Collection}, \texttt{List}, \texttt{Set} e \texttt{Map}. Tutte le collezioni mantengono gruppi di oggetti, ma con semantiche diverse: \texttt{List} mantiene l'ordine degli elementi e permette duplicati; \texttt{Set} non permette duplicati; \texttt{Map} associa chiavi a valori. Ricorda che ArrayList (vedi \autoref{cap:arraylist}) implementa \texttt{List}, e in questo capitolo esploriamo le altre interfacce principali.
+
+\subsection{Gerarchia di interfacce}
+
+\begin{verbatim}
+Collection<E>
+├── List<E>          (ArrayList, LinkedList, Vector)
+├── Set<E>           (HashSet, TreeSet, LinkedHashSet)
+└── Queue<E>         (PriorityQueue, LinkedList)
+
+Map<K, V>
+├── HashMap
+├── TreeMap
+├── LinkedHashMap
+└── Hashtable (legacy)
+\end{verbatim}
+
+Ogni ramo offre diverse implementazioni con caratteristiche specifiche di performance e ordinamento.
+
+\section{Set: Collezioni senza duplicati}
+
+Un \texttt{Set<E>} è una collezione che non contiene elementi duplicati. Implementa l'interfaccia \texttt{Collection}.
+
+\subsection{HashSet: accesso rapido, ordine arbitrario}
+
+\begin{lstlisting}
+import java.util.HashSet;
+import java.util.Set;
+
+public class EsempoHashSet {
+    public static void main(String[] args) {
+        // Crea un HashSet di stringhe
+        Set<String> colori = new HashSet<>();
+
+        // Il metodo colori.add() aggiunge elementi (duplicati ignorati)
+        colori.add("Rosso");
+        colori.add("Verde");
+        colori.add("Blu");
+        colori.add("Rosso"); // Duplicato, non viene aggiunto
+
+        System.out.println("Colori: " + colori);
+        // Output: [Verde, Rosso, Blu] o diverso ordine
+
+        // Il metodo colori.size() ritorna il numero di elementi
+        System.out.println("Dimensione: " + colori.size()); // Output: 3
+
+        // Il metodo colori.contains() verifica la presenza
+        if (colori.contains("Rosso")) {
+            System.out.println("Rosso è nel set");
+        }
+
+        // Il metodo colori.remove() rimuove un elemento
+        colori.remove("Verde");
+        System.out.println("Dopo rimozione: " + colori);
+    }
+}
+\end{lstlisting}
+
+\texttt{HashSet} è l'implementazione più veloce di \texttt{Set}, con complessità O(1) per operazioni di add, remove e lookup. Usa una tabella hash interna, quindi \textbf{non garantisce alcun ordine} degli elementi. Il metodo \texttt{colori.add()} aggiunge elementi e ritorna \texttt{false} se l'elemento era già presente. Il metodo \texttt{colori.contains()} usa il metodo \texttt{equals()} degli oggetti per verificare l'appartenenza.
+
+\subsection{TreeSet: ordine crescente automatico}
+
+\begin{lstlisting}
+import java.util.Set;
+import java.util.TreeSet;
+
+public class EsempoTreeSet {
+    public static void main(String[] args) {
+        // Crea un TreeSet di interi (ordinati automaticamente)
+        Set<Integer> numeri = new TreeSet<>();
+
+        // Il metodo numeri.add() aggiunge elementi mantenendo ordine
+        numeri.add(30);
+        numeri.add(10);
+        numeri.add(20);
+        numeri.add(40);
+        numeri.add(10); // Duplicato, non viene aggiunto
+
+        System.out.println("Numeri ordinati: " + numeri);
+        // Output: [10, 20, 30, 40]
+
+        // Il metodo numeri.first() ritorna il primo elemento
+        System.out.println("Primo: " + numeri.first());
+
+        // Il metodo numeri.last() ritorna l'ultimo elemento
+        System.out.println("Ultimo: " + numeri.last());
+
+        // Il metodo numeri.headSet(20) ritorna elementi minori di 20
+        System.out.println("< 20: " + numeri.headSet(20));
+
+        // Il metodo numeri.tailSet(20) ritorna elementi >= 20
+        System.out.println(">= 20: " + numeri.tailSet(20));
+    }
+}
+\end{lstlisting}
+
+\texttt{TreeSet} mantiene gli elementi in ordine crescente (naturale o personalizzato con Comparator). Ha complessità O(log n) per operazioni di add, remove e lookup, lievemente più lenta di \texttt{HashSet} ma con ordinamento garantito. Il metodo \texttt{numeri.first()} e \texttt{numeri.last()} accedono ai confini. Il metodo \texttt{numeri.headSet()} e \texttt{numeri.tailSet()} ritornano subset ordinati, molto utili per range query.
+
+\subsection{LinkedHashSet: ordine d'inserimento}
+
+\begin{lstlisting}
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+public class EsempoLinkedHashSet {
+    public static void main(String[] args) {
+        // Crea un LinkedHashSet (mantiene ordine d'inserimento)
+        Set<String> nomi = new LinkedHashSet<>();
+
+        // Il metodo nomi.add() aggiunge elementi in ordine
+        nomi.add("Alice");
+        nomi.add("Bob");
+        nomi.add("Charlie");
+        nomi.add("Alice"); // Duplicato, non viene aggiunto
+
+        System.out.println("Nomi (ordine inserimento): " + nomi);
+        // Output: [Alice, Bob, Charlie]
+
+        // Iterazione mantiene l'ordine di inserimento
+        for (String nome : nomi) {
+            // System.out.println() stampa il nome
+            System.out.println(nome);
+        }
+    }
+}
+\end{lstlisting}
+
+\texttt{LinkedHashSet} combina le performance di \texttt{HashSet} (O(1)) con l'ordine d'inserimento, usando una lista interna per tracciare l'ordine. È utile quando importa mantenere l'ordine in cui gli elementi sono stati aggiunti.
+
+\begin{nota}
+Scelta tra Set implementations:
+\begin{itemize}
+    \item Usa \texttt{HashSet} per performance massima quando l'ordine non importa
+    \item Usa \texttt{TreeSet} quando hai bisogno di ordine crescente e range query
+    \item Usa \texttt{LinkedHashSet} quando serve l'ordine d'inserimento
+\end{itemize}
+\end{nota}
+
+\section{Map: Associazioni chiave-valore}
+
+Una \texttt{Map<K, V>} rappresenta associazioni tra chiavi e valori. Ogni chiave è unica, ma i valori possono essere duplicati.
+
+\subsection{HashMap: accesso rapido}
+
+\begin{lstlisting}
+import java.util.HashMap;
+import java.util.Map;
+
+public class EsempoHashMap {
+    public static void main(String[] args) {
+        // Crea una HashMap di stringhe a interi
+        Map<String, Integer> eta = new HashMap<>();
+
+        // Il metodo eta.put() associa chiave a valore
+        eta.put("Alice", 30);
+        eta.put("Bob", 25);
+        eta.put("Charlie", 35);
+
+        // Il metodo eta.get() ritorna il valore per una chiave
+        System.out.println("Età di Alice: " + eta.get("Alice")); // Output: 30
+
+        // Il metodo eta.containsKey() verifica la chiave
+        if (eta.containsKey("Bob")) {
+            System.out.println("Bob è nella mappa");
+        }
+
+        // Il metodo eta.remove() rimuove una coppia chiave-valore
+        eta.remove("Charlie");
+
+        // Il metodo eta.size() ritorna il numero di coppie
+        System.out.println("Dimensione: " + eta.size());
+
+        // Iterazione su chiavi usando eta.keySet()
+        System.out.println("Chiavi:");
+        for (String chiave : eta.keySet()) {
+            System.out.println("  " + chiave);
+        }
+
+        // Iterazione su valori usando eta.values()
+        System.out.println("Valori:");
+        for (Integer valore : eta.values()) {
+            System.out.println("  " + valore);
+        }
+
+        // Iterazione su coppie chiave-valore usando eta.entrySet()
+        System.out.println("Coppie:");
+        for (Map.Entry<String, Integer> entry : eta.entrySet()) {
+            String chiave = entry.getKey();
+            Integer valore = entry.getValue();
+            System.out.println("  " + chiave + " -> " + valore);
+        }
+    }
+}
+\end{lstlisting}
+
+\texttt{HashMap} usa una tabella hash per associare chiavi a valori con O(1) complessità media. Il metodo \texttt{eta.put()} associa una chiave a un valore (sovrascrive se la chiave esiste). Il metodo \texttt{eta.get()} ritorna il valore o \texttt{null} se la chiave non esiste. I metodi \texttt{eta.keySet()}, \texttt{eta.values()}, \texttt{eta.entrySet()} permettono diverse modalità di iterazione. Preferisci \texttt{entrySet()} per iterare su coppie, per evitare lookup multipli.
+
+\subsection{TreeMap: ordine per chiave}
+
+\begin{lstlisting}
+import java.util.Map;
+import java.util.TreeMap;
+
+public class EsempoTreeMap {
+    public static void main(String[] args) {
+        // Crea una TreeMap (ordinata per chiave)
+        Map<String, Integer> popolazione = new TreeMap<>();
+
+        // Il metodo popolazione.put() aggiunge coppie mantenendo ordine
+        popolazione.put("Italia", 59);
+        popolazione.put("Francia", 67);
+        popolazione.put("Germania", 83);
+        popolazione.put("Spagna", 47);
+
+        System.out.println("Paesi (ordine alfabetico): " + popolazione);
+        // Output: {Francia=67, Germania=83, Italia=59, Spagna=47}
+
+        // Iterazione mantiene ordine alfabetico per chiave
+        for (String paese : popolazione.keySet()) {
+            // System.out.println() stampa il paese e la popolazione
+            System.out.println(paese + ": " + popolazione.get(paese));
+        }
+
+        // Metodi navigazionali specifici di TreeMap
+        Map<String, Integer> subMap = (TreeMap<String, Integer>) popolazione;
+        // Sottomappa da "Germania" a "Spagna" (excludente la fine)
+        System.out.println("Da Germania a Spagna: " + ((TreeMap) subMap).subMap("Germania", "Spagna"));
+    }
+}
+\end{lstlisting}
+
+\texttt{TreeMap} mantiene le coppie ordinate per chiave crescente (naturale o personalizzata). Ha complessità O(log n) ma offre metodi navigazionali come \texttt{subMap()}, \texttt{headMap()}, \texttt{tailMap()} per range query efficienti.
+
+\subsection{LinkedHashMap: ordine d'inserimento}
+
+\begin{lstlisting}
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public class EsempoLinkedHashMap {
+    public static void main(String[] args) {
+        // Crea una LinkedHashMap (mantiene ordine d'inserimento)
+        Map<String, String> capitali = new LinkedHashMap<>();
+
+        // Il metodo capitali.put() aggiunge coppie in ordine
+        capitali.put("Italia", "Roma");
+        capitali.put("Francia", "Parigi");
+        capitali.put("Germania", "Berlino");
+
+        System.out.println("Capitali (ordine inserimento): " + capitali);
+        // Output: {Italia=Roma, Francia=Parigi, Germania=Berlino}
+
+        // Iterazione mantiene ordine di inserimento
+        for (String paese : capitali.keySet()) {
+            System.out.println(paese + " -> " + capitali.get(paese));
+        }
+    }
+}
+\end{lstlisting}
+
+\texttt{LinkedHashMap} combina le performance di \texttt{HashMap} con l'ordine di inserimento. È utile per implementare cache con accesso ordinato o per iterazioni prevedibili.
+
+\section{Comparable e Comparator}
+
+Per ordinare oggetti personalizzati in \texttt{TreeSet} e \texttt{TreeMap}, devi implementare \texttt{Comparable} o fornire un \texttt{Comparator}.
+
+\subsection{Interfaccia Comparable: ordine naturale}
+
+\begin{lstlisting}
+public class Persona implements Comparable<Persona> {
+    private String nome;
+    private int eta;
+
+    public Persona(String nome, int eta) {
+        this.nome = nome;
+        this.eta = eta;
+    }
+
+    // Il metodo compareTo() definisce l'ordine naturale
+    // Ritorna negativo se this < other, 0 se uguali, positivo se this > other
+    @Override
+    public int compareTo(Persona altra) {
+        // Confronta per eta prima
+        if (this.eta != altra.eta) {
+            return this.eta - altra.eta;
+        }
+        // Se stessa eta, confronta per nome
+        return this.nome.compareTo(altra.nome);
+    }
+
+    @Override
+    public String toString() {
+        return nome + " (" + eta + ")";
+    }
+}
+
+public class EsempoComparable {
+    public static void main(String[] args) {
+        // TreeSet usa automaticamente compareTo() per ordinare
+        java.util.Set<Persona> persone = new java.util.TreeSet<>();
+
+        persone.add(new Persona("Alice", 30));
+        persone.add(new Persona("Bob", 25));
+        persone.add(new Persona("Charlie", 25));
+
+        // Stampa ordinate per eta, poi per nome
+        for (Persona p : persone) {
+            System.out.println(p);
+        }
+    }
+}
+\end{lstlisting}
+
+Implementare \texttt{Comparable<T>} permette ai TreeSet e TreeMap di ordinare automaticamente usando il metodo \texttt{compareTo()}. Il metodo ritorna un intero: negativo se this è minore di other, zero se uguali, positivo se maggiore. Questo è l'ordine "naturale" della classe.
+
+\subsection{Interfaccia Comparator: ordini personalizzati}
+
+\begin{lstlisting}
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class EsempoComparator {
+    public static void main(String[] args) {
+        // TreeSet con Comparator personalizzato (ordine inverso)
+        Set<String> parole = new TreeSet<>(new Comparator<String>() {
+            @Override
+            public int compare(String s1, String s2) {
+                // Il metodo s2.compareTo(s1) inverte l'ordine
+                return s2.compareTo(s1);
+            }
+        });
+
+        // Il metodo parole.add() aggiunge elementi (ordinati al contrario)
+        parole.add("Apple");
+        parole.add("Banana");
+        parole.add("Cherry");
+
+        System.out.println("Ordine inverso: " + parole);
+        // Output: [Cherry, Banana, Apple]
+
+        // Comparator con lambda (Java 8+, più conciso)
+        Set<Integer> numeri = new TreeSet<>((a, b) -> b - a);
+        numeri.add(30);
+        numeri.add(10);
+        numeri.add(20);
+
+        System.out.println("Numeri (ordine inverso): " + numeri);
+        // Output: [30, 20, 10]
+
+        // Comparator per ordinare stringhe per lunghezza
+        Set<String> stringhe = new TreeSet<>(Comparator.comparingInt(String::length));
+        stringhe.add("Java");
+        stringhe.add("C");
+        stringhe.add("Python");
+
+        System.out.println("Stringhe (per lunghezza): " + stringhe);
+        // Output: [C, Java, Python]
+    }
+}
+\end{lstlisting}
+
+Un \texttt{Comparator<T>} definisce un ordine personalizzato senza modificare la classe. Passalo come argomento al costruttore di \texttt{TreeSet} o \texttt{TreeMap}. Il metodo \texttt{compare()} ritorna un intero con la stessa semantica di \texttt{compareTo()}. Usa lambda expressions (Java 8+) per Comparator più concisi, o metodi static come \texttt{Comparator.comparingInt()} per comparazioni basate su proprietà specifiche.
+
+\begin{nota}
+Quando usare Comparable vs Comparator:
+\begin{itemize}
+    \item \textbf{Comparable}: quando una classe ha un ordine "naturale" unico
+    \item \textbf{Comparator}: quando serve un ordine diverso, o non puoi modificare la classe
+\end{itemize}
+
+È possibile avere multiple Comparator per la stessa classe.
+\end{nota}
+
+\section{Iterator e iterazione}
+
+L'interfaccia \texttt{Iterator<E>} fornisce un modo standardizzato di iterare su qualsiasi collezione.
+
+\subsection{Uso di Iterator}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+public class EsempoIterator {
+    public static void main(String[] args) {
+        Set<String> colori = new HashSet<>();
+        colori.add("Rosso");
+        colori.add("Verde");
+        colori.add("Blu");
+
+        // Il metodo colori.iterator() ritorna un Iterator
+        Iterator<String> it = colori.iterator();
+
+        System.out.println("Usando Iterator:");
+        while (it.hasNext()) {
+            // Il metodo it.next() ritorna l'elemento successivo
+            String colore = it.next();
+            System.out.println(colore);
+
+            // Il metodo it.remove() rimuove l'elemento corrente
+            // (l'unico modo sicuro per modificare durante iterazione)
+            if (colore.equals("Verde")) {
+                it.remove();
+            }
+        }
+
+        System.out.println("Colori dopo rimozione: " + colori);
+
+        // For-each è equivalente (ma non permette remove)
+        System.out.println("\nUsando for-each:");
+        for (String colore : colori) {
+            System.out.println(colore);
+        }
+    }
+}
+\end{lstlisting}
+
+L'interfaccia \texttt{Iterator<E>} fornisce i metodi \texttt{hasNext()} (verifica se ci sono altri elementi) e \texttt{next()} (ritorna l'elemento successivo). Il metodo \texttt{remove()} permette di rimuovere l'elemento corrente in modo sicuro durante l'iterazione, prevenendo \texttt{ConcurrentModificationException}. Il ciclo for-each è un'abbreviazione che chiama automaticamente \texttt{iterator()} e \texttt{next()}.
+
+\section{Operazioni comuni: ricerca e ordinamento}
+
+\subsection{Ricerca in Set e Map}
+
+\begin{lstlisting}
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+public class EsempoRicerca {
+    public static void main(String[] args) {
+        // Ricerca in Set
+        Set<String> nomi = new HashSet<>();
+        nomi.add("Alice");
+        nomi.add("Bob");
+        nomi.add("Charlie");
+
+        // Il metodo nomi.contains() verifica la presence
+        String ricerca = "Bob";
+        if (nomi.contains(ricerca)) {
+            System.out.println(ricerca + " trovato nel set");
+        }
+
+        // Ricerca in Map
+        Map<Integer, String> studenti = new HashMap<>();
+        studenti.put(1, "Alice");
+        studenti.put(2, "Bob");
+        studenti.put(3, "Charlie");
+
+        // Il metodo studenti.containsKey() verifica la chiave
+        if (studenti.containsKey(2)) {
+            System.out.println("Chiave 2 trovata: " + studenti.get(2));
+        }
+
+        // Il metodo studenti.containsValue() verifica il valore
+        if (studenti.containsValue("Charlie")) {
+            System.out.println("Charlie trovato come valore");
+        }
+
+        // Ricerca con condizione custom
+        int ID_TARGET = 1;
+        String valore = studenti.get(ID_TARGET);
+        if (valore != null) {
+            System.out.println("Studente ID " + ID_TARGET + ": " + valore);
+        }
+    }
+}
+\end{lstlisting}
+
+Le operazioni di ricerca in \texttt{HashSet} e \texttt{HashMap} sono O(1). I metodi \texttt{contains()} (per Set) e \texttt{containsKey()}, \texttt{containsValue()} (per Map) verificano l'appartenenza. Per Map, il metodo \texttt{get()} ritorna il valore o \texttt{null}.
+
+\subsection{Ordinamento di List con Comparator}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+public class EsempoOrdinamento {
+    public static void main(String[] args) {
+        List<Integer> numeri = new ArrayList<>();
+        numeri.add(30);
+        numeri.add(10);
+        numeri.add(20);
+        numeri.add(40);
+
+        // Il metodo Collections.sort() ordina in ordine naturale
+        Collections.sort(numeri);
+        System.out.println("Ordine crescente: " + numeri);
+
+        // Ordinamento con Comparator (ordine inverso)
+        Collections.sort(numeri, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer a, Integer b) {
+                return b - a;
+            }
+        });
+        System.out.println("Ordine decrescente: " + numeri);
+
+        // Con lambda (Java 8+)
+        List<String> parole = new ArrayList<>();
+        parole.add("Java");
+        parole.add("Python");
+        parole.add("C");
+
+        // Il metodo Collections.sort() con lambda
+        Collections.sort(parole, (s1, s2) -> Integer.compare(s1.length(), s2.length()));
+        System.out.println("Ordinamento per lunghezza: " + parole);
+
+        // Metodo sort() su List (Java 8+)
+        parole.sort((s1, s2) -> s1.compareTo(s2));
+        System.out.println("Ordinamento alfabetico: " + parole);
+    }
+}
+\end{lstlisting}
+
+Il metodo statico \texttt{Collections.sort()} ordina una \texttt{List}. Puoi passare un \texttt{Comparator} per ordinamenti personalizzati. In Java 8+, il metodo di istanza \texttt{lista.sort()} è disponibile direttamente sulle liste.
+
+\section{Esercizi progressivi}
+
+\subsection{Esercizio 1: Gestione di un Set di prodotti}
+
+Crea una classe \texttt{Prodotto} con campi \texttt{nome} e \texttt{prezzo}. Implementa un programma che:
+\begin{itemize}
+    \item Crea un \texttt{HashSet<Prodotto>} di almeno 5 prodotti
+    \item Verifica se un prodotto specifico è nel set
+    \item Rimuove un prodotto dal set usando Iterator
+    \item Stampa i prodotti rimanenti
+\end{itemize}
+
+\subsection{Esercizio 2: Map di voti studenti}
+
+Crea una \texttt{HashMap<String, Double>} di studenti e voti. Implementa un programma che:
+\begin{itemize}
+    \item Aggiunge almeno 5 studenti
+    \item Stampa lo studente con il voto massimo (usa Collections.max())
+    \item Stampa lo studente con il voto minimo
+    \item Calcola la media dei voti iterando su \texttt{values()}
+\end{itemize}
+
+\subsection{Esercizio 3: TreeSet con Comparable}
+
+Crea una classe \texttt{Libro} con campi \texttt{titolo} e \texttt{anno}. Implementa \texttt{Comparable<Libro>} per ordinare per anno. Crea un \texttt{TreeSet<Libro>} e stampa i libri in ordine cronologico.
+
+\subsection{Esercizio 4: Ordinamento con Comparator personalizzato}
+
+Data una \texttt{List<String>} di nomi, crea tre Comparator diversi:
+\begin{itemize}
+    \item Ordine alfabetico
+    \item Ordine inverso per lunghezza
+    \item Ordine per numero di vocali (decrescente)
+\end{itemize}
+
+Usa \texttt{Collections.sort()} o \texttt{lista.sort()} per ogni Comparator.
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato il Collections Framework:
+
+\begin{itemize}
+    \item \textbf{Set}: collezioni senza duplicati (\texttt{HashSet}, \texttt{TreeSet}, \texttt{LinkedHashSet})
+    \item \textbf{Map}: associazioni chiave-valore (\texttt{HashMap}, \texttt{TreeMap}, \texttt{LinkedHashMap})
+    \item \textbf{Comparable}: ordine naturale di una classe
+    \item \textbf{Comparator}: ordini personalizzati
+    \item \textbf{Iterator}: iterazione sicura su collezioni
+    \item \textbf{Ricerca e ordinamento}: metodi della Collections API
+\end{itemize}
+
+Il Collections Framework è essenziale per ogni programmatore Java e offre strutture dati efficienti per quasi ogni caso d'uso.
+
+\begin{nota}
+Concetti correlati:
+\begin{itemize}
+    \item \textbf{Generics}: il Collections Framework usa estesamente i Generics (\autoref{cap:generics})
+    \item \textbf{ArrayList}: approfondimento sulla List più comune (\autoref{cap:arraylist})
+    \item \textbf{Stream API}: operazioni dichiarative su collezioni (\autoref{cap:stream_api})
+\end{itemize}
+
+Questi argomenti integrano la conoscenza del Collections Framework.
+\end{nota}

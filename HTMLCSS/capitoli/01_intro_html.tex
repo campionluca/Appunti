@@ -1,0 +1,368 @@
+\chapter{Introduzione a HTML5}
+\label{cap:intro_html}
+
+\section{Cos'è HTML?}
+
+HTML (HyperText Markup Language) è il linguaggio di marcatura per creare pagine web. Non è un linguaggio di programmazione come Java (vedi il capitolo sulla programmazione orientata agli oggetti nel corso di Quarta), ma un modo per strutturare e descrivere il contenuto usando tag e attributi.
+
+\section{Struttura base di un documento HTML5}
+
+\subsection{Anatomia dei tag HTML}
+Un tag HTML è composto da:
+\begin{itemize}
+  \item \textbf{Tag di apertura}: \texttt{<nome>}
+  \item \textbf{Contenuto}: testo o altri tag annidati
+  \item \textbf{Tag di chiusura}: \texttt{</nome>}
+\end{itemize}
+
+Esempio di tag con contenuto:
+\begin{lstlisting}[language=HTML]
+<p>Questo è un paragrafo</p>
+<div>
+    <p>Questo paragrafo è annidato nel div</p>
+</div>
+\end{lstlisting}
+
+\subsection{Tag auto-chiudenti (self-closing tags)}
+Alcuni elementi HTML non hanno contenuto. Questi sono chiamati \textbf{tag auto-chiudenti} o \textbf{self-closing tags}. Per garantire la massima compatibilità con XHTML e XML, è importante chiudere esplicitamente questi tag:
+
+\begin{lstlisting}[language=HTML]
+<img src="immagine.jpg" alt="Una descrizione" />
+<input type="text" placeholder="Inserisci testo" />
+<meta charset="UTF-8" />
+<link rel="stylesheet" href="stile.css" />
+<area shape="rect" coords="0,0,100,100" href="link.html" />
+\end{lstlisting}
+
+\begin{nota}
+Anche se HTML5 permette di omettere la chiusura (\texttt{/>}), è consigliabile usare sempre la sintassi XML/XHTML con chiusura esplicita per:
+\begin{itemize}
+  \item Garantire la compatibilità con XHTML e XML
+  \item Rendere il codice più consistente e leggibile
+  \item Evitare problemi con parser XML
+  \item Facilitare la migrazione tra diversi formati
+\end{itemize}
+\end{nota}
+
+\begin{nota}
+Nota: In passato si utilizzavano i tag \texttt{<br>} e \texttt{<hr>} per creare interruzioni di riga e linee orizzontali. Queste pratiche sono ora considerate obsolete poiché mescolano presentazione e contenuto. È preferibile utilizzare CSS per gestire lo spazio e le separazioni visive.
+
+Invece di \texttt{<br>}, usa:
+\begin{itemize}
+  \item Elementi blocco appropriati (\texttt{<p>}, \texttt{<div>})
+  \item CSS \texttt{margin} o \texttt{padding}
+  \item Proprietà CSS \texttt{white-space}
+\end{itemize}
+
+Invece di \texttt{<hr>}, usa:
+\begin{itemize}
+  \item CSS \texttt{border}
+  \item Elementi semantici con stili appropriati
+  \item \texttt{<section>} o altri elementi strutturali
+\end{itemize}
+\end{nota}
+
+\subsection{Commenti HTML}
+I commenti in HTML sono utili per documentare il codice e vengono ignorati dal browser. La sintassi è:
+\begin{lstlisting}[language=HTML]
+<!-- Questo è un commento -->
+<!-- 
+    I commenti possono
+    essere su più righe
+-->
+\end{lstlisting}
+
+I commenti sono utili per:
+\begin{itemize}
+  \item Documentare sezioni complesse del codice
+  \item Disabilitare temporaneamente parti di HTML
+  \item Aggiungere note per altri sviluppatori
+\end{itemize}
+
+\subsection{Attributi HTML}
+Gli attributi forniscono informazioni aggiuntive ai tag e hanno questa sintassi:
+\begin{lstlisting}[language=HTML]
+<tag attributo="valore">contenuto</tag>
+\end{lstlisting}
+
+\subsection{Gli attributi id e class}
+Gli attributi \texttt{id} e \texttt{class} sono fondamentali per identificare e raggruppare elementi HTML:
+
+\begin{description}
+  \item[\texttt{id}] È un identificatore \textbf{univoco} per un elemento nella pagina:
+  \begin{itemize}
+    \item Deve essere unico nel documento (non ci possono essere due elementi con lo stesso \texttt{id})
+    \item Viene usato per identificare un elemento specifico
+    \item Utile per JavaScript e per collegamenti interni alla pagina
+    \item Si riferisce con \texttt{\#} nel CSS (es: \texttt{\#header})
+  \end{itemize}
+  Esempio: \texttt{<div id="header">}
+
+  \item[\texttt{class}] Definisce una o più categorie a cui l'elemento appartiene:
+  \begin{itemize}
+    \item Un elemento può avere multiple classi (separate da spazi)
+    \item La stessa classe può essere usata su più elementi
+    \item Utile per applicare stili comuni a gruppi di elementi
+    \item Si riferisce con \texttt{.} nel CSS (es: \texttt{.container})
+  \end{itemize}
+  Esempio: \texttt{<div class="container blue">}
+\end{description}
+
+\begin{nota}
+Differenze principali:
+\begin{itemize}
+  \item \texttt{id}: come la carta d'identità, è unico e identifica un singolo elemento
+  \item \texttt{class}: come un gruppo o categoria, può essere condiviso tra più elementi
+\end{itemize}
+\end{nota}
+
+\subsection{Attributi per collegamenti e risorse}
+
+\subsubsection{L'attributo href}
+L'attributo \texttt{href} (Hypertext REFerence) definisce il collegamento a una risorsa:
+
+\begin{itemize}
+  \item Usato principalmente con il tag \texttt{<a>} per creare link
+  \item Può contenere:
+    \begin{itemize}
+      \item URL assoluti: \texttt{https://www.esempio.com}
+      \item URL relativi: \texttt{./immagini/foto.jpg}
+      \item Collegamenti interni: \texttt{\#sezione}
+      \item Collegamenti email: \texttt{mailto:esempio@email.com}
+      \item Collegamenti telefonici: \texttt{tel:+390123456789}
+    \end{itemize}
+\end{itemize}
+
+Esempi di utilizzo:
+\begin{lstlisting}[language=HTML]
+<!-- Link a sito web -->
+<a href="https://www.esempio.com/">Visita il sito</a>
+
+<!-- Link a sezione della pagina -->
+<a href="#introduzione">Vai all'introduzione</a>
+
+<!-- Link a email -->
+<a href="mailto:info@esempio.com">Contattaci</a>
+\end{lstlisting}
+
+\subsubsection{L'attributo src}
+L'attributo \texttt{src} (source) specifica la fonte di una risorsa multimediale:
+
+\begin{itemize}
+  \item Utilizzato con elementi che caricano contenuti esterni:
+    \begin{itemize}
+      \item \texttt{<img>} per immagini
+      \item \texttt{<video>} per filmati
+      \item \texttt{<audio>} per suoni
+      \item \texttt{<script>} per JavaScript
+    \end{itemize}
+  \item Può contenere:
+    \begin{itemize}
+      \item Percorsi assoluti: \texttt{https://cdn.esempio.com/immagine.jpg}
+      \item Percorsi relativi: \texttt{./assets/logo.png}
+      \item Data URI: \texttt{data:image/png;base64,...}
+    \end{itemize}
+\end{itemize}
+
+Esempi di utilizzo:
+\begin{lstlisting}[language=HTML]
+<!-- Immagine da URL assoluto -->
+<img src="https://esempio.com/foto.jpg" alt="Descrizione" />
+
+<!-- Immagine da percorso relativo -->
+<img src="./immagini/logo.png" alt="Logo" />
+
+<!-- Video con sorgenti multiple -->
+<video controls="controls">
+    <source src="video.mp4" type="video/mp4" />
+    <source src="video.webm" type="video/webm" />
+</video>
+\end{lstlisting}
+
+\begin{nota}
+Differenze principali:
+\begin{itemize}
+  \item \texttt{href}: per collegamenti e riferimenti (dove vuoi andare)
+  \item \texttt{src}: per contenuti da incorporare (cosa vuoi mostrare)
+\end{itemize}
+\end{nota}
+
+\subsection{Annidamento dei tag}
+I tag possono essere annidati (contenuti dentro altri tag) ma devono seguire regole precise:
+\begin{itemize}
+  \item I tag devono essere chiusi nell'ordine inverso di apertura
+  \item Ogni tag figlio deve essere completamente contenuto nel genitore
+  \item L'indentazione aiuta a visualizzare la struttura
+\end{itemize}
+
+Esempio corretto:
+\begin{lstlisting}[language=HTML]
+<div class="container">
+    <header>
+        <h1>Titolo</h1>
+        <nav>
+            <a href="pagina1.html">Link 1</a>
+            <a href="/about/index.html">Chi siamo</a>
+            <a href="../contatti.html">Contatti</a>
+        </nav>
+    </header>
+</div>
+\end{lstlisting}
+
+Esempio errato:
+\begin{lstlisting}[language=HTML]
+<div><p>Questo è <!-- NON FARE COSÌ -->
+    <span>sbagliato</div></p></span>
+\end{lstlisting}
+
+\begin{attenzione}
+L'annidamento errato può causare comportamenti imprevedibili nel rendering della pagina e non passa la validazione HTML.
+\end{attenzione}
+
+\subsection{Commenti HTML}
+I commenti in HTML servono per documentare il codice e non vengono visualizzati nel browser. Sono utili per:
+\begin{itemize}
+  \item Spiegare sezioni complesse di codice
+  \item Disabilitare temporaneamente parti di codice
+  \item Organizzare il codice in sezioni logiche
+  \item Comunicare con altri sviluppatori
+\end{itemize}
+
+Sintassi dei commenti:
+\begin{lstlisting}[language=HTML]
+<!-- Questo è un commento su una riga -->
+
+<!-- 
+  Questo è un commento
+  su più righe
+-->
+
+<!-- Non usare -- dentro i commenti -->
+
+<div class="header">
+  <!-- TODO: aggiungere logo -->
+  <h1>Titolo</h1>
+</div>
+
+<!--[if IE 8]>
+  <link href="ie8only.css" rel="stylesheet">
+<![endif]-->
+\end{lstlisting}
+
+\begin{nota}
+I commenti HTML possono contenere qualsiasi testo tranne \texttt{--} doppio trattino, che può causare problemi di parsing.
+\end{nota}
+
+\begin{attenzione}
+I commenti sono visibili nel codice sorgente della pagina. Non inserire informazioni sensibili (password, chiavi API, ecc.) nei commenti.
+\end{attenzione}
+
+\subsection{Struttura completa documento}
+Ecco la struttura completa di un documento HTML5:
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Titolo della pagina</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Intestazione principale</h1>
+  </header>
+  <main>
+    <p>Contenuto principale della pagina</p>
+  </main>
+  <footer>
+    <p>&copy; 2025 - Tutti i diritti riservati</p>
+  </footer>
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Elementi principali}
+
+\begin{description}
+  \item[\texttt{<!DOCTYPE html>}] Dichiara che il documento è HTML5, quindi deve rispettare le regole di questa versione del linguaggio.
+  \item[\texttt{<html>}] Elemento radice del documento
+  \item[\texttt{<head>}] Contiene metadati e link a risorse
+  \item[\texttt{<body>}] Contiene il contenuto visibile
+\end{description}
+
+\section{Tag semantici}
+
+HTML5 introduce tag semantici che descrivono il significato del contenuto:
+
+\begin{lstlisting}[language=HTML]
+<header>Intestazione del sito</header>
+<nav>Barra di navigazione</nav>
+<main>Contenuto principale</main>
+<section>Una sezione tematica</section>
+<article>Un articolo indipendente</article>
+<aside>Barra laterale</aside>
+<footer>Piè di pagina</footer>
+\end{lstlisting}
+
+\begin{attenzione}
+La semantica HTML è importante per l'accessibilità: i lettori di schermo leggono il significato dei tag, non solo il testo.
+\end{attenzione}
+
+\section{Meta tag essenziali}
+
+I meta tag sono elementi HTML che forniscono metadati sul documento HTML. Questi tag non sono visualizzati nella pagina ma contengono informazioni importanti per browser, motori di ricerca e altri servizi web.
+
+\subsection{Sintassi generale}
+Un meta tag ha questa struttura:
+\begin{lstlisting}[language=HTML]
+<meta name="nome" content="valore">
+<!-- oppure -->
+<meta http-equiv="nome" content="valore">
+<!-- oppure -->
+<meta charset="codifica">
+\end{lstlisting}
+
+\subsection{Meta tag fondamentali}
+Ecco i meta tag più importanti e il loro utilizzo:
+
+\begin{lstlisting}[language=HTML]
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Breve descrizione della pagina" />
+<meta name="keywords" content="html, css, web, sviluppo" />
+\end{lstlisting}
+
+\begin{description}
+  \item[\texttt{charset}] Specifica la codifica dei caratteri del documento. UTF-8 è lo standard moderno che supporta caratteri internazionali e emoji.
+  
+  \item[\texttt{viewport}] Controlla come la pagina si adatta ai dispositivi mobili:
+  \begin{itemize}
+    \item \texttt{width=device-width}: imposta la larghezza della pagina alla larghezza del dispositivo
+    \item \texttt{initial-scale=1.0}: imposta il livello di zoom iniziale
+  \end{itemize}
+  
+  \item[\texttt{description}] Fornisce una breve descrizione della pagina (massimo 155 caratteri). Viene mostrata nei risultati di ricerca di Google.
+  
+  \item[\texttt{keywords}] Elenca parole chiave rilevanti per la pagina. Oggi ha meno importanza per il SEO ma è ancora utilizzato da alcuni motori di ricerca.
+\end{description}
+
+\begin{attenzione}
+Il meta tag viewport è cruciale per il responsive design. Senza di esso, i siti mobile-friendly non funzioneranno correttamente sui dispositivi mobili.
+\end{attenzione}
+
+\begin{nota}
+Il meta tag \texttt{viewport} è fondamentale per il responsive design. Senza di esso, i dispositivi mobili non visualizzeranno la pagina correttamente.
+\end{nota}
+
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item HTML è il linguaggio di marcatura del web
+  \item \texttt{<!DOCTYPE html>} identifica la versione HTML5
+  \item Tag semantici descrivono il significato del contenuto
+  \item Meta tag sono fondamentali per accessibilità e responsive
+  \item Sempre validare il codice HTML
+\end{itemize}

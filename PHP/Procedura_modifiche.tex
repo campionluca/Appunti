@@ -1,0 +1,26 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\title{Procedura di Modifica: Migrazione Markdown $(\rightarrow)$ LaTeX}
+\date{\small Ultimo aggiornamento: \today}
+\begin{document}
+\maketitle
+
+\section*{Fasi operative}
+\begin{enumerate}
+  \item \textbf{Conversione strutturata}: per ogni file \texttt{.md} del manuale discorsivo creare l\'equivalente \texttt{.tex}, preservando titoli, sottotitoli, paragrafi, elenchi ed esempi di codice.
+  \item \textbf{Stili LaTeX}: applicare impostazioni coerenti con il progetto (babel italiano, geometry, hyperref, listings per PHP).
+  \item \textbf{Aggiornamento configurazione}: modificare \texttt{agent\_instructions.json} impostando \texttt{output\_format.primary=latex} e includendo \texttt{README.tex}, \texttt{TODO.tex}, \texttt{PIANO\_SVILUPPO.tex} nei \emph{main files}.
+  \item \textbf{Compilazione}: eseguire la compilazione (es. \texttt{latexmk -pdf}) su \texttt{PHP/manuale/main.tex} e verificare la generazione del PDF.
+  \item \textbf{Validazione}: controllare coerenza di stile, sezioni, riferimenti incrociati e eventuali warning.
+  \item \textbf{Documentazione}: aggiornare il changelog del progetto (\texttt{PHP/CHANGELOG.tex}) e annotare lo stato in \texttt{README} / \texttt{PIANO\_SVILUPPO}.
+\end{enumerate}
+
+\section*{Note}
+- Evitare caratteri non supportati dai motori scelti; usare \texttt{---} per i trattini lunghi.
+- Preferire compilazione ripetuta (2\texttt{x}) quando ci sono indici/tabelle.
+
+\end{document}

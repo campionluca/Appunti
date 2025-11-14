@@ -1,0 +1,1943 @@
+\chapter{Esercizi e Progetti}
+\label{cap:esercizi}
+
+\section{Esercizi base}
+
+\subsection{Esercizio 1.1}
+Crea un documento HTML5 valido con struttura semantica e meta tag viewport.
+
+\subsection{Esercizio 1.2}
+Crea una pagina con almeno 5 tag semantici diversi e stilizzali con CSS base.
+
+\subsection{Esercizio 2.1}
+Crea un form di login con email, password, e checkbox "ricordami".
+
+\subsection{Esercizio 2.2}
+Crea un form di registrazione con validazione HTML5 per tutti i campi.
+
+\subsection{Esercizio 3.1}
+Calcola specificity per 10 selettori CSS diversi e ordinali per priorità.
+
+\subsection{Esercizio 3.2}
+Crea un layout con header, sidebar, main, footer usando CSS box model.
+
+\section{Esercizi intermedi}
+
+\subsection{Esercizio 4.1}
+Crea un navbar responsivo usando flexbox che diventa menu verticale su mobile.
+
+\subsection{Esercizio 4.2}
+Crea una griglia 3x3 usando CSS Grid con una card che occupa 2 colonne.
+
+\subsection{Esercizio 5.1}
+Implementa 3 breakpoint (320, 768, 1024) con layout che cambia completamente.
+
+\subsection{Esercizio 5.2}
+Crea pagina con immagini responsive usando tag \texttt{<picture>}.
+
+\section{Progetti guidati}
+
+\subsection{Progetto Uno: Portfolio Personale}
+\textbf{Capitoli}: 01-04 (HTML5 + CSS base)
+
+Crea un portfolio personale con:
+\begin{itemize}
+  \item Header con nome e tagline
+  \item Sezione "Chi sono"
+  \item Sezione "Progetti" (gallery di 3-4 progetti)
+  \item Form contatti
+  \item Footer con link social
+\end{itemize}
+
+\textbf{Requisiti}:
+\begin{itemize}
+  \item HTML5 semantico
+  \item CSS styling completo
+  \item Responsive (mobile + desktop)
+  \item Form validato
+\end{itemize}
+
+\subsubsection{Soluzione HTML}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio - Marco Rossi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Marco Rossi</h1>
+    <p class="tagline">Full-Stack Developer & Designer</p>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="#about">Chi sono</a></li>
+      <li><a href="#projects">Progetti</a></li>
+      <li><a href="#contact">Contatti</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section id="about" class="section-about">
+      <h2>Chi sono</h2>
+      <p>Sviluppatore web con 3 anni di esperienza. Specializzato in front-end e back-end con focus su user experience.</p>
+      <div class="skills">
+        <span class="skill-badge">HTML5</span>
+        <span class="skill-badge">CSS3</span>
+        <span class="skill-badge">JavaScript</span>
+        <span class="skill-badge">React</span>
+        <span class="skill-badge">Node.js</span>
+      </div>
+    </section>
+
+    <section id="projects" class="section-projects">
+      <h2>I miei Progetti</h2>
+      <div class="projects-grid">
+        <article class="project-card">
+          <h3>E-commerce App</h3>
+          <p>Piattaforma di vendita online con React e Node.js</p>
+          <a href="#" class="btn-project">Vedi Progetto</a>
+        </article>
+        <article class="project-card">
+          <h3>Social Network</h3>
+          <p>Rete sociale con autenticazione e messaggi real-time</p>
+          <a href="#" class="btn-project">Vedi Progetto</a>
+        </article>
+        <article class="project-card">
+          <h3>Blog CMS</h3>
+          <p>Sistema di gestione contenuti con dashboard admin</p>
+          <a href="#" class="btn-project">Vedi Progetto</a>
+        </article>
+      </div>
+    </section>
+
+    <section id="contact" class="section-contact">
+      <h2>Contattami</h2>
+      <form class="contact-form">
+        <input type="text" placeholder="Il tuo nome" required>
+        <input type="email" placeholder="La tua email" required>
+        <textarea placeholder="Messaggio" rows="5" required></textarea>
+        <button type="submit">Invia</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Marco Rossi. Tutti i diritti riservati.</p>
+    <div class="social-links">
+      <a href="#">GitHub</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">Twitter</a>
+    </div>
+  </footer>
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Soluzione CSS}
+
+\begin{lstlisting}[language=CSS]
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+header .tagline {
+  font-size: 1.2rem;
+  font-weight: 300;
+}
+
+nav {
+  background: #333;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+}
+
+nav a {
+  display: block;
+  color: white;
+  padding: 15px 20px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+nav a:hover {
+  background: #667eea;
+}
+
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.section-about {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-about h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.section-about p {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: #666;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.skill-badge {
+  background: #667eea;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.section-projects h2 {
+  font-size: 2rem;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+.project-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.project-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.project-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+}
+
+.project-card p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.btn-project {
+  display: inline-block;
+  background: #667eea;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+
+.btn-project:hover {
+  background: #764ba2;
+}
+
+.section-contact h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.contact-form {
+  max-width: 600px;
+  margin: 0 auto 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+}
+
+.contact-form button {
+  background: #667eea;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.contact-form button:hover {
+  background: #764ba2;
+}
+
+footer {
+  background: #333;
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+footer p {
+  margin-bottom: 15px;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.social-links a {
+  color: #667eea;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.social-links a:hover {
+  color: #764ba2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 2rem;
+  }
+
+  nav ul {
+    flex-direction: column;
+  }
+
+  nav a {
+    padding: 12px 20px;
+  }
+
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    padding: 20px 10px;
+  }
+}
+\end{lstlisting}
+
+\subsection{Progetto Due: E-commerce Landing}
+\textbf{Capitoli}: 05-06 (Flexbox/Grid + Responsive)
+
+Crea landing page e-commerce con:
+\begin{itemize}
+  \item Hero section
+  \item Griglia prodotti (3 colonne su desktop, 1 su mobile)
+  \item Card prodotto con immagine, titolo, prezzo
+  \item Newsletter signup form
+  \item Footer
+\end{itemize}
+
+\textbf{Requisiti}:
+\begin{itemize}
+  \item CSS Grid per layout
+  \item Responsive breakpoint 768px
+  \item Hover effects su card
+  \item Form validazione
+\end{itemize}
+
+\subsubsection{Soluzione HTML}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechShop - E-commerce</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <h1 class="logo">TechShop</h1>
+      <ul class="nav-menu">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#products">Prodotti</a></li>
+        <li><a href="#newsletter">Newsletter</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section id="home" class="hero">
+    <div class="hero-content">
+      <h1>Benvenuto su TechShop</h1>
+      <p>I migliori gadget tecnologici a prezzi competitivi</p>
+      <a href="#products" class="cta-btn">Scopri i Prodotti</a>
+    </div>
+  </section>
+
+  <section id="products" class="products-section">
+    <h2>I Nostri Prodotti</h2>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Laptop" style="width: 100%; height: 200px;">
+        </div>
+        <h3>Laptop Pro</h3>
+        <p class="description">Processore Intel i7, 16GB RAM, SSD 512GB</p>
+        <p class="price">€999.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Smartphone" style="width: 100%; height: 200px;">
+        </div>
+        <h3>Smartphone X</h3>
+        <p class="description">Display OLED, Fotocamera 108MP, 5G</p>
+        <p class="price">€699.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Smartwatch" style="width: 100%; height: 200px;">
+        </div>
+        <h3>Smartwatch Elite</h3>
+        <p class="description">Batteria 7 giorni, Monitoraggio Salute, GPS</p>
+        <p class="price">€299.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Cuffie" style="width: 100%; height: 200px;">
+        </div>
+        <h3>Cuffie Wireless</h3>
+        <p class="description">ANC, Bluetooth 5.0, Qualità Audio Hi-Fi</p>
+        <p class="price">€199.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Tablet" style="width: 100%; height: 200px;">
+        </div>
+        <h3>Tablet Ultra</h3>
+        <p class="description">11 pollici, 128GB Storage, Stylus inclusa</p>
+        <p class="price">€449.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: #f0f0f0;">
+          <img alt="Powerbank" style="width: 100%; height: 200px;">
+        </div>
+        <h3>PowerBank 30000mAh</h3>
+        <p class="description">Carica veloce, Porte Multiple USB-C</p>
+        <p class="price">€79.99</p>
+        <button class="btn-add">Aggiungi al Carrello</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="newsletter" class="newsletter">
+    <div class="newsletter-content">
+      <h2>Iscriviti alla Newsletter</h2>
+      <p>Ricevi offerte esclusive e sconti speciali</p>
+      <form class="newsletter-form">
+        <input type="email" placeholder="La tua email" required>
+        <button type="submit">Iscriviti</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>About</h4>
+        <p>TechShop - Il tuo negozio di gadget online</p>
+      </div>
+      <div class="footer-section">
+        <h4>Links</h4>
+        <ul>
+          <li><a href="#">Chi Siamo</a></li>
+          <li><a href="#">Contatti</a></li>
+          <li><a href="#">Privacy</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h4>Follow Us</h4>
+        <ul>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">Twitter</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="footer-bottom">&copy; 2025 TechShop. Tutti i diritti riservati.</p>
+  </footer>
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Soluzione CSS}
+
+\begin{lstlisting}[language=CSS]
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  line-height: 1.6;
+}
+
+header {
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: #333;
+  transition: color 0.3s;
+}
+
+.nav-menu a:hover {
+  color: #ff6b6b;
+}
+
+.hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 100px 20px;
+  text-align: center;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+}
+
+.cta-btn {
+  display: inline-block;
+  background: #ff6b6b;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background 0.3s;
+  font-weight: bold;
+}
+
+.cta-btn:hover {
+  background: #ff5252;
+}
+
+.products-section {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.products-section h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 50px;
+  color: #333;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.product-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.product-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.product-card h3 {
+  padding: 15px 15px 5px;
+  font-size: 1.2rem;
+}
+
+.product-card .description {
+  padding: 0 15px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.product-card .price {
+  padding: 15px 15px 10px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff6b6b;
+}
+
+.btn-add {
+  width: calc(100% - 30px);
+  margin: 0 15px 15px;
+  padding: 10px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-add:hover {
+  background: #764ba2;
+}
+
+.newsletter {
+  background: #f8f9fa;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.newsletter-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.newsletter-content h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.newsletter-content p {
+  margin-bottom: 30px;
+  color: #666;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 10px;
+}
+
+.newsletter-form input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.newsletter-form button {
+  padding: 12px 30px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.newsletter-form button:hover {
+  background: #ff5252;
+}
+
+footer {
+  background: #333;
+  color: white;
+  padding: 40px 20px;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+}
+
+.footer-section h4 {
+  margin-bottom: 15px;
+}
+
+.footer-section ul {
+  list-style: none;
+}
+
+.footer-section ul li {
+  margin-bottom: 10px;
+}
+
+.footer-section a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-section a:hover {
+  color: #ff6b6b;
+}
+
+.footer-bottom {
+  text-align: center;
+  border-top: 1px solid #555;
+  padding-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav-menu {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .newsletter-form {
+    flex-direction: column;
+  }
+}
+\end{lstlisting}
+
+\subsection{Progetto Tre: Blog Responsivo}
+\textbf{Capitoli}: 07 (SASS/SCSS)
+
+Crea blog con:
+\begin{itemize}
+  \item Homepage con lista articoli
+  \item Pagina singolo articolo
+  \item Sidebar con categorie
+  \item Search form
+  \item Sistema design con SCSS
+\end{itemize}
+
+\textbf{Requisiti}:
+\begin{itemize}
+  \item Crea file variabili.scss con colori e font
+  \item Crea file mixins.scss con flex-center e media-queries
+  \item Modularità: navbar.scss, cards.scss, responsive.scss
+  \item Compila SCSS a CSS
+\end{itemize}
+
+\subsubsection{Soluzione HTML}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechBlog - Tutorial e Articoli</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <h1 class="logo">TechBlog</h1>
+      <ul class="nav-menu">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#articles">Articoli</a></li>
+        <li><a href="#about">Chi Siamo</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="content">
+      <div class="search-box">
+        <input type="search" placeholder="Cerca articoli...">
+        <button>Cerca</button>
+      </div>
+
+      <article class="article-card">
+        <div class="article-header">
+          <h2>Guida Completa a Flexbox</h2>
+          <span class="category">CSS</span>
+        </div>
+        <p class="date">8 Novembre 2025</p>
+        <p class="excerpt">Scopri tutto quello che devi sapere su Flexbox, uno dei layout moderni più potenti del CSS contemporaneo...</p>
+        <a href="#" class="read-more">Leggi Articolo</a>
+      </article>
+
+      <article class="article-card">
+        <div class="article-header">
+          <h2>JavaScript Async/Await Spiegato</h2>
+          <span class="category">JavaScript</span>
+        </div>
+        <p class="date">5 Novembre 2025</p>
+        <p class="excerpt">Impara a gestire operazioni asincrone in JavaScript con async/await, la sintassi moderna più leggibile...</p>
+        <a href="#" class="read-more">Leggi Articolo</a>
+      </article>
+
+      <article class="article-card">
+        <div class="article-header">
+          <h2>SCSS: Variabili e Mixin</h2>
+          <span class="category">SCSS</span>
+        </div>
+        <p class="date">2 Novembre 2025</p>
+        <p class="excerpt">Trasforma il tuo CSS con SCSS: scopri variabili, nesting e mixin per codice più manutenibile e DRY...</p>
+        <a href="#" class="read-more">Leggi Articolo</a>
+      </article>
+
+      <article class="article-card">
+        <div class="article-header">
+          <h2>Responsive Design: Mobile First</h2>
+          <span class="category">Web Design</span>
+        </div>
+        <p class="date">30 Ottobre 2025</p>
+        <p class="excerpt">Impara l'approccio mobile-first per creare siti responsive che funzionano su tutti i dispositivi...</p>
+        <a href="#" class="read-more">Leggi Articolo</a>
+      </article>
+    </section>
+
+    <aside class="sidebar">
+      <div class="widget">
+        <h3>Categorie</h3>
+        <ul>
+          <li><a href="#">HTML</a> <span class="count">(5)</span></li>
+          <li><a href="#">CSS</a> <span class="count">(8)</span></li>
+          <li><a href="#">JavaScript</a> <span class="count">(12)</span></li>
+          <li><a href="#">SCSS</a> <span class="count">(4)</span></li>
+          <li><a href="#">Web Design</a> <span class="count">(6)</span></li>
+        </ul>
+      </div>
+
+      <div class="widget">
+        <h3>Articoli Recenti</h3>
+        <ul class="recent-posts">
+          <li><a href="#">Guida Completa a Flexbox</a></li>
+          <li><a href="#">JavaScript Async/Await</a></li>
+          <li><a href="#">SCSS: Variabili e Mixin</a></li>
+        </ul>
+      </div>
+
+      <div class="widget">
+        <h3>Newsletter</h3>
+        <form class="newsletter-mini">
+          <input type="email" placeholder="La tua email" required>
+          <button type="submit">Iscriviti</button>
+        </form>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 TechBlog. Tutti i diritti riservati.</p>
+  </footer>
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Soluzione SCSS}
+
+\begin{lstlisting}[language=CSS]
+// variabili.scss
+$primary-color: #667eea;
+$secondary-color: #764ba2;
+$text-color: #333;
+$light-gray: #f5f5f5;
+$border-color: #ddd;
+$success-color: #4caf50;
+
+$font-size-base: 1rem;
+$font-size-lg: 1.5rem;
+$font-size-xl: 2rem;
+$line-height-base: 1.6;
+
+// mixins.scss
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin box-shadow {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+@mixin transition($property: all) {
+  transition: $property 0.3s ease;
+}
+
+@mixin media-tablet {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+@mixin media-mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
+// main.scss
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: $text-color;
+  background: white;
+  line-height: $line-height-base;
+}
+
+header {
+  background: white;
+  @include box-shadow;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navbar {
+  @include flex-between;
+  padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .logo {
+    font-size: $font-size-lg;
+    font-weight: bold;
+    color: $primary-color;
+  }
+
+  .nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+
+    a {
+      text-decoration: none;
+      color: $text-color;
+      @include transition;
+
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+
+  @include media-tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.content {
+  .search-box {
+    @include flex-between;
+    gap: 10px;
+    margin-bottom: 30px;
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid $border-color;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 12px 20px;
+      background: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      @include transition;
+
+      &:hover {
+        background: $secondary-color;
+      }
+    }
+  }
+}
+
+.article-card {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 25px;
+  @include box-shadow;
+  @include transition;
+
+  &:hover {
+    @include box-shadow;
+    transform: translateY(-5px);
+  }
+
+  .article-header {
+    @include flex-between;
+    gap: 15px;
+    margin-bottom: 10px;
+
+    h2 {
+      font-size: 1.4rem;
+      color: $text-color;
+    }
+
+    .category {
+      background: $primary-color;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+  }
+
+  .date {
+    color: #999;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+
+  .excerpt {
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.6;
+  }
+
+  .read-more {
+    display: inline-block;
+    color: $primary-color;
+    text-decoration: none;
+    font-weight: bold;
+    @include transition;
+
+    &:hover {
+      color: $secondary-color;
+    }
+  }
+}
+
+.sidebar {
+  .widget {
+    background: $light-gray;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+
+    h3 {
+      font-size: $font-size-lg;
+      margin-bottom: 15px;
+      color: $primary-color;
+    }
+
+    ul {
+      list-style: none;
+
+      li {
+        padding: 8px 0;
+        border-bottom: 1px solid $border-color;
+
+        a {
+          text-decoration: none;
+          color: $text-color;
+          @include transition;
+
+          &:hover {
+            color: $primary-color;
+          }
+        }
+
+        .count {
+          color: #999;
+          font-size: 0.9rem;
+        }
+      }
+
+      li:last-child {
+        border: none;
+      }
+    }
+
+    .recent-posts li {
+      border: none;
+      padding: 10px 0;
+    }
+  }
+
+  .newsletter-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    input {
+      padding: 10px;
+      border: 1px solid $border-color;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px;
+      background: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      @include transition;
+
+      &:hover {
+        background: $secondary-color;
+      }
+    }
+  }
+}
+
+footer {
+  background: $text-color;
+  color: white;
+  text-align: center;
+  padding: 30px 20px;
+  margin-top: 40px;
+}
+
+// Responsive
+@include media-tablet {
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .nav-menu {
+    gap: 1rem;
+  }
+}
+
+@include media-mobile {
+  .container {
+    padding: 0 10px;
+  }
+
+  .article-card {
+    padding: 15px;
+
+    .article-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h2 {
+        font-size: 1.2rem;
+      }
+    }
+  }
+
+  .sidebar {
+    display: none;
+  }
+}
+\end{lstlisting}
+
+\subsection{Progetto Quattro: Dashboard Admin}
+\textbf{Capitoli}: 01-07 (Integrazione completa)
+
+Crea dashboard admin con:
+\begin{itemize}
+  \item Sidebar navigation (collapsible su mobile)
+  \item Header con user profile
+  \item Griglia statistiche
+  \item Tabella dati
+  \item Form modifica profilo
+  \item Responsive su tutti dispositivi
+\end{itemize}
+
+\textbf{Requisiti}:
+\begin{itemize}
+  \item HTML5 semantico
+  \item CSS Grid per layout principale
+  \item Flexbox per componenti
+  \item SCSS modularizzato
+  \item Responsive (320, 768, 1024)
+  \item Form validazione
+\end{itemize}
+
+\subsubsection{Soluzione HTML}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Dashboard</h2>
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active">
+          <span class="icon">📊</span> Dashboard
+        </a>
+        <a href="#" class="nav-item">
+          <span class="icon">👥</span> Utenti
+        </a>
+        <a href="#" class="nav-item">
+          <span class="icon">📝</span> Articoli
+        </a>
+        <a href="#" class="nav-item">
+          <span class="icon">⚙️</span> Impostazioni
+        </a>
+        <a href="#" class="nav-item">
+          <span class="icon">📄</span> Rapporti
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <h1>Benvenuto, Admin!</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-profile">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23ddd'/%3E%3C/svg%3E" alt="User">
+            <div class="user-info">
+              <p class="user-name">Marco Rossi</p>
+              <p class="user-role">Administrator</p>
+            </div>
+          </div>
+          <button class="logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <h3>Utenti Totali</h3>
+            <p class="stat-value">1,234</p>
+            <p class="stat-change">+12% questo mese</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <h3>Ricavi</h3>
+            <p class="stat-value">€45,231</p>
+            <p class="stat-change">+8% questo mese</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <h3>Ordini</h3>
+            <p class="stat-value">856</p>
+            <p class="stat-change">-2% questo mese</p>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <h3>Rating</h3>
+            <p class="stat-value">4.8/5</p>
+            <p class="stat-change">+0.2 questo mese</p>
+          </div>
+        </section>
+
+        <section class="data-section">
+          <div class="section-header">
+            <h2>Ultimi Utenti</h2>
+            <button class="btn-add">+ Nuovo Utente</button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Email</th>
+                  <th>Data Iscrizione</th>
+                  <th>Status</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Marco Rossi</td>
+                  <td>marco@example.com</td>
+                  <td>01/01/2025</td>
+                  <td><span class="badge active">Attivo</span></td>
+                  <td>
+                    <button class="btn-small">Modifica</button>
+                    <button class="btn-small btn-danger">Elimina</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Anna Bianchi</td>
+                  <td>anna@example.com</td>
+                  <td>05/02/2025</td>
+                  <td><span class="badge active">Attivo</span></td>
+                  <td>
+                    <button class="btn-small">Modifica</button>
+                    <button class="btn-small btn-danger">Elimina</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Luigi Verdi</td>
+                  <td>luigi@example.com</td>
+                  <td>10/02/2025</td>
+                  <td><span class="badge inactive">Inattivo</span></td>
+                  <td>
+                    <button class="btn-small">Modifica</button>
+                    <button class="btn-small btn-danger">Elimina</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>Modifica Profilo</h2>
+          <form class="profile-form">
+            <div class="form-group">
+              <label>Nome Completo</label>
+              <input type="text" placeholder="Marco Rossi" required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" placeholder="marco@example.com" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Telefono</label>
+                <input type="tel" placeholder="+39 3xx xxxx xxx">
+              </div>
+              <div class="form-group">
+                <label>Città</label>
+                <input type="text" placeholder="Roma">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Biografia</label>
+              <textarea rows="4" placeholder="Descrivi te stesso..."></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Salva Modifiche</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('menu-toggle').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('collapsed');
+    });
+  </script>
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Soluzione CSS (Main)}
+
+\begin{lstlisting}[language=CSS]
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+  color: #333;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 250px;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.sidebar-header h2 {
+  font-size: 1.5rem;
+}
+
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-item .icon {
+  font-size: 1.3rem;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 250px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+.top-header {
+  background: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-left h1 {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.user-name {
+  font-weight: bold;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.logout-btn {
+  padding: 8px 15px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.logout-btn:hover {
+  background: #ff5252;
+}
+
+/* Content */
+.content {
+  padding: 40px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.stat-card h3 {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.stat-change {
+  color: #4caf50;
+  font-size: 0.9rem;
+}
+
+.data-section {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  margin-bottom: 40px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+}
+
+.btn-add {
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-add:hover {
+  background: #764ba2;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: #f5f7fa;
+  padding: 15px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+.data-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.badge.active {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.badge.inactive {
+  background: #ffcccc;
+  color: #c62828;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+  transition: background 0.3s;
+}
+
+.btn-small:hover {
+  background: #764ba2;
+}
+
+.btn-small.btn-danger {
+  background: #ff6b6b;
+}
+
+.btn-small.btn-danger:hover {
+  background: #ff5252;
+}
+
+.form-section {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-section h2 {
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.btn-submit {
+  align-self: flex-start;
+  padding: 12px 30px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.3s;
+}
+
+.btn-submit:hover {
+  background: #764ba2;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+  }
+
+  .content {
+    padding: 20px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -250px;
+    transition: left 0.3s;
+    width: 250px;
+  }
+
+  .sidebar.collapsed {
+    left: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .top-header {
+    padding: 15px 20px;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .btn-add {
+    width: 100%;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .profile-form {
+    gap: 15px;
+  }
+
+  .btn-small {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+\end{lstlisting}
+
+\section{Riepilogo}
+
+Completa questi esercizi e progetti in ordine. Ogni progetto integra i concetti dei capitoli precedenti e prepara al prossimo.

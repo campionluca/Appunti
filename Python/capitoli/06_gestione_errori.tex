@@ -1,0 +1,153 @@
+% Modulo 06 — Gestione Errori
+\chapter{Gestione Errori}
+
+\section{Introduzione}
+Gestire eccezioni con \texttt{try/except}, \texttt{finally} e sollevare errori custom.
+
+La descrizione enfatizza robustezza e chiarezza: quando intercettare e quando propagare, come loggare errori in modo utile e come definire gerarchie di eccezioni significative. Mostriamo pattern come "fail fast" e cleanup con \texttt{finally}.
+
+Una buona gestione degli errori migliora affidabilità di script, servizi web, CLI e integrazioni con file e rete.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Intercettare eccezioni comuni (ValueError, FileNotFoundError).
+  \item Usare \texttt{try/except/else/finally}.
+  \item Definire eccezioni personalizzate.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Eccezioni]
+Esempio: \texttt{raise ValueError("messaggio")}
+\end{tcolorbox}
+\begin{tcolorbox}[title=Best practice]
+Usa messaggi informativi, intercetta eccezioni specifiche, evita \texttt{except:} generici. Logga l'errore dove ha senso e decidi se propagare o tradurre in un fallback chiaro; pulisci risorse con \texttt{finally}.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Try/Except}
+\begin{lstlisting}
+try:
+    x = int("12a")
+except ValueError:
+    print("Input non valido")
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Eccezione specifica}: `ValueError` per conversione fallita; evita `except:` generici.  
+- \textbf{Messaggio}: fornisce feedback chiaro; separare validazione da logica di parsing.  
+ - \textbf{Propagazione}: se l'errore non è atteso, lasciare propagare.
+\end{tcolorbox}
+
+\subsection{Finally}
+\begin{lstlisting}
+f = None
+try:
+    f = open("file.txt")
+    # ... usa f
+finally:
+    if f:
+        f.close()
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Cleanup garantito}: `finally` esegue sempre; evita leak di risorse.  
+- \textbf{Preferenza}: usare `with open(...)` al posto del `try/finally` manuale.  
+ - \textbf{Stato}: inizializzare `f=None` evita `UnboundLocalError` se l'apertura fallisce.
+\end{tcolorbox}
+
+\subsection{Custom Exception}
+\begin{lstlisting}
+class NegativeError(Exception):
+    pass
+
+def sqrt(x):
+    if x < 0:
+        raise NegativeError("Valore negativo")
+    return x ** 0.5
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Gerarchia}: eredita da `Exception`; personalizza il significato di dominio.  
+- \textbf{Contratto}: precondizione `x >= 0`; documentarla nel docstring e nelle annotazioni.  
+- \textbf{Segnalazione}: usare messaggi informativi per diagnosi e UX.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Validazione input e regole di dominio con eccezioni chiare.
+  \item Gestione errori di rete/file con retry e fallback.
+  \item Traduzione di errori tecnici in messaggi per utenti/CLI.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Scrivi una funzione che gestisce input numerici con retry.
+  \item Gestisci errori di rete simulati con \texttt{try/except}.
+  \item Definisci un'eccezione custom e usala in una validazione.
+  \item Usa \texttt{else} per eseguire codice solo senza eccezioni.
+  \item Registra errori in un file di log.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai imparato a gestire e sollevare eccezioni correttamente.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Resilienza di script (retry, gestione eccezioni prevedibili).
+ - Validazione input e messaggi d'errore chiari.
+- Gestione risorse con context manager.
+- Strategie di fallback e logging di anomalie.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{try/except/else/finally}: \verb|else| esegue se non ci sono eccezioni; \verb|finally| sempre per cleanup.
+  \item \textbf{Eccezioni personalizzate}: definire gerarchie chiare; documentare quando e perché vengono sollevate.
+  \item \textbf{Raising e reraising}: \verb|raise| per propagare; conservare il traceback con \verb|raise| senza argomenti nel blocco \verb|except|.
+\item \textbf{EAFP vs LBYL}: preferire "it's easier to ask forgiveness than permission" con gestione puntuale delle eccezioni.
+  \item \textbf{Logging}: usare il modulo \verb|logging| per diagnosi e telemetria, evitare \verb|print| in codice di libreria.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Per chi viene da C/Java/JS: modello eccezioni, retry e logging}]
+\textbf{Eccezioni}: Python usa eccezioni per condizioni anomale; evita codici di ritorno speciali.  
+\textbf{Specificità}: cattura eccezioni specifiche (`ValueError`, `FileNotFoundError`) e lascia propagare quelle inattese.  
+\textbf{Cleanup}: preferisci context manager (`with`) rispetto a `try/finally` manuale per risorse.  
+\textbf{Retry/backoff}: implementa retry con `time.sleep` o librerie; non nascondere errori irreparabili.
+
+Esempi commentati:
+\begin{lstlisting}
+import logging, time
+log = logging.getLogger(__name__)
+
+def parse_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        log.warning("input non numerico: %s", s)
+        return None
+
+def fetch_with_retry(fn, attempts=3, delay=0.5):
+    for i in range(attempts):
+        try:
+            return fn()
+        except TimeoutError:
+            log.info("timeout, tentativo %s", i + 1)
+            time.sleep(delay)
+    raise RuntimeError("fallimento dopo retry")
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Logging}: usa \verb|getLogger(__name__)|; preferisci livelli (`warning`, `info`) a `print`.  
+- \textbf{Retry}: intercetta eccezioni attese (`TimeoutError`) e applica backoff con `sleep`.  
+- \textbf{Fallback}: dopo tentativi, solleva errore aggregato chiaro; non nascondere failure.  
+- \textbf{Parse}: ritorna `None` su input non numerico; scegliere `Optional[int]` nel contratto.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Idiomi: EAFP, traduzione errori, context manager}]
+- \textbf{EAFP}: prova e gestisci l'eccezione dove ha senso, invece di pre‑controllare ovunque.
+- \textbf{Traduzione}: traduci eccezioni tecniche in errori di dominio (con messaggi utili).  
+- \textbf{Context manager}: usa `with` per risorse e per garantire rollback/cleanup automatici.
+\end{tcolorbox}
+
+\paragraph{Consigli} Controllare granularità degli \verb|except|, evitare catture generiche; assicurare messaggi di errore chiari e azionabili.
+Consulta: \url{https://docs.python.org/3/tutorial/errors.html}.

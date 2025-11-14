@@ -1,0 +1,82 @@
+\chapter{Flexbox e Grid}
+\label{cap:flexbox_grid}
+
+\section{Flexbox}
+
+Flexbox è un modo moderno per creare layout flessibili:
+
+\begin{lstlisting}[language=CSS]
+.container {
+  display: flex;
+  flex-direction: row;      /* row, column */
+  justify-content: center;  /* allineamento asse principale */
+  align-items: center;      /* allineamento asse trasversale */
+  gap: 20px;               /* spazio tra elementi */
+}
+
+.item {
+  flex: 1;                 /* crescita uguale */
+  flex-basis: 200px;       /* larghezza base */
+}
+\end{lstlisting}
+
+\subsection{Proprietà container}
+
+\begin{itemize}
+  \item \texttt{flex-direction}: row, column, row-reverse, column-reverse
+  \item \texttt{justify-content}: flex-start, center, flex-end, space-between, space-around
+  \item \texttt{align-items}: flex-start, center, flex-end, stretch, baseline
+  \item \texttt{flex-wrap}: nowrap, wrap, wrap-reverse
+\end{itemize}
+
+\section{CSS Grid}
+
+Grid è un sistema di layout bidimensionale:
+
+\begin{lstlisting}[language=CSS]
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+}
+
+.grid-item {
+  grid-column: 1 / 3;      /* colonne 1-2 */
+  grid-row: 1 / 2;        /* riga 1 */
+}
+\end{lstlisting}
+
+\begin{nota}
+\texttt{1fr} significa "1 frazione" dello spazio disponibile. Se hai 3 colonne con \texttt{1fr 2fr 1fr}, la seconda colonna sarà il doppio delle altre.
+\end{nota}
+
+\section{Flexbox vs Grid}
+
+\begin{itemize}
+  \item \textbf{Flexbox}: Layout 1D (riga o colonna)
+  \item \textbf{Grid}: Layout 2D (righe e colonne simultaneamente)
+  \item Usa flexbox per navbar, card layout
+  \item Usa grid per layout pagina completa
+\end{itemize}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea un navbar usando flexbox con logo a sinistra e menu a destra.
+
+\subsection{Esercizio 2 (Intermedio)}
+Crea una griglia 3x3 di card usando CSS Grid. Fai in modo che una card occupi 2 colonne.
+
+\subsection{Esercizio 3 (Avanzato)}
+Crea un layout di pagina completo con header (grid), sidebar e main content (flex), footer usando entrambi.
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item Flexbox per layout monodimensionali
+  \item Grid per layout bidimensionali
+  \item \texttt{justify-content} e \texttt{align-items} per allineamento
+  \item \texttt{gap} per spazi uniformi
+  \item \texttt{1fr} per unità di frazione
+\end{itemize}

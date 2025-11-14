@@ -1,0 +1,401 @@
+\chapter{Operatori ed Espressioni}
+\label{cap:operatori_espressioni}
+
+\section{Introduzione agli Operatori}
+
+Gli operatori sono simboli speciali che eseguono operazioni su uno o più operandi (valori o variabili). Il C fornisce un ricco insieme di operatori che permettono di manipolare i dati in modi diversi.
+
+\begin{nota}
+Il risultato di un'operazione ha sempre un tipo di dato. È importante comprendere come gli operatori interagiscono con i diversi tipi di dati.
+\end{nota}
+
+\section{Operatori Aritmetici}
+
+Gli operatori aritmetici eseguono operazioni matematiche di base.
+
+\subsection{Operatori Binari}
+
+\begin{lstlisting}
+// Operatori aritmetici base
+int a = 10, b = 3;
+int somma = a + b;        // Addizione: 13
+int differenza = a - b;   // Sottrazione: 7
+int prodotto = a * b;     // Moltiplicazione: 30
+int quoziente = a / b;    // Divisione intera: 3
+int resto = a % b;        // Modulo (resto): 1
+
+// Divisione con float
+float x = 10.0, y = 3.0;
+float divisione = x / y;  // Divisione float: 3.333...
+\end{lstlisting}
+
+\begin{attenzione}
+La divisione tra interi produce sempre un risultato intero, troncando la parte decimale. Per ottenere un risultato float, almeno uno degli operandi deve essere float.
+\end{attenzione}
+
+\subsection{Operatori Unari}
+
+\begin{lstlisting}
+int n = 5;
+int positivo = +n;   // Segno positivo: 5
+int negativo = -n;   // Segno negativo: -5
+
+// Incremento e decremento
+int x = 10;
+x++;    // Post-incremento: prima usa x, poi incrementa
+++x;    // Pre-incremento: prima incrementa, poi usa x
+x--;    // Post-decremento
+--x;    // Pre-decremento
+\end{lstlisting}
+
+\subsection{Differenza tra Pre e Post Incremento}
+
+\begin{lstlisting}
+int a = 5, b = 5;
+int x = a++;  // x = 5, a = 6 (prima assegna, poi incrementa)
+int y = ++b;  // y = 6, b = 6 (prima incrementa, poi assegna)
+
+printf("x = %d, a = %d\n", x, a);  // x = 5, a = 6
+printf("y = %d, b = %d\n", y, b);  // y = 6, b = 6
+\end{lstlisting}
+
+\section{Operatori di Assegnamento}
+
+\subsection{Assegnamento Semplice}
+
+\begin{lstlisting}
+int x = 10;  // Assegna 10 a x
+\end{lstlisting}
+
+\subsection{Operatori di Assegnamento Composto}
+
+\begin{lstlisting}
+int x = 10;
+x += 5;   // Equivalente a: x = x + 5;  (x diventa 15)
+x -= 3;   // Equivalente a: x = x - 3;  (x diventa 12)
+x *= 2;   // Equivalente a: x = x * 2;  (x diventa 24)
+x /= 4;   // Equivalente a: x = x / 4;  (x diventa 6)
+x %= 5;   // Equivalente a: x = x % 5;  (x diventa 1)
+\end{lstlisting}
+
+\section{Operatori Relazionali}
+
+Gli operatori relazionali confrontano due valori e restituiscono 1 (vero) o 0 (falso).
+
+\begin{lstlisting}
+int a = 10, b = 20;
+
+// Operatori di confronto
+int uguale = (a == b);          // 0 (falso)
+int diverso = (a != b);         // 1 (vero)
+int maggiore = (a > b);         // 0 (falso)
+int minore = (a < b);           // 1 (vero)
+int maggiore_uguale = (a >= b); // 0 (falso)
+int minore_uguale = (a <= b);   // 1 (vero)
+\end{lstlisting}
+
+\begin{attenzione}
+Non confondere l'operatore di uguaglianza \texttt{==} con l'operatore di assegnamento \texttt{=}. Questo è uno degli errori più comuni in C!
+\end{attenzione}
+
+\section{Operatori Logici}
+
+Gli operatori logici operano su valori booleani (0 = falso, diverso da 0 = vero).
+
+\begin{lstlisting}
+int a = 1, b = 0;  // 1 = vero, 0 = falso
+
+// AND logico (&&): vero solo se entrambi sono veri
+int and_result = a && b;  // 0 (falso)
+
+// OR logico (||): vero se almeno uno e' vero
+int or_result = a || b;   // 1 (vero)
+
+// NOT logico (!): inverte il valore
+int not_a = !a;           // 0 (falso)
+int not_b = !b;           // 1 (vero)
+\end{lstlisting}
+
+\subsection{Valutazione in Cortocircuito}
+
+\begin{lstlisting}
+int x = 5, y = 0;
+
+// Con &&: se il primo e' falso, il secondo non viene valutato
+if (y != 0 && x / y > 2) {
+    printf("Questa riga non viene stampata\n");
+}
+
+// Con ||: se il primo e' vero, il secondo non viene valutato
+if (x > 0 || y / x > 0) {
+    printf("Questa riga viene stampata\n");
+}
+\end{lstlisting}
+
+\begin{nota}
+La valutazione in cortocircuito è utile per evitare errori come la divisione per zero.
+\end{nota}
+
+\section{Operatori Bit a Bit}
+
+Gli operatori bit a bit operano direttamente sui singoli bit dei numeri.
+
+\begin{lstlisting}
+unsigned int a = 12;  // In binario: 1100
+unsigned int b = 10;  // In binario: 1010
+
+// AND bit a bit
+unsigned int and_bit = a & b;  // 1000 = 8
+
+// OR bit a bit
+unsigned int or_bit = a | b;   // 1110 = 14
+
+// XOR bit a bit
+unsigned int xor_bit = a ^ b;  // 0110 = 6
+
+// NOT bit a bit
+unsigned int not_a = ~a;       // 0011 (complemento)
+
+// Shift a sinistra
+unsigned int left = a << 1;    // 11000 = 24
+
+// Shift a destra
+unsigned int right = a >> 1;   // 0110 = 6
+\end{lstlisting}
+
+\section{Operatore Ternario}
+
+L'operatore ternario è una forma compatta di if-else.
+
+\subsection{Sintassi}
+
+\begin{lstlisting}
+condizione ? valore_se_vero : valore_se_falso
+\end{lstlisting}
+
+\subsection{Esempi}
+
+\begin{lstlisting}
+int a = 10, b = 20;
+
+// Trova il massimo
+int max = (a > b) ? a : b;
+printf("Il massimo e': %d\n", max);  // 20
+
+// Verifica parita'
+char* parita = (a % 2 == 0) ? "pari" : "dispari";
+printf("%d e' %s\n", a, parita);     // 10 e' pari
+
+// Assegnamento condizionale
+int x = 5;
+int y = (x > 0) ? x : -x;  // Valore assoluto
+\end{lstlisting}
+
+\section{Precedenza degli Operatori}
+
+La precedenza determina l'ordine in cui vengono eseguiti gli operatori in un'espressione.
+
+\subsection{Tabella di Precedenza (dal più alto al più basso)}
+
+\begin{enumerate}
+    \item Parentesi: \texttt{()}
+    \item Unari: \texttt{++ -- ! - + *} (dereferenziazione) \texttt{\&} (indirizzo)
+    \item Moltiplicativi: \texttt{* / \%}
+    \item Additivi: \texttt{+ -}
+    \item Shift: \texttt{<< >>}
+    \item Relazionali: \texttt{< <= > >=}
+    \item Uguaglianza: \texttt{== !=}
+    \item AND bit a bit: \texttt{\&}
+    \item XOR bit a bit: \texttt{\^{}}
+    \item OR bit a bit: \texttt{|}
+    \item AND logico: \texttt{\&\&}
+    \item OR logico: \texttt{||}
+    \item Ternario: \texttt{? :}
+    \item Assegnamento: \texttt{= += -= *= /= \%= \&= |= \^{}= <<= >>=}
+\end{enumerate}
+
+\subsection{Esempi di Precedenza}
+
+\begin{lstlisting}
+int risultato;
+
+// Esempio 1: moltiplicazione prima dell'addizione
+risultato = 2 + 3 * 4;  // 14, non 20
+
+// Esempio 2: uso delle parentesi
+risultato = (2 + 3) * 4;  // 20
+
+// Esempio 3: operatori logici e relazionali
+int a = 5, b = 10, c = 15;
+int test = a < b && b < c;  // 1 (vero)
+
+// Esempio 4: mix di operatori
+risultato = a + b * c / 2 - 3;  // 5 + (10*15)/2 - 3 = 77
+\end{lstlisting}
+
+\begin{attenzione}
+Quando hai dubbi sulla precedenza, usa sempre le parentesi per rendere esplicito l'ordine di valutazione. Questo rende anche il codice più leggibile.
+\end{attenzione}
+
+\section{Conversioni di Tipo}
+
+\subsection{Conversione Implicita (Casting Automatico)}
+
+\begin{lstlisting}
+int a = 10;
+float b = 3.5;
+
+// Promozione automatica: int -> float
+float risultato = a + b;  // 13.5
+printf("Risultato: %.1f\n", risultato);
+
+// Troncamento automatico: float -> int
+int intero = a + b;  // 13 (parte decimale troncata)
+printf("Intero: %d\n", intero);
+\end{lstlisting}
+
+\subsection{Conversione Esplicita (Cast)}
+
+\begin{lstlisting}
+int a = 10, b = 3;
+
+// Senza cast: divisione intera
+int div1 = a / b;  // 3
+
+// Con cast: divisione float
+float div2 = (float)a / b;  // 3.333...
+float div3 = a / (float)b;  // 3.333...
+float div4 = (float)(a / b);  // 3.0 (cast dopo la divisione)
+
+printf("div1 = %d\n", div1);
+printf("div2 = %.2f\n", div2);
+printf("div3 = %.2f\n", div3);
+printf("div4 = %.2f\n", div4);
+\end{lstlisting}
+
+\begin{nota}
+La posizione del cast è importante: \texttt{(float)(a / b)} esegue prima la divisione intera e poi converte il risultato, mentre \texttt{(float)a / b} converte prima \texttt{a} in float e poi esegue la divisione float.
+\end{nota}
+
+\section{Espressioni Complesse}
+
+\subsection{Combinazione di Operatori}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int a = 5, b = 10, c = 3;
+
+    // Espressione complessa
+    int risultato = (a + b) * c - (b / c) + a % c;
+    // (5 + 10) * 3 - (10 / 3) + 5 % 3
+    // 15 * 3 - 3 + 2
+    // 45 - 3 + 2
+    // 44
+
+    printf("Risultato: %d\n", risultato);
+
+    // Espressione con operatori logici
+    int x = 8;
+    if (x > 0 && x < 10 && x % 2 == 0) {
+        printf("%d e' un numero pari tra 1 e 9\n", x);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Uso dell'Operatore sizeof}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    printf("Dimensione di int: %lu byte\n", sizeof(int));
+    printf("Dimensione di float: %lu byte\n", sizeof(float));
+    printf("Dimensione di double: %lu byte\n", sizeof(double));
+    printf("Dimensione di char: %lu byte\n", sizeof(char));
+
+    int array[10];
+    printf("Dimensione dell'array: %lu byte\n", sizeof(array));
+    printf("Numero di elementi: %lu\n", sizeof(array) / sizeof(int));
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Errori Comuni}
+
+\subsection{Confusione tra = e ==}
+
+\begin{lstlisting}
+int x = 5;
+
+// SBAGLIATO: assegnamento invece di confronto
+if (x = 10) {  // Assegna 10 a x e valuta come vero
+    printf("Questo viene sempre eseguito!\n");
+}
+
+// CORRETTO: confronto
+if (x == 10) {
+    printf("x e' uguale a 10\n");
+}
+\end{lstlisting}
+
+\subsection{Divisione Intera Inaspettata}
+
+\begin{lstlisting}
+// SBAGLIATO: entrambi gli operandi sono interi
+float media = (3 + 4 + 5) / 3;  // 4.0 (non 4.0)
+
+// CORRETTO: almeno un operando float
+float media_corretta = (3 + 4 + 5) / 3.0;  // 4.0
+\end{lstlisting}
+
+\subsection{Overflow in Operazioni Aritmetiche}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <limits.h>
+
+int main(int argc, char** argv) {
+    int max = INT_MAX;  // Valore massimo per int
+    printf("Valore massimo: %d\n", max);
+
+    // Overflow: il risultato supera il massimo
+    int overflow = max + 1;
+    printf("Dopo overflow: %d\n", overflow);  // Numero negativo!
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi un programma che calcola l'area e il perimetro di un rettangolo dati base e altezza.
+    \item Crea un programma che converte una temperatura da Celsius a Fahrenheit usando la formula: $F = C \times \frac{9}{5} + 32$.
+    \item Scrivi un programma che verifica se un numero è pari o dispari usando l'operatore modulo.
+    \item Implementa un programma che calcola la media di tre numeri float.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Scrivi un programma che dato un numero di secondi, calcola quante ore, minuti e secondi rappresenta.
+    \item Crea un programma che scambia i valori di due variabili senza usare una variabile temporanea (usa operatori aritmetici o XOR).
+    \item Implementa un programma che verifica se un anno è bisestile usando operatori logici e relazionali.
+    \item Scrivi un programma che estrae le singole cifre di un numero intero a tre cifre.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Crea un programma che implementa una calcolatrice semplice con le quattro operazioni base, gestendo la divisione per zero.
+    \item Scrivi un programma che usa operatori bit a bit per verificare se un numero è una potenza di 2.
+    \item Implementa un programma che calcola il massimo comun divisore (MCD) di due numeri usando l'algoritmo di Euclide.
+    \item Crea un programma che dato un numero intero, conta quanti bit sono impostati a 1 nella sua rappresentazione binaria.
+\end{enumerate}

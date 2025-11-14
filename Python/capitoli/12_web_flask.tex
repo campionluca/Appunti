@@ -1,0 +1,113 @@
+% Modulo 12 — Web Development con Flask
+\chapter{Web Development con Flask}
+
+\section{Introduzione}
+Creare applicazioni web leggere con Flask: routing, template e richieste.
+
+La descrizione introduce il ciclo richiesta-risposta, la definizione di rotte e l'uso dei template per generare HTML dinamico. Discutiamo buone pratiche di struttura (\texttt{create\_app}, blueprint) e cenni a gestione errori e form.
+
+Flask è adatto a API e piccoli siti, microservizi e prototipi veloci con una curva di apprendimento contenuta.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Definire route e gestire metodi HTTP.
+  \item Usare template Jinja2.
+  \item Gestire form e parametri.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Struttura di app e ciclo richiesta]
+- App factory (\texttt{create\_app}) e blueprint per modularità.
+- Context di applicazione e richiesta, gestione \texttt{g}/\texttt{session}.
+- Routing e metodi HTTP, validazione input e sicurezza.
+- Template Jinja2: separazione presentazione/logica.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{App base}
+\begin{lstlisting}
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello Flask"
+
+# avvia: flask --app app run
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{Flask(\_\_name\_\_)} crea l'app; \texttt{@app.route} definisce una route.
+- Separare creazione app in factory (\texttt{create\_app}) per testing/configurazioni.
+- Avviare con CLI \texttt{flask}; gestire segreti/config via variabili d'ambiente.
+\end{tcolorbox}
+
+\subsection{Parametri}
+\begin{lstlisting}
+from flask import request
+@app.route("/echo")
+def echo():
+    msg = request.args.get("msg", "")
+    return f"{msg}"
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- I parametri query si leggono da \texttt{request.args}; validare e sanificare input.
+- Usare metodi HTTP corretti (GET per lettura, POST per invio dati).
+- Gestire errori e codici di risposta appropriati (400/404/500).
+\end{tcolorbox}
+
+\subsection{Template}
+\begin{lstlisting}
+from flask import render_template
+@app.route("/page")
+def page():
+    return render_template("page.html", title="Demo")
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{render\_template} usa Jinja2: separa presentazione dalla logica.
+- Passare variabili al template e evitare concatenazioni manuali di HTML.
+- Proteggere da XSS/CSRF; usare form e token sicuri.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Micro API per servizi interni.
+- Piccoli siti con template dinamici.
+- Dashboard leggere con form e validazioni.
+- Prototipi rapidi di microservizi.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Crea una route \texttt{/hello/<name>}.
+  \item Gestisci un form POST e visualizza i dati.
+  \item Servi un template con una lista iterata.
+  \item Aggiungi gestione errori 404 custom.
+  \item Separa app in \texttt{create\_app()} e blueprint.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai definito una piccola app Flask con rotte e template.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Microservizi e API interne.
+- Siti dinamici con template.
+- Dashboard leggere con form e validazioni.
+- Prototipi rapidi integrati con DB/servizi.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+\item \textbf{App factory}: creare l'app con funzioni per configurazioni diverse (test, prod).
+  \item \textbf{Blueprints}: modularizzare viste e API; isolare dipendenze.
+  \item \textbf{Contesto di richiesta}: gestire \verb|request|/\verb|g|/\verb|session| in modo sicuro; evitare globali.
+  \item \textbf{Template Jinja2}: separare presentazione; validare input e proteggere da XSS/CSRF.
+  \item \textbf{Testing}: usare il test client; verificare percorsi e stati; integrare CI.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Deployment} Differenziare configurazione sviluppo/produzione, log, e gestione errori; preferire server WSGI adeguati e reverse proxy.
+Consulta: \url{https://flask.palletsprojects.com/}.

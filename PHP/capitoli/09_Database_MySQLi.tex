@@ -1,0 +1,148 @@
+\chapter{Database con MySQLi}\label{cap:db_mysqli}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Connessione, Query preparate, Transazioni, Gestione errori, Ottimizzazione, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Teoria}
+L'estensione \texttt{mysqli} fornisce API procedurali e a oggetti per interagire con MySQL/MariaDB, con supporto a query preparate e transazioni.
+
+\section{Connessione al database}
+\begin{lstlisting}
+<?php
+$mysqli = new mysqli('localhost', 'user', 'pass', 'db');
+if ($mysqli->connect_errno) {
+    error_log('Connessione fallita: ' . $mysqli->connect_error);
+    exit('DB non disponibile');
+}
+\end{lstlisting}
+
+\section{Query preparate}
+\begin{lstlisting}
+<?php
+$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    echo $row['name'];
+}
+$stmt->close();
+\end{lstlisting}
+
+\section{Query non sicure (senza bind) e SQL injection}
+\begin{lstlisting}
+<?php
+// ESEMPIO NON SICURO: concatenazione di input utente
+$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
+$sql = "SELECT id, name FROM users WHERE email = '" . $email . "'";
+$res = $mysqli->query($sql);
+if ($res) {
+    while ($row = $res->fetch_assoc()) { echo $row['name']; }
+}
+// Input malevolo: x' OR '1'='1  -> restituisce TUTTI gli utenti
+// $sql diventa: SELECT id, name FROM users WHERE email = 'x' OR '1'='1'
+?>
+\end{lstlisting}
+
+\subsection*{Rifacimento sicuro con parametri bind}
+\begin{lstlisting}
+<?php
+// VERSIONE SICURA: placeholder e bind_param
+$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
+$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');
+if (!$stmt) { exit('Errore prepare'); }
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) { echo $row['name']; }
+$stmt->close();
+?>
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Dimostrazione]
+La versione non sicura consente l'iniezione di frammenti SQL in \verb|$email|, alterando la logica della WHERE e restituendo risultati non previsti. Con i parametri bind, il valore viene inviato separatamente dall'istruzione SQL e trattato come dato, eliminando la vulnerabilità.
+\end{tcolorbox}
+
+\section{Transazioni}
+\begin{lstlisting}
+<?php
+$mysqli->begin_transaction();
+try {
+    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?');
+    $stmt->bind_param('di', $amount, $fromId);
+    $stmt->execute();
+
+    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?');
+    $stmt->bind_param('di', $amount, $toId);
+    $stmt->execute();
+
+    $mysqli->commit();
+} catch (Throwable $e) {
+    $mysqli->rollback();
+    error_log($e->getMessage());
+}
+\end{lstlisting}
+
+\section{Gestione errori}
+- Controllare \verb|$mysqli->errno| e \verb|$mysqli->error|; loggare errori e non esporre dettagli sensibili all'utente.
+- Gestire eccezioni e timeouts; impostare charset \texttt{utf8mb4}.
+
+\begin{lstlisting}
+<?php
+$mysqli->set_charset('utf8mb4');
+if (!$mysqli->query('SET NAMES utf8mb4')) {
+    error_log($mysqli->error);
+}
+\end{lstlisting}
+
+\section{Ottimizzazione delle query}
+- Indici appropriati, evitare SELECT * nelle tabelle grandi.
+- Limitare i risultati, usare paginazione.
+- Misurare con \texttt{EXPLAIN} e profilarne i piani.
+
+\begin{tcolorbox}[title=Best practice]
+- Usare query preparate per prevenire SQL injection.
+- Gestire transazioni per operazioni atomiche.
+- Impostare charset \texttt{utf8mb4} e collation coerente.
+- Centralizzare la gestione della connessione e pooling se necessario.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Concatenare input utente nelle query.
+- Dimenticare \texttt{commit}/\texttt{rollback} e lasciare transazioni aperte.
+- Ignorare settaggio del charset e problemi di encoding.
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Inserimento utente con validazioni minime
+$stmt = $mysqli->prepare('INSERT INTO users(username,email,password_hash) VALUES (?,?,?)');
+$stmt->bind_param('sss', $username, $email, $hash);
+$stmt->execute();
+if ($stmt->errno) { error_log($stmt->error); }
+$stmt->close();
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Registrazione e login: creazione utente, ricerca per username/email e verifica hash. Discutere error handling e messaggi user-friendly.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa paginazione server-side con LIMIT/OFFSET.
+  \item Aggiungi indici e confronta piani di esecuzione con \texttt{EXPLAIN}.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Quali rischi introduce la concatenazione di input utente?
+  \item Perché \texttt{utf8mb4} è preferibile a \texttt{utf8}?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — MySQLi: \url{https://www.php.net/mysqli}
+  \item MySQL Doc — Prepared Statements: \url{https://dev.mysql.com/doc/}
+\end{itemize}

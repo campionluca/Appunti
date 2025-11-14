@@ -1,0 +1,104 @@
+\chapter{Cookie e Preferenze}\label{cap:cookie}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Impostazione/Lettura, Sicurezza, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Configurare cookie con opzioni di sicurezza adeguate.
+  \item Leggere, validare e serializzare valori cookie in sicurezza.
+  \item Comprendere limiti e uso di SameSite/HttpOnly/Secure.
+\end{itemize}
+
+\section{Impostazione e lettura di un cookie}
+Esempio di impostazione di un cookie con flag di sicurezza.
+
+\begin{lstlisting}[language=PHP, caption={Cookie sicuri}]
+<?php
+$valore = json_encode(['tema' => 'scuro']);
+setcookie('preferenze', $valore, [
+  'expires' => time() + 3600*24*30,
+  'path' => '/',
+  'domain' => '',
+  'secure' => true,
+  'httponly' => true,
+  'samesite' => 'Strict',
+]);
+
+echo htmlspecialchars($_COOKIE['preferenze'] ?? '');
+?>
+\end{lstlisting}
+
+\subsection{Analisi tecnica dei cookie sicuri}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione di cookie sicuri con protezioni complete contro attacchi XSS e session hijacking, utilizzando le opzioni di sicurezza disponibili in PHP.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{json\_encode(['tema' => 'scuro'])}: Serializzazione dati strutturati per storage
+\item \texttt{setcookie()} con array opzioni: Configurazione completa sicurezza
+\item \texttt{expires}: Scadenza 30 giorni per cookie persistente
+\item \texttt{path = '/'}: Accessibile in tutto il dominio
+\item \texttt{secure = true}: Trasmissione solo HTTPS
+\item \texttt{httponly = true}: Blocco accesso JavaScript
+\item \texttt{samesite = 'Strict'}: Limitazione invii cross-site dei cookie
+\item \texttt{htmlspecialchars(\$\_COOKIE[...] ?? '')}: Sanitizzazione output
+\end{itemize}
+
+\section{Caso di studio: preferenze tema e lingua}
+Gestione di preferenze non sensibili (tema/lingua) tramite cookie JSON con opzioni \verb|httponly|, \verb|secure| e \verb|samesite| appropriate; validazione e fallback lato server in caso di valori assenti o corrotti.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Estendi l'esempio per includere la lingua preferita e valida i valori ammessi.
+  \item Implementa una pagina che mostri le preferenze correnti con output opportunamente sanificato.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Quali flag sono indispensabili per cookie di autenticazione?
+  \item Quando \verb|SameSite=Strict| può causare problemi e quale alternativa usare?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item RFC 6265 — HTTP State Management Mechanism
+  \item OWASP — Session Management
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Preferenze utente (tema, lingua, layout)
+\item Token di autenticazione sicuri
+\parametri di configurazione personalizzati
+\item Carrelli acquisto e sessioni utente
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{setrawcookie()} per valori non URL-encoded
+\item \texttt{session\_set\_cookie\_params()} per configurazione globale
+\item Cookie cifrati con OpenSSL per dati sensibili
+\item LocalStorage/SessionStorage per dati client-side
+\item HttpOnly session cookies per autenticazione
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Sempre \texttt{httponly} e \texttt{secure} per dati sensibili
+\item \textbf{Insidia}: Cookie impostati dopo output HTML causano errori headers
+\item \textbf{Sicurezza}: Validare e sanitizzare tutti i valori cookie
+\item \textbf{Performance}: Limitare dimensione cookie (max 4KB)
+\item \textbf{Compatibilità}: \texttt{samesite} supportato da Chrome/Firefox/Safari
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{HTTP Cookies}: Standard RFC 6265 per gestione cookie
+\item \textbf{SameSite Cookies}: Limitazione condivisione cross-site dei cookie
+\item \textbf{Content Security Policy}: Difesa avanzata XSS
+\item \textbf{JSON Serialization}: Formato dati strutturati per storage
+\item \textbf{Secure Flag}: Enforcement HTTPS per trasmissione sicura
+\end{itemize}
+\end{itemize}

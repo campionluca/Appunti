@@ -1,0 +1,555 @@
+\chapter{Eccezioni}
+\label{cap:eccezioni}
+
+\section*{Obiettivi di apprendimento}
+Al termine di questo capitolo sarai in grado di:
+\begin{itemize}
+    \item Comprendere cosa sono le eccezioni e quando si verificano
+    \item Utilizzare i blocchi try-catch-finally per gestire le eccezioni
+    \item Distinguere tra eccezioni checked e unchecked
+    \item Lanciare eccezioni con throw e dichiarare eccezioni con throws
+    \item Creare eccezioni personalizzate
+    \item Applicare le best practices nella gestione degli errori
+\end{itemize}
+
+\section{Cos'è un'eccezione}
+
+Un'\textbf{eccezione} è un evento anomalo che si verifica durante l'esecuzione di un programma e interrompe il normale flusso di istruzioni. Le eccezioni rappresentano errori o situazioni eccezionali che il programma deve gestire.
+
+\subsection{Differenza tra errori ed eccezioni}
+
+\begin{itemize}
+    \item \textbf{Errori (Error)}: problemi gravi del sistema che il programma normalmente non dovrebbe tentare di gestire (es: OutOfMemoryError, StackOverflowError)
+    \item \textbf{Eccezioni (Exception)}: problemi che il programma può e deve gestire (es: file non trovato, divisione per zero, input non valido)
+\end{itemize}
+
+\subsection{Esempio 1: Eccezione non gestita}
+
+\begin{lstlisting}
+public class EccezioneNonGestita {
+    public static void main(String[] args) {
+        int[] numeri = {1, 2, 3};
+
+        // Questo causa ArrayIndexOutOfBoundsException
+        System.out.println(numeri[5]);
+
+        // Questa riga non verrà mai eseguita
+        System.out.println("Fine programma");
+    }
+}
+\end{lstlisting}
+
+Output:
+\begin{verbatim}
+Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: 5
+    at EccezioneNonGestita.main(EccezioneNonGestita.java:5)
+\end{verbatim}
+
+Questo esempio mostra cosa accade quando un'eccezione \textbf{non viene gestita}: il programma si interrompe bruscamente. Stiamo cercando di accedere all'indice 5 di un array che ha solo 3 elementi (indici 0, 1, 2), causando un \texttt{ArrayIndexOutOfBoundsException}. Quando l'eccezione viene lanciata alla riga 5, il normale flusso di esecuzione si interrompe immediatamente: la riga \texttt{System.out.println("Fine programma")} non viene mai eseguita. L'output mostra lo \textbf{stack trace}, che indica il tipo di eccezione, il messaggio di errore (l'indice 5 non valido), e la posizione esatta dove si è verificato il problema (classe, metodo e numero di riga). Questo comportamento è problematico: un singolo errore può far crashare l'intera applicazione. Per questo è fondamentale \textbf{gestire le eccezioni} nei punti critici del codice, permettendo al programma di recuperare da situazioni anomale o di terminare in modo controllato fornendo informazioni utili all'utente.
+
+\section{Gerarchia delle eccezioni}
+
+Tutte le eccezioni in Java derivano dalla classe \texttt{Throwable}. La gerarchia è organizzata così:
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    level distance=2cm,
+    level 1/.style={sibling distance=6cm},
+    level 2/.style={sibling distance=3cm},
+    level 3/.style={sibling distance=2cm},
+    every node/.style={
+        rectangle,
+        draw,
+        very thick,
+        align=center,
+        font=\small
+    },
+    root/.style={fill=yellow!20, draw=orange!60},
+    error/.style={fill=red!10, draw=red!60},
+    exception/.style={fill=blue!10, draw=blue!60},
+    unchecked/.style={fill=orange!10, draw=orange!60},
+    checked/.style={fill=green!10, draw=green!60}
+]
+
+% Radice
+\node[root] (throwable) {\textbf{Throwable}}
+    child { node[error] (error) {\textbf{Error}\\\footnotesize (errori sistema)}
+        child { node[error, font=\footnotesize] {OutOfMemory\\Error} }
+        child { node[error, font=\footnotesize] {StackOverflow\\Error} }
+    }
+    child { node[exception] (exception) {\textbf{Exception}\\\footnotesize (eccezioni gestibili)}
+        child { node[unchecked] (runtime) {\textbf{Runtime\\Exception}\\\footnotesize (unchecked)}
+            child { node[unchecked, font=\footnotesize] {NullPointer\\Exception} }
+            child { node[unchecked, font=\footnotesize] {ArrayIndexOutOf\\BoundsException} }
+        }
+        child { node[checked] (checked) {\textbf{Checked\\Exceptions}\\\footnotesize (controllate)}
+            child { node[checked, font=\footnotesize] {IOException} }
+            child { node[checked, font=\footnotesize] {SQLException} }
+        }
+    };
+
+% Legenda
+\node[below=6.5cm of throwable, font=\footnotesize, align=left] {
+    \textbf{Legenda:}\\
+    \textcolor{red!80}{Error}: errori gravi di sistema (non gestire)\\
+    \textcolor{orange!80}{RuntimeException}: eccezioni unchecked (opzionale gestirle)\\
+    \textcolor{green!80}{Checked}: eccezioni checked (obbligatorio gestirle)
+};
+
+\end{tikzpicture}
+\caption{Gerarchia delle eccezioni in Java: tutte derivano da Throwable, con distinzione tra Error (non gestibili) ed Exception (gestibili)}
+\label{fig:gerarchia_eccezioni}
+\end{figure}
+
+\begin{nota}
+Le eccezioni che derivano da \texttt{RuntimeException} sono dette \textbf{unchecked} (non controllate), mentre le altre sono \textbf{checked} (controllate). Vedremo la differenza più avanti.
+\end{nota}
+
+\section{try-catch-finally}
+
+Il meccanismo base per gestire le eccezioni usa tre blocchi:
+\begin{itemize}
+    \item \texttt{try}: contiene il codice che potrebbe generare un'eccezione
+    \item \texttt{catch}: gestisce l'eccezione se si verifica
+    \item \texttt{finally}: codice che viene sempre eseguito, sia che ci sia un'eccezione o no
+\end{itemize}
+
+\subsection{Esempio 2: Gestione base}
+
+\begin{lstlisting}
+public class GestioneBase {
+    public static void main(String[] args) {
+        try {
+            int risultato = 10 / 0; // Divisione per zero
+            System.out.println("Risultato: " + risultato);
+        } catch (ArithmeticException e) {
+            System.out.println("Errore: non si puo' dividere per zero!");
+            System.out.println("Dettaglio: " + e.getMessage());
+        }
+
+        System.out.println("Il programma continua normalmente");
+    }
+}
+\end{lstlisting}
+
+Output:
+\begin{verbatim}
+Errore: non si puo' dividere per zero!
+Dettaglio: / by zero
+Il programma continua normalmente
+\end{verbatim}
+
+Questo esempio introduce il meccanismo base di gestione delle eccezioni attraverso il blocco \textbf{try-catch}. Il codice potenzialmente pericoloso (la divisione per zero) è racchiuso nel blocco \texttt{try}. Quando si verifica l'eccezione \texttt{ArithmeticException}, invece di interrompere l'intero programma, il controllo passa immediatamente al blocco \texttt{catch} corrispondente. Nel catch possiamo gestire l'errore in modo appropriato: qui stampiamo un messaggio comprensibile all'utente e i dettagli dell'errore tramite il metodo dell'oggetto eccezione \texttt{e.getMessage()}. La variabile \texttt{e} è l'oggetto eccezione che contiene informazioni sull'errore. L'aspetto cruciale è che \textbf{il programma continua l'esecuzione} dopo il blocco catch: la riga "Il programma continua normalmente" viene stampata, dimostrando che abbiamo recuperato dall'errore. Questo è il vantaggio principale della gestione delle eccezioni: permette al programma di reagire agli errori in modo controllato invece di crashare, migliorando la robustezza e l'esperienza utente dell'applicazione.
+
+\subsection{Esempio 3: try-catch-finally}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class TryCatchFinally {
+    public static void main(String[] args) {
+        BufferedReader br = null;
+
+        try {
+            br = new BufferedReader(new FileReader("dati.txt"));
+            String riga = br.readLine();
+            System.out.println("Prima riga: " + riga);
+
+        } catch (IOException e) {
+            System.out.println("Errore lettura file: " + e.getMessage());
+
+        } finally {
+            // Questo blocco viene SEMPRE eseguito
+            System.out.println("Chiusura risorse...");
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            } catch (IOException e) {
+                System.out.println("Errore chiusura: " + e.getMessage());
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio introduce il blocco \textbf{finally}, fondamentale per la gestione delle risorse. Il blocco \texttt{finally} viene \textbf{sempre eseguito}, indipendentemente dal fatto che si verifichi un'eccezione o meno, e anche se c'e' un \texttt{return} nel try o nel catch. Questo lo rende il posto ideale per il \textbf{cleanup delle risorse}: chiusura di file, connessioni di rete, database, ecc. Nel nostro esempio, leggiamo un file usando un oggetto \texttt{BufferedReader}. Se il file non esiste o c'e' un errore di lettura, l'eccezione \texttt{IOException} viene catturata dal catch. Ma indipendentemente dall'esito, il blocco \texttt{finally} garantisce che il file venga chiuso correttamente tramite il metodo dell'oggetto \texttt{br.close()}. Nota che la variabile \texttt{br} e' dichiarata fuori dal try per essere accessibile nel finally. Inoltre, la chiusura stessa puo' lanciare un'eccezione, quindi e' racchiusa in un altro try-catch interno. Questo pattern e' molto comune quando si lavora con risorse esterne. Dalla versione Java 7 esiste il \textit{try-with-resources} che semplifica questo codice, ma il pattern try-catch-finally rimane importante per capire i meccanismi di gestione delle eccezioni.
+
+\begin{attenzione}
+Il blocco \texttt{finally} viene eseguito anche se c'e' un \texttt{return} nel try o nel catch. E' il posto ideale per chiudere risorse (file, connessioni, ecc.).
+\end{attenzione}
+
+\subsection{Esempio 4: Catch multipli}
+
+\begin{lstlisting}
+public class CatchMultipli {
+    public static void main(String[] args) {
+        String[] dati = {"10", "20", "abc", "30"};
+
+        for (String s : dati) {
+            try {
+                int numero = Integer.parseInt(s);
+                int risultato = 100 / numero;
+                System.out.println("100 / " + numero + " = " + risultato);
+
+            } catch (NumberFormatException e) {
+                System.out.println("'" + s + "' non e' un numero valido");
+
+            } catch (ArithmeticException e) {
+                System.out.println("Divisione per zero con: " + s);
+
+            } catch (Exception e) {
+                // Catch generico per altre eccezioni
+                System.out.println("Errore generico: " + e.getMessage());
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio dimostra l'uso di \textbf{blocchi catch multipli} per gestire diversi tipi di eccezioni in modo specifico. Il codice nel try puo' lanciare due tipi di eccezioni: \texttt{NumberFormatException} se la stringa non e' convertibile in numero (tramite il metodo statico \texttt{Integer.parseInt()}) come nel caso di "abc", e \texttt{ArithmeticException} se il numero e' zero (divisione per zero). Avere catch separati permette di fornire \textbf{messaggi di errore specifici} per ogni situazione: un errore di formato riceve un messaggio diverso da un errore di divisione per zero. L'\textbf{ordine dei catch e' fondamentale}: le eccezioni piu' specifiche devono essere catturate prima di quelle piu' generiche. Nell'esempio, \texttt{NumberFormatException} e \texttt{ArithmeticException} sono sottoclassi di \texttt{Exception}, quindi il catch generico di \texttt{Exception} deve stare per ultimo. Se lo mettessimo per primo, catturerebbe tutte le eccezioni e i catch successivi non verrebbero mai eseguiti (il compilatore darebbe errore). Il catch generico finale agisce come "rete di sicurezza" per eventuali altre eccezioni impreviste, garantendo che nessun errore passi inosservato.
+
+\begin{nota}
+L'ordine dei blocchi catch e' importante: le eccezioni piu' specifiche devono essere catturate prima di quelle piu' generiche. \texttt{Exception} e' la classe base, quindi va sempre alla fine.
+\end{nota}
+
+\section{throw e throws}
+
+\subsection{throw: lanciare un'eccezione}
+
+La keyword \texttt{throw} permette di lanciare esplicitamente un'eccezione.
+
+\subsection{Esempio 5: Validazione con throw}
+
+\begin{lstlisting}
+public class Validazione {
+    public static void setEta(int eta) {
+        if (eta < 0 || eta > 150) {
+            throw new IllegalArgumentException(
+                "Eta' non valida: " + eta + " (deve essere 0-150)"
+            );
+        }
+        System.out.println("Eta' impostata: " + eta);
+    }
+
+    public static void main(String[] args) {
+        try {
+            setEta(25);    // OK
+            setEta(-5);    // Lancia eccezione
+            setEta(200);   // Non viene eseguito
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio illustra come \textbf{lanciare esplicitamente un'eccezione} usando la keyword \texttt{throw}. Il metodo \texttt{setEta()} esegue una \textbf{validazione dell'input}: controlla che l'eta' sia in un range ragionevole (0-150). Se la validazione fallisce, il metodo lancia un'eccezione \texttt{IllegalArgumentException} con un messaggio descrittivo. La keyword \texttt{throw} interrompe immediatamente l'esecuzione del metodo e trasferisce il controllo al chiamante. Nel main, la prima chiamata al metodo \texttt{setEta(25)} ha successo perche' 25 e' un valore valido. La seconda chiamata al metodo \texttt{setEta(-5)} lancia l'eccezione perche' -5 non e' valido; il controllo passa immediatamente al blocco catch, e la terza chiamata al metodo \texttt{setEta(200)} non viene mai eseguita. Questo pattern e' fondamentale per la \textbf{programmazione difensiva}: invece di accettare silenziosamente valori non validi che potrebbero causare bug difficili da trovare, il codice segnala immediatamente il problema attraverso un'eccezione. Usa \texttt{throw} quando il tuo codice incontra una situazione che non puo' gestire o quando riceve input non validi.
+
+\subsection{throws: dichiarare eccezioni}
+
+La keyword \texttt{throws} nella firma del metodo dichiara che quel metodo potrebbe lanciare certe eccezioni, delegando al chiamante la responsabilita' di gestirle.
+
+\subsection{Esempio 6: Propagazione eccezioni}
+
+\begin{lstlisting}
+import java.io.FileReader;
+import java.io.IOException;
+
+public class PropagazioneEccezioni {
+
+    // Metodo che dichiara di poter lanciare IOException
+    public static String leggiFile(String path) throws IOException {
+        FileReader fr = new FileReader(path);
+        // ... lettura file
+        fr.close();
+        return "Contenuto letto";
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Il chiamante deve gestire l'eccezione dichiarata
+            String contenuto = leggiFile("dati.txt");
+            System.out.println(contenuto);
+
+        } catch (IOException e) {
+            System.out.println("File non trovato o non leggibile");
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio mostra la differenza tra \texttt{throw} e \texttt{throws}, e il concetto di \textbf{propagazione delle eccezioni}. La keyword \texttt{throws} nella firma del metodo \texttt{leggiFile()} dichiara che il metodo potrebbe lanciare un'\texttt{IOException}. Questo e' obbligatorio per le \textbf{eccezioni checked} (quelle che non derivano da \texttt{RuntimeException}). Il metodo \texttt{leggiFile()} non gestisce l'eccezione internamente con try-catch, ma la \textbf{propaga al chiamante}: e' responsabilita' di chi chiama il metodo gestire l'eventuale errore. Nel main, quando chiamiamo il metodo \texttt{leggiFile()}, il compilatore ci obbliga a fare una di due cose: o racchiudere la chiamata in un try-catch (come nell'esempio), o dichiarare anche il main con \texttt{throws IOException}. Questo meccanismo garantisce che le eccezioni checked non possano essere ignorate: il compilatore forza il programmatore a prendere una decisione consapevole su come gestire gli errori. La propagazione delle eccezioni e' utile quando un metodo non ha abbastanza contesto per gestire l'errore in modo significativo, e preferisce delegare la decisione al livello superiore del programma.
+
+\section{Eccezioni checked vs unchecked}
+
+\subsection{Eccezioni Unchecked (RuntimeException)}
+
+\begin{itemize}
+    \item Derivano da \texttt{RuntimeException}
+    \item Non è obbligatorio gestirle con try-catch
+    \item Indicano errori di programmazione (bug) che andrebbero evitati
+    \item Esempi: \texttt{NullPointerException}, \texttt{ArrayIndexOutOfBoundsException}, \texttt{ArithmeticException}
+\end{itemize}
+
+\subsection{Eccezioni Checked}
+
+\begin{itemize}
+    \item NON derivano da \texttt{RuntimeException}
+    \item È obbligatorio gestirle (try-catch) o dichiararle (throws)
+    \item Indicano condizioni eccezionali prevedibili
+    \item Esempi: \texttt{IOException}, \texttt{SQLException}, \texttt{FileNotFoundException}
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{5cm}|p{5cm}|}
+\hline
+\textbf{Checked} & \textbf{Unchecked} \\
+\hline
+Devono essere gestite o dichiarate & Opzionali da gestire \\
+\hline
+Controllate dal compilatore & Non controllate dal compilatore \\
+\hline
+Condizioni esterne prevedibili & Errori di programmazione \\
+\hline
+IOException, SQLException & NullPointerException, ArithmeticException \\
+\hline
+\end{tabular}
+\caption{Confronto tra eccezioni checked e unchecked}
+\end{table}
+
+\subsection{Quando usare l'una o l'altra}
+
+\begin{itemize}
+    \item \textbf{Usa checked} per condizioni che il chiamante può ragionevolmente gestire (file non trovato, rete non disponibile)
+    \item \textbf{Usa unchecked} per errori di programmazione che andrebbero corretti nel codice (null check mancante, indice array errato)
+\end{itemize}
+
+\section{Creare eccezioni personalizzate}
+
+Puoi creare le tue eccezioni estendendo \texttt{Exception} (checked) o \texttt{RuntimeException} (unchecked).
+
+\subsection{Esempio 7: Eccezione personalizzata checked}
+
+\begin{lstlisting}
+// Eccezione checked personalizzata
+public class SaldoInsufficienteException extends Exception {
+    private double saldoAttuale;
+    private double importoRichiesto;
+
+    public SaldoInsufficienteException(double saldo, double importo) {
+        super("Saldo insufficiente: hai " + saldo +
+              " ma servono " + importo);
+        this.saldoAttuale = saldo;
+        this.importoRichiesto = importo;
+    }
+
+    public double getSaldoAttuale() {
+        return saldoAttuale;
+    }
+
+    public double getImportoRichiesto() {
+        return importoRichiesto;
+    }
+}
+
+// Uso
+public class ContoCorrente {
+    private double saldo;
+
+    public ContoCorrente(double saldoIniziale) {
+        this.saldo = saldoIniziale;
+    }
+
+    public void preleva(double importo) throws SaldoInsufficienteException {
+        if (importo > saldo) {
+            throw new SaldoInsufficienteException(saldo, importo);
+        }
+        saldo -= importo;
+        System.out.println("Prelevati: " + importo +
+                         " - Saldo: " + saldo);
+    }
+
+    public static void main(String[] args) {
+        ContoCorrente conto = new ContoCorrente(100);
+
+        try {
+            conto.preleva(50);   // OK
+            conto.preleva(80);   // Eccezione!
+
+        } catch (SaldoInsufficienteException e) {
+            System.out.println("Errore: " + e.getMessage());
+            System.out.println("Saldo disponibile: " +
+                             e.getSaldoAttuale());
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio mostra come creare e utilizzare \textbf{eccezioni personalizzate}, fondamentali per modellare errori specifici del proprio dominio applicativo. La classe \texttt{SaldoInsufficienteException} estende \texttt{Exception}, rendendola un'eccezione checked. Questo significa che chi chiama il metodo \texttt{preleva()} e' obbligato dal compilatore a gestirla. L'eccezione personalizzata puo' contenere \textbf{campi aggiuntivi} che forniscono informazioni utili: in questo caso, gli attributi \texttt{saldoAttuale} e \texttt{importoRichiesto} dell'oggetto eccezione permettono a chi gestisce l'eccezione di sapere esattamente quanto denaro manca. Il costruttore dell'eccezione chiama il metodo \texttt{super()} della classe base passando un messaggio descrittivo alla classe \texttt{Exception}. Nella classe \texttt{ContoCorrente}, il metodo dell'oggetto \texttt{conto.preleva()} dichiara \texttt{throws SaldoInsufficienteException} e lancia l'eccezione quando il saldo e' insufficiente. Nel main, il blocco catch puo' accedere ai metodi getter dell'oggetto eccezione (come \texttt{e.getSaldoAttuale()}) per ottenere dettagli specifici. Creare eccezioni personalizzate rende il codice piu' espressivo e permette di distinguere tra diversi tipi di errori, facilitando la gestione appropriata di ciascuno. E' una best practice nei progetti reali per modellare la logica di business in modo chiaro.
+
+\subsection{Esempio 8: Eccezione personalizzata unchecked}
+
+A volte conviene creare eccezioni unchecked (che estendono \texttt{RuntimeException}) per errori di programmazione che il programmatore dovrebbe correggere:
+
+\begin{lstlisting}
+// Eccezione unchecked personalizzata
+public class EtaNonValidaException extends RuntimeException {
+    public EtaNonValidaException(int eta) {
+        super("Eta' non valida: " + eta +
+              " (deve essere >= 0 e <= 150)");
+    }
+}
+
+// Uso
+public class Persona {
+    private int eta;
+
+    public void setEta(int eta) {
+        if (eta < 0 || eta > 150) {
+            throw new EtaNonValidaException(eta);
+        }
+        this.eta = eta;
+    }
+
+    public static void main(String[] args) {
+        Persona p = new Persona();
+
+        // Questa parte non richiede try-catch
+        p.setEta(25);      // OK
+        System.out.println("Eta' impostata: " + p.eta);
+
+        // Se non fosse stato catturato, il programma crasherebbe
+        try {
+            p.setEta(-5);   // Lancia EtaNonValidaException
+        } catch (EtaNonValidaException e) {
+            System.out.println("ERRORE DI PROGRAMMAZIONE: " +
+                             e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio illustra le \textbf{eccezioni unchecked personalizzate}. La classe \texttt{EtaNonValidaException} estende \texttt{RuntimeException}, il che significa che chi chiama il metodo \texttt{setEta()} \textbf{non e' obbligato} dal compilatore a gestirla. Questo e' appropriato per un errore di programmazione: se il programmatore passa un'eta' negativa, e' un bug nel codice che dovrebbe essere corretto, non una situazione da gestire gracefully. A differenza della checked exception, il metodo non ha bisogno di dichiarare \texttt{throws EtaNonValidaException} nella firma (anche se puo' farlo per documentazione). L'unchecked exception e' piu' "leggera" da usare perche' non inquina le firme dei metodi, ma va usata solo per errori di programmazione, non per condizioni recuperabili.
+
+\begin{nota}
+\textbf{Confronto Checked vs Unchecked personalizzate:}
+\begin{itemize}
+    \item \textbf{Checked (extends Exception)}: condizioni recuperabili (file non trovato, validazione dati da fonte esterna)
+    \item \textbf{Unchecked (extends RuntimeException)}: errori di programmazione (parametri non validi, invarianti violati)
+\end{itemize}
+\end{nota}
+
+\section{Best Practices}
+
+\subsection{Quando NON usare le eccezioni}
+
+\begin{errore}
+\textbf{Non usare le eccezioni per il controllo di flusso normale:}
+\begin{lstlisting}
+// SBAGLIATO
+try {
+    int i = 0;
+    while (true) {
+        System.out.println(array[i++]);
+    }
+} catch (ArrayIndexOutOfBoundsException e) {
+    // Fine array
+}
+
+// CORRETTO
+for (int i = 0; i < array.length; i++) {
+    System.out.println(array[i]);
+}
+\end{lstlisting}
+\end{errore}
+
+\subsection{Linee guida}
+
+\begin{itemize}
+    \item \textbf{Cattura solo le eccezioni che puoi gestire}: non fare catch generici di \texttt{Exception} se non sai cosa fare
+    \item \textbf{Non nascondere le eccezioni}: evita catch vuoti
+    \item \textbf{Fornisci messaggi significativi}: aiuta a capire cosa è andato storto
+    \item \textbf{Libera le risorse}: usa try-with-resources o finally
+    \item \textbf{Documenta le eccezioni}: specifica con @throws nel Javadoc quali eccezioni lancia un metodo
+    \item \textbf{Preferisci unchecked per errori di programmazione}: checked per condizioni recuperabili
+\end{itemize}
+
+\subsection{Esempio 9: Logging delle eccezioni}
+
+\begin{lstlisting}
+public class LoggingEccezioni {
+    public static void elaboraDati(String dati) {
+        try {
+            // Elaborazione dati
+            int valore = Integer.parseInt(dati);
+            System.out.println("Valore elaborato: " + valore);
+
+        } catch (NumberFormatException e) {
+            // Logging completo dell'errore
+            System.err.println("ERRORE - Formato non valido");
+            System.err.println("Dato ricevuto: " + dati);
+            System.err.println("Messaggio: " + e.getMessage());
+            e.printStackTrace(); // Stack trace per debug
+
+            // Eventualmente rilancia o gestisci diversamente
+            throw new IllegalArgumentException(
+                "Impossibile elaborare: " + dati, e
+            );
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio illustra le best practices per il \textbf{logging delle eccezioni}, fondamentale per il debugging e la manutenzione delle applicazioni. Quando si cattura un'eccezione, e' importante registrare informazioni complete per facilitare l'identificazione del problema. L'esempio mostra diverse tecniche: usare \texttt{System.err} invece di \texttt{System.out} per distinguere errori da output normale; registrare il contesto specifico (in questo caso, il dato che ha causato l'errore); stampare il messaggio dell'eccezione con il metodo dell'oggetto eccezione \texttt{e.getMessage()}; e soprattutto chiamare il metodo dell'oggetto eccezione \texttt{e.printStackTrace()} che stampa l'intero \textbf{stack trace}, mostrando la sequenza completa di chiamate di metodo che hanno portato all'errore. Un aspetto importante e' il \textbf{re-throwing} dell'eccezione: dopo aver loggato l'errore, il metodo lancia una nuova \texttt{IllegalArgumentException}, passando l'eccezione originale come causa (secondo parametro del costruttore). Questo mantiene la traccia completa dell'errore mentre si propaga verso l'alto. In applicazioni reali, invece di \texttt{System.err} useresti un framework di logging professionale come Log4j o SLF4J, ma i principi rimangono gli stessi: registra informazioni sufficienti per diagnosticare il problema.
+
+\section*{Riepilogo}
+
+In questo capitolo abbiamo imparato:
+
+\begin{itemize}
+    \item Le \textbf{eccezioni} gestiscono situazioni anomale durante l'esecuzione
+    \item La \textbf{gerarchia} delle eccezioni parte da \texttt{Throwable}
+    \item \textbf{try-catch-finally} e' il meccanismo base di gestione
+    \item \textbf{throw} lancia un'eccezione, \textbf{throws} la dichiara nella firma
+    \item Eccezioni \textbf{checked} vanno gestite obbligatoriamente, \textbf{unchecked} no
+    \item Si possono creare \textbf{eccezioni personalizzate} estendendo Exception
+    \item Le eccezioni non vanno usate per controllo di flusso normale
+\end{itemize}
+
+\begin{nota}
+\textbf{Best Practices:}
+\begin{itemize}
+    \item Cattura solo eccezioni che puoi gestire
+    \item Fornisci messaggi di errore chiari
+    \item Usa try-with-resources per chiudere risorse automaticamente
+    \item Documenta le eccezioni che un metodo puo' lanciare
+    \item Log completo per debug (metodo dell'oggetto eccezione: \texttt{e.printStackTrace()})
+    \item Preferisci unchecked per bug, checked per condizioni recuperabili
+\end{itemize}
+\end{nota}
+
+\begin{errore}
+\textbf{Errori comuni da evitare:}
+\begin{itemize}
+    \item Catch vuoti che nascondono gli errori
+    \item Catch di Exception generico quando serve specificità
+    \item Usare eccezioni per controllo di flusso
+    \item Non chiudere le risorse (file, connessioni)
+    \item Ordine errato dei catch (generiche prima delle specifiche)
+    \item Non fornire informazioni utili nei messaggi di errore
+\end{itemize}
+\end{errore}
+
+\section*{Riferimenti per approfondimenti}
+
+\begin{itemize}
+    \item Oracle Java Tutorial - Exceptions: \url{https://docs.oracle.com/javase/tutorial/essential/exceptions/}
+    \item Effective Java (Joshua Bloch) - Capitolo sulle eccezioni
+    \item Java API Documentation - Package java.lang (Throwable, Exception, Error)
+\end{itemize}

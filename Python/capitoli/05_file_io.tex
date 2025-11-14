@@ -1,0 +1,149 @@
+% Modulo 05 — File e Gestione I/O
+\chapter{File e Gestione I/O}
+
+\section{Introduzione}
+Operazioni di lettura/scrittura su file e gestione risorse con context manager.
+
+Descriviamo flussi tipici di I/O: aprire file in sicurezza, trattare encoding e newline multipiattaforma, leggere dati strutturati (CSV) e scrivere output affidabile. Evidenziamo l'uso di \texttt{with} per garantire rilascio delle risorse.
+
+Queste competenze abilitano pipeline di dati, logging persistente e integrazione con altri sistemi (configurazioni, esportazioni, archiviazione).
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Aprire, leggere e scrivere file di testo e CSV.
+  \item Usare \texttt{with} per gestire risorse.
+  \item Gestire percorsi e encoding.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Context Manager]
+Usa \texttt{with open("file.txt", "r", encoding="utf-8") as f: ...}
+\end{tcolorbox}
+\begin{tcolorbox}[title=Percorsi e filesystem]
+Preferisci \texttt{pathlib} per percorsi portabili (\texttt{Path("dir") / "file.txt"}). Attenzione a separatori e encoding tra sistemi; valida l'esistenza dei file e gestisci directory in modo sicuro.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Lettura file}
+\begin{lstlisting}
+with open("dati.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.strip())
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{with open}: garantisce chiusura automatica del file, anche su eccezione.  
+- \textbf{Iterazione}: il file è iterabile per riga; `strip` rimuove newline/spazi ai bordi.  
+- \textbf{Encoding}: esplicitare `utf-8` evita problemi di piattaforma.
+\end{tcolorbox}
+
+\subsection{Scrittura file}
+\begin{lstlisting}
+with open("out.txt", "w", encoding="utf-8") as f:
+    f.write("Hello\n")
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Modalità}: `"w"` sovrascrive il file (crea se non esiste).  
+- \textbf{Buffer}: `write` aggiunge al buffer; flush/chiusura avvengono alla fine del `with`.  
+- \textbf{Newline}: usa \verb|\n| come separatore universale; LaTeX e Windows gestiscono conversioni.
+\end{tcolorbox}
+
+\subsection{CSV}
+\begin{lstlisting}
+import csv
+rows = [("nome", "eta"), ("Ada", 27)]
+with open("people.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerows(rows)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{csv.writer}: gestisce quoting/separatori corretti; evitare `join` per CSV complessi.  
+- \textbf{newline=""}: delega al modulo CSV la gestione dei terminatori di riga.  
+- \textbf{Schema}: definire header coerenti e tipi attesi aumenta robustezza.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Pipeline di elaborazione file (log, CSV, esportazioni).
+  \item Gestione configurazioni e archiviazione semplice.
+  \item Generazione di report testuali e tracciamento attività.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Conta linee e parole in un file di testo.
+  \item Copia il contenuto di un file in un altro.
+  \item Leggi un CSV e stampa solo le righe con età \(> 30\).
+  \item Scrivi un log con timestamp per ogni riga letta.
+  \item Gestisci errori di file mancante in lettura.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai praticato I/O su file e uso di context manager.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Lettura/scrittura CSV per piccoli ETL locali.
+- Gestione log e rotazione file.
+- Backup e archiviazione di configurazioni.
+- Import/export per strumenti CLI.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Modalità di apertura}: \verb|'r'|, \verb|'w'|, \verb|'a'|, \verb|'rb'|/\verb|'wb'|; scegliere testo o binario in base ai dati.
+  \item \textbf{Context manager}: usare \verb|with open(...) as f| per chiusura automatica e gestione sicura delle risorse.
+  \item \textbf{Encoding}: esplicitare \verb|encoding='utf-8'|; gestire errori con \verb|errors='replace'| quando necessario.
+  \item \textbf{Buffering e newline}: controllare buffering per prestazioni; gestire newlines con \verb|newline| su piattaforme diverse.
+  \item \textbf{Pathlib}: preferire \verb|pathlib.Path| a \verb|os.path| per operazioni leggibili e composabili.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Per chi viene da C/Java/JS: filesystem e flussi]
+\textbf{Percorsi}: usa `pathlib.Path` per comporre percorsi portabili (`Path("dir") / "file.txt"`).  
+\textbf{Testo vs binario}: `"r"/"w"` per testo con encoding, `"rb"/"wb"` per dati binari grezzi.  
+\textbf{Sicurezza}: gestisci eccezioni come `FileNotFoundError`, `PermissionError`; evita perdita di risorse usando `with`.  
+\textbf{CSV/JSON}: usa moduli standard `csv` e `json`; definisci schema e validazione separata dalla lettura/scrittura.  
+\textbf{Temporary files}: usa `tempfile` per file temporanei sicuri.
+
+Esempi commentati:
+\begin{lstlisting}
+from pathlib import Path
+import json, csv
+
+base = Path("data")
+base.mkdir(exist_ok=True)
+
+# Scrivi JSON
+payload = {"name": "Ada", "age": 27}
+with (base / "user.json").open("w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False, indent=2)
+
+# Leggi CSV
+with (base / "people.csv").open("w", newline="", encoding="utf-8") as f:
+    w = csv.writer(f)
+    w.writerow(["name", "age"]) 
+    w.writerow(["Ada", 27])
+
+with (base / "people.csv").open("r", newline="", encoding="utf-8") as f:
+    r = csv.DictReader(f)
+    rows = list(r)
+    print(rows)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{pathlib}: `Path` compone percorsi portabili e leggibili.  
+- \textbf{json.dump}: scrive JSON con \verb|ensure_ascii=False| per Unicode e \verb|indent| per leggibilità.  
+- \textbf{csv.DictReader}: crea dizionari per riga, facilitando accesso per chiave.  
+- \textbf{mkdir(exist\_ok)}: idempotente; prepara cartella dati senza errori se già esiste.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Idiomi: pathlib, context manager, validazione}]
+- \textbf{pathlib}: preferisci `Path` per comporre, controllare e creare percorsi.  
+- \textbf{context manager}: usa `with` per file, socket e risorse; riduce boilerplate e bug.  
+- \textbf{validazione}: verifica esistenza/permessi prima di elaborare; isola l'I/O dalla logica di trasformazione.
+\end{tcolorbox}
+
+\paragraph{Pratiche} Validare dimensione file, esistenza e permessi prima di elaborare. Isolare l'I/O dai trasformazioni per semplificare test e riuso.
+Consulta: \url{https://docs.python.org/3/tutorial/inputoutput.html}.

@@ -1,0 +1,90 @@
+\chapter{Sessioni}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Avvio e configurazione, Memorizzazione, Sicurezza, Sessioni e cookies, Esempi pratici, Caso di studio, Diagramma, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Teoria}
+Le sessioni mantengono stato tra richieste. Si basano tipicamente su cookie \texttt{PHPSESSID} che identifica un contesto sul server.
+
+\section{Avvio e configurazione}
+\begin{lstlisting}
+<?php
+ini_set('session.cookie_httponly', '1');
+ini_set('session.use_strict_mode', '1');
+session_start();
+\end{lstlisting}
+
+\section{Memorizzazione dati}
+\begin{lstlisting}
+<?php
+$_SESSION['user_id'] = 123;
+$_SESSION['cart'] = ['book'=>2, 'pen'=>1];
+\end{lstlisting}
+
+\section{Sicurezza delle sessioni}
+- \textbf{HttpOnly} e \textbf{Secure} per i cookie (in HTTPS).
+- Rigenerare l'ID sessione dopo login: \texttt{session\_regenerate\_id(true)}.
+- Limitare durata e percorso del cookie; validare user agent/IP se necessario.
+
+\begin{lstlisting}
+<?php
+session_start();
+// Dopo autenticazione
+session_regenerate_id(true);
+\end{lstlisting}
+
+\section{Sessioni e cookies}
+Le sessioni usano cookie per identificare il client; evitare memorizzare dati sensibili nel cookie, preferire lo storage lato server.
+
+\begin{tcolorbox}[title=Best practice]
+- Attivare \texttt{session.use\_strict\_mode} e cookie \texttt{HttpOnly}.
+- Rigenerare ID dopo cambiamenti di privilegi.
+- Invalidare sessione al logout: \texttt{session\_destroy()} e cancellare cookie.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Non avviare la sessione prima di usarla.
+- Lasciare sessioni troppo durature senza invalidazione.
+- Non proteggere il cookie di sessione (manca HttpOnly/Secure).
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Configurazione cookie
+session_set_cookie_params([
+  'lifetime' => 0,
+  'path' => '/',
+  'domain' => '',
+  'secure' => isset($_SERVER['HTTPS']),
+  'httponly' => true,
+  'samesite' => 'Strict',
+]);
+session_start();
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Login e logout: al login si rigenera l'ID, al logout si invalida la sessione e si resetta il cookie.
+
+\section{Diagramma}
+\noindent Flusso: \emph{Login POST} \(\rightarrow\) \emph{session\_regenerate\_id} \(\rightarrow\) \emph{set cookie HttpOnly+SameSite} \(\rightarrow\) \emph{accesso area riservata} \(\rightarrow\) \emph{logout}.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa una funzione di logout che cancella cart e invalida la sessione.
+  \item Aggiungi scadenza breve e verifica comportamento su browser.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Perché rigenerare l'ID dopo login?
+  \item Quali attributi cookie riducono i rischi di attacco rubando la sessione?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — Sessioni: \url{https://www.php.net/session}
+  \item OWASP Session Management: \url{https://cheatsheetseries.owasp.org/}
+\end{itemize}

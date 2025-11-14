@@ -1,0 +1,89 @@
+% main.tex — Documento principale LaTeX per "Appunti di Programmazione PHP"
+\documentclass[a4paper,11pt]{book}
+
+% Lingua e codifica
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{fontspec}
+\usepackage{csquotes}
+
+% Layout
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Hyperlink e colori
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Codice sorgente (PHP)
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstdefinestyle{php}{
+  language=PHP,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  frame=single,
+  breaklines=true
+}
+\lstset{style=php, inputencoding=utf8,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {À}{{\`A}}1 {È}{{\`E}}1 {É}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+           {–}{{-}}1 {—}{{-}}1 {‑}{{-}}1 {→}{{->}}2 {…}{{...}}3}
+
+% Box informativi
+\usepackage[skins, breakable]{tcolorbox}
+\tcbset{
+  colback=gray!5,
+  colframe=gray!60,
+  coltitle=black,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt
+}
+
+% Tipografia
+\usepackage[protrusion=true,expansion=false]{microtype}
+\setlength{\emergencystretch}{3em}
+
+% Metadati documento
+\title{Appunti di Programmazione PHP}
+\author{Prof. Luca Campion}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Inclusione dei capitoli
+\include{capitoli/00_prefazione}
+\include{capitoli/01_Form_HTML}
+\include{capitoli/02_Campi_hidden}
+\include{capitoli/03_Redirect_Header_Location}
+\include{capitoli/04_Array}
+\include{capitoli/05_Array_associativi}
+\include{capitoli/06_Funzioni}
+\include{capitoli/07_File_Testo}
+\include{capitoli/08_Sessioni}
+\include{capitoli/09_Database_MySQLi}
+
+\backmatter
+\include{capitoli/appendice_qr}
+\include{capitoli/99_bibliografia}
+
+\end{document}
+

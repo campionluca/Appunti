@@ -1,0 +1,110 @@
+% main.tex - bozza minimale per compilazione
+\documentclass[a4paper,11pt,oneside]{book}
+
+% Pacchetti essenziali
+\usepackage[italian]{babel}
+\usepackage{fontspec}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usepackage{plantuml}
+\usepackage{titling} 
+\usetikzlibrary{shapes,arrows,arrows.meta,positioning,trees,shadows,fit}
+
+% Configurazione
+\geometry{margin=2.5cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Configurazione Listings per Java
+\lstset{
+    language=Java,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black!30},
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)},
+    xleftmargin=15pt,
+    xrightmargin=15pt,
+    float=htbp,
+    aboveskip=15pt,
+    belowskip=15pt
+}
+
+% Box Colorati per Note Speciali
+\newtcolorbox{attenzione}{
+    colback=yellow!10,
+    colframe=orange!80,
+    title=Attenzione,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{nota}{
+    colback=blue!5,
+    colframe=blue!60,
+    title=Nota,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{errore}{
+    colback=red!5,
+    colframe=red!60,
+    title=Errore Comune,
+    fonttitle=\bfseries
+}
+
+\begin{document}
+\frontmatter
+\title{Appunti di Programmazione Java}
+\author{Prof. Luca Campion}
+\date{\today}
+\maketitle
+\tableofcontents
+\listoffigures
+\lstlistoflistings
+\mainmatter
+
+%\include{capitoli/00_prefazione}
+
+% Inclusione capitoli
+\include{capitoli/00_classi_oggetti_ereditarieta}
+%\include{capitoli/01_stream_buffer}
+%\include{capitoli/02_interfacce_classi_astratte}
+%\include{capitoli/03_eccezioni}
+%\include{capitoli/04_arraylist}
+%\include{capitoli/05_interfacce_grafiche}
+%\include{capitoli/06_model_view_controller}
+%\include{capitoli/07_lambda_expressions}
+%\include{capitoli/08_esercizi}
+%\include{capitoli/09_generics}
+%\include{capitoli/10_collections_framework}
+%\include{capitoli/11_multithreading}
+%\include{capitoli/12_design_patterns}
+%\include{capitoli/13_stream_api}
+
+%\backmatter
+%\include{capitoli/appendice_soluzioni}
+%\include{capitoli/99_bibliografia}
+
+\end{document}

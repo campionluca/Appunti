@@ -1,0 +1,480 @@
+\chapter{GDB Debugger}
+\label{cap:gdb_debugging}
+
+\section{Introduzione al Debugging}
+
+Il debugging è il processo di ricerca e correzione degli errori (bug) in un programma. GDB (GNU Debugger) è uno strumento potente che permette di:
+
+\begin{itemize}
+    \item Eseguire il programma passo dopo passo
+    \item Impostare breakpoint per fermare l'esecuzione in punti specifici
+    \item Ispezionare il valore delle variabili durante l'esecuzione
+    \item Visualizzare lo stack di chiamate (call stack)
+    \item Modificare il comportamento del programma al volo
+    \item Rilevare errori di memoria e segmentation fault
+\end{itemize}
+
+\begin{nota}
+Per usare GDB è necessario compilare il programma con il flag \texttt{-g} che include informazioni di debugging nel binario.
+\end{nota}
+
+\subsection{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Compilare programmi con informazioni di debug
+    \item Avviare GDB e navigare il programma
+    \item Usare breakpoint e watchpoint
+    \item Ispezionare variabili e memoria
+    \item Visualizzare e navigare lo stack
+    \item Risolvere errori comuni nei programmi C
+    \item Eseguire debugging su crash e segmentation fault
+\end{itemize}
+
+\section{Compilazione per il Debugging}
+
+\subsection{Flag -g}
+
+\begin{lstlisting}
+# Compilazione normale (senza debug)
+gcc -o programma main.c
+
+# Compilazione con debug (include simboli)
+gcc -g -o programma main.c
+
+# Compilazione con debug completo
+gcc -g -O0 -o programma main.c
+
+# Compilazione con debug e warning
+gcc -g -Wall -Wextra -o programma main.c
+\end{lstlisting}
+
+Il flag \texttt{-g} include informazioni di debugging:
+\begin{itemize}
+    \item Nomi di funzioni e variabili
+    \item Numeri di linea del sorgente
+    \item Tipi di dati
+    \item Path ai file sorgenti
+\end{itemize}
+
+\subsection{Esempio Programma con Bug}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+void stampa_caratteri(char* stringa) {
+    // Bug: accesso oltre il limite dell'array
+    for (int i = 0; i <= 10; i++) {
+        printf("Carattere %d: %c\n", i, stringa[i]);
+    }
+}
+
+int main(int argc, char** argv) {
+    char messaggio[] = "Ciao";
+
+    printf("Lunghezza: %lu\n", strlen(messaggio));
+    stampa_caratteri(messaggio);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Questo programma ha un buffer overflow. Non fare mai:
+\begin{itemize}
+    \item \texttt{for (int i = 0; i <= dimensione; i++)} - dev'essere \texttt{i < dimensione}
+    \item Accessi senza verificare i limiti dell'array
+    \item Operazioni su puntatori NULL
+\end{itemize}
+\end{attenzione}
+
+\section{Comandi Fondamentali di GDB}
+
+\subsection{Avviare GDB}
+
+\begin{lstlisting}
+# Avvia GDB con il programma
+gdb ./programma
+
+# GDB prompt (gdb)
+
+# Esci da GDB
+quit
+\end{lstlisting}
+
+\subsection{Breakpoint}
+
+\begin{lstlisting}
+# Imposta breakpoint sulla linea 10 del file main.c
+break main.c:10
+b main.c:10
+
+# Imposta breakpoint su una funzione
+break stampa_caratteri
+b stampa_caratteri
+
+# Imposta breakpoint con condizione
+break main.c:20 if i > 5
+
+# Visualizza tutti i breakpoint
+info break
+
+# Cancella un breakpoint
+delete 1
+del 1
+
+# Disabilita/abilita un breakpoint senza cancellarlo
+disable 1
+enable 1
+\end{lstlisting}
+
+\subsection{Esecuzione del Programma}
+
+\begin{lstlisting}
+# Esegue il programma fino al primo breakpoint (o fine)
+run
+
+# Esegue con argomenti da linea di comando
+run argomento1 argomento2
+
+# Continua l'esecuzione dal breakpoint corrente
+continue
+c
+
+# Esegue la prossima linea (salta dentro le funzioni)
+next
+n
+
+# Esegue la prossima linea (entra dentro le funzioni)
+step
+s
+
+# Continua finche' non torna dalla funzione attuale
+finish
+\end{lstlisting}
+
+\subsection{Ispezionare Variabili}
+
+\begin{lstlisting}
+# Stampa il valore di una variabile
+print variabile
+p variabile
+
+# Stampa con formato specifico
+p /x variabile        # Esadecimale
+p /o variabile        # Ottale
+p /t variabile        # Binario
+p /d variabile        # Decimale
+
+# Stampa un array/stringa
+p array@10            # Stampa 10 elementi
+p *puntatore
+
+# Visualizza tipo di una variabile
+whatis variabile
+
+# Stampa più variabili locali
+info locals
+
+# Stampa le variabili globali
+info globals
+\end{lstlisting}
+
+\subsection{Watchpoint}
+
+\begin{lstlisting}
+# Imposta un watchpoint su una variabile
+watch variabile
+
+# Il programma si ferma quando la variabile cambia valore
+
+# Visualizza watchpoint
+info watch
+
+# Cancella un watchpoint
+delete numero_watchpoint
+\end{lstlisting}
+
+\section{Stack e Funzioni}
+
+\subsection{Stack Trace}
+
+\begin{lstlisting}
+# Visualizza lo stack di chiamate (call stack)
+backtrace
+bt
+
+# Visualizza informazioni dettagliate dello stack
+backtrace full
+
+# Visualizza il numero di frame
+frame
+
+# Cambia frame (riga di livello nello stack)
+frame 0
+frame 1
+frame 2
+
+# Sali/scendi nello stack
+up
+down
+\end{lstlisting}
+
+\subsection{Esempio di Debugging con Stack}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+void funzione_c() {
+    printf("In funzione_c\n");
+    int errore = 1 / 0;  // Errore di divisione per zero
+}
+
+void funzione_b() {
+    printf("In funzione_b\n");
+    funzione_c();
+}
+
+void funzione_a() {
+    printf("In funzione_a\n");
+    funzione_b();
+}
+
+int main(int argc, char** argv) {
+    printf("In main\n");
+    funzione_a();
+    return 0;
+}
+\end{lstlisting}
+
+Nel debugger, dopo il crash, digitare \texttt{backtrace} mostra la sequenza di chiamate.
+
+\section{Comandi Avanzati}
+
+\subsection{Memoria e Puntatori}
+
+\begin{lstlisting}
+# Esamina memoria in un indirizzo
+x 0x7fff5fbff8c0
+
+# Formati differenti
+x /x indirizzo      # Esadecimale
+x /d indirizzo      # Intero con segno
+x /s indirizzo      # Stringa
+x /i indirizzo      # Istruzione assembler
+
+# Mostra indirizzo di una variabile
+p &variabile
+
+# Dereferenzia un puntatore
+p *puntatore
+
+# Numero di elementi da mostrare
+x /10x indirizzo    # Mostra 10 parole in hex
+\end{lstlisting}
+
+\subsection{Modificare Valori}
+
+\begin{lstlisting}
+# Cambia il valore di una variabile durante l'esecuzione
+set variable variabile = nuovo_valore
+set var x = 42
+
+# Cambia il valore di un registro
+set $rax = 10
+
+# Torna a un precedente stato? NO, ma puoi modificare
+\end{lstlisting}
+
+\subsection{Script e Automazione}
+
+\begin{lstlisting}
+# File: debug_script.gdb
+
+break main.c:20
+run
+print x
+print y
+print z
+continue
+quit
+
+# Utilizzo:
+# gdb programma -x debug_script.gdb
+\end{lstlisting}
+
+\section{Esempi Pratici di Debugging}
+
+\subsection{Debug di Segmentation Fault}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(int argc, char** argv) {
+    char* buffer = NULL;
+
+    // BUG: accesso a puntatore NULL
+    strcpy(buffer, "Ciao");
+
+    printf("%s\n", buffer);
+
+    return 0;
+}
+\end{lstlisting}
+
+Comandi GDB:
+\begin{lstlisting}
+gdb ./programma
+(gdb) run
+# Segmentation fault (core dumped)
+(gdb) backtrace
+(gdb) frame 0
+(gdb) print buffer
+# $1 = 0x0 (NULL)
+(gdb) quit
+\end{lstlisting}
+
+\subsection{Debug di Buffer Overflow}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char** argv) {
+    char buffer[10];
+
+    // BUG: scrive oltre i 10 byte
+    strcpy(buffer, "Questo è un messaggio molto lungo!");
+
+    printf("%s\n", buffer);
+
+    return 0;
+}
+\end{lstlisting}
+
+Comandi GDB:
+\begin{lstlisting}
+gdb ./programma
+(gdb) break main
+(gdb) run
+(gdb) step
+(gdb) print buffer
+(gdb) x /s buffer
+# Mostra il contenuto del buffer
+\end{lstlisting}
+
+\subsection{Debug di Loop Infinito}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int i = 0;
+
+    // BUG: loop infinito (i non cambia mai)
+    while (i < 10) {
+        printf("i = %d\n", i);
+        // Manca i++
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+Comandi GDB:
+\begin{lstlisting}
+gdb ./programma
+(gdb) run
+# Dopo un po', premi Ctrl+C per fermare il programma
+(gdb) break (numero linea con printf)
+(gdb) continue
+(gdb) print i
+# $1 = 0 (è sempre 0!)
+(gdb) list
+# Mostra il sorgente intorno alla posizione corrente
+\end{lstlisting}
+
+\begin{attenzione}
+Per fermare un programma in esecuzione in GDB, premi \texttt{Ctrl+C}. Questo non esce da GDB, ma ferma il programma, permettendoti di ispezionare lo stato corrente.
+\end{attenzione}
+
+\section{Comandi Utili Riassunti}
+
+\subsection{Tabella Veloce}
+
+\begin{lstlisting}
+run / r              Esegui il programma
+break / b            Imposta breakpoint
+continue / c         Continua esecuzione
+next / n             Linea successiva
+step / s             Entra in funzione
+finish / fin         Esci dalla funzione
+backtrace / bt       Mostra call stack
+print / p            Stampa variabile
+info break           Lista breakpoint
+info locals          Variabili locali
+help comando         Aiuto su comando
+quit / q             Esci da GDB
+list / l             Mostra sorgente
+watch                Monitora variabile
+delete / del         Cancella breakpoint
+disable / enable     Disabilita/abilita
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Compila un programma semplice con \texttt{gcc -g} e avvialo in GDB. Usa il comando \texttt{run}, poi \texttt{quit}.
+
+    \item Scrivi un programma con un bug di accesso ad array fuori bounds. Debugga con GDB usando \texttt{break} e \texttt{print}.
+
+    \item Crea un programma con una funzione che modifica una variabile. Usa \texttt{watch} per monitorare quando cambia.
+
+    \item Scrivi un programma con un loop che stampa variabili. Usa \texttt{next} per eseguire linea per linea.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Implementa un programma con 3 funzioni annidate. Debugga con \texttt{step} e \texttt{backtrace} per navigare le funzioni.
+
+    \item Crea un programma con un buffer overflow deliberato. Usa GDB per ispezionare la memoria corrotta.
+
+    \item Scrivi un programma che gestisce puntatori. Debugga con \texttt{print \&variabile} e \texttt{x /x indirizzo}.
+
+    \item Implementa un programma con un segmentation fault. Uso GDB per trovare la linea del crash e il motivo.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Crea un programma con un memory leak (malloc senza free). Usa valgrind con GDB per individuare il leak.
+
+    \item Implementa un debugger interattivo che permette di caricare un programma, impostare breakpoint, e ispezionare lo stato.
+
+    \item Scrivi uno script GDB (\texttt{.gdb}) che automatizza il debugging di un programma complesso con più breakpoint condizionali.
+
+    \item Crea un programma con race condition (multi-threading). Usa GDB thread debugging (\texttt{info threads}, \texttt{thread 1}).
+\end{enumerate}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item GDB è il debugger ufficiale di GNU/Linux per programmi C/C++
+    \item Compila con \texttt{gcc -g} per includere informazioni di debug
+    \item \texttt{break} imposta breakpoint; \texttt{run} esegue; \texttt{continue} riprende
+    \item \texttt{next} salta funzioni; \texttt{step} entra dentro; \texttt{finish} esce
+    \item \texttt{print} mostra variabili; \texttt{watch} monitora cambamenti
+    \item \texttt{backtrace} mostra lo stack di chiamate
+    \item \texttt{x} esamina memoria a indirizzi specifici
+    \item I breakpoint condizionali (\texttt{if}) sono molto utili
+    \item GDB permette di modificare variabili durante l'esecuzione con \texttt{set var}
+    \item Script GDB (\texttt{.gdb}) automatizzano il debugging
+    \item Combinato con valgrind per memory leak detection
+\end{itemize}

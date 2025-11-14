@@ -1,0 +1,95 @@
+\chapter{Sessioni}\label{cap:sessioni_ex}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Gestione sessione, Sicurezza, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Avviare, configurare e terminare sessioni in modo sicuro.
+  \item Applicare rigenerazione ID e timeout inattività.
+  \item Usare i cookie di sessione con flag appropriati (vedi \ref{cap:cookie}).
+\end{itemize}
+
+\section{Gestione della sessione}
+Esempio di avvio sessione, rigenerazione ID e conteggio visite.
+
+\lstinputlisting[language=PHP, caption={Session demo}, label={lst:sessiondemo}]{esempi/session_demo.php}
+
+\subsection{Analisi tecnica della gestione sessioni sicura}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione completa di sistema di gestione sessioni con protezioni contro session fixation, session hijacking, timeout automatico e configurazione sicura dei cookie di sessione seguendo le best practices OWASP.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{session\_start([...])}: Configurazione sicura cookie sessione con opzioni
+\item \texttt{cookie\_httponly = true}: Protezione XSS (no accesso JavaScript)
+\item \texttt{cookie\_secure = false/true}: Enforcement HTTPS per ambienti production
+\item \texttt{cookie\_samesite = 'Lax'}: Limitazione invii cross-site dei cookie
+\item \texttt{session\_regenerate\_id(true)}: Rigenerazione ID sessione per fixation protection
+\item \texttt{\$_SESSION['initialized']}: Flag per controllo prima inizializzazione
+\item Timeout inattività: Distruzione automatica sessioni inactive (20 minuti)
+\item \texttt{session\_unset() + session\_destroy()}: Pulizia completa sessione scaduta
+\item Contatore visite: Esempio pratico utilizzo variabili sessione
+\end{itemize}
+
+\section{Caso di studio: login/logout}
+Flusso di autenticazione con sessione inizializzata al login, rigenerazione ID post-auth e corretta chiusura al logout, con PRG per i redirect (vedi \ref{cap:redirect_header_location}).
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa un timeout di inattività personalizzato e testane il comportamento.
+  \item Aggiungi un controllo di \verb|user_agent| e \verb|ip| in sessione per rafforzare la sicurezza.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Perché è importante rigenerare l'ID sessione dopo il login?
+  \item Quali dati è preferibile non memorizzare in sessione?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item OWASP — Session Management
+  \item PHP Manual — Sessions: \url{https://www.php.net/session}
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Sistemi di autenticazione utente e login
+\item Carrelli acquisto e-commerce
+\item Preferenze utente persistenti tra pagine
+\item Meccanismi di autorizzazione e ruoli
+\item Tracciamento attività utente per analytics
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item Sessioni database-based per scalabilità e persistenza
+\item Redis/Memcached session storage per performance
+\item JWT (JSON Web Tokens) per applicazioni stateless
+\item OAuth/OpenID Connect per autenticazione federata
+\item Sessioni cifrate per dati sensibili
+\item Custom session handlers per requisiti specifici
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Sempre rigenerare ID sessione dopo login
+\item \textbf{Insidia}: Session fixation se non si rigenera ID dopo privilegi elevation
+\item \textbf{Sicurezza}: Validare e sanitizzare tutti i dati in \texttt{\$_SESSION}
+\item \textbf{Performance}: Usare sessioni database per load balancing
+\item \textbf{Storage}: Non memorizzare dati sensibili in sessione (password, CC)
+\item \textbf{Timeout}: Configurare timeout appropriati per tipo applicazione
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{Session Management}: OWASP guidelines per gestione sessioni sicure
+\item \textbf{Session Fixation}: Attacco e prevenzione attraverso ID rigeneration
+\item \textbf{Session Hijacking}: Protezione con HTTPS e secure cookies
+\item \textbf{Stateless vs Stateful}: Architetture applicative e gestione stato
+\item \textbf{HTTP Cookies}: Meccanismo sottostante alle sessioni PHP
+\item \textbf{SameSite Cookies}: Limitazioni invii cross-site dei cookie
+\end{itemize}
+\end{itemize}

@@ -1,0 +1,25 @@
+# Fdb version 4
+["pdflatex"] 1763101439.94279 "main.tex" "main.pdf" "main" 1763101440.11746 2
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/map/fontname/texfonts.map" 1741388039 3524 cb3e574dea2d1052e39280babc910dc8 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/fonts/tfm/public/cm/cmr10.tfm" 1741388039 1296 45809c5a464d5f32c8f98ba97c1bb47f ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/generic/babel-italian/italian.ldf" 1741388039 11361 8658bbf8ead5c43fd2f199c4b2910145 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/generic/babel/babel.sty" 1741388039 143388 b008e1666520ff43d0878397f2926242 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/generic/babel/locale/it/babel-it.ini" 1741388039 4255 d2c36ede3f04f7968d64917327cbb37a ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/generic/babel/locale/it/babel-italian.tex" 1741388039 336 03ec4eb0d03eb340ff7cfbc6acac5ec5 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/generic/babel/txtbabel.def" 1741388039 6945 a248d839b1f26b388440c973966647b5 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/base/bk11.clo" 1741388039 8303 39aa0e3e266379e4557d5fa2b9b916a5 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/base/book.cls" 1741388039 23268 24ec0168da5de0ccc9a2593a79692068 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/etoolbox/etoolbox.sty" 1741388039 46850 d87daedc2abdc653769a6f1067849fe0 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/fontspec/fontspec.sty" 1741388039 3755 4872b99d810c024f9c09bb1c62ffee3b ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def" 1741388039 29785 9f93ab201fe5dd053afcc6c1bcf7d266 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3kernel/expl3.sty" 1741388039 6565 f51d809db6193fae7b06c1bc26ca8f75 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/tex/latex/l3packages/xparse/xparse.sty" 1741388039 9783 ab4bee47700c04aadedb8da27591b0ab ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-dist/web2c/texmf.cnf" 1741388039 42151 79f67285bdd95beca4d137b380b4b9e5 ""
+  "/opt/homebrew/Cellar/texlive/20250308_1/share/texmf-var/web2c/pdftex/pdflatex.fmt" 1741388039 3346141 1288109d02d1c772df65535881471649 ""
+  "main.aux" 1762719904.232 405 e64154b4f49eef82c0d78f61d9004cef "pdflatex"
+  "main.tex" 1762718375.329 2650 b1437d179176a04b6a5ccc15d5725604 ""
+  (generated)
+  "main.aux"
+  "main.log"
+  "main.pdf"
+  (rewritten before read)

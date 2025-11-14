@@ -1,0 +1,556 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Instructions Configuration v4.0",
+  "description": "Configuration file for AI agents processing educational courses (C, HTMLCSS, Java, PHP, Python) organized in LaTeX + PDF + Markdown documentation",
+  "version": "4.0",
+  "last_updated": "2025-11-14",
+  "metadata": {
+    "organization": "Istituto Tecnico Antonio Scarpa ITS",
+    "courses": ["C (Terza)", "HTMLCSS (Quarta)", "Java (Quarta)", "PHP", "Python (Quinta)"],
+    "documentation_standard": "MASTER-TODO.md v3.0 (Sincronizzazione 14 Nov 2025)"
+  },
+  "type": "object",
+  "properties": {
+    "folder_structure": {
+      "type": "object",
+      "description": "Configuration for folder structure detection and management across all courses",
+      "properties": {
+        "supported_formats": {
+          "type": "array",
+          "description": "File formats detected in the folder structure",
+          "items": {
+            "type": "string",
+            "enum": ["latex", "pdf", "markdown", "scripts", "logs", "images"]
+          },
+          "default": ["latex", "pdf", "markdown", "scripts", "logs", "images"]
+        },
+        "directory_pattern": {
+          "type": "object",
+          "description": "Expected directory structure patterns (synced from MASTER-TODO.md)",
+          "properties": {
+            "main_files": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Critical documentation files (must be kept in sync)",
+              "default": ["main.tex", "main.pdf", "README.md", "TODO.md", "PIANO_SVILUPPO.md", "MASTER-TODO.md"]
+            },
+            "subdirectories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": ["capitoli", "immagini", "esempi", "esercizi", "logs", "export", "quick_reference"]
+            }
+          }
+        },
+        "sync_critical_files": {
+          "type": "object",
+          "description": "Files that must remain synchronized across all agents",
+          "properties": {
+            "MASTER-TODO.md": {
+              "type": "object",
+              "properties": {
+                "sync_required": { "type": "boolean", "default": true },
+                "update_frequency": { "type": "string", "enum": ["weekly", "daily", "on_change"], "default": "weekly" },
+                "sources": { "type": "array", "default": ["README.md", "TODO.md", "PIANO_SVILUPPO.md"] },
+                "version": { "type": "string", "default": "3.0" }
+              }
+            },
+            "course_todo_files": {
+              "type": "object",
+              "properties": {
+                "sync_required": { "type": "boolean", "default": true },
+                "files": { "type": "array", "default": ["C/TODO.md", "HTMLCSS/TODO.md", "Java/TODO.md", "PHP/TODO.md", "Python/TODO.md"] },
+                "consistency_check": { "type": "boolean", "default": true }
+              }
+            }
+          }
+        },
+        "auto_detection": {
+          "type": "object",
+          "description": "Automatic detection settings for changes and updates",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "scan_interval": {
+              "type": "integer",
+              "minimum": 60,
+              "maximum": 86400,
+              "default": 3600,
+              "description": "Scan interval in seconds (default: 1 hour)"
+            },
+            "file_patterns": {
+              "type": "object",
+              "properties": {
+                "latex": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "default": ["*.tex", "main.tex"]
+                },
+                "pdf": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "default": ["*.pdf", "main.pdf"]
+                },
+                "markdown": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "default": ["*.md", "README.md", "TODO.md", "PIANO_SVILUPPO.md", "MASTER-TODO.md"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadata_management": {
+      "type": "object",
+      "description": "Configuration for metadata extraction and management (aligned with MASTER-TODO.md v3.0)",
+      "properties": {
+        "extraction_sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["readme", "todo", "development_plan", "latex_comments", "file_structure", "master_todo"]
+          },
+          "default": ["readme", "todo", "development_plan", "master_todo"]
+        },
+        "metadata_fields": {
+          "type": "object",
+          "properties": {
+            "book_info": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["title", "author", "last_modified", "status", "pages", "exercises", "examples", "chapters_count"]
+            },
+            "technical_info": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["compilation_requirements", "dependencies", "build_instructions", "test_procedures", "pdf_status"]
+            },
+            "project_info": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["version", "license", "completion_date", "priority", "deadline", "priority_level"]
+            },
+            "master_todo_fields": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": ["course_name", "state", "pdf_status", "priority", "deadline", "assignee"]
+            }
+          }
+        },
+        "search_capabilities": {
+          "type": "object",
+          "properties": {
+            "full_text_search": { "type": "boolean", "default": true },
+            "metadata_search": { "type": "boolean", "default": true },
+            "format_search": { "type": "boolean", "default": true },
+            "master_todo_search": { "type": "boolean", "default": true, "description": "Search in MASTER-TODO.md for centralized task tracking" },
+            "advanced_filters": {
+              "type": "object",
+              "properties": {
+                "by_status": { "type": "boolean", "default": true },
+                "by_date": { "type": "boolean", "default": true },
+                "by_format": { "type": "boolean", "default": true },
+                "by_chapter_count": { "type": "boolean", "default": true },
+                "by_priority": { "type": "boolean", "default": true },
+                "by_deadline": { "type": "boolean", "default": true }
+              }
+            }
+          }
+        }
+      }
+    },
+    "course_status": {
+      "type": "object",
+      "description": "Real-time course status (source: MASTER-TODO.md v3.0, updated 2025-11-14)",
+      "properties": {
+        "C": {
+          "type": "object",
+          "properties": {
+            "year": { "type": "string", "default": "Terza (3°)" },
+            "capitoli": { "type": "integer", "default": 11 },
+            "pdf_status": { "type": "string", "enum": ["compiled", "missing", "error"], "default": "compiled" },
+            "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"], "default": "completed" },
+            "priority": { "type": "string", "enum": ["alta", "media", "bassa"], "default": "bassa" },
+            "deadline": { "type": "string", "default": "— (completato)" }
+          }
+        },
+        "HTMLCSS": {
+          "type": "object",
+          "properties": {
+            "year": { "type": "string", "default": "Quarta (4°)" },
+            "capitoli": { "type": "integer", "default": 12 },
+            "pdf_status": { "type": "string", "enum": ["compiled", "missing", "error"], "default": "compiled" },
+            "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"], "default": "completed" },
+            "priority": { "type": "string", "enum": ["alta", "media", "bassa"], "default": "bassa" },
+            "deadline": { "type": "string", "default": "— (completato)" }
+          }
+        },
+        "Java": {
+          "type": "object",
+          "properties": {
+            "year": { "type": "string", "default": "Quarta (4°)" },
+            "capitoli": { "type": "integer", "default": 10 },
+            "pdf_status": { "type": "string", "enum": ["compiled", "missing", "error"], "default": "compiled" },
+            "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"], "default": "in_progress" },
+            "priority": { "type": "string", "enum": ["alta", "media", "bassa"], "default": "media" },
+            "deadline": { "type": "string", "default": "2025-11-30" },
+            "blockers": { "type": "array", "default": ["JAVA-BUG-01: Overfull/Underfull \\hbox in main.log"] }
+          }
+        },
+        "PHP": {
+          "type": "object",
+          "properties": {
+            "year": { "type": "string", "default": "Quarta (4°) — Web Development" },
+            "capitoli": { "type": "integer", "default": 7 },
+            "pdf_status": { "type": "string", "enum": ["compiled", "missing", "error"], "default": "compiled" },
+            "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"], "default": "in_progress" },
+            "priority": { "type": "string", "enum": ["alta", "media", "bassa"], "default": "media" },
+            "deadline": { "type": "string", "default": "2025-11-28" },
+            "blockers": { "type": "array", "default": ["PHP-DOC-01: Sincronizzare PIANO_SVILUPPO.md"] }
+          }
+        },
+        "Python": {
+          "type": "object",
+          "properties": {
+            "year": { "type": "string", "default": "Quinta (5°)" },
+            "capitoli": { "type": "integer", "default": 18 },
+            "pdf_status": { "type": "string", "enum": ["compiled", "missing", "error"], "default": "missing" },
+            "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"], "default": "blocked" },
+            "priority": { "type": "string", "enum": ["alta", "media", "bassa"], "default": "alta" },
+            "deadline": { "type": "string", "default": "2025-11-20" },
+            "blockers": { "type": "array", "default": ["PY-BLOCKER-01: PDF assente — CRITICO", "main.pdf non compilato"] }
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "array",
+      "description": "List of agent configurations for different courses (aligned with MASTER-TODO.md v3.0)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent_name": {
+            "type": "string",
+            "description": "Unique identifier for the agent (format: {COURSE}-{TYPE})"
+          },
+          "target_directory": {
+            "type": "string",
+            "description": "Target directory this agent should process",
+            "enum": ["C", "HTMLCSS", "Java", "PHP", "Python"]
+          },
+          "course_info": {
+            "type": "object",
+            "description": "Course metadata from MASTER-TODO.md",
+            "properties": {
+              "year": { "type": "string" },
+              "status": { "type": "string", "enum": ["completed", "in_progress", "blocked"] },
+              "priority": { "type": "string", "enum": ["alta", "media", "bassa"] },
+              "deadline": { "type": "string" }
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief description of the agent's purpose"
+          },
+          "processing_type": {
+            "type": "string",
+            "enum": ["code_analysis", "documentation", "error_checking", "content_generation", "compilation", "metadata_extraction", "master_todo_sync"],
+            "description": "Type of processing this agent specializes in"
+          },
+          "supported_formats": {
+            "type": "array",
+            "description": "File formats this agent can process",
+            "items": {
+              "type": "string",
+              "enum": ["tex", "pdf", "md", "ps1", "sh", "log", "fls"]
+            }
+          },
+          "work_parameters": {
+            "type": "object",
+            "description": "Specific parameters for the agent's work",
+            "properties": {
+              "code_analysis": {
+                "type": "object",
+                "properties": {
+                  "depth": {
+                    "type": "string",
+                    "enum": ["basic", "intermediate", "advanced"],
+                    "default": "intermediate"
+                  },
+                  "include_comments": { "type": "boolean", "default": true },
+                  "check_best_practices": { "type": "boolean", "default": true }
+                }
+              },
+              "documentation": {
+                "type": "object",
+                "properties": {
+                  "language": { "type": "string", "default": "italian" },
+                  "detail_level": {
+                    "type": "string",
+                    "enum": ["concise", "standard", "comprehensive"],
+                    "default": "standard"
+                  },
+                  "include_examples": { "type": "boolean", "default": true }
+                }
+              },
+              "error_checking": {
+                "type": "object",
+                "properties": {
+                  "syntax_errors": { "type": "boolean", "default": true },
+                  "logical_errors": { "type": "boolean", "default": true },
+                  "security_issues": { "type": "boolean", "default": true },
+                  "compilation_errors": { "type": "boolean", "default": true },
+                  "link_validation": { "type": "boolean", "default": true }
+                }
+              },
+              "compilation": {
+                "type": "object",
+                "properties": {
+                  "build_tool": {
+                    "type": "string",
+                    "enum": ["xelatex", "pdflatex", "latexmk", "custom_script"],
+                    "default": "latexmk"
+                  },
+                  "iterations": { "type": "integer", "minimum": 1, "maximum": 5, "default": 3 },
+                  "cleanup_intermediate": { "type": "boolean", "default": false }
+                }
+              },
+              "metadata_extraction": {
+                "type": "object",
+                "properties": {
+                  "sources": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "default": ["readme", "todo", "development_plan", "master_todo"]
+                  },
+                  "auto_update": { "type": "boolean", "default": true }
+                }
+              },
+              "master_todo_sync": {
+                "type": "object",
+                "description": "Synchronization with MASTER-TODO.md",
+                "properties": {
+                  "enabled": { "type": "boolean", "default": true },
+                  "extract_blockers": { "type": "boolean", "default": true },
+                  "extract_deadlines": { "type": "boolean", "default": true },
+                  "sync_priority": { "type": "boolean", "default": true },
+                  "extract_assignees": { "type": "boolean", "default": true },
+                  "sync_interval_hours": { "type": "integer", "default": 12 }
+                }
+              },
+              "output_format": {
+                "type": "object",
+                "properties": {
+                  "primary": {
+                    "type": "string",
+                    "enum": ["markdown", "latex", "html", "plain_text", "json"],
+                    "default": "markdown",
+                    "description": "Primary output format (prefer markdown per consistency)"
+                  },
+                  "backup": {
+                    "type": "string",
+                    "enum": ["markdown", "latex", "html", "plain_text", "json"],
+                    "default": "json"
+                  }
+                }
+              },
+              "temporal_constraints": {
+                "type": "object",
+                "properties": {
+                  "max_processing_time": { "type": "integer", "minimum": 1, "maximum": 3600, "default": 300 },
+                  "timeout_action": {
+                    "type": "string",
+                    "enum": ["save_progress", "abort", "notify"],
+                    "default": "save_progress"
+                  }
+                }
+              }
+            }
+          },
+          "file_relationships": {
+            "type": "object",
+            "description": "Configuration for handling file relationships",
+            "properties": {
+              "detect_dependencies": { "type": "boolean", "default": true },
+              "main_tex_includes": { "type": "boolean", "default": true },
+              "build_script_references": { "type": "boolean", "default": true },
+              "log_file_analysis": { "type": "boolean", "default": true },
+              "master_todo_references": { "type": "boolean", "default": true }
+            }
+          },
+          "customization_instructions": {
+            "type": "object",
+            "description": "Instructions for customizing this agent's behavior",
+            "properties": {
+              "parameter_modification": {
+                "type": "string",
+                "description": "How to modify agent parameters"
+              },
+              "rule_addition": {
+                "type": "string",
+                "description": "How to add new processing rules"
+              },
+              "formatting_preferences": {
+                "type": "string",
+                "description": "Formatting preferences and styles"
+              },
+              "verbosity_level": {
+                "type": "string",
+                "enum": ["minimal", "normal", "verbose", "debug"],
+                "default": "normal"
+              }
+            }
+          }
+        },
+        "required": ["agent_name", "processing_type", "target_directory"]
+      }
+    }
+  },
+  "required": ["folder_structure", "metadata_management", "agents"],
+  "definitions": {
+    "book_types": {
+      "type": "string",
+      "enum": ["C", "HTMLCSS", "Java", "PHP", "Python"]
+    },
+    "priority_levels": {
+      "type": "string",
+      "enum": ["alta", "media", "bassa"],
+      "description": "Priority levels aligned with MASTER-TODO.md v3.0"
+    }
+  },
+  "error_handling": {
+    "file_not_found": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": ["skip", "create", "notify", "abort"],
+          "default": "notify"
+        },
+        "log_level": {
+          "type": "string",
+          "enum": ["warning", "error", "info"],
+          "default": "warning"
+        }
+      }
+    },
+    "compilation_failure": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 1, "maximum": 5, "default": 3 },
+        "fallback_action": {
+          "type": "string",
+          "enum": ["use_previous", "generate_summary", "abort"],
+          "default": "generate_summary"
+        }
+      }
+    },
+    "metadata_inconsistency": {
+      "type": "object",
+      "properties": {
+        "resolution_strategy": {
+          "type": "string",
+          "enum": ["use_most_recent", "prompt_user", "skip_field"],
+          "default": "use_most_recent"
+        }
+      }
+    },
+    "master_todo_sync_failure": {
+      "type": "object",
+      "description": "Error handling for MASTER-TODO.md synchronization failures",
+      "properties": {
+        "action": { "type": "string", "enum": ["skip", "retry", "notify", "abort"], "default": "retry" },
+        "max_retries": { "type": "integer", "default": 3 },
+        "notification_level": { "type": "string", "enum": ["info", "warning", "error"], "default": "warning" }
+      }
+    }
+  },
+  "auto_update_mechanism": {
+    "enabled": true,
+    "scan_schedule": {
+      "interval": 3600,
+      "unit": "seconds"
+    },
+    "detection_methods": {
+      "file_system_watcher": true,
+      "periodic_scan": true,
+      "metadata_change_detection": true,
+      "master_todo_change_detection": true
+    },
+    "notification_settings": {
+      "on_new_book": true,
+      "on_metadata_update": true,
+      "on_structure_change": true,
+      "on_master_todo_change": true
+    }
+  },
+  "master_todo_integration": {
+    "type": "object",
+    "description": "Integration with MASTER-TODO.md v3.0 for centralized task tracking",
+    "properties": {
+      "enabled": { "type": "boolean", "default": true },
+      "file_path": { "type": "string", "default": "MASTER-TODO.md" },
+      "sync_interval_hours": { "type": "integer", "default": 12 },
+      "auto_sync_on_agent_start": { "type": "boolean", "default": true },
+      "extract_fields": {
+        "type": "array",
+        "default": ["course_name", "status", "pdf_status", "priority", "deadline", "blockers", "assignee"]
+      },
+      "status_mapping": {
+        "type": "object",
+        "description": "Map MASTER-TODO.md status to agent priority",
+        "properties": {
+          "blocked": { "type": "string", "default": "halt" },
+          "in_progress": { "type": "string", "default": "continue" },
+          "todo": { "type": "string", "default": "queue" },
+          "completed": { "type": "string", "default": "monitor" }
+        }
+      },
+      "priority_action_mapping": {
+        "type": "object",
+        "properties": {
+          "alta": { "type": "array", "default": ["immediate_processing", "notify_on_blockers", "increase_priority"] },
+          "media": { "type": "array", "default": ["schedule_processing", "track_progress"] },
+          "bassa": { "type": "array", "default": ["background_processing", "opportunistic"] }
+        }
+      }
+    }
+  },
+  "customization_guide": {
+    "how_to_modify": {
+      "json_structure": "The configuration uses JSON schema draft-07 for validation. Aligned with MASTER-TODO.md v3.0 (2025-11-14).",
+      "required_fields": ["agent_name", "processing_type", "target_directory"],
+      "optional_fields": ["description", "work_parameters", "customization_instructions", "supported_formats", "file_relationships"],
+      "validation": "The configuration is validated against the schema. Use JSON validators to check syntax.",
+      "master_todo_alignment": "Always ensure agent parameters align with MASTER-TODO.md status, priority, and deadlines",
+      "examples": {
+        "add_new_agent": "To add a new agent, copy an existing agent object and modify the values. Ensure agent_name is unique and target_directory exists.",
+        "modify_parameters": "Change values in work_parameters object to adjust agent behavior. Most parameters have sensible defaults.",
+        "change_output_format": "Modify output_format.primary and output_format.backup to change the output format preferences.",
+        "sync_with_master_todo": "Set master_todo_sync.enabled=true and configure extract_blockers, extract_deadlines, sync_priority"
+      }
+    },
+    "testing_procedures": {
+      "validation_check": "Validate the JSON against the schema using online validators or npm package 'ajv'.",
+      "functionality_test": "Test agent functionality with sample book content to ensure parameters work as expected.",
+      "master_todo_sync_test": "Verify agents correctly extract and apply MASTER-TODO.md status and priorities",
+      "performance_test": "Monitor processing time and adjust max_processing_time if needed.",
+      "compatibility_test": "Verify compatibility with existing file structure and metadata."
+    },
+    "best_practices": {
+      "backup_config": "Always keep a backup of the original configuration before making changes.",
+      "incremental_changes": "Make small incremental changes and test after each modification.",
+      "document_changes": "Document any changes made to the configuration for future reference.",
+      "master_todo_sync": "Keep agent_instructions.json synchronized with MASTER-TODO.md for coherent task tracking",
+      "status_synchronization": "Synchronize agent status with project completion states from TODO files.",
+      "weekly_review": "Review course_status object weekly against MASTER-TODO.md and update deadlines/priorities"
+    }
+  }
+}

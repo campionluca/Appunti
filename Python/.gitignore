@@ -1,0 +1,16 @@
+# Artifacts LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.pdf
+capitoli/*.aux
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

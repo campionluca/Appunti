@@ -1,0 +1,195 @@
+% Modulo 00 — Fondamenti Python
+\chapter{Fondamenti Python}
+
+\section{Introduzione}
+Questo modulo introduce i concetti fondamentali del linguaggio Python: esecuzione di script, tipi di dato di base, variabili, input/output, e buone pratiche di stile secondo PEP 8.
+
+Inquadreremo quando usare l'interprete rispetto agli script, come scegliere i tipi corretti per rappresentare dati reali e come applicare un primo livello di ordine e leggibilità al codice. La descrizione è pensata per chi parte da zero o proviene da un altro linguaggio, con esempi brevi e ripetibili.
+
+Al termine sarai in grado di impostare un ambiente funzionante, comprendere la sintassi di base e produrre piccoli programmi che leggono input, elaborano dati e presentano un output chiaro.
+
+\section{Obiettivi di Apprendimento}
+Al termine del modulo lo studente sarà in grado di:
+\begin{itemize}
+  \item Eseguire script Python da riga di comando e in ambienti interattivi.
+  \item Dichiarare e utilizzare variabili e tipi di dato nativi (int, float, str, bool, list).
+  \item Gestire input da tastiera e output formattato.
+  \item Applicare convenzioni di stile PEP 8 di base.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Setup Ambiente]
+Installa Python (3.10+) e verifica con \texttt{python --version}. Usa un IDE (VS Code, PyCharm) o un editor leggero. Avvia l'interprete con \texttt{python} o esegui file con \texttt{python main.py}.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Stile e Convenzioni (PEP 8)]
+Nomi di variabili in minuscolo con underscore (\emph{snake\_case}), righe massimo 79 caratteri, indentazione con 4 spazi, docstring per funzioni e moduli.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Concetti chiave]
+Tipi dinamici e conversioni (\texttt{int()}, \texttt{float()}, \texttt{str()}), validazione dell'input e gestione dei casi limite (vuoti, valori fuori range). Comprendere gli effetti collaterali (stampa, scrittura su file) rispetto a funzioni pure facilita test e manutenzione.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+
+\subsection{Hello, World}
+\begin{lstlisting}
+print("Hello, World!")
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Stampa}: `print` scrive su stdout e aggiunge newline finale per default.  
+- \textbf{Stringhe}: le virgolette doppie delimitano un `str` Unicode; immutabile.  
+- \textbf{Side-effect}: questo è I/O; separare la logica dai side‑effect facilita i test.
+\end{tcolorbox}
+
+\subsection{Variabili e Tipi}
+\begin{lstlisting}
+nome = "Ada"
+anni = 27
+altezza = 1.68
+studente = True
+
+print(type(nome), type(anni), type(altezza), type(studente))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Binding}: variabili assegnano riferimenti a oggetti; il tipo è dell'oggetto.
+- \textbf{Tipi}: `str`, `int`, `float`, `bool` sono built‑in fondamentali.  
+- \textbf{Ispezione}: `type(obj)` mostra la classe dell'oggetto; utile per debug rapido.
+\end{tcolorbox}
+
+\subsection{Input e Output Formattato}
+\begin{lstlisting}
+eta = int(input("Quanti anni hai? "))
+print(f"Tra 5 anni avrai {eta + 5} anni.")
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Input}: `input()` legge una riga da stdin e ritorna `str`.  
+- \textbf{Conversione}: `int(...)` traduce `str` a intero; solleva `ValueError` se non numerico.  
+- \textbf{f-string}: interpolazione e formato inline (`{...}`); qui espressione aritmetica.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Script CLI che raccolgono input e producono report.
+  \item Piccoli tool per conversioni (temperature, valute, unità).
+  \item Esempi didattici per introdurre sintassi e interazione.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Scrivi uno script che stampa il tuo nome e la tua età.
+  \item Dato un raggio \texttt{r}, calcola l'area del cerchio (\(\pi r^2\)).
+  \item Chiedi all'utente due numeri e stampa somma, differenza, prodotto, divisione.
+  \item Converte una temperatura da Celsius a Fahrenheit.
+  \item Crea una lista di tre stringhe e stampale una per riga.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai visto la sintassi di base e come eseguire semplici programmi in Python, con variabili, tipi di dato e input/output.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Script rapidi per automazione quotidiana.
+- Pulizia e normalizzazione di dati semplici.
+- Prototipi di funzioni e micro-tool didattici.
+- Problem solving e esercizi algoritmici.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+Questo modulo introduce le basi del linguaggio e del runtime Python. Alcuni punti essenziali:
+\begin{itemize}
+  \item \textbf{Tipi di base e immutabilità}: interi e stringhe sono immutabili; liste e dizionari sono mutabili. Comprendere le implicazioni per aliasing e copie.
+  \item \textbf{Verità implicita (truthiness)}: oggetti vuoti (\verb|[]|, \verb|{}|, \verb|""|) e lo zero sono valutati come \verb|False| in contesti booleani.
+  \item \textbf{Slice e passi}: la notazione \verb|seq[start:end:step]| è potente; usare \verb|[:] | per ottenere una copia superficiale.
+  \item \textbf{Script vs funzione}: isolare la logica in funzioni rende il codice testabile e riusabile; usare il guardiano \verb|if __name__ == "__main__"| negli script.
+  \item \textbf{Stile e leggibilità}: seguire PEP8 per nomi, indentazione, lunghezza delle righe; preferire nomi esplicativi rispetto ad abbreviazioni.
+\item \textbf{Docstring e aiuto}: documentare funzioni e moduli con docstring; \verb|help(obj)| e \verb|obj.__doc__| facilitano l'esplorazione.
+  \item \textbf{Ambiente}: usare ambienti virtuali per isolare dipendenze; non installare globalmente salvo necessità.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Per chi viene da C/Java/JS]
+\textbf{Esecuzione}: Nessun \texttt{main()} obbligatorio; il file viene eseguito dall'alto verso il basso. Usa il guardiano \verb|if __name__ == "__main__"| per l'entrypoint.
+\textbf{Variabili}: Non si dichiara il tipo (\texttt{int a}); il tipo è dell'oggetto. Usa annotazioni opzionali \verb|x: int = 0| per comunicare intenti.
+\textbf{Stringhe}: Sono immutabili; preferisci f-string \verb|f"{var}"| a concatenazioni.  
+\textbf{Collezioni}: \texttt{list}/\texttt{dict}/\texttt{set} coprono gran parte degli use case.  
+\textbf{Errori}: Eccezioni al posto di codici di ritorno; gestisci con \verb|try/except|.
+
+Esempio: traduzione di uno snippet JS in Python.
+\begin{lstlisting}
+// JS
+function sumPositives(arr) {
+  let s = 0;
+  for (const x of arr) if (x > 0) s += x;
+  return s;
+}
+
+# Python
+def sum_positives(arr):
+    s = 0
+    for x in arr:
+        if x > 0:
+            s += x
+    return s
+
+# Idiomatico
+def sum_positives_fast(arr):
+    return sum(x for x in arr if x > 0)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Idiomi e differenze pratiche]
+- \textbf{Enumerare}: `for i, x in enumerate(xs)` al posto di contatori manuali.  
+- \textbf{Comprensioni}: trasformazioni compatte `[f(x) for x in xs if cond]`.  
+- \textbf{Packing/Unpacking}: `a, b = pair` e `*rest` per raccogliere.  
+- \textbf{Path e I/O}: usa `pathlib` e context manager `with` per risorse.  
+- \textbf{Test}: prediligi funzioni pure e `pytest` con fixture isolanti.
+\end{tcolorbox}
+
+\paragraph{Copy vs alias} Assegnazioni come \verb|b = a| condividono il riferimento; modifiche su oggetti mutabili si riflettono su tutte le variabili alias. Per copiare: \verb|list(a)|, \verb|a[:] |, oppure \verb|copy.copy|/\verb|copy.deepcopy|.
+
+\paragraph{Suggerimenti pratici} Sfruttare il REPL per esplorazione rapida, creare snippet brevi, e salvare esempi riproducibili. Integrare l'uso di \verb|timeit| per confrontare approcci alternativi.
+Consulta la documentazione ufficiale: \url{https://docs.python.org/3/}. Esplora \texttt{help(str)} e \texttt{dir(str)} nell'interprete per conoscere metodi utili.
+
+\begin{tcolorbox}[title=Guida rapida per programmatori non-Python]
+\textbf{Indentazione come sintassi}: i blocchi (funzioni, cicli, condizioni) sono definiti da indentazione a 4 spazi. Niente parentesi graffe.  
+\textbf{Tipi dinamici e duck typing}: il tipo è associato all'oggetto, non alla variabile; l'API attesa conta più della classe.  
+\textbf{Truthiness}: oggetti vuoti e zero sono \texttt{False}; tutto il resto è \texttt{True}.  
+\textbf{Eccezioni}: si gestiscono con \texttt{try/except}; evitare codici di errore.  
+\textbf{Liste e dizionari}: strutture fondamentali per raccolte e mapping.
+
+Esempio commentato:
+\begin{lstlisting}
+# Variabili e tipi
+count = 0            # int
+msg = "ok"          # str
+values = [1, 2, 3]   # list
+meta = {"k": 1}     # dict
+
+# Condizioni basate su truthiness
+if values:           # True se non vuota
+    print("ha elementi")
+
+# Funzione e slicing
+def head(seq):
+    """Ritorna il primo elemento o None se vuota."""
+    return seq[0] if seq else None
+
+print(head(values))  # 1
+print(values[:2])    # copia dei primi 2 elementi
+
+# Eccezioni per gestione errori
+try:
+    x = int("10")
+except ValueError:
+    x = 0
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Collezioni}: `list` e `dict` sono mutabili; adatti a raccolte e mapping.  
+- \textbf{Truthiness}: `if values:` verifica non‑vuoto in modo idiomatico.  
+- \textbf{Funzione}: `head` usa ritorno condizionale; il docstring descrive contratto.  
+- \textbf{Eccezioni}: `try/except` evita codici di errore; `ValueError` in parsing.
+\end{tcolorbox}
+\end{tcolorbox}

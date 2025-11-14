@@ -1,0 +1,673 @@
+\chapter{React/Vue Intro e Deployment}
+\label{cap:javascript_framework}
+
+\section{Cos'è un Framework JavaScript}
+
+Un framework JavaScript (come React e Vue) permette di costruire interfacce utente complesse in modo organizzato, con component riutilizzabili, gestione dello stato e rendering reattivo.
+
+\begin{nota}
+React è una libreria per costruire UI con un approccio basato su componenti. Vue è un framework più leggero con sintassi template. Entrambi rendono la gestione di pagine dinamiche più semplice.
+\end{nota}
+
+\section{React Basics}
+
+\subsection{JSX Syntax}
+
+JSX permette di scrivere HTML-like syntax dentro JavaScript.
+
+\begin{lstlisting}[language=JavaScript]
+// JSX viene trasformato in React.createElement()
+// Questo JSX:
+const element = <h1 className="greeting">Hello World</h1>;
+
+// Diventa:
+const element = React.createElement("h1", { className: "greeting" }, "Hello World");
+
+// Componenti JSX
+function Greeting() {
+  return <h1>Ciao, sono un componente!</h1>;
+}
+
+// Usare il componente
+const app = <Greeting />;
+\end{lstlisting}
+
+\begin{attenzione}
+Nota: \texttt{class} in HTML diventa \texttt{className} in JSX. Usa \texttt{htmlFor} invece di \texttt{for}.
+\end{attenzione}
+
+\subsection{Componenti Funzionali}
+
+\begin{lstlisting}[language=JavaScript]
+// Componente funzionale semplice
+function Welcome(props) {
+  return <h1>Benvenuto, {props.name}!</h1>;
+}
+
+// Usare il componente
+<Welcome name="Marco" />  // Output: <h1>Benvenuto, Marco!</h1>
+
+// Componente con più contenuto
+function Card({ title, description, imageUrl }) {
+  return (
+    <div className="card">
+      <img src={imageUrl} alt={title} />
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </div>
+  );
+}
+
+// Destructuring dei props
+function Button({ label, onClick, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled}>
+      {label}
+    </button>
+  );
+}
+\end{lstlisting}
+
+\subsection{Hook: useState}
+
+\begin{lstlisting}[language=JavaScript]
+import { useState } from 'react';
+
+// Componente con stato
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Contatore: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Incrementa
+      </button>
+      <button onClick={() => setCount(0)}>
+        Reset
+      </button>
+    </div>
+  );
+}
+
+// Stato complesso
+function Form() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: ""
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); console.log(formData); }}>
+      <input name="name" value={formData.name} onChange={handleChange} />
+      <input name="email" value={formData.email} onChange={handleChange} />
+      <textarea name="message" value={formData.message} onChange={handleChange} />
+      <button type="submit">Invia</button>
+    </form>
+  );
+}
+\end{lstlisting}
+
+\subsection{Hook: useEffect}
+
+\begin{lstlisting}[language=JavaScript]
+import { useState, useEffect } from 'react';
+
+// Componente con side effect
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Questo codice runs quando componente monta o userId cambia
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error("Errore:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]); // Dependency array
+
+  if (loading) return <p>Caricamento...</p>;
+  if (!user) return <p>Utente non trovato</p>;
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>Email: {user.email}</p>
+    </div>
+  );
+}
+
+// useEffect senza dipendenze: runs solo al mount
+useEffect(() => {
+  console.log("Componente montato!");
+  return () => console.log("Componente smontato!");
+}, []);
+\end{lstlisting}
+
+\begin{nota}
+Dependency array: [] = runs solo al mount; [dep1, dep2] = runs quando dipendenze cambiano; niente = runs dopo ogni render (pericoloso!).
+\end{nota}
+
+\subsection{Lista di Elementi}
+
+\begin{lstlisting}[language=JavaScript]
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Compra latte" },
+    { id: 2, text: "Studia React" }
+  ]);
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo.id}>
+          {todo.text}
+          <button onClick={() => deleteTodo(todo.id)}>Elimina</button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\section{Vue Basics}
+
+\subsection{Template Syntax}
+
+\begin{lstlisting}[language=HTML]
+<!-- Interpolazione -->
+<div>{{ message }}</div>
+<div>{{ firstName + " " + lastName }}</div>
+
+<!-- Attributi -->
+<img :src="imageUrl" :alt="imageAlt" />
+<div :class="{ active: isActive }"></div>
+<div :style="{ color: dynamicColor }"></div>
+
+<!-- Attributi booleani -->
+<button :disabled="isLoading">Submit</button>
+
+<!-- Espressioni brevi -->
+<div v-bind:id="dynamicId"></div> <!-- Lungo -->
+<div :id="dynamicId"></div>       <!-- Corto -->
+\end{lstlisting}
+
+\subsection{Direttive Condizionali}
+
+\begin{lstlisting}[language=HTML]
+<!-- v-if, v-else-if, v-else -->
+<div v-if="status === 'loading'">Caricamento...</div>
+<div v-else-if="status === 'error'">Errore!</div>
+<div v-else>Completato!</div>
+
+<!-- v-show: usa display:none invece di rimuovere dal DOM -->
+<div v-show="isVisible">Mostra/nascondi con CSS</div>
+
+<!-- v-if vs v-show: v-if è meglio per toggle rari, v-show per frequenti -->
+\end{lstlisting}
+
+\subsection{Direttive di Iterazione}
+
+\begin{lstlisting}[language=HTML]
+<!-- v-for con array -->
+<ul>
+  <li v-for="item in items" :key="item.id">
+    {{ item.name }}
+  </li>
+</ul>
+
+<!-- v-for con indice -->
+<div v-for="(item, index) in items" :key="index">
+  {{ index }}: {{ item }}
+</div>
+
+<!-- v-for con oggetto -->
+<div v-for="(value, key) in user" :key="key">
+  {{ key }}: {{ value }}
+</div>
+
+<!-- v-for annidati -->
+<ul>
+  <li v-for="category in categories" :key="category.id">
+    {{ category.name }}
+    <ul>
+      <li v-for="item in category.items" :key="item.id">
+        {{ item }}
+      </li>
+    </ul>
+  </li>
+</ul>
+\end{lstlisting}
+
+\begin{attenzione}
+Sempre usa :key nei v-for. Non usare indice come key se la lista può cambiare ordine!
+\end{attenzione}
+
+\subsection{Event Handling}
+
+\begin{lstlisting}[language=HTML]
+<!-- v-on o @ shorthand -->
+<button v-on:click="handleClick">Click me</button>
+<button @click="handleClick">Click me (shorthand)</button>
+
+<!-- Passare argomenti -->
+<button @click="handleClick('param1', 42)">Click</button>
+
+<!-- Accedere all'evento -->
+<input @keydown.enter="handleEnter" />
+<button @click.right="handleRightClick">Right click</button>
+<button @click.prevent="handleClick">Previeni default</button>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+export default {
+  data() {
+    return {
+      message: "Ciao Vue!",
+      count: 0
+    };
+  },
+  methods: {
+    handleClick() {
+      this.count++;
+      console.log("Cliccato!");
+    },
+    handleEnter() {
+      this.message = "Enter premuto!";
+    }
+  }
+};
+\end{lstlisting}
+
+\subsection{Two-Way Binding}
+
+\begin{lstlisting}[language=HTML]
+<!-- v-model per input bidirrezionali -->
+<input v-model="name" placeholder="Nome" />
+<p>{{ name }}</p>
+
+<!-- Con checkbox -->
+<input type="checkbox" v-model="agreed" />
+<p v-if="agreed">Accettato!</p>
+
+<!-- Con select -->
+<select v-model="selectedCity">
+  <option value="">Seleziona città</option>
+  <option value="roma">Roma</option>
+  <option value="milano">Milano</option>
+</select>
+
+<!-- Con radio -->
+<input type="radio" value="yes" v-model="answer" /> Sì
+<input type="radio" value="no" v-model="answer" /> No
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+export default {
+  data() {
+    return {
+      name: "",
+      agreed: false,
+      selectedCity: "",
+      answer: ""
+    };
+  }
+};
+\end{lstlisting}
+
+\section{Component Lifecycle}
+
+\subsection{React Lifecycle (hooks)}
+
+\begin{lstlisting}[language=JavaScript]
+function MyComponent() {
+  // Mount
+  useEffect(() => {
+    console.log("Componente montato");
+    return () => console.log("Componente smontato");
+  }, []);
+
+  // Update (quando dipendenza cambia)
+  useEffect(() => {
+    console.log("Componente aggiornato");
+  }, [someDependency]);
+
+  // Update generale
+  useEffect(() => {
+    console.log("Componente montato o aggiornato");
+  });
+
+  return <div>Contenuto</div>;
+}
+\end{lstlisting}
+
+\subsection{Vue Lifecycle}
+
+\begin{lstlisting}[language=JavaScript]
+export default {
+  created() {
+    // Componente creato, dati disponibili
+    console.log("created");
+  },
+  mounted() {
+    // Componente inserito nel DOM
+    console.log("mounted - accedi a template");
+  },
+  updated() {
+    // Dati sono cambiati, DOM aggiornato
+    console.log("updated");
+  },
+  unmounted() {
+    // Componente rimosso dal DOM
+    console.log("unmounted - cleanup");
+  }
+};
+\end{lstlisting}
+
+\section{State Management}
+
+\subsection{Props per passare dati}
+
+\begin{lstlisting}[language=JavaScript]
+// React
+function Parent() {
+  const [count, setCount] = useState(0);
+  return <Child count={count} onIncrement={() => setCount(count + 1)} />;
+}
+
+function Child({ count, onIncrement }) {
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={onIncrement}>Incrementa</button>
+    </div>
+  );
+}
+
+// Vue
+<!-- Parent.vue -->
+<template>
+  <Child :count="count" @increment="count++" />
+</template>
+
+<script>
+import Child from './Child.vue';
+export default {
+  components: { Child },
+  data() { return { count: 0 }; }
+};
+</script>
+
+<!-- Child.vue -->
+<template>
+  <div>
+    <p>{{ count }}</p>
+    <button @click="$emit('increment')">Incrementa</button>
+  </div>
+</template>
+
+<script>
+export default {
+  props: ['count']
+};
+</script>
+\end{lstlisting}
+
+\section{Deployment}
+
+\subsection{Netlify}
+
+\begin{lstlisting}[language=bash]
+# 1. Installare Netlify CLI
+npm install -g netlify-cli
+
+# 2. Buildare il progetto
+npm run build
+
+# 3. Deployare
+netlify deploy --prod --dir=dist
+
+# O configurare deploys automatici
+# Collegare repo GitHub a Netlify, settare:
+# - Build command: npm run build
+# - Publish directory: dist
+\end{lstlisting}
+
+\subsection{Vercel (per Next.js)}
+
+\begin{lstlisting}[language=bash]
+# 1. Installare Vercel CLI
+npm install -g vercel
+
+# 2. Deployare
+vercel --prod
+
+# O collegare GitHub repo a vercel.com
+# Vercel auto-detecta Next.js e configure tutto
+\end{lstlisting}
+
+\subsection{GitHub Pages}
+
+\begin{lstlisting}[language=bash]
+# Per progetti React/Vue statici
+# 1. Aggiungere a package.json:
+"homepage": "https://username.github.io/repo-name"
+
+# 2. Installare gh-pages
+npm install --save-dev gh-pages
+
+# 3. Aggiungere scripts:
+"scripts": {
+  "deploy": "npm run build && gh-pages -d build",
+  "build": "react-scripts build"
+}
+
+# 4. Deployare
+npm run deploy
+
+# Oppure manualmente in GitHub:
+# - Creare branch gh-pages
+# - Pushare build files
+# - Settings > Pages > Source: gh-pages
+\end{lstlisting}
+
+\section{Esercizio Pratico: React Todo App}
+
+\subsection{Componenti}
+
+\begin{lstlisting}[language=JavaScript]
+// App.jsx
+import { useState, useEffect } from 'react';
+import './App.css';
+
+function App() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  // Caricare todos da localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('todos');
+    if (saved) setTodos(JSON.parse(saved));
+  }, []);
+
+  // Salvare todos quando cambiano
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(todos));
+  }, [todos]);
+
+  const addTodo = () => {
+    if (!input.trim()) return;
+    setTodos([...todos, { id: Date.now(), text: input, done: false }]);
+    setInput('');
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ));
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  return (
+    <div className="app">
+      <h1>My Todos</h1>
+      <div className="input-group">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+          placeholder="Aggiungi task..."
+        />
+        <button onClick={addTodo}>Aggiungi</button>
+      </div>
+      <ul className="todo-list">
+        {todos.map(todo => (
+          <li key={todo.id} className={todo.done ? 'done' : ''}>
+            <input
+              type="checkbox"
+              checked={todo.done}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <span>{todo.text}</span>
+            <button onClick={() => deleteTodo(todo.id)}>X</button>
+          </li>
+        ))}
+      </ul>
+      <p>{todos.filter(t => !t.done).length} task rimanenti</p>
+    </div>
+  );
+}
+
+export default App;
+\end{lstlisting}
+
+\subsection{Styling}
+
+\begin{lstlisting}[language=CSS]
+/* App.css */
+.app {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.input-group button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.input-group button:hover {
+  background: #0056b3;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+}
+
+.todo-list li {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  gap: 10px;
+}
+
+.todo-list li.done {
+  opacity: 0.6;
+}
+
+.todo-list li.done span {
+  text-decoration: line-through;
+}
+
+.todo-list button {
+  margin-left: auto;
+  padding: 5px 10px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea un componente React che mostra un contatore con bottoni +/- e Reset.
+
+\subsection{Esercizio 2 (Intermedio)}
+Crea un form con input text, email, select. Raccogli i dati e mostrali in una preview sotto il form.
+
+\subsection{Esercizio 3 (Avanzato)}
+Crea un componente React che fetcha una lista di utenti da JSONPlaceholder e li mostra in una tabella. Aggiungi possibilità di filtrare per nome.
+
+\subsection{Esercizio 4 (Avanzato)}
+Converti il React Todo App in Vue usando script setup (composition API).
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item React usa JSX per scrivere componenti in modo dichiarativo
+  \item \texttt{useState} per gestire stato locale nel componente
+  \item \texttt{useEffect} per side effects come fetch dati
+  \item Props per passare dati da parent a child
+  \item Vue usa template syntax per separare HTML da JS
+  \item \texttt{v-if}, \texttt{v-for}, \texttt{v-model} direttive comuni di Vue
+  \item Lifecycle hooks per mount/update/unmount
+  \item Tutti i framework moderni rendono le applicazioni più mantenibili
+  \item Deployment su Netlify, Vercel, GitHub Pages molto semplice
+  \item Build step necessario prima del deploy (npm run build)
+\end{itemize}

@@ -1,0 +1,106 @@
+\chapter{Array Associativi}\label{cap:array_assoc}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Confronto con array numerici, Funzioni utili, Esempi pratici, Conversioni, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Modellare dati semplici con array associativi in PHP.
+  \item Applicare funzioni standard per manipolare chiavi e valori.
+  \item Integrare array con JSON e query string in modo sicuro.
+\end{itemize}
+
+\section{Teoria}
+Gli array associativi usano chiavi stringa per mappare valori, ideali per rappresentare oggetti semplici o record.
+
+\section{Differenze con array numerici}
+- Chiave esplicita vs indice numerico.
+- Iterazione con \verb|foreach ($arr as $k=>$v)|.
+
+\begin{lstlisting}
+<?php
+$user = ['id'=>10, 'name'=>'Alice', 'role'=>'admin'];
+echo $user['name'];
+\end{lstlisting}
+
+\section{Funzioni specifiche}
+- \texttt{array\_keys}, \texttt{array\_values}, \texttt{array\_merge}, \texttt{array\_replace}
+
+\begin{lstlisting}
+<?php
+$users = [
+  ['id'=>1,'name'=>'A'],
+  ['id'=>2,'name'=>'B'],
+];
+// Estrazione manuale di una colonna
+$names = [];
+foreach ($users as $row) { $names[] = $row['name']; } // ['A','B']
+\end{lstlisting}
+
+\subsection*{Esempi pratici aggiuntivi}
+\begin{lstlisting}
+<?php
+// Merge con precedenza del secondo array sulle stesse chiavi
+$base = ['host'=>'localhost','port'=>3306,'debug'=>false];
+$override = ['debug'=>true];
+$cfg = array_replace($base, $override); // ['host'=>..., 'port'=>..., 'debug'=>true]
+
+// Ordinamento per chiave (k) e per valore (v)
+$map = ['z'=>3, 'a'=>1, 'm'=>2];
+ksort($map);  // ['a'=>1, 'm'=>2, 'z'=>3]
+asort($map);  // ['a'=>1, 'm'=>2, 'z'=>3] (ordinato per valore crescente)
+
+// Ridenominazione chiavi tramite costruzione manuale
+$user = ['id'=>10,'name'=>'Alice'];
+$renamed = [];
+foreach ($user as $k=>$v) {
+    $newKey = ($k==='name') ? 'nome' : $k;
+    $renamed[$newKey] = $v;
+}
+\end{lstlisting}
+
+\section{Conversione da/verso altri formati}
+- JSON: \texttt{json\_encode} / \texttt{json\_decode(true)} (associativo)
+- Query string: costruzione manuale (\texttt{urlencode} + \texttt{implode})
+
+\begin{lstlisting}
+<?php
+$payload = json_encode($user, JSON_UNESCAPED_UNICODE);
+$assoc   = json_decode($payload, true);
+// Costruzione manuale di query string
+$pairs = [];
+foreach ($assoc as $k=>$v) { $pairs[] = urlencode($k).'='.urlencode((string)$v); }
+$qs = implode('&', $pairs);
+\end{lstlisting}
+
+\section{Caso di studio: impostazioni applicative}
+Rappresentazione di una configurazione come mappa chiave\textrightarrow{}valore con override per ambiente (sviluppo/produzione) e esportazione in query string per diagnosticare lo stato.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Dato un elenco di utenti, costruisci \verb|id=>nome| e ordinane le chiavi alfabeticamente.
+  \item Implementa una funzione che rinomini una chiave in un array associativo senza perdere l'ordine.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Qual è la differenza tra \texttt{array\_merge} e \texttt{array\_replace}?
+  \item Come si impone l'ordinamento per chiave rispetto a per valore?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — Array: \url{https://www.php.net/array}
+  \item JSON in PHP: \url{https://www.php.net/json}
+\end{itemize}
+
+\begin{tcolorbox}[title=Best practice]
+- Validare chiavi attese e valori prima dell'uso.
+- Per oggetti complessi preferire classi/DTO; usare array associativi per strutture semplici.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Confondere array associativi e oggetti stdClass dopo \texttt{json\_decode} (usare \texttt{true}).
+- Usare \texttt{array\_merge} senza considerare override di chiavi.
+\end{tcolorbox}

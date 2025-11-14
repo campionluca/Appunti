@@ -1,0 +1,115 @@
+\chapter{Funzioni}\label{cap:funzioni}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Definizione e chiamata, Parametri e ritorni, Scope, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Incapsulare logica riutilizzabile con funzioni chiare.
+  \item Comprendere parametri, valori di ritorno e scope delle variabili.
+  \item Applicare pattern di funzioni pure e gestire effetti collaterali.
+\end{itemize}
+
+\section{Teoria}
+Le funzioni incapsulano logica riutilizzabile. In PHP moderno è consigliato usare type hints per parametri e tipo di ritorno.
+
+\section{Definizione e chiamata}
+\begin{lstlisting}
+<?php
+function greet(string $name): string {
+    return "Ciao, $name";
+}
+echo greet('Mondo');
+\end{lstlisting}
+
+\subsection*{Stile alternativo senza type hints (compatibilità)}
+\begin{lstlisting}
+<?php
+function greet2($name) {
+    $name = (string)$name;
+    return 'Ciao, ' . $name;
+}
+echo greet2('Mondo');
+\end{lstlisting}
+
+\section{Parametri e valori di ritorno}
+- Parametri con default, tipi unione, passaggio per riferimento se necessario.
+
+\begin{lstlisting}
+<?php
+function add(int $a, int $b = 0): int { return $a + $b; }
+function normalize(?string $s): string { return trim($s ?? ''); }
+\end{lstlisting}
+
+\subsection*{Passaggio per riferimento e variadiche}
+\begin{lstlisting}
+<?php
+function pushValue(array &$arr, $value) { $arr[] = $value; }
+function sumAll(...$nums) {
+    $tot = 0;
+    foreach ($nums as $n) { $tot += (int)$n; }
+    return $tot;
+}
+$a = [];
+pushValue($a, 10); // $a = [10]
+\end{lstlisting}
+
+\section{Variabili globali e locali}
+- Evitare l'uso di \texttt{global}; preferire passaggio parametri o dipendenze esplicite.
+
+\begin{lstlisting}
+<?php
+$counter = 0;
+function inc(): int {
+    static $c = 0; // persiste tra chiamate
+    $c++; return $c;
+}
+\end{lstlisting}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Funzione pura
+function twice($n) { return (int)$n * 2; }
+
+// Closure con cattura di contesto
+$prefixer = function($p) {
+    return function($s) use ($p) { return $p . (string)$s; };
+};
+$hello = $prefixer('Hello ');
+echo $hello('world');
+\end{lstlisting}
+
+\section{Caso di studio: libreria di utilità}
+Raccolta di funzioni pure per normalizzare input (trim, lower/upper, sostituzioni) e funzioni impure per logging controllato, con documentazione delle pre/post-condizioni.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa una funzione \verb|rename_key($arr, $old, $new)| che rinomini una chiave se presente.
+  \item Scrivi una funzione \verb|compose($f,$g)| che restituisca una nuova funzione composizione.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Quando è opportuno usare variabili \texttt{static} all'interno delle funzioni?
+  \item Quali benefici e limiti portano i type hints in PHP?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — Funzioni: \url{https://www.php.net/functions}
+  \item PSR — Best practices di coding: \url{https://www.php-fig.org/}
+\end{itemize}
+
+\begin{tcolorbox}[title=Best practice]
+- Tipizzare parametri e ritorni per chiarezza e robustezza.
+- Funzioni pure quando possibile; gestione degli effetti collaterali ben delimitata.
+- Documentare pre/post-condizioni e casi limite.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Abuso di variabili globali.
+- Mancata validazione degli argomenti.
+- Ignorare i tipi e restituire valori eterogenei.
+\end{tcolorbox}

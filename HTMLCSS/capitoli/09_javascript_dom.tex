@@ -1,0 +1,653 @@
+\chapter{DOM Manipulation Avanzato}
+\label{cap:javascript_dom}
+
+\section{Document Object Model (DOM)}
+
+Il DOM (Document Object Model) è una rappresentazione ad albero del documento HTML. Ogni elemento, attributo e testo è un nodo che può essere accesso e modificato con JavaScript.
+
+\begin{nota}
+Il DOM è l'interfaccia tra JavaScript e HTML. Quando modifichi il DOM con JavaScript, il browser aggiorna automaticamente la pagina visualizzata.
+\end{nota}
+
+\section{Traversing il DOM}
+
+\subsection{Relazioni tra nodi}
+
+\begin{lstlisting}[language=JavaScript]
+// Accedere ai nodi parent, child e sibling
+const element = document.getElementById("main");
+
+element.parentElement;           // Elemento genitore
+element.parentNode;              // Nodo genitore (può essere text node)
+element.children;                // Array di elementi figli
+element.childNodes;              // Array di tutti i nodi figli (inclusi text)
+element.firstChild;              // Primo nodo figlio
+element.lastChild;               // Ultimo nodo figlio
+element.firstElementChild;       // Primo elemento figlio
+element.lastElementChild;        // Ultimo elemento figlio
+element.nextSibling;             // Prossimo nodo fratello
+element.nextElementSibling;      // Prossimo elemento fratello
+element.previousSibling;         // Nodo fratello precedente
+element.previousElementSibling;  // Elemento fratello precedente
+\end{lstlisting}
+
+\subsection{Attraversare gerarchie complesse}
+
+\begin{lstlisting}[language=HTML]
+<div id="root">
+  <header>
+    <nav>
+      <ul id="menu">
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="content">
+    <section class="card">...</section>
+  </main>
+</div>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+const link = document.querySelector("a[href='#home']");
+
+// Salire verso l'alto
+const li = link.parentElement;           // <li>
+const ul = li.parentElement;             // <ul id="menu">
+const nav = ul.parentElement;            // <nav>
+const header = nav.parentElement;        // <header>
+
+// Discendere verso il basso
+const root = document.getElementById("root");
+const main = root.querySelector("main");
+const firstSection = main.firstElementChild; // <section class="card">
+
+// Metodo più diretto: closest()
+const listItem = link.closest("li");  // Trova primo <li> antenato
+const container = link.closest("[id]"); // Trova primo antenato con id
+\end{lstlisting}
+
+\section{Selettori CSS Avanzati}
+
+\subsection{querySelector e querySelectorAll}
+
+\begin{lstlisting}[language=JavaScript]
+// querySelector restituisce il primo match
+const button = document.querySelector("button.primary");
+const item = document.querySelector("#main .item");
+const input = document.querySelector("input[name='email']");
+
+// querySelectorAll restituisce NodeList
+const buttons = document.querySelectorAll("button");
+const items = document.querySelectorAll(".card");
+const inputs = document.querySelectorAll("input[type='text']");
+
+// Convertire NodeList a Array
+const itemsArray = Array.from(items);
+const itemsArray2 = [...items]; // Usando spread operator
+\end{lstlisting}
+
+\subsection{Selettori CSS3}
+
+\begin{lstlisting}[language=CSS]
+/* Pseudo-class selectors */
+li:first-child                   /* Primo figlio */
+li:last-child                    /* Ultimo figlio */
+li:nth-child(2)                  /* Secondo figlio */
+li:nth-child(odd)                /* Figli dispari */
+li:nth-of-type(2)                /* Secondo del suo tipo */
+
+/* Attribute selectors */
+input[type="email"]              /* Input email */
+input[name^="user"]              /* Name inizia con "user" */
+input[name$="code"]              /* Name finisce con "code" */
+input[name*="temp"]              /* Name contiene "temp" */
+
+/* Combinatori */
+div.container > p                /* Figli diretti */
+.parent p                        /* Tutti i discendenti */
+h1 + p                           /* Elemento adiacente */
+h1 ~ p                           /* Elementi fratelli seguenti */
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+// Usare selettori avanzati con querySelector
+const firstItem = document.querySelector("li:first-child");
+const emailInput = document.querySelector("input[type='email']");
+const oddListItems = document.querySelectorAll("li:nth-child(odd)");
+
+// Filtrare con selezione dinamica
+const activeButtons = document.querySelectorAll("button:not(.disabled)");
+const visibleCards = document.querySelectorAll(".card:not(.hidden)");
+\end{lstlisting}
+
+\section{Event Delegation}
+
+\subsection{Problema: Troppi Event Listener}
+
+\begin{lstlisting}[language=HTML]
+<ul id="tasks">
+  <li data-id="1">Compra latte <button class="delete">X</button></li>
+  <li data-id="2">Studia JS <button class="delete">X</button></li>
+  <li data-id="3">Esercizio <button class="delete">X</button></li>
+  <!-- Migliaia di item... -->
+</ul>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+// SBAGLIATO: Aggiungere listener a ogni bottone
+document.querySelectorAll(".delete").forEach(btn => {
+  btn.addEventListener("click", handleDelete);
+});
+// Questo è inefficiente se aggiungi/rimuovi molti item!
+
+// CORRETTO: Delegare al genitore
+const taskList = document.getElementById("tasks");
+taskList.addEventListener("click", (event) => {
+  // Controllare se il click è su un bottone delete
+  if (event.target.classList.contains("delete")) {
+    const taskItem = event.target.parentElement;
+    const taskId = taskItem.dataset.id;
+    handleDelete(taskId);
+    taskItem.remove();
+  }
+});
+\end{lstlisting}
+
+\begin{attenzione}
+Event delegation funziona con tutti gli eventi che bubblano (click, change, input, etc.). Per eventi che non bubblano (focus, load), usa il terzo parametro \texttt{capture: true}.
+\end{attenzione}
+
+\subsection{Proprietà di event}
+
+\begin{lstlisting}[language=JavaScript]
+document.addEventListener("click", (event) => {
+  console.log(event.target);         // Elemento cliccato
+  console.log(event.currentTarget);  // Elemento con listener
+  console.log(event.bubbles);        // Booleano: bubblare?
+  console.log(event.preventDefault()); // Annullare azione
+  console.log(event.stopPropagation()); // Bloccare bubbling
+  console.log(event.type);           // "click"
+});
+\end{lstlisting}
+
+\section{Element Creation e Manipulation}
+
+\subsection{Creare e aggiungere elementi}
+
+\begin{lstlisting}[language=JavaScript]
+// Creare elementi
+const div = document.createElement("div");
+const p = document.createElement("p");
+const button = document.createElement("button");
+
+// Aggiungere classi e attributi
+div.className = "card";
+div.classList.add("featured");
+div.setAttribute("data-type", "product");
+button.textContent = "Click me";
+
+// Aggiungere al DOM
+document.body.appendChild(div);
+div.appendChild(p);
+div.appendChild(button);
+
+// Altre operazioni di aggiunta
+div.insertBefore(p, button);        // Inserire prima di elemento
+div.insertAdjacentHTML("beforeend", "<span>Testo</span>");
+\end{lstlisting}
+
+\subsection{innerHTML vs textContent vs innerText}
+
+\begin{lstlisting}[language=JavaScript]
+const div = document.getElementById("content");
+
+// innerHTML: Parsed come HTML
+div.innerHTML = "<strong>Testo</strong>"; // Crea <strong>
+
+// textContent: Puro testo
+div.textContent = "<strong>Testo</strong>"; // Mostra stringa
+
+// innerText: Testo visibile (considera CSS)
+div.innerText = "Solo testo"; // Ignora elementi nascosti
+
+// Preferire textContent per sicurezza
+const userInput = getUserInput();
+div.textContent = userInput; // Sicuro da XSS injection
+\end{lstlisting}
+
+\begin{nota}
+Usa \texttt{textContent} per inserire testo utente. Usa \texttt{innerHTML} solo se hai totale controllo del contenuto. Mai usare \texttt{innerHTML} con dati da utenti!
+\end{nota}
+
+\subsection{Clonare elementi}
+
+\begin{lstlisting}[language=HTML]
+<template id="card-template">
+  <div class="card">
+    <h3 class="title"></h3>
+    <p class="description"></p>
+    <button class="delete">Elimina</button>
+  </div>
+</template>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+// Clonare da template
+const template = document.getElementById("card-template");
+const clone = template.content.cloneNode(true);
+
+// Modificare il clone
+clone.querySelector(".title").textContent = "My Card";
+clone.querySelector(".description").textContent = "Description here";
+
+// Aggiungere al DOM
+document.getElementById("container").appendChild(clone);
+\end{lstlisting}
+
+\subsection{Rimuovere elementi}
+
+\begin{lstlisting}[language=JavaScript]
+// Rimuovere elemento specifico
+const element = document.getElementById("to-delete");
+element.remove();
+element.parentElement.removeChild(element); // Alternativa
+
+// Svuotare un contenitore
+const container = document.getElementById("container");
+container.innerHTML = ""; // Opzione 1
+while (container.firstChild) {
+  container.removeChild(container.firstChild); // Opzione 2
+}
+\end{lstlisting}
+
+\section{Manipolazione di Classi e Attributi}
+
+\subsection{ClassList API}
+
+\begin{lstlisting}[language=JavaScript]
+const button = document.getElementById("save-btn");
+
+// Aggiungere classe
+button.classList.add("active");
+button.classList.add("primary", "large"); // Più classi
+
+// Rimuovere classe
+button.classList.remove("disabled");
+
+// Toggle: aggiungere se assente, rimuovere se presente
+button.classList.toggle("selected");
+button.classList.toggle("highlight", true); // Forza add
+button.classList.toggle("highlight", false); // Forza remove
+
+// Controllare classe
+if (button.classList.contains("active")) {
+  console.log("Button è attivo");
+}
+
+// Iterare le classi
+button.classList.forEach(className => {
+  console.log(className);
+});
+\end{lstlisting}
+
+\subsection{Attributi personalizzati (data-*)}
+
+\begin{lstlisting}[language=HTML]
+<div class="product" data-id="123" data-price="29.99"
+     data-in-stock="true">
+  Nike Shoes
+</div>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript]
+const product = document.querySelector(".product");
+
+// Accedere ai data attributes
+console.log(product.dataset.id);      // "123"
+console.log(product.dataset.price);   // "29.99"
+console.log(product.dataset.inStock); // "true"
+
+// Modificare data attributes
+product.dataset.id = "456";
+product.dataset.available = "false";
+
+// Accesso diretto agli attributi
+product.setAttribute("data-discount", "10%");
+console.log(product.getAttribute("data-discount")); // "10%"
+\end{lstlisting}
+
+\section{Esercizio Pratico: Dynamic Form Builder}
+
+\subsection{Specifica}
+
+Crea una app che permette all'utente di costruire un form dinamicamente:
+- Aggiungere campi (text, email, select, checkbox)
+- Personalizzare label e placeholder
+- Rimuovere campi
+- Generare il codice HTML del form
+- Salvare il form in localStorage
+- Resettare il form
+
+\subsection{HTML/CSS/JavaScript}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Form Builder</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .builder {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .preview {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 { margin-top: 0; }
+
+    .controls {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 8px 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover { background: #0056b3; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #c82333; }
+    button.success { background: #28a745; }
+    button.success:hover { background: #218838; }
+
+    .field {
+      margin-bottom: 15px;
+      padding: 15px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .field label {
+      display: block;
+      font-weight: bold;
+      margin: 10px 0 5px 0;
+    }
+
+    .field button.remove {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    #code-output {
+      background: #f0f0f0;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dynamic Form Builder</h1>
+
+  <div class="container">
+    <div class="builder">
+      <h2>Builder</h2>
+      <div class="controls">
+        <button onclick="addTextField()">+ Text</button>
+        <button onclick="addEmailField()">+ Email</button>
+        <button onclick="addSelectField()">+ Select</button>
+        <button onclick="addCheckboxField()">+ Checkbox</button>
+        <button onclick="addTextareaField()">+ Textarea</button>
+      </div>
+      <div id="fields-container"></div>
+      <div class="controls" style="margin-top: 20px;">
+        <button class="success" onclick="generateCode()">Genera Codice</button>
+        <button class="success" onclick="saveForm()">Salva Form</button>
+        <button class="danger" onclick="resetForm()">Resetta</button>
+      </div>
+    </div>
+
+    <div class="preview">
+      <h2>Anteprima Form</h2>
+      <form id="preview-form"></form>
+      <h3>Codice HTML</h3>
+      <div id="code-output"></div>
+    </div>
+  </div>
+
+  <script>
+    class FormBuilder {
+      constructor() {
+        this.fields = [];
+        this.fieldId = 0;
+        this.loadForm();
+      }
+
+      addField(type) {
+        const id = this.fieldId++;
+        const field = {
+          id, type,
+          label: `Campo ${id + 1}`,
+          placeholder: "",
+          options: type === "select" ? ["Opzione 1"] : [],
+          required: false
+        };
+        this.fields.push(field);
+        this.render();
+      }
+
+      removeField(id) {
+        this.fields = this.fields.filter(f => f.id !== id);
+        this.render();
+      }
+
+      updateField(id, updates) {
+        const field = this.fields.find(f => f.id === id);
+        if (field) {
+          Object.assign(field, updates);
+          this.render();
+        }
+      }
+
+      render() {
+        const container = document.getElementById("fields-container");
+        container.innerHTML = "";
+
+        this.fields.forEach(field => {
+          const fieldDiv = document.createElement("div");
+          fieldDiv.className = "field";
+          fieldDiv.innerHTML = `
+            <button class="remove danger" onclick="formBuilder.removeField(${field.id})">X</button>
+            <label>Label:</label>
+            <input type="text" value="${field.label}"
+              onchange="formBuilder.updateField(${field.id}, {label: this.value})">
+
+            <label>Placeholder:</label>
+            <input type="text" value="${field.placeholder}"
+              onchange="formBuilder.updateField(${field.id}, {placeholder: this.value})"
+              ${field.type === "select" || field.type === "checkbox" ? "disabled" : ""}>
+
+            ${field.type === "select" ? `
+              <label>Opzioni (una per riga):</label>
+              <textarea style="width: 100%; height: 80px;"
+                onchange="formBuilder.updateField(${field.id}, {options: this.value.split('\\n').filter(o => o)})">
+                ${field.options.join("\n")}
+              </textarea>
+            ` : ""}
+
+            <label>
+              <input type="checkbox" ${field.required ? "checked" : ""}
+                onchange="formBuilder.updateField(${field.id}, {required: this.checked})">
+              Campo obbligatorio
+            </label>
+
+            <small style="color: #666;">Tipo: ${field.type}</small>
+          `;
+          container.appendChild(fieldDiv);
+        });
+
+        this.updatePreview();
+      }
+
+      updatePreview() {
+        const preview = document.getElementById("preview-form");
+        preview.innerHTML = "";
+
+        this.fields.forEach(field => {
+          const label = document.createElement("label");
+          label.textContent = field.label;
+          label.style.display = "block";
+          label.style.marginTop = "10px";
+          label.style.fontWeight = "bold";
+          preview.appendChild(label);
+
+          if (field.type === "text" || field.type === "email") {
+            const input = document.createElement("input");
+            input.type = field.type;
+            input.placeholder = field.placeholder;
+            input.required = field.required;
+            input.style.width = "100%";
+            input.style.padding = "8px";
+            input.style.margin = "5px 0 10px 0";
+            input.style.border = "1px solid #ccc";
+            input.style.borderRadius = "4px";
+            input.style.boxSizing = "border-box";
+            preview.appendChild(input);
+          }
+        });
+
+        const submitBtn = document.createElement("button");
+        submitBtn.type = "submit";
+        submitBtn.textContent = "Invia";
+        submitBtn.style.marginTop = "10px";
+        submitBtn.style.padding = "10px 20px";
+        preview.appendChild(submitBtn);
+      }
+
+      generateCode() {
+        let html = '<form>\n';
+        this.fields.forEach(field => {
+          html += `  <label>${field.label}</label>\n`;
+          html += `  <input type="${field.type}" `;
+          html += `placeholder="${field.placeholder}" `;
+          html += `${field.required ? 'required' : ''}>\n\n`;
+        });
+        html += '  <button type="submit">Invia</button>\n</form>';
+        document.getElementById("code-output").textContent = html;
+      }
+
+      saveForm() {
+        localStorage.setItem("form-builder", JSON.stringify(this.fields));
+        alert("Form salvato!");
+      }
+
+      loadForm() {
+        const saved = localStorage.getItem("form-builder");
+        if (saved) {
+          this.fields = JSON.parse(saved);
+          this.fieldId = Math.max(...this.fields.map(f => f.id)) + 1;
+          this.render();
+        }
+      }
+
+      reset() {
+        this.fields = [];
+        this.fieldId = 0;
+        this.render();
+        document.getElementById("code-output").textContent = "";
+      }
+    }
+
+    const formBuilder = new FormBuilder();
+
+    function addTextField() { formBuilder.addField("text"); }
+    function addEmailField() { formBuilder.addField("email"); }
+    function addSelectField() { formBuilder.addField("select"); }
+    function addCheckboxField() { formBuilder.addField("checkbox"); }
+    function addTextareaField() { formBuilder.addField("textarea"); }
+    function generateCode() { formBuilder.generateCode(); }
+    function saveForm() { formBuilder.saveForm(); }
+    function resetForm() { formBuilder.reset(); }
+  </script>
+</body>
+</html>
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Scrivi una funzione che seleziona tutti i bottoni della pagina e aggiunge la classe "highlighted" solo a quelli che contengono la parola "submit".
+
+\subsection{Esercizio 2 (Intermedio)}
+Crea una funzione che con event delegation ascolta click su una lista e, quando clicchi su un item, colora il background di giallo. Quando clicchi di nuovo, lo rimuove.
+
+\subsection{Esercizio 3 (Avanzato)}
+Crea una tabella HTML dove ogni riga ha un bottone "Modifica" e "Elimina". Usa event delegation per gestire tutti i click e mostra in console quale riga è stata cliccata.
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item Il DOM è una rappresentazione ad albero del documento HTML
+  \item \texttt{parentElement}, \texttt{children}, \texttt{nextSibling} per traversing
+  \item \texttt{querySelector} e \texttt{querySelectorAll} con selettori CSS avanzati
+  \item Event delegation riduce il numero di listener quando hai molti elementi
+  \item \texttt{createElement} per creare elementi dinamicamente
+  \item \texttt{classList} per manipolare classi in modo pulito
+  \item \texttt{dataset} per accedere a attributi data-*
+  \item Template tag \texttt{<template>} perfetto per clonare elementi
+  \item Preferisci \texttt{textContent} per sicurezza rispetto a \texttt{innerHTML}
+\end{itemize}

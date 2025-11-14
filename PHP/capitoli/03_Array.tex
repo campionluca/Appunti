@@ -1,0 +1,265 @@
+\chapter{Array — Approccio Imperativo senza Funzioni di Ordine Superiore}
+
+\section{Obiettivo del capitolo}
+In questo capitolo impariamo a manipolare gli array utilizzando esclusivamente cicli tradizionali (\texttt{for}, \texttt{while}) e semplici controlli, senza ricorrere a funzioni di ordine superiore come \texttt{array\_map}, \texttt{array\_filter}, \texttt{array\_reduce} o \texttt{foreach}. Lavoreremo sia con array indicizzati sia con array associativi.
+```
+\section{Esempio pratico: IVA, filtro e somma con cicli}
+Di seguito riscriviamo un classico esempio (calcolo dell'IVA, filtraggio e somma) usando solo cicli.
+
+\textbf{Spiegazione dettagliata:} Questo esempio dimostra come implementare le operazioni fondamentali sugli array (trasformazione, filtro e riduzione) utilizzando esclusivamente cicli tradizionali. Ogni fase viene eseguita passo dopo passo:
+
+\begin{itemize}
+    \item \textbf{Trasformazione}: Calcolo dell'IVA su ogni prezzo mediante ciclo \texttt{for}
+    \item \textbf{Filtro}: Selezione dei prezzi maggiori di 12 tramite controllo condizionale
+    \item \textbf{Riduzione}: Somma di tutti i valori filtrati attraverso accumulazione
+\end{itemize}
+
+\begin{lstlisting}[language=PHP, caption={Trasformazioni con cicli: IVA, filtro e somma}]
+<?php
+// Dati di partenza: array indicizzato di prezzi
+$prezzi = [10.0, 12.5, 8.9, 15.0];
+$iva = 0.22;
+
+// 1) Trasformazione: calcola i prezzi con IVA usando un ciclo for
+//    Logica: per ogni indice i, prendi il prezzo, applica l'IVA e salva nel nuovo array
+$conIva = [];
+for ($i = 0; $i < count($prezzi); $i++) {
+    $prezzoOriginale = $prezzi[$i];
+    $prezzoIvato = round($prezzoOriginale * (1 + $iva), 2);
+    $conIva[$i] = $prezzoIvato; // manteniamo lo stesso indice
+}
+
+// 2) Filtro: mantieni solo i prezzi > 12 con un ciclo for
+//    Logica: visita ogni elemento e, se soddisfa la condizione, aggiungilo all'array dei filtrati
+$filtrati = [];
+for ($i = 0; $i < count($conIva); $i++) {
+    if ($conIva[$i] > 12) {
+        $filtrati[] = $conIva[$i]; // aggiunta in coda
+    }
+}
+
+// 3) Riduzione: somma tutti i valori con un ciclo for
+//    Logica: accumula la somma in una variabile inizializzata a 0.0
+$somma = 0.0;
+for ($i = 0; $i < count($filtrati); $i++) {
+    $somma += $filtrati[$i];
+}
+
+// Output formattato (usa solo funzioni già viste)
+echo number\_format(\$somma, 2, ',', '.');
+\?>
+\end{lstlisting}
+
+\subsection{Analisi tecnica dell'esempio con array indicizzati}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione completa del pattern trasformazione-filtro-somma su array indicizzati usando cicli \texttt{for} per dimostrare la logica imperativa senza funzioni di ordine superiore.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{\$prezzi = [10.0, 12.5, 8.9, 15.0]}: Array indicizzato di numeri floating-point
+\item \texttt{for (\$i = 0; \$i < count(\$prezzi); \$i++)}: Ciclo tradizionale con indice numerico
+\item \texttt{round(\$prezzoOriginale * (1 + \$iva), 2)}: Trasformazione con arrotondamento a 2 decimali
+\item \texttt{if (\$conIva[\$i] > 12)}: Condizione di filtro per valori maggiori di 12
+\item \texttt{\$somma += \$filtrati[\$i]}: Accumulazione somma con operatore composto
+\item \texttt{number\_format()}: Formattazione output per valuta
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Calcolo totali carrello acquisti con tasse e sconti
+\item Elaborazione dati sensoriali con filtri e aggregazioni
+\item Analisi dataset scientifici con trasformazioni sequenziali
+\item Processing batch di dati finanziari con validazioni
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{while} loop con condizione basata su flag invece di indice
+\item \texttt{do-while} per garantire almeno un'iterazione
+\item Cicli annidati per elaborazione matrici 2D
+\item Ricorsione per strutture dati nidificate (anche se non idiomatico in PHP)
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Precalcolare \texttt{count(\$array)} fuori dal ciclo per performance
+\item \textbf{Insidia}: Modificare l'array durante l'iterazione può causare comportamenti imprevedibili
+\item \textbf{Sicurezza}: Validare sempre i dati numerici prima di operazioni matematiche
+\item \textbf{Leggibilità}: Commentare la logica complessa e usare nomi variabili descrittivi
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{Imperative Programming}: Stile di programmazione con sequenze esplicite di comandi
+\item \textbf{Array Traversal}: Tecniche per visitare sistematicamente elementi array
+\item \textbf{Time Complexity}: O(n) per singolo ciclo, O(n+m) per operazioni sequenziali
+\item \textbf{Space Complexity}: O(n) per array trasformati e filtrati
+\end{itemize}
+\end{itemize}
+
+\section{Variante con array associativi}
+Talvolta è utile lavorare con chiavi descrittive. Qui ripetiamo l'esempio usando un array associativo e solo cicli.
+
+\begin{lstlisting}[language=PHP, caption={Stesso flusso con array associativi e cicli}]
+<?php
+// Array associativo: etichette come chiavi
+$prezziAssoc = [
+    'A' => 10.0,
+    'B' => 12.5,
+    'C' => 8.9,
+    'D' => 15.0,
+];
+$iva = 0.22;
+
+// 1) Calcolo IVA: iteriamo sulle chiavi con for su array_keys
+$conIvaAssoc = [];
+$chiavi = array_keys($prezziAssoc);
+for ($i = 0; $i < count($chiavi); $i++) {
+    $k = $chiavi[$i];
+    $conIvaAssoc[$k] = round($prezziAssoc[$k] * (1 + $iva), 2);
+}
+
+// 2) Filtro: costruiamo un nuovo array associativo con i soli valori > 12
+$filtratiAssoc = [];
+for ($i = 0; $i < count($chiavi); $i++) {
+    $k = $chiavi[$i];
+    if ($conIvaAssoc[$k] > 12) {
+        $filtratiAssoc[$k] = $conIvaAssoc[$k];
+    }
+}
+
+// 3) Somma: accumula i valori filtrati
+$sommaAssoc = 0.0;
+$chiaviFiltrate = array_keys($filtratiAssoc);
+for ($i = 0; $i < count($chiaviFiltrate); $i++) {
+    $k = $chiaviFiltrate[$i];
+    $sommaAssoc += $filtratiAssoc[$k];
+}
+
+echo number\_format(\$sommaAssoc, 2, ',', '.');
+\?>
+\end{lstlisting}
+
+\subsection{Analisi tecnica dell'esempio con array associativi}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione del pattern trasformazione-filtro-somma su array associativi mantenendo le chiavi descrittive durante tutte le operazioni, dimostrando come lavorare con dati semanticamente ricchi.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{\$prezziAssoc = ['A' => 10.0, 'B' => 12.5, ...]}: Array associativo con chiavi alfabetiche
+\item \texttt{array\_keys(\$prezziAssoc)}: Estrazione chiavi per iterazione controllata
+\item \texttt{\$k = \$chiavi[\$i]}: Accesso alla chiave corrente durante l'iterazione
+\item \texttt{\$conIvaAssoc[\$k] = ...}: Assegnazione con mantenimento della chiave originale
+\item \texttt{\$filtratiAssoc[\$k] = ...}: Costruzione nuovo array associativo filtrato
+\item Doppia estrazione chiavi: prima per trasformazione, poi per somma sui filtrati
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Elaborazione dati configurazione con parametri nominati
+\item Processing dataset con metadati e attributi descrittivi
+\item Sistemi di inventario con codici prodotto univoci
+\item Analisi prestazioni con metriche categorizzate
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{foreach (\$array as \$key => \$value)}: Pattern più idiomatico per array associativi
+\item \texttt{array\_values()} per convertire a indicizzato dopo elaborazione
+\item \texttt{array\_combine()} per ricreare associazioni chiave-valore
+\item Iteratori personalizzati per strutture dati complesse
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Usare chiavi significative che descrivono il dato
+\item \textbf{Insidia}: \texttt{array\_keys()} crea copia delle chiavi, potenziale overhead memoria
+\item \textbf{Sicurezza}: Validare chiavi se provenienti da input utente
+\item \textbf{Leggibilità}: Mantenere consistenza nomi chiavi attraverso trasformazioni
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{Associative Arrays}: Strutture dati chiave-valore con accesso semantico
+\item \textbf{Hash Tables}: Implementazione sottostante array associativi in PHP
+\item \textbf{Data Normalization}: Tecniche per organizzare dati complessi
+\item \textbf{Metadata Processing}: Gestione informazioni descrittive sui dati
+\end{itemize}
+\end{itemize}
+
+\section{Nota didattica}
+Questo approccio mantiene la stessa funzionalità dei casi con funzioni di ordine superiore, ma rende esplicita la logica passo‑passo: trasformazione, selezione e accumulo. L'uso degli array associativi permette di dare un nome ai dati e di mantenere leggibilità senza introdurre concetti avanzati.
+
+\section{Scheda riassuntiva: pattern trasformazione–filtro–somma}
+
+\subsection{Pattern con array indicizzati}
+\begin{enumerate}
+    \item \textbf{Trasformazione}: crea un nuovo array applicando una funzione a ogni elemento
+    \begin{verbatim}
+$risultato = [];
+for ($i = 0; $i < count($input); $i++) {
+    $risultato[$i] = funzione($input[$i]);
+}
+    \end{verbatim}
+    
+    \item \textbf{Filtro}: crea un nuovo array con solo gli elementi che soddisfano una condizione
+    \begin{verbatim}
+$risultato = [];
+for ($i = 0; $i < count($input); $i++) {
+    if (condizione($input[$i])) {
+        $risultato[] = $input[$i];
+    }
+}
+    \end{verbatim}
+    
+    \item \textbf{Somma/Accumulo}: calcola un valore aggregato da tutti gli elementi
+    \begin{verbatim}
+$totale = 0.0;
+for ($i = 0; $i < count($input); $i++) {
+    $totale += $input[$i];
+}
+    \end{verbatim}
+\end{enumerate}
+
+\subsection{Pattern con array associativi}
+\begin{enumerate}
+    \item \textbf{Trasformazione}: applica funzione mantenendo le chiavi
+    \begin{verbatim}
+$risultato = [];
+$chiavi = array_keys($input);
+for ($i = 0; $i < count($chiavi); $i++) {
+    $k = $chiavi[$i];
+    $risultato[$k] = funzione($input[$k]);
+}
+    \end{verbatim}
+    
+    \item \textbf{Filtro}: mantieni solo elementi che soddisfano condizione
+    \begin{verbatim}
+$risultato = [];
+$chiavi = array_keys($input);
+for ($i = 0; $i < count($chiavi); $i++) {
+    $k = $chiavi[$i];
+    if (condizione($input[$k])) {
+        $risultato[$k] = $input[$k];
+    }
+}
+    \end{verbatim}
+    
+    \item \textbf{Somma/Accumulo}: somma tutti i valori
+    \begin{verbatim}
+$totale = 0.0;
+$chiavi = array_keys($input);
+for ($i = 0; $i < count($chiavi); $i++) {
+    $k = $chiavi[$i];
+    $totale += $input[$k];
+}
+    \end{verbatim}
+\end{enumerate}
+
+\subsection{Quando usare ciascun pattern}
+\begin{itemize}
+    \item \textbf{Array indicizzati}: quando l'ordine è importante e non servono etichette
+    \item \textbf{Array associativi}: quando i dati hanno nomi significativi e si vuole mantenere tracciabilità
+    \item \textbf{Cicli for}: quando si conosce la dimensione e si vuole controllo preciso sugli indici
+    \item \textbf{Cicli while}: quando la condizione di terminazione è complessa o basata su flag
+\end{itemize}

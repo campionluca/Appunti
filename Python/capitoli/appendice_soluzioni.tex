@@ -1,0 +1,44 @@
+% Appendice — Soluzioni degli esercizi
+\chapter{Soluzioni agli Esercizi}
+
+\section*{Modulo 00 — Fondamenti Python}
+\begin{description}
+  \item[Esercizio 1] \hfill\\
+  \begin{lstlisting}
+nome = "Ada"
+eta = 27
+print(f"Mi chiamo {nome} e ho {eta} anni")
+  \end{lstlisting}
+
+  \item[Esercizio 2] \hfill\\
+  \begin{lstlisting}
+import math
+r = float(input("Raggio: "))
+area = math.pi * (r ** 2)
+print(f"Area: {area}")
+  \end{lstlisting}
+
+  \item[Esercizio 3] \hfill\\
+  \begin{lstlisting}
+a = float(input("Primo numero: "))
+b = float(input("Secondo numero: "))
+print("Somma:", a + b)
+print("Differenza:", a - b)
+print("Prodotto:", a * b)
+print("Divisione:", a / b if b != 0 else "Impossibile")
+  \end{lstlisting}
+
+  \item[Esercizio 4] \hfill\\
+  \begin{lstlisting}
+c = float(input("Celsius: "))
+f = c * 9 / 5 + 32
+print(f"Fahrenheit: {f}")
+  \end{lstlisting}
+
+  \item[Esercizio 5] \hfill\\
+  \begin{lstlisting}
+items = ["uno", "due", "tre"]
+for it in items:
+    print(it)
+  \end{lstlisting}
+\end{description}

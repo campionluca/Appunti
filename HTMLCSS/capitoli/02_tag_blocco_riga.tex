@@ -1,0 +1,93 @@
+\chapter{Tag di Blocco e Riga}
+\label{cap:tag_blocco_riga}
+
+\section{Differenza tra blocco e riga}
+
+In HTML, i tag sono classificati in due categorie:
+
+\begin{description}
+  \item[Block-level] L'elemento occupa tutta la larghezza disponibile e inizia su una nuova riga
+  \item[Inline] L'elemento occupa solo lo spazio necessario e rimane sulla stessa riga
+\end{description}
+
+\section{Tag di blocco}
+
+I tag di blocco iniziano su una nuova riga:
+
+\begin{lstlisting}[language=HTML]
+<!-- Esempio di elementi di blocco HTML -->
+<div class="container">Contenitore generico</div>
+<p>Questo è un paragrafo di testo</p>
+<!-- I titoli hanno diversi livelli di importanza -->
+<h1>Titolo principale</h1>
+<h2>Titolo secondario</h2>
+<section>Una sezione tematica</section>
+<article>Un articolo completo</article>
+<!-- Le liste possono essere ordinate o non ordinate -->
+<ul>
+  <li>Lista elemento non ordinato</li>
+  <li>Lista elemento non ordinato</li>
+</ul>
+<ol>
+  <li>Lista elemento ordinato</li>
+  <li>Lista elemento ordinato</li>
+</ol>
+\end{lstlisting}
+
+%TODO: Inserire l'immagine del codice sopra
+
+\subsection{Tag blocco comuni}
+
+\begin{itemize}
+  \item \texttt{<div>}: Contenitore generico
+  \item \texttt{<p>}: Paragrafo
+  \item \texttt{<h1>} a \texttt{<h6>}: Heading (titoli)
+  \item \texttt{<section>}, \texttt{<article>}, \texttt{<header>}, \texttt{<footer>}: Semantici
+  \item \texttt{<ul>}, \texttt{<ol>}, \texttt{<li>}: Liste
+  \item \texttt{<blockquote>}: Citazione in blocco
+\end{itemize}
+
+\section{Tag inline}
+
+I tag inline non creano nuove righe e occupano solo lo spazio del contenuto:
+
+\begin{lstlisting}[language=HTML]
+<span class="highlight">testo importante</span>
+<a href="https://example.com">collegamento</a>
+<strong>testo forte (bold)</strong>
+<em>testo enfatizzato (italic)</em>
+<code>codice inline</code>
+<img src="immagine.jpg" alt="Descrizione" />
+\end{lstlisting}
+
+%TODO: Questa sezione va spostata nei css
+
+\section{Proprietà display CSS}
+
+La proprietà CSS \texttt{display} controlla come un elemento viene visualizzato:
+
+\begin{lstlisting}[language=CSS]
+/* Block-level */
+display: block;
+display: flex;
+display: grid;
+
+/* Inline */
+display: inline;
+display: inline-block;
+display: none;
+\end{lstlisting}
+
+\begin{nota}
+Con \texttt{display: inline-block}, un elemento inline può avere larghezza e altezza come un blocco, ma rimane sulla stessa riga degli elementi vicini.
+\end{nota}
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item Tag blocco occupano tutta la larghezza disponibile
+  \item Tag inline occupano solo lo spazio del contenuto
+  \item \texttt{display: block/inline/inline-block} controlla il comportamento
+  \item Proprietà CSS può modificare il comportamento di default
+  \item Semantica HTML rimane importante indipendentemente da display
+\end{itemize}

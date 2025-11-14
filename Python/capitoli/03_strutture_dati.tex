@@ -1,0 +1,166 @@
+% Modulo 03 — Strutture Dati
+\chapter{Strutture Dati}
+
+\section{Introduzione}
+Le strutture dati di base in Python includono liste, tuple, dizionari e insiemi. Ogni tipo ha proprietà e operazioni utili per modellare e manipolare dati.
+
+La descrizione guida alla scelta consapevole del tipo in base a mutabilità, costi operativi e chiarezza dell'intenzione: quando usare un dizionario per accesso rapido, un set per unicità o una tupla per dati immutabili. Vedremo idiomi Pythonici come comprensioni e unpacking.
+
+Una buona padronanza delle strutture dati rende le soluzioni più semplici, efficienti e robuste in problemi quotidiani di elaborazione, trasformazione e aggregazione.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Usare liste, tuple, dizionari e insiemi con metodi principali.
+  \item Comprendere mutabilità/immutabilità e scegliere il tipo adeguato.
+  \item Iterare e trasformare dati in modo idiomatico.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Panoramica]
+Lista (mutabile), Tupla (immutabile), Dizionario (mappa chiave $\rightarrow$ valore), Insieme (collezione non ordinata di elementi unici).
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Complessità e prestazioni]
+Liste: append/iterazione veloci; Dizionari/insiemi: lookup/inserimento mediamente O(1); Tuple: immutabili e leggere. Scegli in base a mutabilità, necessità di ordine e costi operativi.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Liste e comprensioni}
+\begin{lstlisting}
+nums = [1, 2, 3, 4]
+nums.append(5)
+quadrati = [n*n for n in nums]
+print(quadrati)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Lista mutabile}: `append` aggiunge in coda in O(1) amortizzato.  
+- \textbf{Comprensione}: crea una nuova lista trasformando elementi (`n*n`).  
+- \textbf{Separazione}: calcolo e I/O (`print`) sono distinti per chiarezza.
+\end{tcolorbox}
+
+\subsection{Tuple e unpacking}
+\begin{lstlisting}
+pt = (10, 20)
+x, y = pt
+print(x, y)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Tupla immutabile}: buona per record fissi e chiavi di dizionari.  
+- \textbf{Unpacking}: assegna posizionalmente; solleva `ValueError` se la cardinalità non coincide.  
+- \textbf{Chiarezza}: nomi `x, y` rendono esplicita la struttura dei dati.
+\end{tcolorbox}
+
+\subsection{Dizionari}
+\begin{lstlisting}
+info = {"nome": "Ada", "eta": 27}
+info["lingua"] = "Python"
+for k, v in info.items():
+    print(k, v)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Insert/Update}: assegnazione su chiave crea/aggiorna coppie chiave $\rightarrow$ valore.
+- \textbf{items}: itera su coppie `(k, v)` evitando lookup ripetuti.  
+- \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento.
+\end{tcolorbox}
+
+\subsection{Insiemi}
+\begin{lstlisting}
+u = {1, 2, 3}
+v = {3, 4}
+print(u | v, u & v, u - v)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Unione/intersezione/differenza}: \texttt{|}, \texttt{\&}, \texttt{-} operano su insiemi con semantica matematica.  
+- \textbf{Unicità}: i set eliminano duplicati; elementi devono essere hashable.  
+- \textbf{Prestazioni}: membership e operazioni insiemistiche sono mediamente O(1)/O(n).
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Rimozione di duplicati e membership veloce con set.
+  \item Indici e lookup rapidi con dizionari.
+  \item Rappresentazione compatta e immutabile con tuple.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Dato un elenco di parole, rimuovi duplicati mantenendo l'ordine.
+  \item Conta la frequenza dei caratteri in una stringa con un dizionario.
+  \item Data una lista di tuple (nome, punteggio), stampa il top 3.
+  \item Usa un set per trovare l'intersezione tra due liste.
+  \item Trasforma una lista di dizionari in un dizionario indicizzato per una chiave.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai esplorato le principali strutture dati e le loro operazioni tipiche.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Modellare dati di dominio (liste, dizionari, set).
+- Cache LRU e code con \texttt{deque}.
+- Rilevare duplicati e membership con \texttt{set}.
+- Mappare configurazioni e lookup con \texttt{dict}.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Liste vs tuple}: liste per collezioni mutabili; tuple per record immutabili e chiavi di dizionari.
+  \item \textbf{Insiemi}: utili per eliminare duplicati e test di appartenenza rapidi (hash-based); attenzione agli oggetti non hashable.
+  \item \textbf{Dizionari}: mapping flessibile; sfruttare \verb|dict.get|, \verb|defaultdict| e \verb|Counter| per pattern frequenti.
+  \item \textbf{Comprensioni}: preferire list/dict/set comprehension a cicli espliciti per trasformazioni; mantenere espressioni leggibili.
+  \item \textbf{Copia superficiale/profonda}: distinguere tra copia dei contenitori e copia degli elementi; usare \verb|copy| e \verb|deepcopy| consapevolmente.
+  \item \textbf{Complessità}: conoscere i costi di operazioni chiave (append, pop, membership) per evitare colli di bottiglia.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Per chi viene da C/Java/JS: mapping, set e ordinamenti}]
+\textbf{dict}: come una HashMap/oggetto JS ma con metodi ricchi (`items`, `keys`, `values`); le chiavi devono essere hashable (immutabili).  
+\textbf{set}: come HashSet, elimina duplicati e offre operazioni insiemistiche (\texttt{|}, \texttt{\&}, \texttt{-}).  
+\textbf{ordinamenti}: `sorted(xs, key=...)` ordina senza mutare; `list.sort()` ordina in-place.
+
+Esempi commentati:
+\begin{lstlisting}
+from collections import defaultdict, Counter
+
+# Conteggi frequenze
+c = Counter("abracadabra")
+print(c.most_common(2))  # [('a', 5), ('b', 2)]
+
+# Indice per chiave
+people = [
+    {"name": "Ada", "age": 27},
+    {"name": "Bob", "age": 33},
+]
+by_name = {p["name"]: p for p in people}
+
+# set per unione/intersezione
+a = {1, 2, 3}
+b = {3, 4}
+print(a | b, a & b, a - b)
+
+# defaultdict per accumuli
+acc = defaultdict(list)
+for p in people:
+    acc[p["age"]].append(p["name"])
+
+# ordinare per chiave
+print(sorted(people, key=lambda p: (p["age"], p["name"])) )
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Counter}: conteggio frequenze e \texttt{most\_common} per ranking rapido.  
+- \textbf{Comprehension dict}: crea indice per chiave evitando loop manuali.  
+- \textbf{defaultdict}: inizializza accumulatori riducendo boilerplate.  
+- \textbf{sorted key}: ordinamento stabile su tuple di chiavi senza mutare l'input.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Idiomi: comprensioni, unpacking, generatori}]
+- \textbf{Comprensioni}: `[f(x) for x in xs if cond]` per trasformazioni rapide.  
+- \textbf{Unpacking}: `a, b = pair`, `first, *rest = xs`.  
+- \textbf{Generatori}: `(... for x in xs)` per elaborazioni lazy e ridotto uso memoria; usa `sum`, `any`, `all` su generatori.
+\end{tcolorbox}
+
+\paragraph{Idiomi utili} Sfruttare \verb|zip|, \verb|sorted(key=...)| e generatori per elaborare sequenze in modo espressivo e efficiente.
+Consulta: \url{https://docs.python.org/3/tutorial/datastructures.html}.

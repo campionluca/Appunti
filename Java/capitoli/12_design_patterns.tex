@@ -1,0 +1,763 @@
+% Capitolo 12 - Design Patterns
+\chapter{Design Patterns}
+\label{cap:design_patterns}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere i principi dietro i Design Patterns
+    \item Implementare pattern creazionali: Singleton, Factory, Builder
+    \item Implementare pattern comportamentali: Observer, Strategy, Decorator
+    \item Implementare pattern strutturali: Adapter, Bridge
+    \item Riconoscere quando applicare ogni pattern
+    \item Evitare anti-patterns e abusi di design
+    \item Scrivere codice più maintainable e riusabile
+\end{itemize}
+
+\section{Introduzione ai Design Patterns}
+
+I \textbf{Design Patterns} sono soluzioni consolidate e riusabili a problemi comuni nel design del software. Forniscono un linguaggio condiviso tra sviluppatori e aiutano a scrivere codice più organizzato. Si dividono in tre categorie: \textbf{creazionali} (come creare oggetti), \textbf{strutturali} (come organizzare classi e oggetti), \textbf{comportamentali} (come gestire interazioni tra oggetti).
+
+\section{Singleton: una sola istanza}
+
+Il \textbf{Singleton} pattern garantisce che una classe abbia una sola istanza e fornisce un punto di accesso globale a essa.
+
+\subsection{Singleton base}
+
+\begin{lstlisting}
+public class DatabaseConnection {
+    // Variabile statica privata: unica istanza
+    private static DatabaseConnection istanza;
+
+    // Costruttore privato: impedisce creazione di altre istanze
+    private DatabaseConnection() {
+        System.out.println("Connessione al database avviata");
+    }
+
+    // Metodo statico getInstance(): ritorna l'istanza unica
+    public static DatabaseConnection getInstance() {
+        if (istanza == null) {
+            // Lazy initialization: crea l'istanza solo al primo accesso
+            istanza = new DatabaseConnection();
+        }
+        return istanza;
+    }
+
+    public void eseguiQuery(String query) {
+        System.out.println("Esecuzione: " + query);
+    }
+}
+
+public class EsempoSingleton {
+    public static void main(String[] args) {
+        // Accedi all'istanza unica
+        DatabaseConnection db1 = DatabaseConnection.getInstance();
+        DatabaseConnection db2 = DatabaseConnection.getInstance();
+
+        // db1 e db2 sono la stessa istanza
+        System.out.println("Sono uguali: " + (db1 == db2)); // true
+
+        db1.eseguiQuery("SELECT * FROM utenti");
+        db2.eseguiQuery("SELECT * FROM prodotti");
+    }
+}
+\end{lstlisting}
+
+Il Singleton usa un costruttore privato per impedire istanziazione diretta e un metodo statico \texttt{getInstance()} per accedere all'istanza unica. Il metodo implementa \textbf{lazy initialization}: l'istanza viene creata solo al primo accesso. Questo pattern è utile per risorse costose come connessioni database.
+
+\subsection{Singleton thread-safe}
+
+\begin{lstlisting}
+public class LoggerSingleton {
+    private static LoggerSingleton istanza;
+
+    private LoggerSingleton() {
+    }
+
+    // Metodo synchronized: thread-safe ma meno efficiente
+    public static synchronized LoggerSingleton getInstance() {
+        if (istanza == null) {
+            istanza = new LoggerSingleton();
+        }
+        return istanza;
+    }
+
+    public void log(String messaggio) {
+        System.out.println("[LOG] " + messaggio);
+    }
+}
+
+// Alternativa: Eager Initialization (più semplice e thread-safe)
+public class ConfigSingleton {
+    // Istanza creata al caricamento della classe
+    private static final ConfigSingleton istanza = new ConfigSingleton();
+
+    private ConfigSingleton() {
+    }
+
+    // Metodo getInstance(): sempre thread-safe
+    public static ConfigSingleton getInstance() {
+        return istanza;
+    }
+
+    public String getProprietà(String chiave) {
+        return "valore";
+    }
+}
+\end{lstlisting}
+
+In ambienti multithreaded, usa il metodo \texttt{synchronized} o l'eager initialization. La versione sincronizzata protegge la creazione dell'istanza da race conditions. L'eager initialization è più semplice: crea l'istanza quando la classe è caricata (garantito dal class loader di Java).
+
+\section{Factory: creazione di oggetti}
+
+Il \textbf{Factory} pattern fornisce un'interfaccia per creare oggetti senza specificare le loro classi concrete.
+
+\subsection{Simple Factory}
+
+\begin{lstlisting}
+// Interfaccia per i tipi di trasporto
+public interface Trasporto {
+    void consegna(String indirizzo);
+}
+
+// Implementazioni concrete
+public class Bicicletta implements Trasporto {
+    @Override
+    public void consegna(String indirizzo) {
+        System.out.println("Consegna in bicicletta a: " + indirizzo);
+    }
+}
+
+public class Furgone implements Trasporto {
+    @Override
+    public void consegna(String indirizzo) {
+        System.out.println("Consegna in furgone a: " + indirizzo);
+    }
+}
+
+public class Aereo implements Trasporto {
+    @Override
+    public void consegna(String indirizzo) {
+        System.out.println("Consegna in aereo a: " + indirizzo);
+    }
+}
+
+// Factory: crea istanze senza che il client conosca le classi concrete
+public class TrasportoFactory {
+    public static Trasporto creaTrasporto(String tipo) {
+        switch (tipo.toLowerCase()) {
+            case "bicicletta":
+                return new Bicicletta();
+            case "furgone":
+                return new Furgone();
+            case "aereo":
+                return new Aereo();
+            default:
+                throw new IllegalArgumentException("Tipo sconosciuto: " + tipo);
+        }
+    }
+}
+
+public class EsempoFactory {
+    public static void main(String[] args) {
+        // Il client non conosce le classi concrete
+        // Il metodo TrasportoFactory.creaTrasporto() crea l'istanza appropriata
+        Trasporto t1 = TrasportoFactory.creaTrasporto("bicicletta");
+        Trasporto t2 = TrasportoFactory.creaTrasporto("furgone");
+        Trasporto t3 = TrasportoFactory.creaTrasporto("aereo");
+
+        t1.consegna("Via Roma 1");
+        t2.consegna("Via Milano 2");
+        t3.consegna("Via Torino 3");
+    }
+}
+\end{lstlisting}
+
+Il pattern Factory centralizza la creazione di oggetti. I client usano il metodo \texttt{TrasportoFactory.creaTrasporto()} per ottenere istanze senza conoscere le classi concrete. Questo decoupling facilita l'aggiunta di nuovi tipi senza modificare il codice client.
+
+\section{Builder: costruzione complessa}
+
+Il \textbf{Builder} pattern costruisce oggetti complessi passo dopo passo.
+
+\subsection{Implementazione del Builder}
+
+\begin{lstlisting}
+public class Casa {
+    private String fondamenta;
+    private String muri;
+    private String tetto;
+    private String porta;
+    private String finestre;
+
+    // Costruttore privato: usa il Builder per creare istanze
+    private Casa(CasaBuilder builder) {
+        this.fondamenta = builder.fondamenta;
+        this.muri = builder.muri;
+        this.tetto = builder.tetto;
+        this.porta = builder.porta;
+        this.finestre = builder.finestre;
+    }
+
+    // Metodo toString(): stampa i dettagli della casa
+    @Override
+    public String toString() {
+        return "Casa{" +
+                "fondamenta='" + fondamenta + '\'' +
+                ", muri='" + muri + '\'' +
+                ", tetto='" + tetto + '\'' +
+                ", porta='" + porta + '\'' +
+                ", finestre='" + finestre + '\'' +
+                '}';
+    }
+
+    // Builder inner class
+    public static class CasaBuilder {
+        private String fondamenta;
+        private String muri;
+        private String tetto;
+        private String porta;
+        private String finestre;
+
+        // Metodi builder(): ogni metodo ritorna il builder per chaining
+        public CasaBuilder conFondamenta(String fondamenta) {
+            this.fondamenta = fondamenta;
+            return this;
+        }
+
+        public CasaBuilder conMuri(String muri) {
+            this.muri = muri;
+            return this;
+        }
+
+        public CasaBuilder conTetto(String tetto) {
+            this.tetto = tetto;
+            return this;
+        }
+
+        public CasaBuilder conPorta(String porta) {
+            this.porta = porta;
+            return this;
+        }
+
+        public CasaBuilder conFinestre(String finestre) {
+            this.finestre = finestre;
+            return this;
+        }
+
+        // Metodo build(): crea l'istanza finale
+        public Casa build() {
+            return new Casa(this);
+        }
+    }
+}
+
+public class EsempoBuilder {
+    public static void main(String[] args) {
+        // Costruisci la casa passo dopo passo
+        // Il metodo build() ritorna l'istanza completa
+        Casa casa = new Casa.CasaBuilder()
+                .conFondamenta("Cemento")
+                .conMuri("Mattoni")
+                .conTetto("Tegole")
+                .conPorta("Legno")
+                .conFinestre("Vetro")
+                .build();
+
+        System.out.println(casa);
+
+        // Puoi anche omettere alcuni passi
+        Casa casaSemplice = new Casa.CasaBuilder()
+                .conFondamenta("Sabbia")
+                .conMuri("Legno")
+                .build();
+
+        System.out.println(casaSemplice);
+    }
+}
+\end{lstlisting}
+
+Il Builder pattern facilita la creazione di oggetti complessi con molti parametri. Il metodo \texttt{conXxx()} ritorna il builder stesso, permettendo il \textbf{method chaining}: una sequenza di metodi che costruiscono l'oggetto passo dopo passo. Questo è più leggibile di un costruttore con molti parametri.
+
+\section{Observer: notifica di cambiamenti}
+
+L'Observer pattern definisce una relazione uno-a-molti: quando un oggetto cambia stato, tutti gli osservatori sono notificati.
+
+\subsection{Implementazione di Observer}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+// Interfaccia Observer: gli osservatori implementano questo metodo
+public interface Osservatore {
+    // Il metodo aggiorna(): viene chiamato quando il soggetto cambia
+    void aggiorna(String messaggio);
+}
+
+// Soggetto (Subject/Observable)
+public class Stazione {
+    private List<Osservatore> osservatori = new ArrayList<>();
+
+    // Il metodo aggiungiOsservatore(): registra un osservatore
+    public void aggiungiOsservatore(Osservatore o) {
+        osservatori.add(o);
+    }
+
+    // Il metodo rimuoviOsservatore(): deregistra un osservatore
+    public void rimuoviOsservatore(Osservatore o) {
+        osservatori.remove(o);
+    }
+
+    // Il metodo notificaOsservatori(): notifica tutti gli osservatori
+    private void notificaOsservatori(String messaggio) {
+        for (Osservatore o : osservatori) {
+            // Il metodo o.aggiorna() notifica l'osservatore
+            o.aggiorna(messaggio);
+        }
+    }
+
+    // Il metodo annunciaTrainPartenza(): anuncia una partenza e notifica
+    public void annunciaTrainPartenza(String treno) {
+        String messaggio = "Treno " + treno + " in partenza";
+        notificaOsservatori(messaggio);
+    }
+}
+
+// Osservatori concreti
+public class Passeggero implements Osservatore {
+    private String nome;
+
+    public Passeggero(String nome) {
+        this.nome = nome;
+    }
+
+    @Override
+    public void aggiorna(String messaggio) {
+        System.out.println(nome + " riceve: " + messaggio);
+    }
+}
+
+public class Controllore implements Osservatore {
+    @Override
+    public void aggiorna(String messaggio) {
+        System.out.println("[Controllore] " + messaggio);
+    }
+}
+
+public class EsempoObserver {
+    public static void main(String[] args) {
+        Stazione stazione = new Stazione();
+
+        // Crea osservatori
+        Passeggero p1 = new Passeggero("Alice");
+        Passeggero p2 = new Passeggero("Bob");
+        Controllore controllore = new Controllore();
+
+        // Il metodo stazione.aggiungiOsservatore() registra gli osservatori
+        stazione.aggiungiOsservatore(p1);
+        stazione.aggiungiOsservatore(p2);
+        stazione.aggiungiOsservatore(controllore);
+
+        // Il metodo stazione.annunciaTrainPartenza() notifica tutti
+        stazione.annunciaTrainPartenza("IC100");
+
+        // Rimuovi un osservatore
+        // Il metodo stazione.rimuoviOsservatore() deregistra
+        stazione.rimuoviOsservatore(p1);
+
+        stazione.annunciaTrainPartenza("EC200");
+    }
+}
+\end{lstlisting}
+
+L'Observer pattern decoupling l'oggetto che cambia (soggetto) da quelli che reagiscono al cambiamento (osservatori). Il metodo \texttt{aggiungiOsservatore()} registra osservatori e il metodo \texttt{notificaOsservatori()} notifica tutti quando il soggetto cambia stato.
+
+\section{Strategy: selezionare algoritmi}
+
+Lo Strategy pattern permette di selezionare un algoritmo da una famiglia di algoritmi intercambiabili.
+
+\subsection{Implementazione di Strategy}
+
+\begin{lstlisting}
+// Interfaccia Strategy
+public interface StrategiaOrdine {
+    // Il metodo applica(): calcola il prezzo finale con la strategia
+    double applica(double prezzoBase);
+}
+
+// Strategie concrete
+public class DescuentoFisso implements StrategiaOrdine {
+    private double importo;
+
+    public DescuentoFisso(double importo) {
+        this.importo = importo;
+    }
+
+    @Override
+    public double applica(double prezzoBase) {
+        // Sconto fisso
+        return Math.max(0, prezzoBase - importo);
+    }
+}
+
+public class DescuentoPercentuale implements StrategiaOrdine {
+    private double percentuale;
+
+    public DescuentoPercentuale(double percentuale) {
+        this.percentuale = percentuale;
+    }
+
+    @Override
+    public double applica(double prezzoBase) {
+        // Sconto percentuale
+        return prezzoBase * (1 - percentuale / 100);
+    }
+}
+
+public class SenzaSconto implements StrategiaOrdine {
+    @Override
+    public double applica(double prezzoBase) {
+        return prezzoBase;
+    }
+}
+
+// Contesto che usa la strategia
+public class Ordine {
+    private double prezzo;
+    private StrategiaOrdine strategia;
+
+    public Ordine(double prezzo) {
+        this.prezzo = prezzo;
+        this.strategia = new SenzaSconto(); // Strategia di default
+    }
+
+    // Il metodo setStrategia(): seleziona una strategia a runtime
+    public void setStrategia(StrategiaOrdine strategia) {
+        this.strategia = strategia;
+    }
+
+    // Il metodo calcolaPrezzoFinale(): applica la strategia corrente
+    public double calcolaPrezzoFinale() {
+        // Il metodo strategia.applica() calcola il prezzo
+        return strategia.applica(prezzo);
+    }
+}
+
+public class EsempoStrategy {
+    public static void main(String[] args) {
+        Ordine ordine = new Ordine(100.0);
+
+        // Senza sconto
+        System.out.println("Prezzo senza sconto: " + ordine.calcolaPrezzoFinale());
+
+        // Sconto fisso
+        // Il metodo ordine.setStrategia() cambia la strategia
+        ordine.setStrategia(new DescuentoFisso(20));
+        System.out.println("Prezzo con sconto fisso: " + ordine.calcolaPrezzoFinale());
+
+        // Sconto percentuale
+        ordine.setStrategia(new DescuentoPercentuale(10));
+        System.out.println("Prezzo con sconto 10%: " + ordine.calcolaPrezzoFinale());
+    }
+}
+\end{lstlisting}
+
+Lo Strategy pattern incapsula algoritmi in classi separate e li rende intercambiabili. Il metodo \texttt{ordine.setStrategia()} permette di cambiare l'algoritmo a runtime. Questo è particolarmente utile quando hai molti algoritmi simili con leggere variazioni.
+
+\section{Decorator: aggiungere responsabilità}
+
+Il Decorator pattern aggiunge funzionalità a oggetti dinamicamente, senza modificarne la classe.
+
+\subsection{Implementazione di Decorator}
+
+\begin{lstlisting}
+// Interfaccia base
+public interface Bevanda {
+    // Il metodo descrizione(): descrive la bevanda
+    String descrizione();
+
+    // Il metodo prezzo(): ritorna il prezzo
+    double prezzo();
+}
+
+// Implementazione concreta
+public class Caffè implements Bevanda {
+    @Override
+    public String descrizione() {
+        return "Caffè";
+    }
+
+    @Override
+    public double prezzo() {
+        return 2.0;
+    }
+}
+
+// Decorator base: implementa Bevanda e contiene una Bevanda
+public abstract class CondimentoDecorator implements Bevanda {
+    protected Bevanda bevanda;
+
+    public CondimentoDecorator(Bevanda bevanda) {
+        this.bevanda = bevanda;
+    }
+}
+
+// Decorator concreti
+public class Latte extends CondimentoDecorator {
+    public Latte(Bevanda bevanda) {
+        super(bevanda);
+    }
+
+    @Override
+    public String descrizione() {
+        // Il metodo bevanda.descrizione() ritorna la descrizione della bevanda originale
+        return bevanda.descrizione() + " + Latte";
+    }
+
+    @Override
+    public double prezzo() {
+        // Il metodo bevanda.prezzo() ritorna il prezzo della bevanda originale
+        return bevanda.prezzo() + 0.50;
+    }
+}
+
+public class Cioccolato extends CondimentoDecorator {
+    public Cioccolato(Bevanda bevanda) {
+        super(bevanda);
+    }
+
+    @Override
+    public String descrizione() {
+        return bevanda.descrizione() + " + Cioccolato";
+    }
+
+    @Override
+    public double prezzo() {
+        return bevanda.prezzo() + 0.75;
+    }
+}
+
+public class EsempoDecorator {
+    public static void main(String[] args) {
+        // Crea una bevanda base
+        Bevanda bevanda = new Caffè();
+
+        // Decora con Latte
+        // Il metodo new Latte() wrappa la bevanda aggiungendo Latte
+        bevanda = new Latte(bevanda);
+
+        // Decora con Cioccolato
+        bevanda = new Cioccolato(bevanda);
+
+        // Stampa descrizione e prezzo
+        System.out.println(bevanda.descrizione()); // "Caffè + Latte + Cioccolato"
+        System.out.println("Prezzo: €" + bevanda.prezzo()); // 3.25
+
+        // Puoi decorare in qualsiasi ordine
+        Bevanda alt = new Cioccolato(new Latte(new Caffè()));
+        System.out.println(alt.descrizione());
+        System.out.println("Prezzo: €" + alt.prezzo());
+    }
+}
+\end{lstlisting}
+
+Il Decorator pattern permette di aggiungere responsabilità a oggetti dinamicamente, senza usare l'eredità (che sarebbe rigida). Un Decorator wrappa un oggetto e fornisce la stessa interfaccia, aggiungendo funzionalità. I Decorator possono essere annidati per composizioni complesse.
+
+\begin{nota}
+Pattern creazionali vs comportamentali:
+\begin{itemize}
+    \item \textbf{Creazionali} (Singleton, Factory, Builder): come creare oggetti
+    \item \textbf{Comportamentali} (Observer, Strategy, Decorator): come organizzare oggetti e responsabilità
+    \item \textbf{Strutturali} (Adapter, Bridge): come comporre classi e oggetti in strutture più grandi
+\end{itemize}
+
+Scegli il pattern che meglio risolve il tuo problema di design.
+\end{nota}
+
+\section{Adapter: compatibilità tra interfacce}
+
+L'Adapter pattern rende compatibili interfacce incompatibili permettendo a classi con interfacce diverse di collaborare.
+
+\subsection{Implementazione di Adapter}
+
+\begin{lstlisting}
+// Interfaccia vecchia (legacy)
+public interface InterfacciaVecchia {
+    String richiestaVecchia();
+}
+
+// Implementazione della vecchia interfaccia
+public class ClasseVecchia implements InterfacciaVecchia {
+    @Override
+    public String richiestaVecchia() {
+        return "Risposta vecchia";
+    }
+}
+
+// Nuova interfaccia (quello che vogliamo)
+public interface InterfacciaNuova {
+    String richiestaNuova();
+}
+
+// Adapter: converte InterfacciaVecchia a InterfacciaNuova
+public class Adapter implements InterfacciaNuova {
+    private InterfacciaVecchia vecchia;
+
+    public Adapter(InterfacciaVecchia vecchia) {
+        this.vecchia = vecchia;
+    }
+
+    @Override
+    public String richiestaNuova() {
+        // Converte la richiesta vecchia al nuovo formato
+        // Il metodo vecchia.richiestaVecchia() chiama il metodo vecchio
+        String risposta = vecchia.richiestaVecchia();
+        return "Adattata: " + risposta;
+    }
+}
+
+public class EsempoAdapter {
+    public static void main(String[] args) {
+        InterfacciaVecchia vecchia = new ClasseVecchia();
+
+        // Crea un adapter che converte l'interfaccia
+        InterfacciaNuova nuova = new Adapter(vecchia);
+
+        // Usa come se fosse della nuova interfaccia
+        System.out.println(nuova.richiestaNuova());
+    }
+}
+\end{lstlisting}
+
+L'Adapter pattern è utile quando hai codice legacy con interfacce incompatibili e vuoi usarlo con codice nuovo. L'adapter implementa la nuova interfaccia e contiene un'istanza della vecchia, convertendo le chiamate tra le due.
+
+\section{Bridge: disaccoppiare astrazione da implementazione}
+
+Il Bridge pattern separa l'astrazione dall'implementazione in modo che possano variare indipendentemente.
+
+\subsection{Implementazione di Bridge}
+
+\begin{lstlisting}
+// Implementazione (lato concreto)
+public interface RenderizzatoreVideo {
+    void renderizza(String video);
+}
+
+public class RenderizzatoreHTML implements RenderizzatoreVideo {
+    @Override
+    public void renderizza(String video) {
+        System.out.println("<video src=\"" + video + "\"></video>");
+    }
+}
+
+public class RenderizzatoreFlash implements RenderizzatoreVideo {
+    @Override
+    public void renderizza(String video) {
+        System.out.println("<object data=\"" + video + "\"></object>");
+    }
+}
+
+// Astrazione (lato astratto)
+public abstract class VideoPlayer {
+    protected RenderizzatoreVideo renderizzatore;
+
+    public VideoPlayer(RenderizzatoreVideo renderizzatore) {
+        this.renderizzatore = renderizzatore;
+    }
+
+    // Il metodo play(): delega al renderizzatore concreto
+    public abstract void play(String video);
+}
+
+// Astrazione concreta
+public class VideoPlayerPC extends VideoPlayer {
+    public VideoPlayerPC(RenderizzatoreVideo renderizzatore) {
+        super(renderizzatore);
+    }
+
+    @Override
+    public void play(String video) {
+        System.out.println("Riproduzione su PC:");
+        // Il metodo renderizzatore.renderizza() usa il renderizzatore delegato
+        renderizzatore.renderizza(video);
+    }
+}
+
+public class VideoPlayerMobile extends VideoPlayer {
+    public VideoPlayerMobile(RenderizzatoreVideo renderizzatore) {
+        super(renderizzatore);
+    }
+
+    @Override
+    public void play(String video) {
+        System.out.println("Riproduzione su Mobile:");
+        renderizzatore.renderizza(video);
+    }
+}
+
+public class EsempoBridge {
+    public static void main(String[] args) {
+        // PC con HTML
+        VideoPlayer pcHTML = new VideoPlayerPC(new RenderizzatoreHTML());
+        pcHTML.play("film.mp4");
+
+        // PC con Flash
+        VideoPlayer pcFlash = new VideoPlayerPC(new RenderizzatoreFlash());
+        pcFlash.play("video.flv");
+
+        // Mobile con HTML
+        VideoPlayer mobileHTML = new VideoPlayerMobile(new RenderizzatoreHTML());
+        mobileHTML.play("clip.mp4");
+    }
+}
+\end{lstlisting}
+
+Il Bridge pattern decoupling l'astrazione (VideoPlayer) dall'implementazione (RenderizzatoreVideo), permettendo a entrambe di variare indipendentemente. Questo evita un'esplosione combinatoria di sottoclassi (una per ogni combinazione di astrazione e implementazione).
+
+\section{Esercizi progressivi}
+
+\subsection{Esercizio 1: Logger Singleton}
+
+Crea una classe \texttt{Logger} Singleton con metodo \texttt{log()} e \texttt{logError()}. Usa eager initialization per thread-safety. Verifica che tutti i log vadano alla stessa istanza.
+
+\subsection{Esercizio 2: Factory di Forme}
+
+Crea un'interfaccia \texttt{Forma} con metodo \texttt{area()}. Implementa \texttt{Cerchio}, \texttt{Rettangolo}, \texttt{Triangolo}. Crea una \texttt{FormaFactory} che crea forme per tipo.
+
+\subsection{Esercizio 3: Builder di Persona}
+
+Crea una classe \texttt{Persona} con campi \texttt{nome}, \texttt{eta}, \texttt{email}, \texttt{telefono}. Implementa un \texttt{PersonaBuilder} che permette costruzione passo dopo passo con method chaining.
+
+\subsection{Esercizio 4: Observer di Temperature}
+
+Crea una classe \texttt{Termometro} che notifica gli osservatori quando la temperatura cambia. Gli osservatori stampano avvisi se la temperatura supera una soglia.
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato importanti Design Patterns:
+
+\begin{itemize}
+    \item \textbf{Singleton}: assicura una sola istanza di una classe
+    \item \textbf{Factory}: crea oggetti senza specificare classi concrete
+    \item \textbf{Builder}: costruisce oggetti complessi passo dopo passo
+    \item \textbf{Observer}: notifica multiple classi quando lo stato cambia
+    \item \textbf{Strategy}: seleziona algoritmi intercambiabili a runtime
+    \item \textbf{Decorator}: aggiunge responsabilità a oggetti dinamicamente
+    \item \textbf{Adapter}: rende compatibili interfacce incompatibili
+    \item \textbf{Bridge}: disaccoppia astrazione da implementazione
+\end{itemize}
+
+I Design Patterns sono strumenti potenti per scrivere codice robusto, mantenibile e estendibile.
+
+\begin{nota}
+Concetti correlati:
+\begin{itemize}
+    \item \textbf{SOLID Principles}: principi fondamentali di design
+    \item \textbf{Dependency Injection}: pattern correlato a Factory
+    \item \textbf{Interfacce e Classi Astratte}: fondamenta dei pattern (\autoref{cap:interfacce_classi_astratte})
+\end{itemize}
+
+Questi argomenti approfondiscono ulteriormente l'architettura software.
+\end{nota}

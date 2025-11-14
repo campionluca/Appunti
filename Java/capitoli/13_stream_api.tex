@@ -1,0 +1,699 @@
+% Capitolo 13 - Stream API e Functional Programming
+\chapter{Stream API e Functional Programming}
+\label{cap:stream_api}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere il concetto di Stream e la programmazione dichiarativa
+    \item Creare Stream da collezioni, array, e risorse
+    \item Usare operazioni intermedie: map(), filter(), flatMap(), sorted()
+    \item Usare operazioni terminali: collect(), forEach(), reduce(), count()
+    \item Lavorare con Optional per gestire valori opzionali
+    \item Implementare lazy evaluation per ottimizzazione
+    \item Utilizzare Parallel Streams per elaborazione concorrente
+\end{itemize}
+
+\section{Introduzione a Stream e Functional Programming}
+
+Uno \textbf{Stream} è una sequenza di elementi che può essere elaborata in modo funzionale e dichiarativo. La \textbf{programmazione funzionale} enfatizza funzioni pure (senza effetti collaterali) e immutabilità, in contrasto con la programmazione imperativa che specifica come fare qualcosa. Gli Stream semplificano il lavoro con collezioni, permettendoti di esprimere operazioni con eleganza e concisione.
+
+\subsection{Programmazione imperativa vs dichiarativa}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class ImperativoVsDichiarativo {
+    public static void main(String[] args) {
+        List<Integer> numeri = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            numeri.add(i);
+        }
+
+        // === APPROCCIO IMPERATIVO (vecchio) ===
+        // Specifica come fare: itera, filtra, trasforma manualmente
+        List<Integer> risultato1 = new ArrayList<>();
+        for (Integer num : numeri) {
+            // Ciclo for-each: il "come" è esplicito
+            if (num % 2 == 0) {
+                risultato1.add(num * 2);
+            }
+        }
+        System.out.println("Imperativo: " + risultato1);
+
+        // === APPROCCIO DICHIARATIVO (con Stream) ===
+        // Specifica cosa fare: filtra, trasforma, raccogli
+        List<Integer> risultato2 = numeri.stream()
+                // Il metodo filter() filtra elementi pari
+                .filter(n -> n % 2 == 0)
+                // Il metodo map() trasforma ogni elemento
+                .map(n -> n * 2)
+                // Il metodo collect() raccoglie il risultato
+                .collect(java.util.stream.Collectors.toList());
+        System.out.println("Dichiarativo: " + risultato2);
+    }
+}
+\end{lstlisting}
+
+La programmazione imperativa specifica esplicitamente ogni passo: itera, verifica condizioni, modifica. La programmazione dichiarativa specifica cosa ottenere senza dettagli implementativi. Gli Stream permettono l'approccio dichiarativo: dici al compilatore quale trasformazione vuoi, e il compilatore ottimizza come eseguirla.
+
+\section{Creazione di Stream}
+
+\subsection{Stream da collezioni}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
+
+public class CrezioneStream {
+    public static void main(String[] args) {
+        // Stream da List
+        List<String> parole = new ArrayList<>();
+        parole.add("Java");
+        parole.add("Stream");
+        parole.add("API");
+
+        // Il metodo parole.stream() crea uno stream da una lista
+        Stream<String> stream1 = parole.stream();
+
+        // Stream da Set
+        Set<Integer> numeri = new HashSet<>();
+        numeri.add(1);
+        numeri.add(2);
+        numeri.add(3);
+
+        // Il metodo numeri.stream() crea uno stream da un set
+        Stream<Integer> stream2 = numeri.stream();
+
+        // Stream da array
+        String[] array = {"A", "B", "C"};
+
+        // Il metodo Arrays.stream() crea uno stream da un array
+        Stream<String> stream3 = java.util.Arrays.stream(array);
+
+        // Stream.of() crea uno stream da elementi singoli
+        Stream<Double> stream4 = Stream.of(1.1, 2.2, 3.3);
+
+        // Stream infinito (con limit per evitare infinito)
+        Stream<Integer> stream5 = Stream.iterate(1, n -> n + 1).limit(5);
+
+        // Stream da generazione
+        Stream<String> stream6 = Stream.generate(() -> "Hello").limit(3);
+    }
+}
+\end{lstlisting}
+
+Puoi creare Stream da:
+- Collezioni: \texttt{lista.stream()} (disponibile su List, Set, Collection)
+- Array: \texttt{Arrays.stream()}
+- Valori singoli: \texttt{Stream.of()}
+- Iterazione infinita: \texttt{Stream.iterate()}
+- Generazione: \texttt{Stream.generate()}
+
+\section{Operazioni intermedie}
+
+Le operazioni intermedie trasformano uno Stream in un altro Stream.
+
+\subsection{filter(): selezionare elementi}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class EsempoFilter {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        // Il metodo filter() seleziona elementi che soddisfano il predicato
+        // La lambda n -> n % 2 == 0 filtra numeri pari
+        List<Integer> pari = numeri.stream()
+                .filter(n -> n % 2 == 0)
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        System.out.println("Pari: " + pari);
+
+        // Filtri multipli (chainati)
+        List<Integer> pareMaggioriDi5 = numeri.stream()
+                // Il primo filter() seleziona pari
+                .filter(n -> n % 2 == 0)
+                // Il secondo filter() seleziona maggiori di 5
+                .filter(n -> n > 5)
+                .collect(Collectors.toList());
+
+        System.out.println("Pari > 5: " + pareMaggioriDi5);
+
+        // Filter con logica complessa
+        List<String> parole = List.of("Java", "Stream", "API", "Cool");
+        List<String> paroleLunghe = parole.stream()
+                // La lambda s -> s.length() > 4 filtra stringhe con più di 4 caratteri
+                .filter(s -> s.length() > 4)
+                .collect(Collectors.toList());
+
+        System.out.println("Parole lunghe: " + paroleLunghe);
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{filter()} applica un predicato e mantiene solo elementi per cui il predicato ritorna true. Puoi chainare multipli \texttt{filter()} per logica complessa.
+
+\subsection{map(): trasformare elementi}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class EsempoMap {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(1, 2, 3, 4, 5);
+
+        // Il metodo map() trasforma ogni elemento
+        // La lambda n -> n * 2 moltiplica per 2
+        List<Integer> raddoppiati = numeri.stream()
+                .map(n -> n * 2)
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        System.out.println("Raddoppiati: " + raddoppiati);
+
+        // Map su stringhe
+        List<String> parole = List.of("java", "stream", "api");
+
+        // La lambda String::toUpperCase converte a maiuscole
+        // Equivalente a: s -> s.toUpperCase()
+        List<String> maiuscole = parole.stream()
+                .map(String::toUpperCase)
+                .collect(Collectors.toList());
+
+        System.out.println("Maiuscole: " + maiuscole);
+
+        // Map per estrarre proprietà
+        List<String> nomi = List.of("Alice", "Bob", "Charlie");
+
+        // La lambda s -> s.length() calcola la lunghezza
+        List<Integer> lunghezze = nomi.stream()
+                .map(String::length)
+                .collect(Collectors.toList());
+
+        System.out.println("Lunghezze: " + lunghezze);
+
+        // Combinazione di filter e map
+        List<Integer> risultato = numeri.stream()
+                // Il metodo filter() seleziona pari
+                .filter(n -> n % 2 == 0)
+                // Il metodo map() trasforma
+                .map(n -> n * n)
+                // Il metodo collect() raccoglie
+                .collect(Collectors.toList());
+
+        System.out.println("Pari quadrati: " + risultato);
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{map()} applica una funzione di trasformazione a ogni elemento, producendo un nuovo Stream di elementi trasformati. Method reference (come \texttt{String::toUpperCase}) sono shorthand per lambda.
+
+\subsection{flatMap(): appiattire Stream annidati}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class EsempoFlatMap {
+    public static void main(String[] args) {
+        // Lista di liste
+        List<List<Integer>> listeDiNumeri = List.of(
+                List.of(1, 2, 3),
+                List.of(4, 5),
+                List.of(6, 7, 8, 9)
+        );
+
+        // flatMap() appiattisce Stream annidati
+        // La lambda lista -> lista.stream() converte ogni lista in uno stream
+        List<Integer> numeriFlatmap = listeDiNumeri.stream()
+                .flatMap(List::stream)
+                // Il metodo collect() raccoglie il risultato in una lista piatta
+                .collect(Collectors.toList());
+
+        System.out.println("Appiattito: " + numeriFlatmap);
+
+        // flatMap con trasformazione
+        List<String> parole = List.of("Java", "Stream");
+
+        // Per ogni parola, crea uno stream dei caratteri
+        List<String> caratteri = parole.stream()
+                // La lambda p -> p.split("") divide la parola in caratteri
+                .flatMap(p -> Stream.of(p.split("")))
+                // Il metodo collect() raccoglie i caratteri
+                .collect(Collectors.toList());
+
+        System.out.println("Caratteri: " + caratteri);
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{flatMap()} è utile quando una funzione ritorna uno Stream e vuoi appiattire il risultato in un singolo Stream. Usa \texttt{map()} per trasformazioni uno-a-uno, \texttt{flatMap()} per uno-a-molti.
+
+\subsection{sorted(): ordinamento}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class EsempoSorted {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(5, 2, 9, 1, 7, 3);
+
+        // Il metodo sorted() ordina in ordine naturale
+        List<Integer> ordinati = numeri.stream()
+                .sorted()
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        System.out.println("Ordinati: " + ordinati);
+
+        // Ordinamento con Comparator (ordine inverso)
+        List<Integer> inversi = numeri.stream()
+                // La lambda (a, b) -> b - a ordina in ordine decrescente
+                .sorted((a, b) -> b - a)
+                .collect(Collectors.toList());
+
+        System.out.println("Inversi: " + inversi);
+
+        // Ordinamento di stringhe per lunghezza
+        List<String> parole = List.of("Java", "Stream", "API", "Hello");
+
+        List<String> perLunghezza = parole.stream()
+                // Il metodo Comparator.comparingInt(String::length) ordina per lunghezza
+                .sorted(java.util.Comparator.comparingInt(String::length))
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        System.out.println("Per lunghezza: " + perLunghezza);
+
+        // Ordinamento decrescente
+        List<String> lunghezzaDecrescente = parole.stream()
+                // Il metodo reversed() inverte l'ordine
+                .sorted(java.util.Comparator.comparingInt(String::length).reversed())
+                .collect(Collectors.toList());
+
+        System.out.println("Lunghezza decrescente: " + lunghezzaDecrescente);
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{sorted()} ordina uno Stream. Senza argomenti, usa l'ordine naturale. Con un \texttt{Comparator}, usa l'ordinamento personalizzato.
+
+\section{Operazioni terminali}
+
+Le operazioni terminali producono un risultato finale (non Stream).
+
+\subsection{collect(): raccogliere risultati}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class EsempoCollect {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(1, 2, 3, 4, 5, 2, 3);
+
+        // Collect in List
+        // Il metodo Collectors.toList() raccoglie in una lista
+        List<Integer> lista = numeri.stream()
+                .filter(n -> n > 2)
+                .collect(Collectors.toList());
+
+        System.out.println("Lista: " + lista);
+
+        // Collect in Set (rimuove duplicati)
+        // Il metodo Collectors.toSet() raccoglie in un set
+        Set<Integer> insieme = numeri.stream()
+                .collect(Collectors.toSet());
+
+        System.out.println("Set: " + insieme);
+
+        // Collect in String (join)
+        // Il metodo Collectors.joining() concatena stringhe
+        List<String> parole = List.of("Java", "Stream", "API");
+
+        String concatenate = parole.stream()
+                .collect(Collectors.joining(", "));
+
+        System.out.println("Concatenate: " + concatenate);
+
+        // Collect con groupingBy
+        List<String> nomi = List.of("Alice", "Bob", "Anna", "Bruno");
+
+        // Il metodo Collectors.groupingBy(String::length) raggruppa per lunghezza
+        var raggruppatoPerlunghezza = nomi.stream()
+                .collect(Collectors.groupingBy(String::length));
+
+        System.out.println("Raggruppato: " + raggruppatoPerlunghezza);
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{collect()} è l'operazione terminale più versatile. I \texttt{Collectors} forniscono strategie di raccolta:
+- \texttt{toList()}: raccoglie in una lista
+- \texttt{toSet()}: raccoglie in un set
+- \texttt{joining()}: concatena stringhe
+- \texttt{groupingBy()}: raggruppa elementi
+- \texttt{partitioningBy()}: divide in due gruppi
+
+\subsection{forEach(), reduce(), count()}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.Optional;
+
+public class EsempoOperazioniTerminali {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(1, 2, 3, 4, 5);
+
+        // === forEach() ===
+        // Il metodo forEach() esegue un'azione per ogni elemento
+        System.out.println("Elementi:");
+        numeri.stream()
+                .forEach(n -> System.out.println("  " + n));
+
+        // === count() ===
+        // Il metodo count() ritorna il numero di elementi
+        long conteggio = numeri.stream()
+                .filter(n -> n > 2)
+                // Il metodo count() ritorna il numero di elementi che soddisfano il filtro
+                .count();
+
+        System.out.println("Conteggio > 2: " + conteggio);
+
+        // === reduce() ===
+        // Il metodo reduce() combina gli elementi in un singolo valore
+        // La lambda (a, b) -> a + b somma gli elementi
+        Optional<Integer> somma = numeri.stream()
+                .reduce((a, b) -> a + b);
+
+        // Il metodo somma.ifPresent() esegue un'azione se il valore è presente
+        somma.ifPresent(s -> System.out.println("Somma: " + s));
+
+        // reduce con valore iniziale
+        // Il metodo reduce(0, (a, b) -> a + b) somma partendo da 0
+        int sommaConIniziale = numeri.stream()
+                .reduce(0, (a, b) -> a + b);
+
+        System.out.println("Somma con iniziale: " + sommaConIniziale);
+
+        // === min() e max() ===
+        Optional<Integer> massimo = numeri.stream()
+                // Il metodo max() trova il massimo
+                .max((a, b) -> a - b);
+
+        massimo.ifPresent(m -> System.out.println("Massimo: " + m));
+
+        // === anyMatch(), allMatch(), noneMatch() ===
+        // Il metodo anyMatch() ritorna true se almeno un elemento soddisfa la condizione
+        boolean haePari = numeri.stream()
+                .anyMatch(n -> n % 2 == 0);
+
+        System.out.println("Ha pari: " + haePari);
+
+        // Il metodo allMatch() ritorna true se tutti gli elementi soddisfano
+        boolean tuttiPositivi = numeri.stream()
+                .allMatch(n -> n > 0);
+
+        System.out.println("Tutti positivi: " + tuttiPositivi);
+    }
+}
+\end{lstlisting}
+
+Operazioni terminali comuni:
+- \texttt{forEach()}: esegue un'azione per ogni elemento
+- \texttt{count()}: ritorna il numero di elementi
+- \texttt{reduce()}: combina elementi in un singolo valore
+- \texttt{min()}, \texttt{max()}: ritorna Optional con min/max
+- \texttt{anyMatch()}, \texttt{allMatch()}, \texttt{noneMatch()}: predicati su interi Stream
+
+\section{Optional: gestire valori opzionali}
+
+\texttt{Optional<T>} è un contenitore che può contenere un valore o essere vuoto, evitando \texttt{NullPointerException}.
+
+\subsection{Uso di Optional}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.Optional;
+
+public class EsempoOptional {
+    public static void main(String[] args) {
+        List<String> nomi = List.of("Alice", "Bob", "Charlie");
+
+        // Optional da valore presente
+        Optional<String> primo = nomi.stream().findFirst();
+
+        // Il metodo ifPresent() esegue un'azione se il valore è presente
+        primo.ifPresent(nome -> System.out.println("Primo nome: " + nome));
+
+        // Il metodo ifPresentOrElse() esegue azioni in entrambi i casi
+        Optional<String> assente = nomi.stream()
+                .filter(n -> n.startsWith("Z"))
+                .findFirst();
+
+        assente.ifPresentOrElse(
+                nome -> System.out.println("Trovato: " + nome),
+                () -> System.out.println("Non trovato")
+        );
+
+        // Il metodo orElse() ritorna il valore o un default
+        String risultato = assente.orElse("Nessuno");
+        System.out.println("Risultato: " + risultato);
+
+        // Il metodo orElseThrow() ritorna il valore o lancia eccezione
+        try {
+            // Il metodo orElseThrow() lancia eccezione se vuoto
+            String nome = assente.orElseThrow(() -> new IllegalArgumentException("Nome non trovato"));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Eccezione: " + e.getMessage());
+        }
+
+        // Il metodo map() trasforma il valore se presente
+        // La lambda s -> s.toUpperCase() trasforma il nome in maiuscole
+        Optional<String> maiuscolo = primo.map(String::toUpperCase);
+        maiuscolo.ifPresent(m -> System.out.println("Maiuscolo: " + m));
+
+        // Il metodo filter() filtra il valore se presente
+        Optional<String> lungo = primo.filter(s -> s.length() > 3);
+        lungo.ifPresent(l -> System.out.println("Nome lungo: " + l));
+    }
+}
+\end{lstlisting}
+
+\texttt{Optional} è utile per gestire risultati che potrebbero non esistere. I metodi principali:
+- \texttt{ifPresent()}: esegue azione se presente
+- \texttt{orElse()}: ritorna valore o default
+- \texttt{orElseThrow()}: ritorna valore o lancia eccezione
+- \texttt{map()}, \texttt{filter()}: trasformano il valore se presente
+
+\begin{nota}
+Non abusare di Optional:
+\begin{itemize}
+    \item Usa Optional per risultati di operazioni che potrebbero mancare
+    \item Non usare Optional come parametro di metodo (usa overloading o default)
+    \item Non usare Optional per campi di classe (usa null o valore di default)
+    \item Optional è per restituire valori opzionali da metodi
+\end{itemize}
+\end{nota}
+
+\section{Lazy Evaluation}
+
+Gli Stream usano \textbf{lazy evaluation}: non elaborano elementi fino a quando un'operazione terminale non li richiede.
+
+\subsection{Ottimizzazione con Lazy Evaluation}
+
+\begin{lstlisting}
+import java.util.List;
+
+public class EsempoLazyEvaluation {
+    public static void main(String[] args) {
+        List<Integer> numeri = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        // Senza limit, dovrebbe filtrare tutti gli elementi
+        // Ma con lazy evaluation, si ferma al primo elemento che soddisfa limit(1)
+        System.out.println("Lazy evaluation:");
+
+        numeri.stream()
+                // Stampa per ogni elemento (per mostrare lazy evaluation)
+                .peek(n -> System.out.println("  Elaborando: " + n))
+                // Il metodo filter() seleziona elementi
+                .filter(n -> {
+                    System.out.println("    Filtrando: " + n);
+                    return n > 3;
+                })
+                // Il metodo map() trasforma
+                .map(n -> {
+                    System.out.println("    Mappando: " + n);
+                    return n * 2;
+                })
+                // Il metodo limit() limita a 2 elementi
+                // Con lazy evaluation, non elabora più di 2 elementi
+                .limit(2)
+                // Il metodo forEach() esegue l'operazione terminale
+                .forEach(n -> System.out.println("    Risultato: " + n));
+
+        System.out.println("\nSenza limit, elaboro tutto:");
+
+        numeri.stream()
+                .peek(n -> System.out.println("  Elaborando: " + n))
+                .filter(n -> n > 3)
+                .map(n -> n * 2)
+                // Senza limit, elabora tutti gli elementi
+                .forEach(n -> System.out.println("    Risultato: " + n));
+    }
+}
+\end{lstlisting}
+
+La lazy evaluation significa che le operazioni intermedie non vengono eseguite finché un'operazione terminale non lo richiede. Questo permette ottimizzazioni: con \texttt{limit(2)}, lo Stream si ferma dopo aver prodotto 2 elementi, non elabora l'intero Stream.
+
+\section{Parallel Streams: elaborazione concorrente}
+
+\textbf{Parallel Streams} dividono il lavoro tra multipli thread per elaborazione concorrente.
+
+\subsection{Uso di Parallel Streams}
+
+\begin{lstlisting}
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class EsempoParallelStream {
+    public static void main(String[] args) {
+        List<Integer> numeri = java.util.stream.IntStream.range(1, 101)
+                .boxed()
+                .collect(Collectors.toList());
+
+        // Sequential stream (normale)
+        System.out.println("Sequential:");
+        long inizio = System.currentTimeMillis();
+
+        List<Integer> risultato1 = numeri.stream()
+                // Il metodo filter() filtra elementi
+                .filter(n -> costosaOperazione(n))
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        long durata1 = System.currentTimeMillis() - inizio;
+        System.out.println("Tempo: " + durata1 + "ms");
+        System.out.println("Conteggio: " + risultato1.size());
+
+        // Parallel stream (distribuito su multipli thread)
+        System.out.println("\nParallel:");
+        inizio = System.currentTimeMillis();
+
+        List<Integer> risultato2 = numeri.parallelStream()
+                // Il metodo filter() filtra elementi (in parallelo)
+                .filter(n -> costosaOperazione(n))
+                // Il metodo collect() raccoglie il risultato
+                .collect(Collectors.toList());
+
+        long durata2 = System.currentTimeMillis() - inizio;
+        System.out.println("Tempo: " + durata2 + "ms");
+        System.out.println("Conteggio: " + risultato2.size());
+
+        System.out.println("Speedup: " + (double) durata1 / durata2);
+    }
+
+    // Operazione costosa per simulare lavoro
+    private static boolean costosaOperazione(int n) {
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return n % 2 == 0;
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{parallelStream()} elabora elementi su multipli thread. Usa \texttt{parallelStream()} per operazioni costose su collezioni grandi. Per collezioni piccole o operazioni leggere, il sequential stream è più veloce.
+
+\begin{nota}
+Quando usare Parallel Streams:
+\begin{itemize}
+    \item Usa quando hai molti elementi (migliaia+) e operazioni costose
+    \item La pratica parallelizzazione ha overhead: numero di elementi e costo dell'operazione devono giustificare l'overhead
+    \item Evita parallelizzazione su operazioni rapide su collezioni piccole
+    \item Assicurati che la funzione sia pura (senza effetti collaterali)
+\end{itemize}
+\end{nota}
+
+\section{Esercizi progressivi}
+
+\subsection{Esercizio 1: Filtraggio e trasformazione}
+
+Data una lista di numeri da 1 a 20:
+\begin{itemize}
+    \item Filtra numeri pari
+    \item Trasforma (moltiplica per 3)
+    \item Stampa il risultato
+\end{itemize}
+
+\subsection{Esercizio 2: Operazioni su stringhe}
+
+Data una lista di parole, crea uno Stream che:
+\begin{itemize}
+    \item Filtra parole con lunghezza > 3
+    \item Trasforma a maiuscole
+    \item Concatena con ", "
+    \item Stampa il risultato
+\end{itemize}
+
+\subsection{Esercizio 3: Reduce per somma e prodotto}
+
+Usa \texttt{reduce()} per calcolare:
+\begin{itemize}
+    \item Somma di numeri da 1 a 100
+    \item Prodotto di numeri da 1 a 10
+    \item Stringa concatenata di una lista di stringhe
+\end{itemize}
+
+\subsection{Esercizio 4: Optional e find}
+
+Crea uno Stream che:
+\begin{itemize}
+    \item Cerca il primo numero divisibile per 7
+    \item Usa Optional e \texttt{findFirst()}
+    \item Stampa "Trovato: X" o "Non trovato"
+\end{itemize}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato la Stream API e la programmazione funzionale:
+
+\begin{itemize}
+    \item \textbf{Stream}: sequenze elaborabili in modo funzionale
+    \item \textbf{Operazioni intermedie}: \texttt{filter()}, \texttt{map()}, \texttt{flatMap()}, \texttt{sorted()}
+    \item \textbf{Operazioni terminali}: \texttt{collect()}, \texttt{forEach()}, \texttt{reduce()}, \texttt{count()}
+    \item \textbf{Optional}: gestione di valori opzionali
+    \item \textbf{Lazy evaluation}: ottimizzazione con valutazione ritardata
+    \item \textbf{Parallel Streams}: elaborazione concorrente su multipli thread
+    \item \textbf{Programmazione funzionale}: dichiarativa, basata su funzioni pure
+\end{itemize}
+
+La Stream API è uno strumento potente per scrivere codice espressivo e efficiente quando lavori con collezioni.
+
+\begin{nota}
+Concetti correlati:
+\begin{itemize}
+    \item \textbf{Lambda Expressions}: fondamenta della Stream API (\autoref{cap:lambda_expressions})
+    \item \textbf{Collections Framework}: sorgente di Stream (\autoref{cap:collections_framework})
+    \item \textbf{Generics}: type safety negli Stream (\autoref{cap:generics})
+    \item \textbf{Multithreading}: usato da Parallel Streams (\autoref{cap:multithreading})
+\end{itemize}
+
+Questi argomenti si integrano con la Stream API per una programmazione Java moderna.
+\end{nota}

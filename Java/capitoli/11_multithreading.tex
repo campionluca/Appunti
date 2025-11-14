@@ -1,0 +1,641 @@
+% Capitolo 11 - Multithreading e Concurrency
+\chapter{Multithreading e Concurrency}
+\label{cap:multithreading}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere i concetti di thread e il modello di concorrenza di Java
+    \item Creare e avviare thread estendendo Thread e implementando Runnable
+    \item Sincronizzare l'accesso a risorse condivise con synchronized
+    \item Utilizzare Lock e ReentrantLock per controllo granulare della sincronizzazione
+    \item Lavorare con Atomic variables per operazioni thread-safe
+    \item Usare ExecutorService per gestire pool di thread
+    \item Evitare deadlock e race conditions
+\end{itemize}
+
+\section{Concetti base di Thread}
+
+Un \textbf{thread} (filo) è un flusso di esecuzione indipendente all'interno di un processo. Java supporta il \textbf{multithreading}, permettendo di eseguire più thread contemporaneamente, rendendo le applicazioni più responsabili e efficienti.
+
+\subsection{Creazione di Thread: estensione di Thread}
+
+\begin{lstlisting}
+public class MioThread extends Thread {
+    private String nome;
+
+    public MioThread(String nome) {
+        this.nome = nome;
+    }
+
+    // Il metodo run() contiene il codice eseguito dal thread
+    @Override
+    public void run() {
+        for (int i = 1; i <= 5; i++) {
+            // System.out.println() stampa il messaggio
+            System.out.println(nome + " - Iterazione " + i);
+
+            try {
+                // Il metodo Thread.sleep() mette in pausa il thread per 1000ms
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                System.out.println("Thread interrotto");
+            }
+        }
+    }
+}
+
+public class EsempoThreadEstensione {
+    public static void main(String[] args) {
+        // Crea istanze di thread
+        MioThread t1 = new MioThread("Thread-1");
+        MioThread t2 = new MioThread("Thread-2");
+
+        // Il metodo t1.start() avvia il thread
+        // Nota: NON chiamare run() direttamente!
+        t1.start();
+        t2.start();
+
+        System.out.println("Main thread continua");
+    }
+}
+\end{lstlisting}
+
+Per creare un thread, estendi la classe \texttt{Thread} e implementa il metodo \texttt{run()}. Il metodo \texttt{start()} avvia un nuovo thread che eseguirà il metodo \texttt{run()} concorrentemente. \textbf{Importante}: chiama \texttt{start()}, non \texttt{run()} direttamente, altrimenti il codice viene eseguito nel thread corrente. Il metodo \texttt{Thread.sleep()} sospende il thread per il tempo specificato (in millisecondi).
+
+\subsection{Implementazione di Runnable}
+
+\begin{lstlisting}
+public class MioRunnable implements Runnable {
+    private String nome;
+
+    public MioRunnable(String nome) {
+        this.nome = nome;
+    }
+
+    // Il metodo run() contiene il codice eseguito dal thread
+    @Override
+    public void run() {
+        for (int i = 1; i <= 5; i++) {
+            System.out.println(nome + " - Passo " + i);
+        }
+    }
+}
+
+public class EsempoRunnable {
+    public static void main(String[] args) {
+        // Crea Runnable (non è un Thread)
+        Runnable r1 = new MioRunnable("Runnable-1");
+        Runnable r2 = new MioRunnable("Runnable-2");
+
+        // Crea Thread, passando il Runnable al costruttore
+        Thread t1 = new Thread(r1);
+        Thread t2 = new Thread(r2);
+
+        // Il metodo t1.start() avvia i thread
+        t1.start();
+        t2.start();
+
+        // Con lambda (Java 8+)
+        Thread t3 = new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                System.out.println("Lambda thread");
+            }
+        });
+
+        // Il metodo t3.start() avvia il thread
+        t3.start();
+    }
+}
+\end{lstlisting}
+
+L'approccio \texttt{Runnable} è preferito a estendere \texttt{Thread} perché permette di ereditare da altre classi (Java non supporta eredità multipla). Implementa \texttt{run()} in una classe che implementa \texttt{Runnable}, poi passa l'istanza al costruttore di \texttt{Thread}. In Java 8+, puoi usare lambda expressions per sintassi più concisa: \texttt{new Thread(() -> { ... }).start()}.
+
+\begin{nota}
+Esecuzione sequenziale vs concorrente:
+\begin{itemize}
+    \item \textbf{main thread}: il thread principale che avvia il programma
+    \item \textbf{worker threads}: thread creati dal programma per eseguire lavoro concorrentemente
+    \item Quando un thread termina il metodo \texttt{run()}, il thread muore
+    \item Il programma termina quando il main thread e tutti gli altri thread non-daemon sono terminati
+\end{itemize}
+\end{nota}
+
+\section{Sincronizzazione: accesso a risorse condivise}
+
+Quando più thread accedono alla stessa risorsa (variabile, oggetto), occorre \textbf{sincronizzare} per evitare \textbf{race conditions} (comportamenti imprevedibili).
+
+\subsection{Sincronizzazione con synchronized}
+
+\begin{lstlisting}
+public class ContoCorrente {
+    private int saldo;
+
+    public ContoCorrente(int saldoIniziale) {
+        this.saldo = saldoIniziale;
+    }
+
+    // Metodo synchronized: solo un thread alla volta può eseguirlo
+    public synchronized void deposita(int importo) {
+        // Leggi il saldo corrente
+        int temp = saldo;
+
+        // Simula una operazione lunga (tempo di elaborazione)
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        // Aggiorna il saldo
+        saldo = temp + importo;
+        System.out.println("Deposito: " + importo + ", Nuovo saldo: " + saldo);
+    }
+
+    // Metodo synchronized: accesso thread-safe
+    public synchronized int getSaldo() {
+        return saldo;
+    }
+}
+
+public class EsempoSynchronized {
+    public static void main(String[] args) {
+        ContoCorrente conto = new ContoCorrente(1000);
+
+        // Crea due thread che depositano contemporaneamente
+        Thread t1 = new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                // Il metodo conto.deposita() è sincronizzato
+                conto.deposita(100);
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            for (int i = 0; i < 3; i++) {
+                conto.deposita(200);
+            }
+        });
+
+        // Il metodo t1.start() avvia i thread
+        t1.start();
+        t2.start();
+
+        try {
+            // Il metodo t1.join() aspetta che il thread termini
+            t1.join();
+            t2.join();
+        } catch (InterruptedException e) {
+            System.out.println("Interrotto");
+        }
+
+        // Stampa il saldo finale
+        System.out.println("Saldo finale: " + conto.getSaldo());
+    }
+}
+\end{lstlisting}
+
+La parola chiave \texttt{synchronized} su un metodo garantisce che solo un thread alla volta possa eseguire quel metodo su una particolare istanza. Il thread acquisisce un \textbf{lock} (blocco) sull'oggetto prima di entrare nel metodo e lo rilascia dopo l'uscita. Tutti gli altri thread in attesa del lock rimangono bloccati. Il metodo \texttt{join()} aspetta che un thread termini prima di continuare.
+
+\subsection{Sincronizzazione di blocchi}
+
+\begin{lstlisting}
+public class BufferCondiviso {
+    private int[] buffer = new int[10];
+    private int indice = 0;
+
+    public void scrivi(int valore) {
+        // Sincronizza solo la sezione critica
+        synchronized (this) {
+            if (indice < buffer.length) {
+                // System.out.println() stampa il valore scritto
+                System.out.println("Scritto: " + valore);
+                buffer[indice++] = valore;
+            }
+        }
+
+        // Codice non sincronizzato (può eseguirsi in parallelo)
+        System.out.println("Elaborazione continuata");
+    }
+
+    public int leggi() {
+        synchronized (this) {
+            if (indice > 0) {
+                // Il metodo --indice decrementa l'indice
+                return buffer[--indice];
+            }
+        }
+        return -1;
+    }
+}
+
+public class EsempoBlockoSincronizzato {
+    public static void main(String[] args) {
+        BufferCondiviso buffer = new BufferCondiviso();
+
+        Thread scrittore = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                // Il metodo buffer.scrivi() è sincronizzato
+                buffer.scrivi(i * 10);
+            }
+        });
+
+        Thread lettore = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                int valore = buffer.leggi();
+                // System.out.println() stampa il valore letto
+                System.out.println("Letto: " + valore);
+            }
+        });
+
+        scrittore.start();
+        lettore.start();
+    }
+}
+\end{lstlisting}
+
+La sincronizzazione di blocchi permette di sincronizzare solo sezioni critiche, lasciando il resto del codice non sincronizzato. La sintassi \texttt{synchronized (oggetto)} acquisisce il lock su quell'oggetto. Questo è più granulare di sincronizzare l'intero metodo e può migliorare le performance.
+
+\section{Lock e ReentrantLock}
+
+Per controllo più avanzato della sincronizzazione, Java fornisce l'interfaccia \texttt{Lock} e l'implementazione \texttt{ReentrantLock}.
+
+\subsection{ReentrantLock: controllo esplicito}
+
+\begin{lstlisting}
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class Cassa {
+    private double denaro;
+    private Lock lock = new ReentrantLock();
+
+    public Cassa(double denaro) {
+        this.denaro = denaro;
+    }
+
+    public void prelievo(double importo) {
+        // Il metodo lock.lock() acquisisce il lock
+        lock.lock();
+        try {
+            if (denaro >= importo) {
+                // Simula operazione
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                // Il metodo -= aggiorna il saldo
+                denaro -= importo;
+                // System.out.println() stampa il prelievo
+                System.out.println("Prelievo: " + importo + ", Saldo: " + denaro);
+            } else {
+                System.out.println("Fondi insufficienti");
+            }
+        } finally {
+            // Il metodo lock.unlock() rilascia il lock
+            // unlock() va SEMPRE in finally per evitare deadlock se eccezione
+            lock.unlock();
+        }
+    }
+
+    public double getSaldo() {
+        lock.lock();
+        try {
+            return denaro;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+public class EsempoReentrantLock {
+    public static void main(String[] args) {
+        Cassa cassa = new Cassa(1000);
+
+        Thread[] thread = new Thread[3];
+
+        for (int i = 0; i < 3; i++) {
+            final int id = i;
+            thread[i] = new Thread(() -> {
+                for (int j = 0; j < 2; j++) {
+                    // Il metodo cassa.prelievo() usa ReentrantLock
+                    cassa.prelievo(100);
+                }
+            });
+            // Il metodo thread[i].start() avvia il thread
+            thread[i].start();
+        }
+
+        // Il metodo Thread.join() aspetta tutti i thread
+        for (Thread t : thread) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                System.out.println("Interrotto");
+            }
+        }
+
+        System.out.println("Saldo finale: " + cassa.getSaldo());
+    }
+}
+\end{lstlisting}
+
+\texttt{ReentrantLock} fornisce controllo esplicito: chiami \texttt{lock.lock()} per acquisire il lock e \texttt{lock.unlock()} per rilasciarlo. \textbf{Importante}: metti \texttt{unlock()} in un blocco \texttt{finally} per garantire il rilascio anche se si verifica un'eccezione. \texttt{ReentrantLock} è "reentrant": lo stesso thread può acquisire il lock multiple volte senza deadlock.
+
+\subsection{Atomic Variables: operazioni thread-safe}
+
+\begin{lstlisting}
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Contatore {
+    // AtomicInteger fornisce operazioni thread-safe senza lock esplicito
+    private AtomicInteger conteggio = new AtomicInteger(0);
+
+    public void incrementa() {
+        // Il metodo incrementAndGet() incrementa e ritorna il nuovo valore
+        // Operazione atomica (thread-safe)
+        conteggio.incrementAndGet();
+    }
+
+    public void decrementa() {
+        // Il metodo decrementAndGet() decrementa e ritorna il nuovo valore
+        conteggio.decrementAndGet();
+    }
+
+    public int getValore() {
+        // Il metodo get() ritorna il valore corrente
+        return conteggio.get();
+    }
+
+    public void somma(int delta) {
+        // Il metodo addAndGet() somma e ritorna il nuovo valore
+        conteggio.addAndGet(delta);
+    }
+}
+
+public class EsempoAtomic {
+    public static void main(String[] args) {
+        Contatore contatore = new Contatore();
+
+        // Crea 5 thread che incrementano contemporaneamente
+        Thread[] thread = new Thread[5];
+
+        for (int i = 0; i < 5; i++) {
+            thread[i] = new Thread(() -> {
+                for (int j = 0; j < 1000; j++) {
+                    // Il metodo contatore.incrementa() usa AtomicInteger
+                    contatore.incrementa();
+                }
+            });
+            // Il metodo thread[i].start() avvia il thread
+            thread[i].start();
+        }
+
+        // Il metodo Thread.join() aspetta i thread
+        for (Thread t : thread) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                System.out.println("Interrotto");
+            }
+        }
+
+        // Output: 5000 (esatto perché AtomicInteger è thread-safe)
+        System.out.println("Conteggio finale: " + contatore.getValore());
+    }
+}
+\end{lstlisting}
+
+Le \texttt{Atomic} variables (come \texttt{AtomicInteger}, \texttt{AtomicLong}, \texttt{AtomicBoolean}) forniscono operazioni thread-safe senza lock esplicito, usando istruzioni CAS (Compare-And-Swap) del processore. Sono molto più efficienti di lock per operazioni semplici. I metodi \texttt{incrementAndGet()}, \texttt{decrementAndGet()}, \texttt{addAndGet()}, \texttt{compareAndSet()} sono tutti atomici.
+
+\section{ExecutorService: gestione di thread pool}
+
+Creare un nuovo thread per ogni task è inefficiente. \texttt{ExecutorService} gestisce un pool di thread riutilizzabili.
+
+\subsection{Threadpool con ExecutorService}
+
+\begin{lstlisting}
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class EsempoExecutorService {
+    public static void main(String[] args) {
+        // Crea un pool di 3 thread
+        // Il metodo Executors.newFixedThreadPool() crea un pool fisso
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+
+        // Invia 10 task al pool
+        for (int i = 0; i < 10; i++) {
+            final int id = i;
+
+            // Il metodo executor.execute() invia un Runnable al pool
+            executor.execute(() -> {
+                // System.out.println() stampa il task in esecuzione
+                System.out.println("Task " + id + " eseguito da " + Thread.currentThread().getName());
+
+                try {
+                    // Il metodo Thread.sleep() simula lavoro
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+
+                System.out.println("Task " + id + " completato");
+            });
+        }
+
+        // Il metodo executor.shutdown() ferma il pool (non accetta più task)
+        executor.shutdown();
+
+        try {
+            // Il metodo executor.awaitTermination() aspetta che tutti i task terminino
+            if (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+                System.out.println("Timeout");
+                // Il metodo executor.shutdownNow() ferma immediatamente
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        System.out.println("Tutti i task completati");
+    }
+}
+\end{lstlisting}
+
+\texttt{ExecutorService} è un pool di thread che gestisce l'esecuzione di task asincroni. Il metodo \texttt{Executors.newFixedThreadPool(n)} crea un pool con \texttt{n} thread. Il metodo \texttt{executor.execute()} invia un Runnable per l'esecuzione. Il metodo \texttt{executor.shutdown()} ferma il pool e il metodo \texttt{executor.awaitTermination()} aspetta che tutti i task completino.
+
+\subsection{Submit e Future}
+
+\begin{lstlisting}
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+public class EsempoFuture {
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+
+        // Il metodo executor.submit() ritorna un Future
+        Future<Integer> futuro1 = executor.submit(() -> {
+            // System.out.println() stampa il messaggio
+            System.out.println("Calcolo 1 avviato");
+
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            // Ritorna il risultato
+            return 100;
+        });
+
+        Future<Integer> futuro2 = executor.submit(() -> {
+            System.out.println("Calcolo 2 avviato");
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            return 200;
+        });
+
+        try {
+            // Il metodo futuro1.get() attende il risultato
+            Integer risultato1 = futuro1.get();
+            Integer risultato2 = futuro2.get();
+
+            System.out.println("Risultato 1: " + risultato1);
+            System.out.println("Risultato 2: " + risultato2);
+        } catch (Exception e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+
+        executor.shutdown();
+    }
+}
+\end{lstlisting}
+
+Il metodo \texttt{executor.submit()} ritorna un \texttt{Future} che rappresenta il risultato di un'operazione asincrona. Il metodo \texttt{futuro.get()} blocca e aspetta il risultato. Puoi usare \texttt{futuro.isDone()} per verificare se il task è completato senza bloccare.
+
+\section{Evitare Deadlock e Race Conditions}
+
+\subsection{Race Condition: accesso non sincronizzato}
+
+\begin{lstlisting}
+public class RaceCondition {
+    private int contatore = 0;
+
+    // Metodo NON sincronizzato: race condition!
+    public void incrementa() {
+        // Operazione non-atomica: leggi, modifica, scrivi
+        int temp = contatore; // Leggi
+        temp++; // Modifica
+        contatore = temp; // Scrivi
+    }
+
+    public int getContatore() {
+        return contatore;
+    }
+}
+
+public class EsempoRaceCondition {
+    public static void main(String[] args) throws InterruptedException {
+        RaceCondition rc = new RaceCondition();
+
+        // Crea 10 thread che incrementano 1000 volte ciascuno
+        Thread[] thread = new Thread[10];
+
+        for (int i = 0; i < 10; i++) {
+            thread[i] = new Thread(() -> {
+                for (int j = 0; j < 1000; j++) {
+                    // Il metodo rc.incrementa() non è sincronizzato
+                    rc.incrementa();
+                }
+            });
+            thread[i].start();
+        }
+
+        // Aspetta che tutti i thread completino
+        for (Thread t : thread) {
+            t.join();
+        }
+
+        // Output: < 10000 (perdita di incrementi a causa di race condition)
+        System.out.println("Contatore: " + rc.getContatore());
+    }
+}
+\end{lstlisting}
+
+Una \textbf{race condition} si verifica quando più thread accedono a dati condivisi contemporaneamente senza sincronizzazione. Nel codice sopra, l'operazione "leggi-modifica-scrivi" non è atomica: tra leggi e scrivi, altri thread possono modificare il valore, causando perdita di incrementi. \textbf{Soluzione}: sincronizza il metodo \texttt{incrementa()} o usa \texttt{AtomicInteger}.
+
+\begin{nota}
+Come evitare problemi di concorrenza:
+\begin{itemize}
+    \item Sincronizza l'accesso a dati condivisi
+    \item Usa \texttt{AtomicXxx} per operazioni semplici su variabili singole
+    \item Immutabilità: dati che non cambiano non hanno problemi di sincronizzazione
+    \item Riduci l'ambito del lock: sincronizza solo sezioni critiche
+    \item Evita lock annidati per prevenire deadlock
+\end{itemize}
+\end{nota}
+
+\section{Esercizi progressivi}
+
+\subsection{Esercizio 1: Produttore-Consumatore sincronizzato}
+
+Crea un buffer condiviso con metodi sincronizzati \texttt{produci()} e \texttt{consuma()}. Implementa un produttore e un consumatore in thread diversi. Usa lock per sincronizzazione.
+
+\subsection{Esercizio 2: Contatore thread-safe}
+
+Crea una classe \texttt{ContatoreThread} con un \texttt{AtomicInteger}. Crea 5 thread che incrementano il contatore 100 volte ciascuno. Verifica che il risultato sia 500.
+
+\subsection{Esercizio 3: ExecutorService con 10 task}
+
+Crea un ExecutorService con pool di 3 thread. Invia 10 task che stampano il numero del task e il thread name. Aspetta che tutti completino prima di uscire.
+
+\subsection{Esercizio 4: Future e calcoli asincroni}
+
+Usa ExecutorService.submit() per calcolare:
+\begin{itemize}
+    \item Somma dei numeri da 1 a 100
+    \item Prodotto dei numeri da 1 a 10
+    \item Media di una lista di numeri
+\end{itemize}
+
+Stampa i risultati dopo averli ottenuti con Future.get().
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato il multithreading in Java:
+
+\begin{itemize}
+    \item \textbf{Thread}: creazione estendendo Thread o implementando Runnable
+    \item \textbf{synchronized}: protezione di metodi e blocchi critici
+    \item \textbf{Lock e ReentrantLock}: controllo esplicito della sincronizzazione
+    \item \textbf{Atomic variables}: operazioni thread-safe senza lock esplicito
+    \item \textbf{ExecutorService}: gestione efficiente di pool di thread
+    \item \textbf{Race condition}: evitare accessi non sincronizzati a dati condivisi
+    \item \textbf{Deadlock}: evitare blocchi circolari di lock
+\end{itemize}
+
+Il multithreading è essenziale per applicazioni che devono gestire operazioni lunghe o multiple simultaneamente.
+
+\begin{nota}
+Concetti correlati:
+\begin{itemize}
+    \item \textbf{Lambda Expressions}: usate estesamente con thread e Runnable (\autoref{cap:lambda_expressions})
+    \item \textbf{Stream API}: operazioni parallele su collezioni (\autoref{cap:stream_api})
+    \item \textbf{Collections Thread-safe}: \texttt{ConcurrentHashMap}, \texttt{CopyOnWriteArrayList}
+\end{itemize}
+
+Questi argomenti complementano la conoscenza del multithreading.
+\end{nota}

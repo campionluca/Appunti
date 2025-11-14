@@ -1,0 +1,565 @@
+% Capitolo 9 - Generics e Type Erasure
+\chapter{Generics e Type Erasure}
+\label{cap:generics}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere il concetto di tipi generici in Java
+    \item Dichiarare e utilizzare classi generiche con sintassi <T>
+    \item Creare metodi generici con type parameters
+    \item Applicare bounded type parameters e wildcard constraints
+    \item Distinguere tra type erasure e compile-time type checking
+    \item Utilizzare wildcards (<? extends T>, <? super T>) per controllo della varianza
+    \item Sviluppare strutture dati generiche riusabili
+\end{itemize}
+
+\section{Introduzione ai Generics}
+
+I \textbf{Generics} sono un meccanismo di Java che permette di scrivere codice type-safe e riusabile, parametrizzando le classi e i metodi con tipi generici. Prima dell'introduzione dei Generics in Java 5, era necessario usare casting esplicito quando si lavorava con collezioni (per approfondimenti sulle collezioni, vedi \autoref{cap:collections_framework}), con il rischio di errori runtime. I Generics permettono al compilatore di verificare a tempo di compilazione che stai usando i tipi corretti, prevenendo \texttt{ClassCastException} a runtime.
+
+\subsection{Problema senza Generics}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class SenzaGenerics {
+    public static void main(String[] args) {
+        // Senza generics: la lista accetta any Object
+        List lista = new ArrayList();
+
+        // Il metodo lista.add() accetta un Object
+        lista.add("Ciao");
+        lista.add(42);
+        lista.add(3.14);
+
+        // Necessario il casting esplicito
+        String s = (String) lista.get(0); // OK
+        String s2 = (String) lista.get(1); // ClassCastException!
+
+        System.out.println(s);
+        System.out.println(s2);
+    }
+}
+\end{lstlisting}
+
+Questo codice mostra i problemi di sicurezza dei tipi senza Generics. Il metodo della lista \texttt{lista.add()} accetta qualsiasi \texttt{Object}, quindi il compilatore non può verificare che stai aggiungendo il tipo corretto. Lo stesso vale per \texttt{lista.get()}, che ritorna un \texttt{Object} generico, costringendoti a fare casting esplicito con il rischio di \texttt{ClassCastException} se il tipo non corrisponde.
+
+\section{Classi generiche}
+
+Una classe generica parametrizza il suo comportamento rispetto a uno o più tipi che vengono specificati al momento dell'istanziazione.
+
+\subsection{Sintassi base: <T>}
+
+\begin{lstlisting}
+public class Contenitore<T> {
+    private T elemento;
+
+    // Il metodo setElemento() assegna un elemento di tipo T
+    public void setElemento(T elemento) {
+        this.elemento = elemento;
+    }
+
+    // Il metodo getElemento() ritorna un elemento di tipo T
+    public T getElemento() {
+        return elemento;
+    }
+}
+
+public class EsempoGenerics {
+    public static void main(String[] args) {
+        // Istanzia con String: T = String
+        Contenitore<String> conString = new Contenitore<>();
+        conString.setElemento("Hello");
+        String s = conString.getElemento(); // Nessun casting necessario
+
+        // Istanzia con Integer: T = Integer
+        Contenitore<Integer> conInteger = new Contenitore<>();
+        conInteger.setElemento(42);
+        Integer n = conInteger.getElemento(); // Nessun casting necessario
+
+        System.out.println("Stringa: " + s);
+        System.out.println("Numero: " + n);
+    }
+}
+\end{lstlisting}
+
+Questo esempio introduce la sintassi base dei Generics. La classe \texttt{Contenitore<T>} dichiara un \textbf{type parameter} \texttt{T} che rappresenta un tipo generico. Quando istanzi la classe con \texttt{new Contenitore<String>()}, il compilatore sostituisce tutte le occorrenze di \texttt{T} con \texttt{String}. Allo stesso modo, \texttt{new Contenitore<Integer>()} sostituisce \texttt{T} con \texttt{Integer}. Il vantaggio principale è la \textbf{type safety}: il compilatore sa che il metodo \texttt{setElemento()} accetta un \texttt{String} nel primo caso e un \texttt{Integer} nel secondo, e che il metodo \texttt{getElemento()} ritorna il tipo corretto senza necessità di casting esplicito.
+
+\subsection{Multipli type parameters}
+
+\begin{lstlisting}
+public class Coppia<K, V> {
+    private K chiave;
+    private V valore;
+
+    // Il metodo setCoppia() assegna chiave e valore
+    public void setCoppia(K chiave, V valore) {
+        this.chiave = chiave;
+        this.valore = valore;
+    }
+
+    // Il metodo getChiave() ritorna la chiave di tipo K
+    public K getChiave() {
+        return chiave;
+    }
+
+    // Il metodo getValore() ritorna il valore di tipo V
+    public V getValore() {
+        return valore;
+    }
+}
+
+public class EsempoMultipli {
+    public static void main(String[] args) {
+        // Coppia con K=String e V=Integer
+        Coppia<String, Integer> coppia = new Coppia<>();
+        coppia.setCoppia("Età", 30);
+
+        String k = coppia.getChiave(); // Ritorna String
+        Integer v = coppia.getValore(); // Ritorna Integer
+
+        System.out.println(k + ": " + v);
+    }
+}
+\end{lstlisting}
+
+Le classi generiche possono avere \textbf{multipli type parameters}. In questo esempio, la classe \texttt{Coppia<K, V>} parametrizza due tipi: \texttt{K} per la chiave e \texttt{V} per il valore. Quando istanzi con \texttt{new Coppia<String, Integer>()}, il compilatore sostituisce \texttt{K} con \texttt{String} e \texttt{V} con \texttt{Integer}. Il metodo \texttt{setCoppia()} accetta una chiave di tipo \texttt{K} e un valore di tipo \texttt{V}, mentre i metodi \texttt{getChiave()} e \texttt{getValore()} ritornano i tipi corretti.
+
+\begin{nota}
+Convenzioni di naming per type parameters in Java:
+\begin{itemize}
+    \item \texttt{T} - Type (tipo generico)
+    \item \texttt{K} - Key (chiave)
+    \item \texttt{V} - Value (valore)
+    \item \texttt{N} - Number (numero)
+    \item \texttt{E} - Element (elemento)
+\end{itemize}
+
+Sebbene sia possibile usare qualsiasi nome, seguire queste convenzioni rende il codice più leggibile e riconoscibile a altri sviluppatori.
+\end{nota}
+
+\section{Metodi generici}
+
+Oltre alle classi, anche i metodi possono essere parametrizzati con type parameters indipendenti dalla classe.
+
+\subsection{Sintassi base di metodi generici}
+
+\begin{lstlisting}
+public class MetodiGenerici {
+
+    // Metodo generico <T> che ritorna il massimo tra due elementi
+    // Il parametro di tipo <T extends Comparable<T>> vincula T a implementare Comparable
+    public static <T extends Comparable<T>> T massimo(T a, T b) {
+        // Il metodo a.compareTo(b) confronta a con b
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+
+    // Metodo generico <T> che stampa un array di elementi
+    public static <T> void stampaArray(T[] array) {
+        for (T elemento : array) {
+            // System.out.print() stampa l'elemento
+            System.out.print(elemento + " ");
+        }
+        System.out.println();
+    }
+
+    public static void main(String[] args) {
+        // Invoca il metodo generico con Integer
+        Integer max1 = massimo(10, 20);
+        System.out.println("Max Integer: " + max1);
+
+        // Invoca il metodo generico con String
+        String max2 = massimo("Apple", "Banana");
+        System.out.println("Max String: " + max2);
+
+        // Invoca stampaArray con Integer[]
+        Integer[] numeri = {1, 2, 3, 4, 5};
+        stampaArray(numeri);
+
+        // Invoca stampaArray con String[]
+        String[] parole = {"Java", "Generics", "API"};
+        stampaArray(parole);
+    }
+}
+\end{lstlisting}
+
+Questo esempio mostra come dichiarare e usare metodi generici. La sintassi \texttt{<T>} prima del tipo di ritorno indica che il metodo è generico rispetto al tipo \texttt{T}. Nel metodo \texttt{massimo()}, usiamo \texttt{<T extends Comparable<T>>} per vincolare il tipo \texttt{T}: il simbolo \texttt{extends} significa che \texttt{T} deve implementare l'interfaccia \texttt{Comparable}, permettendoci di usare il metodo \texttt{a.compareTo(b)}. Nel metodo \texttt{stampaArray()}, non abbiamo vincoli: accettiamo qualsiasi tipo \texttt{T} e iteriamo sull'array usando un ciclo for-each, invocando \texttt{System.out.print()} per stampare ogni elemento. Il compilatore infierisce il tipo \texttt{T} dal tipo degli argomenti passati: quando chiami \texttt{massimo(10, 20)}, il compilatore inferisce \texttt{T = Integer}.
+
+\section{Bounded Type Parameters}
+
+Un \textbf{bounded type parameter} è un type parameter con una limitazione sul tipo di dati che può accettare.
+
+\subsection{Upper Bounds: extends}
+
+\begin{lstlisting}
+// Type parameter T è limitato agli Object (vincolo base)
+public class Contenitore<T extends Number> {
+    private T valore;
+
+    // Il metodo setValore() accetta un Number o sottoclasse
+    public void setValore(T valore) {
+        this.valore = valore;
+    }
+
+    // Il metodo getValore() ritorna il valore
+    public T getValore() {
+        return valore;
+    }
+
+    // Il metodo convertiADouble() sfrutta il vincolo extends Number
+    // Per accedere al metodo doubleValue() di Number
+    public double convertiADouble() {
+        // Il metodo valore.doubleValue() è disponibile perché T extends Number
+        return valore.doubleValue();
+    }
+}
+
+public class EsempoBound {
+    public static void main(String[] args) {
+        // OK: Integer extends Number
+        Contenitore<Integer> con1 = new Contenitore<>();
+        con1.setValore(42);
+        System.out.println(con1.convertiADouble()); // Output: 42.0
+
+        // OK: Double extends Number
+        Contenitore<Double> con2 = new Contenitore<>();
+        con2.setValore(3.14);
+        System.out.println(con2.convertiADouble()); // Output: 3.14
+
+        // ERRORE (compile time): String non extends Number
+        // Contenitore<String> con3 = new Contenitore<>();
+    }
+}
+\end{lstlisting}
+
+I bounded type parameters permettono di vincolare i tipo parameters a una gerarchia specifica. La sintassi \texttt{<T extends Number>} significa che il tipo \texttt{T} deve essere \texttt{Number} o una sua sottoclasse. Questo vincolo è utile perché puoi usare i metodi della classe \texttt{Number} all'interno della classe generica: nel metodo \texttt{convertiADouble()}, il compilatore sa che il metodo \texttt{valore.doubleValue()} è disponibile perché \texttt{T} estende \texttt{Number}. Questo è un \textbf{upper bound} (vincolo superiore): stai dicendo al compilatore un limite superiore nella gerarchia di eredità.
+
+\subsection{Multiple Bounds}
+
+\begin{lstlisting}
+// Type parameter T deve implementare sia Comparable che Serializable
+public class ContenitoreVincoli<T extends Comparable<T> & Serializable> {
+    private T elemento;
+
+    // Il metodo setElemento() assegna l'elemento
+    public void setElemento(T elemento) {
+        this.elemento = elemento;
+    }
+
+    // Il metodo getElemento() ritorna l'elemento
+    public T getElemento() {
+        return elemento;
+    }
+
+    // Il metodo confronta() usa il vincolo Comparable
+    public int confronta(T altro) {
+        // Il metodo elemento.compareTo(altro) è disponibile per il vincolo Comparable
+        return elemento.compareTo(altro);
+    }
+}
+
+public class EsempoMultipliBound {
+    public static void main(String[] args) {
+        // String implements Comparable<String> e Serializable
+        ContenitoreVincoli<String> con = new ContenitoreVincoli<>();
+        con.setElemento("Hello");
+        System.out.println("Elemento: " + con.getElemento());
+    }
+}
+\end{lstlisting}
+
+A volte è necessario vincolare un type parameter a più di una interfaccia o classe. Usa la sintassi \texttt{<T extends A & B & C>} per multiple bounds. Nel nostro esempio, \texttt{T extends Comparable<T> & Serializable} significa che \texttt{T} deve implementare sia \texttt{Comparable<T>} che \texttt{Serializable}. Quando istanzi con \texttt{ContenitoreVincoli<String>()}, il compilatore verifica che \texttt{String} implementi entrambe le interfacce prima di permettere l'istanziazione. L'order è importante: il limite di classe (se presente) deve venire prima dei limiti di interfaccia.
+
+\section{Wildcards e Varianza}
+
+I \textbf{wildcards} permettono una maggior flessibilità quando si lavorano con type generici, specialmente quando non conosci o non importa il tipo specifico.
+
+\subsection{Unbounded Wildcard: ?}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class WildcardUnbounded {
+
+    // Il metodo stampaLista() accetta una lista di qualsiasi tipo
+    public static void stampaLista(List<?> lista) {
+        // Iterazione su elementi di tipo sconosciuto
+        for (Object elemento : lista) {
+            // System.out.println() stampa l'elemento (convertito a Object)
+            System.out.println(elemento);
+        }
+    }
+
+    // Il metodo contaElementi() ritorna la dimensione della lista
+    public static int contaElementi(List<?> lista) {
+        // Il metodo lista.size() ritorna il numero di elementi
+        return lista.size();
+    }
+
+    public static void main(String[] args) {
+        List<String> stringhe = new ArrayList<>();
+        stringhe.add("Java");
+        stringhe.add("Generics");
+
+        List<Integer> numeri = new ArrayList<>();
+        numeri.add(1);
+        numeri.add(2);
+        numeri.add(3);
+
+        // Passa liste diverse al metodo generico
+        stampaLista(stringhe);
+        stampaLista(numeri);
+
+        System.out.println("Stringhe: " + contaElementi(stringhe));
+        System.out.println("Numeri: " + contaElementi(numeri));
+    }
+}
+\end{lstlisting}
+
+L'unbounded wildcard \texttt{?} è utile quando il tipo specifico non importa, o quando vuoi accettare liste di qualsiasi tipo. Nel metodo \texttt{stampaLista()}, il parametro \texttt{List<?> lista} significa "una lista di qualsiasi tipo". All'interno del metodo, puoi leggere elementi (come \texttt{Object}) ma non puoi aggiungere elementi (eccetto \texttt{null}) perché il compilatore non sa che tipo di elementi la lista contiene. Questo è un trade-off: guadagni flessibilità ma perdi la capacità di modificare la lista in modo type-safe.
+
+\subsection{Upper Bounded Wildcard: extends}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class WildcardExtends {
+
+    // Il metodo calcolaSommaDouble() accetta una lista di numeri
+    // ? extends Number significa: "tipo sconosciuto che estende Number"
+    public static double calcolaSommaDouble(List<? extends Number> numeri) {
+        double somma = 0.0;
+        for (Number n : numeri) {
+            // Il metodo n.doubleValue() è disponibile perché Number
+            somma += n.doubleValue();
+        }
+        return somma;
+    }
+
+    public static void main(String[] args) {
+        List<Integer> interi = new ArrayList<>();
+        interi.add(10);
+        interi.add(20);
+        interi.add(30);
+
+        List<Double> doppi = new ArrayList<>();
+        doppi.add(1.5);
+        doppi.add(2.5);
+        doppi.add(3.5);
+
+        // Entrambe le liste sono accettate dal metodo
+        double sommaInt = calcolaSommaDouble(interi);
+        double sommaDouble = calcolaSommaDouble(doppi);
+
+        System.out.println("Somma interi: " + sommaInt);
+        System.out.println("Somma doppi: " + sommaDouble);
+    }
+}
+\end{lstlisting}
+
+L'upper bounded wildcard \texttt{<? extends Number>} significa: "un tipo sconosciuto che è Number o una sua sottoclasse". Questo permette di accettare \texttt{List<Integer>}, \texttt{List<Double>}, \texttt{List<Long>}, etc. all'interno dello stesso metodo. Nel metodo \texttt{calcolaSommaDouble()}, puoi leggere elementi come \texttt{Number} e usare i metodi di \texttt{Number} come \texttt{doubleValue()}, ma non puoi aggiungere elementi (il compilatore non sa quale sottoclasse di \texttt{Number} sta contenendo la lista). Questo pattern è molto utile per metodi che leggono dati da collezioni.
+
+\subsection{Lower Bounded Wildcard: super}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class WildcardSuper {
+
+    // Il metodo aggiungiNumeri() accetta una lista che può contenere Number o superclassi
+    // ? super Number significa: "tipo sconosciuto che è Number o superclasse di Number"
+    public static void aggiungiNumeri(List<? super Number> lista, int... numeri) {
+        for (int n : numeri) {
+            // Il metodo lista.add() accetta un Integer (che è un Number)
+            // perché la lista è in grado di contenere Number
+            lista.add(n);
+        }
+    }
+
+    public static void main(String[] args) {
+        List<Number> numeriBase = new ArrayList<>();
+        List<Object> oggetti = new ArrayList<>();
+
+        // Entrambe accettano l'aggiunta di numeri
+        aggiungiNumeri(numeriBase, 1, 2, 3);
+        aggiungiNumeri(oggetti, 4, 5, 6);
+
+        System.out.println("Numeri: " + numeriBase);
+        System.out.println("Oggetti: " + oggetti);
+    }
+}
+\end{lstlisting}
+
+Il lower bounded wildcard \texttt{<? super Number>} significa: "un tipo sconosciuto che è Number o una sua superclasse". Questo pattern è utile quando vuoi aggiungere elementi a una collezione. Nel metodo \texttt{aggiungiNumeri()}, puoi aggiungere \texttt{Number} o qualsiasi sua sottoclasse perché la lista è in grado di contenerli. Tuttavia, quando leggi da una lista con lower bounded wildcard, puoi solo ottenere \texttt{Object}, perché non conosci la classe genitore esatta.
+
+\begin{nota}
+Regola PECS (Producer Extends, Consumer Super):
+\begin{itemize}
+    \item Usa \texttt{<? extends T>} quando \textbf{leggi} da una collezione (producer)
+    \item Usa \texttt{<? super T>} quando \textbf{scrivi} in una collezione (consumer)
+    \item Usa \texttt{<?> } quando non leggi né scrivi (unbounded)
+\end{itemize}
+
+Questa regola aiuta a scrivere API generiche flessibili e type-safe.
+\end{nota}
+
+\section{Type Erasure}
+
+Java implementa i Generics attraverso il \textbf{type erasure}: il compilatore rimuove le informazioni di tipo a livello di bytecode, mantenendo solo i controlli di tipo a compile-time.
+
+\subsection{Come funziona Type Erasure}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class EsempoTypeErasure {
+
+    // Questo metodo generico
+    public static <T> void stampaClasse(List<T> lista) {
+        // Il metodo lista.getClass().getName() ritorna il nome della classe
+        System.out.println("Classe: " + lista.getClass().getName());
+    }
+
+    public static void main(String[] args) {
+        List<String> stringhe = new ArrayList<>();
+        List<Integer> interi = new ArrayList<>();
+
+        // Entrambe hanno la stessa classe a runtime
+        stampaClasse(stringhe);
+        stampaClasse(interi);
+
+        // Output:
+        // Classe: java.util.ArrayList
+        // Classe: java.util.ArrayList
+        // (Non vedi <String> o <Integer>)
+    }
+}
+\end{lstlisting}
+
+Type erasure significa che il compilatore sostituisce i type parameters con i loro limiti (o \texttt{Object} se non ci sono limiti), e aggiunge cast dove necessario. Nel bytecode compilato, \texttt{List<String>} e \texttt{List<Integer>} diventano entrambe \texttt{List}, perché le informazioni di tipo sono state cancellate. Questo preserva la compatibilità con il codice non-generic, ma ha implicazioni importanti: non puoi creare istanze di array di tipo generico (\texttt{new T[10]} è un errore), e non puoi usare \texttt{instanceof} con type generici.
+
+\subsection{Implicazioni del Type Erasure}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+
+public class ImplicazioniTypeErasure {
+
+    public static void main(String[] args) {
+        List<String> stringhe = new ArrayList<>();
+
+        // ERRORE: non puoi creare array di tipo generico
+        // List<String>[] array = new List<String>[10]; // Compile error
+
+        // WORKAROUND: usa array di raw type (con warning)
+        @SuppressWarnings("unchecked")
+        List<String>[] array = (List<String>[]) new List[10];
+
+        // ERRORE: non puoi usare instanceof con type generici
+        // if (stringhe instanceof List<String>) {} // Compile error
+
+        // Puoi usare instanceof con raw type
+        if (stringhe instanceof List) {
+            System.out.println("E' una lista");
+        }
+
+        // A runtime, il tipo generico è erasato
+        // Quindi questo funziona (ma non dovresti farlo)
+        List rawList = stringhe; // Senza type checking
+        rawList.add(42); // Aggiunge un Integer a una List<String>
+
+        // Qui viene lanciato ClassCastException
+        try {
+            String s = stringhe.get(0);
+        } catch (ClassCastException e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+Type erasure crea limitazioni che è importante conoscere. Non puoi creare array di tipi generici perché Java non sa quale tipo allocare a runtime. Non puoi usare \texttt{instanceof} con tipi generici per lo stesso motivo. Comunque, puoi forzare il cast con \texttt{@SuppressWarnings("unchecked")} se sai quello che stai facendo. È importante evitare di assegnare una lista generica a una raw type list, perché perdi i controlli di tipo e puoi finire con oggetti del tipo sbagliato nella collezione.
+
+\section{Esercizi progressivi}
+
+\subsection{Esercizio 1: Classe Scatola generica}
+
+Crea una classe \texttt{Scatola<T>} che:
+\begin{itemize}
+    \item Ha un metodo \texttt{scatola.riponi(T elemento)} per aggiungere un elemento
+    \item Ha un metodo \texttt{scatola.estrai()} per ottenere l'elemento
+    \item Traccia il numero di elementi aggiunti (usa un campo \texttt{int contatore})
+    \item Ha un metodo \texttt{scatola.getContatore()} che ritorna il numero di elementi aggiunti
+\end{itemize}
+
+Scrivi un programma di test che crei scatole di diversi tipi (String, Integer, Double).
+
+\subsection{Esercizio 2: Metodo generico di ricerca}
+
+Implementa un metodo generico statico \texttt{find()} che:
+\begin{itemize}
+    \item Accetta un array generico di tipo \texttt{T}
+    \item Accetta un elemento da cercare di tipo \texttt{T}
+    \item Ritorna l'indice dell'elemento se trovato, -1 altrimenti
+    \item Usa il metodo \texttt{elemento.equals()} per confronti
+\end{itemize}
+
+Usa il metodo su array di String e Integer.
+
+\subsection{Esercizio 3: Bounded Type Parameter}
+
+Crea una classe \texttt{Calcolatrice<T extends Number>} che:
+\begin{itemize}
+    \item Ha un campo privato \texttt{T valore}
+    \item Ha un metodo \texttt{calcolatrice.aggiungi(T x)} che somma x al valore (converti a double e ritorna)
+    \item Ha un metodo \texttt{calcolatrice.getRisultato()} che ritorna il valore attuale come double
+\end{itemize}
+
+Testa con Integer, Double e Long.
+
+\subsection{Esercizio 4: Wildcard e collezioni}
+
+Crea un metodo statico che:
+\begin{itemize}
+    \item Accetta una \texttt{List<? extends Number>} di numeri
+    \item Calcola la media dei numeri (usa il metodo \texttt{numero.doubleValue()})
+    \item Ritorna il valore della media come double
+\end{itemize}
+
+Passa liste diverse al metodo e verifica i risultati.
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato i Generics in Java:
+
+\begin{itemize}
+    \item \textbf{Classi generiche}: parametrizzazione di classi con \texttt{<T>}
+    \item \textbf{Metodi generici}: parametrizzazione di metodi indipendenti dalla classe
+    \item \textbf{Bounded type parameters}: vincoli sui type parameters con \texttt{extends}
+    \item \textbf{Multiple bounds}: vincoli a più interfacce con \texttt{&}
+    \item \textbf{Wildcards}: \texttt{<?>}, \texttt{<? extends T>}, \texttt{<? super T>} per flessibilità
+    \item \textbf{Type erasure}: il meccanismo di implementazione che rimuove le informazioni di tipo a runtime
+    \item \textbf{Type safety}: verifiche a compile-time che prevengono ClassCastException
+\end{itemize}
+
+I Generics sono fondamentali per scrivere codice Java sicuro e riusabile, e sono usati estensivamente nelle API di Java (Collections, Streams, etc.).
+
+\begin{nota}
+Concetti correlati:
+\begin{itemize}
+    \item \textbf{Collections Framework}: utilizza estesamente i Generics (\autoref{cap:collections_framework})
+    \item \textbf{Stream API}: sfrutta i Generics per operazioni dichiarative (\autoref{cap:stream_api})
+    \item \textbf{Design Patterns}: molti pattern usano Generics per implementazioni type-safe
+\end{itemize}
+
+Questi argomenti approfondiscono ulteriormente l'uso dei Generics in contesti pratici.
+\end{nota}

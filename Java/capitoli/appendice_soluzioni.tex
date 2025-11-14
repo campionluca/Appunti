@@ -1,0 +1,2012 @@
+\appendix
+\chapter{Soluzioni degli Esercizi}
+
+\section*{Nota}
+In questa appendice sono riportate le soluzioni complete e commentate degli esercizi dei capitoli 1-4. Ogni soluzione include codice completo funzionante con commenti italiani e una breve spiegazione del funzionamento.
+
+\section{Capitolo 1: Stream e Buffer}
+
+\subsection{Esercizio 1.1: Contatore di righe}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class ContaRighe {
+    public static void main(String[] args) {
+        int numeroRighe = 0;
+
+        // Try-with-resources per chiusura automatica
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("file.txt"))) {
+
+            // Legge ogni riga fino alla fine del file
+            while (br.readLine() != null) {
+                numeroRighe++;
+            }
+
+            System.out.println("Il file contiene " + numeroRighe + " righe");
+
+        } catch (IOException e) {
+            System.out.println("Errore lettura file: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma utilizza BufferedReader per leggere il file riga per riga con readLine(), incrementando un contatore per ogni riga letta. Quando readLine() restituisce null, significa che si è raggiunta la fine del file.
+
+\subsection{Esercizio 1.2: Copia carattere per carattere}
+
+\begin{lstlisting}
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class CopiaCarattere {
+    public static void main(String[] args) {
+        // Usa try-with-resources per gestire due risorse
+        try (FileReader input = new FileReader("originale.txt");
+             FileWriter output = new FileWriter("copia.txt")) {
+
+            int carattere;
+
+            // read() restituisce -1 quando raggiunge la fine
+            while ((carattere = input.read()) != -1) {
+                // Scrive il carattere letto nel file di output
+                output.write(carattere);
+            }
+
+            System.out.println("Copia completata con successo!");
+
+        } catch (IOException e) {
+            System.out.println("Errore durante la copia: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma legge un carattere alla volta con read() e lo scrive immediatamente nel file di destinazione. Try-with-resources garantisce la chiusura automatica di entrambi gli stream anche in caso di eccezione.
+
+\subsection{Esercizio 1.3: Salva nomi in file}
+
+\begin{lstlisting}
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class SalvaNomi {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter("nomi.txt"))) {
+
+            System.out.println("Inserisci 5 nomi:");
+
+            // Legge 5 nomi dall'utente
+            for (int i = 1; i <= 5; i++) {
+                System.out.print("Nome " + i + ": ");
+                String nome = scanner.nextLine();
+
+                // Scrive il nome nel file
+                bw.write(nome);
+                bw.newLine(); // Aggiunge separatore di riga
+            }
+
+            System.out.println("Nomi salvati in nomi.txt");
+
+        } catch (IOException e) {
+            System.out.println("Errore scrittura file: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma legge 5 nomi da console usando Scanner e li scrive su file usando BufferedWriter, aggiungendo newLine() dopo ogni nome per scriverli su righe separate.
+
+\subsection{Esercizio 1.4: Inverti righe}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class InvertiRighe {
+    public static void main(String[] args) {
+        ArrayList<String> righe = new ArrayList<>();
+
+        // Legge tutte le righe e le memorizza nell'ArrayList
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("input.txt"))) {
+
+            String riga;
+            while ((riga = br.readLine()) != null) {
+                righe.add(riga);
+            }
+
+        } catch (IOException e) {
+            System.out.println("Errore lettura: " + e.getMessage());
+            return;
+        }
+
+        // Scrive le righe in ordine inverso
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter("output.txt"))) {
+
+            // Itera dall'ultima riga alla prima
+            for (int i = righe.size() - 1; i >= 0; i--) {
+                bw.write(righe.get(i));
+                bw.newLine();
+            }
+
+            System.out.println("File invertito creato con successo!");
+
+        } catch (IOException e) {
+            System.out.println("Errore scrittura: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Prima legge tutte le righe in un ArrayList, poi le scrive in ordine inverso iterando dall'ultimo indice al primo. Questa tecnica permette di invertire facilmente l'ordine delle righe.
+
+\subsection{Esercizio 1.5: Filtra righe maiuscole}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class FiltraMaiuscole {
+    public static void main(String[] args) {
+        try (BufferedReader input = new BufferedReader(
+                new FileReader("input.txt"));
+             BufferedWriter output = new BufferedWriter(
+                new FileWriter("output.txt"))) {
+
+            String riga;
+            int righeCopiate = 0;
+
+            while ((riga = input.readLine()) != null) {
+                // Verifica se la riga non e' vuota e inizia con maiuscola
+                if (!riga.isEmpty() &&
+                    Character.isUpperCase(riga.charAt(0))) {
+
+                    output.write(riga);
+                    output.newLine();
+                    righeCopiate++;
+                }
+            }
+
+            System.out.println("Copiate " + righeCopiate +
+                             " righe che iniziano con maiuscola");
+
+        } catch (IOException e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma legge ogni riga e verifica se non è vuota e se il primo carattere è una lettera maiuscola usando Character.isUpperCase(). Solo le righe che soddisfano questa condizione vengono scritte nel file di output.
+
+\subsection{Esercizio 1.6: Merge di due file}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class MergeFile {
+    public static void main(String[] args) {
+        try (BufferedReader br1 = new BufferedReader(
+                new FileReader("file1.txt"));
+             BufferedReader br2 = new BufferedReader(
+                new FileReader("file2.txt"));
+             BufferedWriter output = new BufferedWriter(
+                new FileWriter("merge.txt"))) {
+
+            String riga1, riga2;
+
+            // Legge alternando le righe dai due file
+            while (true) {
+                riga1 = br1.readLine();
+                riga2 = br2.readLine();
+
+                // Se entrambi i file sono finiti, esci dal ciclo
+                if (riga1 == null && riga2 == null) {
+                    break;
+                }
+
+                // Scrivi riga dal primo file se disponibile
+                if (riga1 != null) {
+                    output.write(riga1);
+                    output.newLine();
+                }
+
+                // Scrivi riga dal secondo file se disponibile
+                if (riga2 != null) {
+                    output.write(riga2);
+                    output.newLine();
+                }
+            }
+
+            System.out.println("Merge completato!");
+
+        } catch (IOException e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma alterna la lettura di una riga dal primo file e una dal secondo, scrivendole nel file di output. Continua finché entrambi i file non hanno più righe da leggere.
+
+\subsection{Esercizio 1.7: Analisi parole}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class AnalisiParole {
+    public static void main(String[] args) {
+        int totaleParole = 0;
+        int totaleCaratteri = 0;
+        // Mappa per contare la frequenza di ogni parola
+        HashMap<String, Integer> frequenze = new HashMap<>();
+
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("testo.txt"))) {
+
+            String riga;
+
+            while ((riga = br.readLine()) != null) {
+                // Divide la riga in parole (split per spazi)
+                String[] parole = riga.split("\\s+");
+
+                for (String parola : parole) {
+                    // Rimuove punteggiatura e converte in minuscolo
+                    parola = parola.replaceAll("[^a-zA-Z]", "")
+                                   .toLowerCase();
+
+                    if (!parola.isEmpty()) {
+                        totaleParole++;
+                        totaleCaratteri += parola.length();
+
+                        // Aggiorna frequenza della parola
+                        frequenze.put(parola,
+                                    frequenze.getOrDefault(parola, 0) + 1);
+                    }
+                }
+            }
+
+            // Stampa report
+            System.out.println("=== REPORT ANALISI ===");
+            System.out.println("Totale parole: " + totaleParole);
+            System.out.println("Totale caratteri: " + totaleCaratteri);
+            System.out.println("\nFrequenza parole:");
+
+            for (Map.Entry<String, Integer> entry : frequenze.entrySet()) {
+                System.out.println(entry.getKey() + ": " +
+                                 entry.getValue() + " volte");
+            }
+
+        } catch (IOException e) {
+            System.out.println("Errore: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma divide ogni riga in parole, le pulisce dalla punteggiatura e conta i caratteri totali. Usa una HashMap per tenere traccia della frequenza di ogni parola, incrementando il contatore quando la parola viene incontrata.
+
+\subsection{Esercizio 1.8: Parser CSV}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class ParserCSV {
+    public static void main(String[] args) {
+        ArrayList<String[]> dati = new ArrayList<>();
+        int maxLunghezze[] = new int[3]; // Per 3 colonne
+
+        // Legge file CSV
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("dati.csv"))) {
+
+            String riga;
+
+            while ((riga = br.readLine()) != null) {
+                // Split per virgola
+                String[] campi = riga.split(",");
+                dati.add(campi);
+
+                // Calcola lunghezza massima per ogni colonna
+                for (int i = 0; i < campi.length && i < 3; i++) {
+                    if (campi[i].length() > maxLunghezze[i]) {
+                        maxLunghezze[i] = campi[i].length();
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Errore lettura: " + e.getMessage());
+            return;
+        }
+
+        // Stampa tabella allineata
+        System.out.println("=== DATI CSV ===");
+
+        for (String[] riga : dati) {
+            for (int i = 0; i < riga.length && i < 3; i++) {
+                // Stampa campo allineato a sinistra
+                System.out.printf("%-" + (maxLunghezze[i] + 2) + "s",
+                                riga[i]);
+            }
+            System.out.println();
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il parser legge il file CSV, divide ogni riga usando split(",") e calcola la lunghezza massima di ogni colonna. Poi stampa i dati in formato tabellare allineato usando printf con formattazione dinamica.
+
+\section{Capitolo 2: Interfacce e Classi Astratte}
+
+\subsection{Esercizio 2.1: Interfaccia Volante}
+
+\begin{lstlisting}
+// Interfaccia Volante
+public interface Volante {
+    void vola();
+}
+
+// Classe Aereo
+public class Aereo implements Volante {
+    private String modello;
+    private int passeggeri;
+
+    public Aereo(String modello, int passeggeri) {
+        this.modello = modello;
+        this.passeggeri = passeggeri;
+    }
+
+    @Override
+    public void vola() {
+        System.out.println("L'aereo " + modello +
+                         " vola trasportando " + passeggeri +
+                         " passeggeri");
+    }
+}
+
+// Classe Uccello
+public class Uccello implements Volante {
+    private String specie;
+
+    public Uccello(String specie) {
+        this.specie = specie;
+    }
+
+    @Override
+    public void vola() {
+        System.out.println("L'uccello " + specie +
+                         " vola sbattendo le ali");
+    }
+}
+
+// Test
+public class TestVolante {
+    public static void main(String[] args) {
+        Volante[] volanti = {
+            new Aereo("Boeing 747", 400),
+            new Uccello("Aquila"),
+            new Aereo("Cessna", 4),
+            new Uccello("Gabbiano")
+        };
+
+        for (Volante v : volanti) {
+            v.vola();
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} L'interfaccia Volante definisce il contratto vola(), implementato diversamente da Aereo (con modello e passeggeri) e Uccello (con specie). Il polimorfismo permette di trattare entrambi come oggetti Volante.
+
+\subsection{Esercizio 2.2: Classe astratta Animale}
+
+\begin{lstlisting}
+// Classe astratta Animale
+public abstract class Animale {
+    protected String nome;
+
+    public Animale(String nome) {
+        this.nome = nome;
+    }
+
+    // Metodo astratto - ogni animale ha un verso diverso
+    public abstract void verso();
+
+    // Metodo concreto - tutti gli animali dormono allo stesso modo
+    public void dorme() {
+        System.out.println(nome + " sta dormendo... Zzz");
+    }
+}
+
+// Classe Cane
+public class Cane extends Animale {
+    public Cane(String nome) {
+        super(nome);
+    }
+
+    @Override
+    public void verso() {
+        System.out.println(nome + " fa: Bau bau!");
+    }
+}
+
+// Classe Gatto
+public class Gatto extends Animale {
+    public Gatto(String nome) {
+        super(nome);
+    }
+
+    @Override
+    public void verso() {
+        System.out.println(nome + " fa: Miao miao!");
+    }
+}
+
+// Test
+public class TestAnimali {
+    public static void main(String[] args) {
+        Animale[] animali = {
+            new Cane("Fido"),
+            new Gatto("Whiskers"),
+            new Cane("Rex")
+        };
+
+        for (Animale a : animali) {
+            a.verso();
+            a.dorme();
+            System.out.println();
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} La classe astratta Animale fornisce il metodo concreto dorme() condiviso da tutti gli animali, mentre verso() è astratto e deve essere implementato da ogni sottoclasse con il proprio verso specifico.
+
+\subsection{Esercizio 2.3: Interfaccia Pagabile}
+
+\begin{lstlisting}
+// Interfaccia Pagabile
+public interface Pagabile {
+    double calcolaStipendio();
+}
+
+// Classe Dipendente
+public class Dipendente implements Pagabile {
+    private String nome;
+    private double stipendioMensile;
+
+    public Dipendente(String nome, double stipendioMensile) {
+        this.nome = nome;
+        this.stipendioMensile = stipendioMensile;
+    }
+
+    @Override
+    public double calcolaStipendio() {
+        // Stipendio fisso mensile
+        return stipendioMensile;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+}
+
+// Classe Freelance
+public class Freelance implements Pagabile {
+    private String nome;
+    private double tariffaOraria;
+    private int oreLavorate;
+
+    public Freelance(String nome, double tariffaOraria, int oreLavorate) {
+        this.nome = nome;
+        this.tariffaOraria = tariffaOraria;
+        this.oreLavorate = oreLavorate;
+    }
+
+    @Override
+    public double calcolaStipendio() {
+        // Stipendio basato su ore lavorate
+        return tariffaOraria * oreLavorate;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+}
+
+// Test
+public class TestPagabile {
+    public static void main(String[] args) {
+        Pagabile[] lavoratori = {
+            new Dipendente("Mario Rossi", 2000),
+            new Freelance("Laura Bianchi", 50, 80),
+            new Dipendente("Giuseppe Verdi", 2500),
+            new Freelance("Anna Neri", 60, 120)
+        };
+
+        double totalePagamenti = 0;
+
+        for (Pagabile p : lavoratori) {
+            double stipendio = p.calcolaStipendio();
+            totalePagamenti += stipendio;
+
+            String nome = "";
+            if (p instanceof Dipendente) {
+                nome = ((Dipendente)p).getNome();
+            } else if (p instanceof Freelance) {
+                nome = ((Freelance)p).getNome();
+            }
+
+            System.out.printf("%s: %.2f euro\n", nome, stipendio);
+        }
+
+        System.out.printf("\nTotale pagamenti: %.2f euro\n",
+                        totalePagamenti);
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} L'interfaccia Pagabile definisce il metodo calcolaStipendio(). Dipendente restituisce lo stipendio mensile fisso, mentre Freelance calcola il pagamento moltiplicando tariffa oraria per ore lavorate.
+
+\subsection{Esercizio 2.4: Interfaccia DispositivoElettronico}
+
+\begin{lstlisting}
+// Interfaccia DispositivoElettronico
+public interface DispositivoElettronico {
+    void accendi();
+    void spegni();
+    double consumoEnergetico(); // in Watt
+}
+
+// Classe Televisore
+public class Televisore implements DispositivoElettronico {
+    private boolean acceso = false;
+    private int pollici;
+
+    public Televisore(int pollici) {
+        this.pollici = pollici;
+    }
+
+    @Override
+    public void accendi() {
+        acceso = true;
+        System.out.println("TV " + pollici + "\" accesa");
+    }
+
+    @Override
+    public void spegni() {
+        acceso = false;
+        System.out.println("TV " + pollici + "\" spenta");
+    }
+
+    @Override
+    public double consumoEnergetico() {
+        // Consumo proporzionale ai pollici
+        return acceso ? pollici * 2.5 : 0.5; // standby
+    }
+}
+
+// Classe Computer
+public class Computer implements DispositivoElettronico {
+    private boolean acceso = false;
+    private boolean desktop;
+
+    public Computer(boolean desktop) {
+        this.desktop = desktop;
+    }
+
+    @Override
+    public void accendi() {
+        acceso = true;
+        System.out.println((desktop ? "Desktop" : "Laptop") + " acceso");
+    }
+
+    @Override
+    public void spegni() {
+        acceso = false;
+        System.out.println((desktop ? "Desktop" : "Laptop") + " spento");
+    }
+
+    @Override
+    public double consumoEnergetico() {
+        if (!acceso) return 0;
+        return desktop ? 150 : 65;
+    }
+}
+
+// Classe Lampada
+public class Lampada implements DispositivoElettronico {
+    private boolean accesa = false;
+    private int watt;
+
+    public Lampada(int watt) {
+        this.watt = watt;
+    }
+
+    @Override
+    public void accendi() {
+        accesa = true;
+        System.out.println("Lampada " + watt + "W accesa");
+    }
+
+    @Override
+    public void spegni() {
+        accesa = false;
+        System.out.println("Lampada " + watt + "W spenta");
+    }
+
+    @Override
+    public double consumoEnergetico() {
+        return accesa ? watt : 0;
+    }
+}
+
+// Test
+public class TestDispositivi {
+    public static double calcolaConsumoTotale(
+            DispositivoElettronico[] dispositivi) {
+        double totale = 0;
+        for (DispositivoElettronico d : dispositivi) {
+            totale += d.consumoEnergetico();
+        }
+        return totale;
+    }
+
+    public static void main(String[] args) {
+        DispositivoElettronico[] dispositivi = {
+            new Televisore(55),
+            new Computer(true),
+            new Lampada(60),
+            new Computer(false)
+        };
+
+        // Accende tutti i dispositivi
+        for (DispositivoElettronico d : dispositivi) {
+            d.accendi();
+        }
+
+        System.out.println();
+        double consumo = calcolaConsumoTotale(dispositivi);
+        System.out.printf("Consumo totale: %.2f Watt\n", consumo);
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Ogni dispositivo implementa i metodi accendi(), spegni() e consumoEnergetico() con logiche diverse. Il metodo calcolaConsumoTotale() somma i consumi di tutti i dispositivi in un array, dimostrando il polimorfismo.
+
+\subsection{Esercizio 2.5: Classe astratta FiguraPiana}
+
+\begin{lstlisting}
+// Classe astratta FiguraPiana
+public abstract class FiguraPiana {
+    protected String colore;
+
+    public FiguraPiana(String colore) {
+        this.colore = colore;
+    }
+
+    // Metodi astratti
+    public abstract double area();
+    public abstract double perimetro();
+
+    // Metodo concreto che usa i metodi astratti
+    public String confrontaArea(FiguraPiana altra) {
+        double miaArea = this.area();
+        double altraArea = altra.area();
+
+        if (miaArea > altraArea) {
+            return "Questa figura ha area maggiore";
+        } else if (miaArea < altraArea) {
+            return "L'altra figura ha area maggiore";
+        } else {
+            return "Le due figure hanno la stessa area";
+        }
+    }
+}
+
+// Classe Quadrato
+public class Quadrato extends FiguraPiana {
+    private double lato;
+
+    public Quadrato(String colore, double lato) {
+        super(colore);
+        this.lato = lato;
+    }
+
+    @Override
+    public double area() {
+        return lato * lato;
+    }
+
+    @Override
+    public double perimetro() {
+        return 4 * lato;
+    }
+}
+
+// Classe Cerchio
+public class Cerchio extends FiguraPiana {
+    private double raggio;
+
+    public Cerchio(String colore, double raggio) {
+        super(colore);
+        this.raggio = raggio;
+    }
+
+    @Override
+    public double area() {
+        return Math.PI * raggio * raggio;
+    }
+
+    @Override
+    public double perimetro() {
+        return 2 * Math.PI * raggio;
+    }
+}
+
+// Classe Triangolo
+public class Triangolo extends FiguraPiana {
+    private double base;
+    private double altezza;
+    private double lato1, lato2, lato3;
+
+    public Triangolo(String colore, double base, double altezza,
+                    double lato1, double lato2, double lato3) {
+        super(colore);
+        this.base = base;
+        this.altezza = altezza;
+        this.lato1 = lato1;
+        this.lato2 = lato2;
+        this.lato3 = lato3;
+    }
+
+    @Override
+    public double area() {
+        return (base * altezza) / 2;
+    }
+
+    @Override
+    public double perimetro() {
+        return lato1 + lato2 + lato3;
+    }
+}
+
+// Test
+public class TestFigure {
+    public static void main(String[] args) {
+        FiguraPiana[] figure = {
+            new Quadrato("Rosso", 5),
+            new Cerchio("Blu", 3),
+            new Triangolo("Verde", 4, 3, 3, 4, 5)
+        };
+
+        System.out.println("=== ANALISI FIGURE ===");
+        for (FiguraPiana f : figure) {
+            System.out.printf("Area: %.2f - Perimetro: %.2f\n",
+                            f.area(), f.perimetro());
+        }
+
+        System.out.println("\n=== CONFRONTI ===");
+        System.out.println(figure[0].confrontaArea(figure[1]));
+        System.out.println(figure[1].confrontaArea(figure[2]));
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} La classe astratta fornisce il metodo concreto confrontaArea() che usa i metodi astratti area(). Ogni figura implementa area() e perimetro() con le proprie formule geometriche.
+
+\subsection{Esercizio 2.6: Libro Comparable}
+
+\begin{lstlisting}
+import java.util.Arrays;
+
+// Classe Libro che implementa Comparable
+public class Libro implements Comparable<Libro> {
+    private String titolo;
+    private String autore;
+    private int anno;
+
+    public Libro(String titolo, String autore, int anno) {
+        this.titolo = titolo;
+        this.autore = autore;
+        this.anno = anno;
+    }
+
+    @Override
+    public int compareTo(Libro altro) {
+        // Confronta per titolo (ordine alfabetico)
+        return this.titolo.compareTo(altro.titolo);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("\"%s\" di %s (%d)", titolo, autore, anno);
+    }
+
+    // Getter
+    public String getTitolo() { return titolo; }
+    public String getAutore() { return autore; }
+    public int getAnno() { return anno; }
+}
+
+// Test
+public class TestLibri {
+    public static void main(String[] args) {
+        Libro[] biblioteca = {
+            new Libro("Zeno", "Italo Svevo", 1923),
+            new Libro("Il nome della rosa", "Umberto Eco", 1980),
+            new Libro("Annabelle Lee", "Edgar Allan Poe", 1849),
+            new Libro("Divina Commedia", "Dante Alighieri", 1321),
+            new Libro("Promessi Sposi", "Alessandro Manzoni", 1827)
+        };
+
+        System.out.println("=== PRIMA DELL'ORDINAMENTO ===");
+        for (Libro libro : biblioteca) {
+            System.out.println(libro);
+        }
+
+        // Ordina usando compareTo (per titolo)
+        Arrays.sort(biblioteca);
+
+        System.out.println("\n=== DOPO ORDINAMENTO (per titolo) ===");
+        for (Libro libro : biblioteca) {
+            System.out.println(libro);
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} La classe Libro implementa Comparable<Libro> definendo il metodo compareTo() che confronta i titoli in ordine alfabetico. Arrays.sort() usa automaticamente questo metodo per ordinare l'array.
+
+\subsection{Esercizio 2.7: Sistema Account Bancari}
+
+\begin{lstlisting}
+// Classe astratta Account
+public abstract class Account {
+    protected String numeroAccount;
+    protected String intestatario;
+    protected double saldo;
+
+    public Account(String numero, String intestatario, double saldoIniziale) {
+        this.numeroAccount = numero;
+        this.intestatario = intestatario;
+        this.saldo = saldoIniziale;
+    }
+
+    // Metodi concreti comuni
+    public void deposita(double importo) {
+        if (importo > 0) {
+            saldo += importo;
+            System.out.printf("Depositati %.2f euro\n", importo);
+        }
+    }
+
+    public boolean preleva(double importo) {
+        if (importo > 0 && importo <= saldo) {
+            saldo -= importo;
+            System.out.printf("Prelevati %.2f euro\n", importo);
+            return true;
+        }
+        System.out.println("Prelievo non riuscito");
+        return false;
+    }
+
+    public double getSaldo() {
+        return saldo;
+    }
+
+    // Metodi astratti
+    public abstract double calcolaInteressi();
+    public abstract void applicaCommissioni();
+}
+
+// Account Corrente
+public class AccountCorrente extends Account {
+    private static final double COMMISSIONE_MENSILE = 5.0;
+    private static final double TASSO_INTERESSE = 0.001; // 0.1%
+
+    public AccountCorrente(String numero, String intestatario,
+                          double saldoIniziale) {
+        super(numero, intestatario, saldoIniziale);
+    }
+
+    @Override
+    public double calcolaInteressi() {
+        // Interessi molto bassi
+        return saldo * TASSO_INTERESSE;
+    }
+
+    @Override
+    public void applicaCommissioni() {
+        saldo -= COMMISSIONE_MENSILE;
+        System.out.printf("Commissione applicata: %.2f euro\n",
+                        COMMISSIONE_MENSILE);
+    }
+}
+
+// Account Risparmio
+public class AccountRisparmio extends Account {
+    private static final double TASSO_INTERESSE = 0.02; // 2%
+
+    public AccountRisparmio(String numero, String intestatario,
+                           double saldoIniziale) {
+        super(numero, intestatario, saldoIniziale);
+    }
+
+    @Override
+    public double calcolaInteressi() {
+        // Interessi piu' alti
+        return saldo * TASSO_INTERESSE;
+    }
+
+    @Override
+    public void applicaCommissioni() {
+        // Nessuna commissione per risparmio
+        System.out.println("Nessuna commissione per account risparmio");
+    }
+
+    @Override
+    public boolean preleva(double importo) {
+        // Limite prelievi per risparmio
+        if (importo > 1000) {
+            System.out.println("Limite prelievo: max 1000 euro");
+            return false;
+        }
+        return super.preleva(importo);
+    }
+}
+
+// Account Deposito
+public class AccountDeposito extends Account {
+    private static final double TASSO_INTERESSE = 0.035; // 3.5%
+    private int mesiVincolo;
+
+    public AccountDeposito(String numero, String intestatario,
+                          double saldoIniziale, int mesiVincolo) {
+        super(numero, intestatario, saldoIniziale);
+        this.mesiVincolo = mesiVincolo;
+    }
+
+    @Override
+    public double calcolaInteressi() {
+        // Interessi piu' alti se vincolato
+        return saldo * TASSO_INTERESSE * (mesiVincolo / 12.0);
+    }
+
+    @Override
+    public void applicaCommissioni() {
+        // Nessuna commissione
+        System.out.println("Nessuna commissione per deposito");
+    }
+
+    @Override
+    public boolean preleva(double importo) {
+        System.out.println("Impossibile prelevare da deposito vincolato");
+        return false;
+    }
+}
+
+// Test
+public class TestBanca {
+    public static void main(String[] args) {
+        Account[] conti = {
+            new AccountCorrente("CC001", "Mario Rossi", 1000),
+            new AccountRisparmio("RS001", "Laura Bianchi", 5000),
+            new AccountDeposito("DP001", "Giuseppe Verdi", 10000, 12)
+        };
+
+        System.out.println("=== OPERAZIONI MENSILI ===\n");
+
+        for (Account a : conti) {
+            System.out.println("Account: " + a.intestatario);
+            System.out.printf("Saldo iniziale: %.2f euro\n", a.getSaldo());
+
+            // Calcola e accredita interessi
+            double interessi = a.calcolaInteressi();
+            a.deposita(interessi);
+            System.out.printf("Interessi maturati: %.2f euro\n", interessi);
+
+            // Applica commissioni
+            a.applicaCommissioni();
+
+            System.out.printf("Saldo finale: %.2f euro\n\n", a.getSaldo());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} La classe astratta Account fornisce metodi comuni (deposita, preleva) e metodi astratti (calcolaInteressi, applicaCommissioni). Ogni tipo di account implementa questi metodi con regole specifiche: corrente ha commissioni, risparmio ha limiti di prelievo, deposito non permette prelievi.
+
+\subsection{Esercizio 2.8: Interfaccia Ordinabile}
+
+\begin{lstlisting}
+// Interfaccia Ordinabile
+public interface Ordinabile {
+    int confronta(Ordinabile altro);
+    String getChiave();
+}
+
+// Classe Prodotto
+public class Prodotto implements Ordinabile {
+    private String codice;
+    private String nome;
+    private double prezzo;
+
+    public Prodotto(String codice, String nome, double prezzo) {
+        this.codice = codice;
+        this.nome = nome;
+        this.prezzo = prezzo;
+    }
+
+    @Override
+    public int confronta(Ordinabile altro) {
+        // Ordina per codice
+        return this.codice.compareTo(((Prodotto)altro).codice);
+    }
+
+    @Override
+    public String getChiave() {
+        return codice;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s - %s (%.2f euro)", codice, nome, prezzo);
+    }
+}
+
+// Classe Cliente
+public class Cliente implements Ordinabile {
+    private String id;
+    private String nome;
+    private String cognome;
+
+    public Cliente(String id, String nome, String cognome) {
+        this.id = id;
+        this.nome = nome;
+        this.cognome = cognome;
+    }
+
+    @Override
+    public int confronta(Ordinabile altro) {
+        // Ordina per cognome, poi nome
+        Cliente altroCliente = (Cliente)altro;
+        int confrontoCognome = this.cognome.compareTo(altroCliente.cognome);
+        if (confrontoCognome != 0) {
+            return confrontoCognome;
+        }
+        return this.nome.compareTo(altroCliente.nome);
+    }
+
+    @Override
+    public String getChiave() {
+        return id;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s: %s %s", id, nome, cognome);
+    }
+}
+
+// Classe Ordine
+public class Ordine implements Ordinabile {
+    private int numeroOrdine;
+    private String dataOrdine;
+    private double totale;
+
+    public Ordine(int numero, String data, double totale) {
+        this.numeroOrdine = numero;
+        this.dataOrdine = data;
+        this.totale = totale;
+    }
+
+    @Override
+    public int confronta(Ordinabile altro) {
+        // Ordina per numero ordine
+        Ordine altroOrdine = (Ordine)altro;
+        return Integer.compare(this.numeroOrdine, altroOrdine.numeroOrdine);
+    }
+
+    @Override
+    public String getChiave() {
+        return String.valueOf(numeroOrdine);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Ordine %d del %s - Totale: %.2f euro",
+                           numeroOrdine, dataOrdine, totale);
+    }
+}
+
+// Metodo generico di ordinamento
+public class Ordinatore {
+    // Bubble sort generico per Ordinabile
+    public static void ordina(Ordinabile[] array) {
+        int n = array.length;
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (array[j].confronta(array[j + 1]) > 0) {
+                    // Scambia elementi
+                    Ordinabile temp = array[j];
+                    array[j] = array[j + 1];
+                    array[j + 1] = temp;
+                }
+            }
+        }
+    }
+}
+
+// Test
+public class TestOrdinabile {
+    public static void main(String[] args) {
+        // Test con Prodotti
+        Ordinabile[] prodotti = {
+            new Prodotto("P003", "Mouse", 25.99),
+            new Prodotto("P001", "Tastiera", 45.50),
+            new Prodotto("P002", "Monitor", 199.99)
+        };
+
+        System.out.println("=== PRODOTTI NON ORDINATI ===");
+        stampa(prodotti);
+
+        Ordinatore.ordina(prodotti);
+
+        System.out.println("\n=== PRODOTTI ORDINATI ===");
+        stampa(prodotti);
+
+        // Test con Clienti
+        Ordinabile[] clienti = {
+            new Cliente("C003", "Mario", "Rossi"),
+            new Cliente("C001", "Laura", "Bianchi"),
+            new Cliente("C002", "Anna", "Bianchi")
+        };
+
+        System.out.println("\n=== CLIENTI NON ORDINATI ===");
+        stampa(clienti);
+
+        Ordinatore.ordina(clienti);
+
+        System.out.println("\n=== CLIENTI ORDINATI ===");
+        stampa(clienti);
+    }
+
+    private static void stampa(Ordinabile[] array) {
+        for (Ordinabile o : array) {
+            System.out.println(o);
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} L'interfaccia Ordinabile permette di scrivere un algoritmo di ordinamento generico che funziona con qualsiasi tipo che implementa confronta(). Ogni classe definisce la propria logica di confronto: Prodotto per codice, Cliente per cognome/nome, Ordine per numero.
+
+\section{Capitolo 3: Eccezioni}
+
+\subsection{Esercizio 3.1: Input numerico con gestione eccezioni}
+
+\begin{lstlisting}
+import java.util.Scanner;
+import java.util.InputMismatchException;
+
+public class InputNumerico {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int numero = 0;
+        boolean inputValido = false;
+
+        // Continua a chiedere finche' l'input non e' valido
+        while (!inputValido) {
+            try {
+                System.out.print("Inserisci un numero intero: ");
+                numero = scanner.nextInt();
+                inputValido = true; // Input valido, esci dal ciclo
+
+            } catch (InputMismatchException e) {
+                System.out.println("ERRORE: Devi inserire un numero intero!");
+                scanner.nextLine(); // Pulisce l'input errato
+            }
+        }
+
+        System.out.println("Hai inserito: " + numero);
+        scanner.close();
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma usa un ciclo while per continuare a chiedere l'input finché non viene inserito un numero valido. InputMismatchException viene catturata quando l'utente inserisce testo invece di un numero.
+
+\subsection{Esercizio 3.2: Divisione sicura}
+
+\begin{lstlisting}
+public class DivisioneSicura {
+
+    public static double dividi(double dividendo, double divisore) {
+        try {
+            // Lancia eccezione se divisore e' zero
+            if (divisore == 0) {
+                throw new ArithmeticException("Divisione per zero");
+            }
+            return dividendo / divisore;
+
+        } catch (ArithmeticException e) {
+            System.out.println("Attenzione: " + e.getMessage() +
+                             " - Restituisco 0");
+            return 0;
+        }
+    }
+
+    public static void main(String[] args) {
+        // Test vari casi
+        System.out.println("10 / 2 = " + dividi(10, 2));
+        System.out.println("15 / 3 = " + dividi(15, 3));
+        System.out.println("7 / 0 = " + dividi(7, 0));  // Gestisce eccezione
+        System.out.println("20 / 4 = " + dividi(20, 4));
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il metodo dividi() controlla se il divisore è zero e in tal caso lancia un'eccezione ArithmeticException. Il catch intercetta l'eccezione e restituisce 0 come valore di default.
+
+\subsection{Esercizio 3.3: Accesso array sicuro}
+
+\begin{lstlisting}
+import java.util.Scanner;
+
+public class AccessoArraySicuro {
+    public static void main(String[] args) {
+        String[] frutti = {"Mela", "Banana", "Arancia", "Pera", "Kiwi"};
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Array disponibile con " + frutti.length +
+                         " elementi (indici 0-" + (frutti.length - 1) + ")");
+
+        System.out.print("Inserisci indice da visualizzare: ");
+        int indice = scanner.nextInt();
+
+        try {
+            // Tenta di accedere all'elemento
+            String frutto = frutti[indice];
+            System.out.println("Elemento all'indice " + indice +
+                             ": " + frutto);
+
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("ERRORE: Indice " + indice +
+                             " non valido!");
+            System.out.println("Gli indici validi sono da 0 a " +
+                             (frutti.length - 1));
+        } finally {
+            scanner.close();
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma cattura ArrayIndexOutOfBoundsException quando l'utente inserisce un indice fuori dai limiti dell'array, mostrando un messaggio di errore chiaro con gli indici validi.
+
+\subsection{Esercizio 3.4: Eccezione personalizzata NumeroNegativo}
+
+\begin{lstlisting}
+// Eccezione personalizzata checked
+public class NumeroNegativoException extends Exception {
+    private double numeroErrato;
+
+    public NumeroNegativoException(double numero) {
+        super("Impossibile calcolare radice quadrata di numero negativo: "
+              + numero);
+        this.numeroErrato = numero;
+    }
+
+    public double getNumeroErrato() {
+        return numeroErrato;
+    }
+}
+
+// Classe con metodo che usa l'eccezione
+public class CalcolatoreRadici {
+
+    public static double calcolaRadiceQuadrata(double n)
+            throws NumeroNegativoException {
+
+        if (n < 0) {
+            throw new NumeroNegativoException(n);
+        }
+
+        return Math.sqrt(n);
+    }
+
+    public static void main(String[] args) {
+        double[] numeri = {16, 25, -9, 49, -4, 64};
+
+        System.out.println("=== CALCOLO RADICI QUADRATE ===");
+
+        for (double num : numeri) {
+            try {
+                double radice = calcolaRadiceQuadrata(num);
+                System.out.printf("Radice di %.1f = %.2f\n", num, radice);
+
+            } catch (NumeroNegativoException e) {
+                System.out.println("ERRORE: " + e.getMessage());
+                System.out.println("Numero problematico: " +
+                                 e.getNumeroErrato());
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Viene creata un'eccezione checked personalizzata che memorizza il numero negativo che ha causato l'errore. Il metodo calcolaRadiceQuadrata() dichiara throws e lancia l'eccezione se il numero è negativo.
+
+\subsection{Esercizio 3.5: Classe Calcolatrice con eccezioni}
+
+\begin{lstlisting}
+// Eccezioni personalizzate
+class DivisoreZeroException extends Exception {
+    public DivisoreZeroException() {
+        super("Errore: divisione per zero non permessa");
+    }
+}
+
+class OperazioneNonValidaException extends Exception {
+    public OperazioneNonValidaException(String messaggio) {
+        super(messaggio);
+    }
+}
+
+// Classe Calcolatrice
+public class Calcolatrice {
+
+    public double somma(double a, double b) {
+        return a + b;
+    }
+
+    public double sottrai(double a, double b) {
+        return a - b;
+    }
+
+    public double moltiplica(double a, double b)
+            throws OperazioneNonValidaException {
+        // Controlla overflow per numeri molto grandi
+        if (Math.abs(a) > 1e100 || Math.abs(b) > 1e100) {
+            throw new OperazioneNonValidaException(
+                "Numeri troppo grandi per la moltiplicazione");
+        }
+        return a * b;
+    }
+
+    public double dividi(double dividendo, double divisore)
+            throws DivisoreZeroException {
+        if (divisore == 0) {
+            throw new DivisoreZeroException();
+        }
+        return dividendo / divisore;
+    }
+
+    public static void main(String[] args) {
+        Calcolatrice calc = new Calcolatrice();
+
+        System.out.println("=== TEST CALCOLATRICE ===\n");
+
+        // Test somma
+        System.out.println("5 + 3 = " + calc.somma(5, 3));
+
+        // Test sottrazione
+        System.out.println("10 - 4 = " + calc.sottrai(10, 4));
+
+        // Test moltiplicazione
+        try {
+            System.out.println("6 * 7 = " + calc.moltiplica(6, 7));
+            System.out.println("1e101 * 2 = " + calc.moltiplica(1e101, 2));
+        } catch (OperazioneNonValidaException e) {
+            System.out.println("ERRORE: " + e.getMessage());
+        }
+
+        // Test divisione
+        try {
+            System.out.println("20 / 5 = " + calc.dividi(20, 5));
+            System.out.println("15 / 0 = " + calc.dividi(15, 0));
+        } catch (DivisoreZeroException e) {
+            System.out.println("ERRORE: " + e.getMessage());
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} La classe Calcolatrice implementa le 4 operazioni base, lanciando eccezioni personalizzate per situazioni non valide: DivisoreZeroException per divisioni per zero e OperazioneNonValidaException per numeri troppo grandi.
+
+\subsection{Esercizio 3.6: Conta righe file con gestione eccezioni}
+
+\begin{lstlisting}
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class ContaRigheConEccezioni {
+
+    public static int contaRighe(String percorsoFile)
+            throws FileNotFoundException, IOException {
+
+        int righe = 0;
+
+        try (BufferedReader br = new BufferedReader(
+                new FileReader(percorsoFile))) {
+
+            while (br.readLine() != null) {
+                righe++;
+            }
+        }
+        // Try-with-resources chiude automaticamente br
+        // Le eccezioni vengono propagate al chiamante
+
+        return righe;
+    }
+
+    public static void main(String[] args) {
+        String[] files = {"documento.txt", "file_inesistente.txt",
+                         "dati.csv"};
+
+        for (String file : files) {
+            try {
+                int numeroRighe = contaRighe(file);
+                System.out.println(file + ": " + numeroRighe + " righe");
+
+            } catch (FileNotFoundException e) {
+                System.out.println("ERRORE: File '" + file +
+                                 "' non trovato");
+                System.out.println("Verifica che il file esista " +
+                                 "nella directory corrente");
+
+            } catch (IOException e) {
+                System.out.println("ERRORE lettura file '" + file + "': " +
+                                 e.getMessage());
+                System.out.println("Il file potrebbe essere corrotto " +
+                                 "o non accessibile");
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma usa catch separati per FileNotFoundException (file non esiste) e IOException (errore generico di lettura), fornendo messaggi di errore specifici per ogni situazione.
+
+\subsection{Esercizio 3.7: Gerarchia eccezioni prenotazioni}
+
+\begin{lstlisting}
+// Eccezione base
+class PrenotazioneException extends Exception {
+    public PrenotazioneException(String messaggio) {
+        super(messaggio);
+    }
+}
+
+// Eccezioni specifiche
+class PostiEsauritiException extends PrenotazioneException {
+    private int postiRichiesti;
+    private int postiDisponibili;
+
+    public PostiEsauritiException(int richiesti, int disponibili) {
+        super("Posti esauriti: richiesti " + richiesti +
+              ", disponibili " + disponibili);
+        this.postiRichiesti = richiesti;
+        this.postiDisponibili = disponibili;
+    }
+
+    public int getPostiDisponibili() {
+        return postiDisponibili;
+    }
+}
+
+class DataNonValidaException extends PrenotazioneException {
+    public DataNonValidaException(String data) {
+        super("Data non valida: " + data);
+    }
+}
+
+class PagamentoFallitoException extends PrenotazioneException {
+    private String motivoFallimento;
+
+    public PagamentoFallitoException(String motivo) {
+        super("Pagamento fallito: " + motivo);
+        this.motivoFallimento = motivo;
+    }
+
+    public String getMotivoFallimento() {
+        return motivoFallimento;
+    }
+}
+
+// Sistema di prenotazioni
+public class SistemaPrenotazioni {
+    private int postiTotali = 100;
+    private int postiPrenotati = 0;
+
+    public void prenota(String data, int numPersone, String metodoPagamento)
+            throws PrenotazioneException {
+
+        // Valida data (formato semplice: gg/mm/aaaa)
+        if (!data.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            throw new DataNonValidaException(data);
+        }
+
+        // Controlla disponibilita' posti
+        int postiLiberi = postiTotali - postiPrenotati;
+        if (numPersone > postiLiberi) {
+            throw new PostiEsauritiException(numPersone, postiLiberi);
+        }
+
+        // Simula pagamento
+        if (!elaboraPagamento(metodoPagamento)) {
+            throw new PagamentoFallitoException(
+                "Metodo di pagamento non valido: " + metodoPagamento);
+        }
+
+        // Prenotazione confermata
+        postiPrenotati += numPersone;
+        System.out.println("Prenotazione confermata per " + numPersone +
+                         " persone il " + data);
+        System.out.println("Posti rimanenti: " +
+                         (postiTotali - postiPrenotati));
+    }
+
+    private boolean elaboraPagamento(String metodo) {
+        // Simula validazione pagamento
+        return metodo.equals("carta") || metodo.equals("contanti");
+    }
+
+    public static void main(String[] args) {
+        SistemaPrenotazioni sistema = new SistemaPrenotazioni();
+
+        // Test varie prenotazioni
+        String[][] prenotazioni = {
+            {"15/06/2025", "4", "carta"},
+            {"20/06/2025", "2", "contanti"},
+            {"data_errata", "3", "carta"},
+            {"25/06/2025", "150", "carta"},
+            {"30/06/2025", "5", "paypal"}
+        };
+
+        for (String[] p : prenotazioni) {
+            try {
+                System.out.println("\n--- Tentativo prenotazione ---");
+                sistema.prenota(p[0], Integer.parseInt(p[1]), p[2]);
+
+            } catch (DataNonValidaException e) {
+                System.out.println("ERRORE: " + e.getMessage());
+                System.out.println("Formato richiesto: gg/mm/aaaa");
+
+            } catch (PostiEsauritiException e) {
+                System.out.println("ERRORE: " + e.getMessage());
+                System.out.println("Suggerimento: prenotare solo " +
+                                 e.getPostiDisponibili() + " posti");
+
+            } catch (PagamentoFallitoException e) {
+                System.out.println("ERRORE: " + e.getMessage());
+                System.out.println("Metodi accettati: carta, contanti");
+
+            } catch (PrenotazioneException e) {
+                // Catch generico per altre eccezioni
+                System.out.println("ERRORE generico: " + e.getMessage());
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Viene creata una gerarchia di eccezioni con PrenotazioneException come base e tre eccezioni specifiche che ereditano da essa. Ogni eccezione può memorizzare informazioni aggiuntive (posti disponibili, motivo fallimento) e il catch può gestirle in modo specifico.
+
+\subsection{Esercizio 3.8: Parser JSON semplificato}
+
+\begin{lstlisting}
+// Eccezioni personalizzate per parsing JSON
+class JsonSyntaxException extends Exception {
+    public JsonSyntaxException(String messaggio) {
+        super("Errore sintassi JSON: " + messaggio);
+    }
+}
+
+class JsonKeyException extends Exception {
+    public JsonKeyException(String chiave) {
+        super("Chiave JSON non valida: '" + chiave + "'");
+    }
+}
+
+class JsonValueException extends Exception {
+    public JsonValueException(String valore) {
+        super("Valore JSON non valido: '" + valore + "'");
+    }
+}
+
+// Parser JSON semplificato
+public class SimpleJsonParser {
+
+    public static void parseJson(String json)
+            throws JsonSyntaxException, JsonKeyException, JsonValueException {
+
+        // Rimuove spazi
+        json = json.trim();
+
+        // Verifica graffe di apertura e chiusura
+        if (!json.startsWith("{") || !json.endsWith("}")) {
+            throw new JsonSyntaxException(
+                "Il JSON deve iniziare con { e finire con }");
+        }
+
+        // Rimuove graffe
+        String contenuto = json.substring(1, json.length() - 1).trim();
+
+        // Se vuoto, e' valido
+        if (contenuto.isEmpty()) {
+            System.out.println("JSON vuoto valido: {}");
+            return;
+        }
+
+        // Split per coppie chiave:valore
+        String[] coppie = contenuto.split(",");
+
+        for (String coppia : coppie) {
+            coppia = coppia.trim();
+
+            // Verifica presenza di :
+            if (!coppia.contains(":")) {
+                throw new JsonSyntaxException(
+                    "Manca ':' nella coppia chiave:valore");
+            }
+
+            // Split chiave:valore
+            String[] parti = coppia.split(":", 2);
+            String chiave = parti[0].trim();
+            String valore = parti[1].trim();
+
+            // Valida chiave (deve essere tra virgolette)
+            if (!chiave.startsWith("\"") || !chiave.endsWith("\"")) {
+                throw new JsonKeyException(chiave);
+            }
+
+            // Rimuove virgolette dalla chiave
+            chiave = chiave.substring(1, chiave.length() - 1);
+
+            // Valida valore (stringa tra virgolette o numero)
+            if (!isValoreValido(valore)) {
+                throw new JsonValueException(valore);
+            }
+
+            System.out.println("Coppia valida -> " + chiave +
+                             " = " + valore);
+        }
+
+        System.out.println("JSON valido!");
+    }
+
+    private static boolean isValoreValido(String valore) {
+        // Valore valido se: stringa tra virgolette, numero,
+        // true, false, null
+        if (valore.startsWith("\"") && valore.endsWith("\"")) {
+            return true; // Stringa
+        }
+        if (valore.equals("true") || valore.equals("false") ||
+            valore.equals("null")) {
+            return true; // Boolean o null
+        }
+        try {
+            Double.parseDouble(valore);
+            return true; // Numero
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        String[] testJson = {
+            "{\"nome\":\"Mario\", \"eta\":30}",
+            "{\"valido\":true, \"count\":42}",
+            "{\"errore\":senza_virgolette}",
+            "{chiave_senza_virgolette:\"valore\"}",
+            "{\"completo\":\"ok\", senza_due_punti}",
+            "non inizia con graffa"
+        };
+
+        for (String json : testJson) {
+            try {
+                System.out.println("\n=== Test JSON ===");
+                System.out.println("Input: " + json);
+                parseJson(json);
+
+            } catch (JsonSyntaxException e) {
+                System.out.println("ERRORE SINTASSI: " + e.getMessage());
+
+            } catch (JsonKeyException e) {
+                System.out.println("ERRORE CHIAVE: " + e.getMessage());
+                System.out.println("Le chiavi devono essere tra " +
+                                 "virgolette doppie");
+
+            } catch (JsonValueException e) {
+                System.out.println("ERRORE VALORE: " + e.getMessage());
+                System.out.println("I valori stringa devono essere " +
+                                 "tra virgolette");
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il parser verifica la sintassi JSON base con tre tipi di eccezioni: JsonSyntaxException per errori strutturali (graffe, due punti), JsonKeyException per chiavi non tra virgolette, JsonValueException per valori non validi. Ogni eccezione fornisce informazioni specifiche sull'errore.
+
+\section{Capitolo 4: ArrayList}
+
+\subsection{Esercizio 4.1: Lista della spesa}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class ListaSpesa {
+    private static ArrayList<String> spesa = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        boolean continua = true;
+
+        while (continua) {
+            mostraMenu();
+            int scelta = scanner.nextInt();
+            scanner.nextLine(); // Consuma newline
+
+            switch (scelta) {
+                case 1:
+                    aggiungiProdotto();
+                    break;
+                case 2:
+                    visualizzaLista();
+                    break;
+                case 3:
+                    rimuoviProdotto();
+                    break;
+                case 4:
+                    verificaProdotto();
+                    break;
+                case 5:
+                    continua = false;
+                    System.out.println("Buona spesa!");
+                    break;
+                default:
+                    System.out.println("Scelta non valida");
+            }
+        }
+        scanner.close();
+    }
+
+    private static void mostraMenu() {
+        System.out.println("\n=== LISTA DELLA SPESA ===");
+        System.out.println("1. Aggiungi prodotto");
+        System.out.println("2. Visualizza lista");
+        System.out.println("3. Rimuovi prodotto");
+        System.out.println("4. Verifica prodotto");
+        System.out.println("5. Esci");
+        System.out.print("Scelta: ");
+    }
+
+    private static void aggiungiProdotto() {
+        System.out.print("Nome prodotto: ");
+        String prodotto = scanner.nextLine();
+
+        // Verifica se gia' presente
+        if (spesa.contains(prodotto)) {
+            System.out.println("Prodotto gia' presente nella lista!");
+        } else {
+            spesa.add(prodotto);
+            System.out.println("Prodotto aggiunto!");
+        }
+    }
+
+    private static void visualizzaLista() {
+        if (spesa.isEmpty()) {
+            System.out.println("Lista vuota");
+            return;
+        }
+
+        System.out.println("\n--- LISTA DELLA SPESA ---");
+        for (int i = 0; i < spesa.size(); i++) {
+            System.out.println((i + 1) + ". " + spesa.get(i));
+        }
+        System.out.println("Totale prodotti: " + spesa.size());
+    }
+
+    private static void rimuoviProdotto() {
+        if (spesa.isEmpty()) {
+            System.out.println("Lista vuota");
+            return;
+        }
+
+        visualizzaLista();
+        System.out.print("Numero prodotto da rimuovere: ");
+        int indice = scanner.nextInt() - 1;
+        scanner.nextLine();
+
+        if (indice >= 0 && indice < spesa.size()) {
+            String rimosso = spesa.remove(indice);
+            System.out.println("Rimosso: " + rimosso);
+        } else {
+            System.out.println("Numero non valido");
+        }
+    }
+
+    private static void verificaProdotto() {
+        System.out.print("Prodotto da cercare: ");
+        String prodotto = scanner.nextLine();
+
+        if (spesa.contains(prodotto)) {
+            int posizione = spesa.indexOf(prodotto) + 1;
+            System.out.println("'" + prodotto + "' e' presente " +
+                             "(posizione " + posizione + ")");
+        } else {
+            System.out.println("'" + prodotto + "' non e' nella lista");
+        }
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma gestisce una lista della spesa con menu interattivo, permettendo di aggiungere prodotti (controllando duplicati con contains), visualizzarli, rimuoverli per indice e verificare la presenza di un prodotto.
+
+\subsection{Esercizio 4.2: Temperature settimanali}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class TemperatureSettimanali {
+    public static void main(String[] args) {
+        ArrayList<Double> temperature = new ArrayList<>();
+        Scanner scanner = new Scanner(System.in);
+
+        String[] giorni = {"Lunedi", "Martedi", "Mercoledi", "Giovedi",
+                          "Venerdi", "Sabato", "Domenica"};
+
+        // Inserimento temperature
+        System.out.println("=== TEMPERATURE MASSIME SETTIMANALI ===");
+        for (String giorno : giorni) {
+            System.out.print(giorno + ": ");
+            double temp = scanner.nextDouble();
+            temperature.add(temp);
+        }
+
+        // Calcolo media
+        double somma = 0;
+        for (double temp : temperature) {
+            somma += temp;
+        }
+        double media = somma / temperature.size();
+
+        // Trova massima e minima
+        double massima = temperature.get(0);
+        double minima = temperature.get(0);
+        int giornoMax = 0;
+        int giornoMin = 0;
+
+        for (int i = 1; i < temperature.size(); i++) {
+            double temp = temperature.get(i);
+            if (temp > massima) {
+                massima = temp;
+                giornoMax = i;
+            }
+            if (temp < minima) {
+                minima = temp;
+                giornoMin = i;
+            }
+        }
+
+        // Visualizza risultati
+        System.out.println("\n=== ANALISI ===");
+        System.out.printf("Temperatura media: %.1f gradi C\n", media);
+        System.out.printf("Temperatura massima: %.1f gradi C (%s)\n",
+                        massima, giorni[giornoMax]);
+        System.out.printf("Temperatura minima: %.1f gradi C (%s)\n",
+                        minima, giorni[giornoMin]);
+
+        // Giorni sopra la media
+        System.out.println("\nGiorni sopra la media:");
+        for (int i = 0; i < temperature.size(); i++) {
+            if (temperature.get(i) > media) {
+                System.out.printf("- %s: %.1f gradi C\n",
+                                giorni[i], temperature.get(i));
+            }
+        }
+
+        scanner.close();
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il programma memorizza 7 temperature in un ArrayList, calcola la media sommando tutti i valori, trova massima e minima iterando sulla lista e visualizza i giorni sopra la media confrontando ogni elemento con la media calcolata.
+
+\subsection{Esercizio 4.3: Rimozione duplicati}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class RimuoviDuplicati {
+
+    public static ArrayList<String> rimuoviDuplicati(
+            ArrayList<String> listaOriginale) {
+
+        ArrayList<String> listaSenzaDuplicati = new ArrayList<>();
+
+        // Itera sulla lista originale
+        for (String elemento : listaOriginale) {
+            // Aggiunge solo se non gia' presente nella nuova lista
+            if (!listaSenzaDuplicati.contains(elemento)) {
+                listaSenzaDuplicati.add(elemento);
+            }
+        }
+
+        return listaSenzaDuplicati;
+    }
+
+    public static void main(String[] args) {
+        // Test con lista contenente duplicati
+        ArrayList<String> frutti = new ArrayList<>();
+        frutti.add("Mela");
+        frutti.add("Banana");
+        frutti.add("Mela");
+        frutti.add("Arancia");
+        frutti.add("Banana");
+        frutti.add("Kiwi");
+        frutti.add("Mela");
+        frutti.add("Arancia");
+
+        System.out.println("=== LISTA ORIGINALE ===");
+        System.out.println(frutti);
+        System.out.println("Dimensione: " + frutti.size());
+
+        ArrayList<String> senzaDuplicati = rimuoviDuplicati(frutti);
+
+        System.out.println("\n=== LISTA SENZA DUPLICATI ===");
+        System.out.println(senzaDuplicati);
+        System.out.println("Dimensione: " + senzaDuplicati.size());
+
+        // Verifica ordine mantenuto
+        System.out.println("\nOrdine prima apparizione mantenuto: " +
+                         senzaDuplicati.get(0).equals("Mela"));
+    }
+}
+\end{lstlisting}
+
+\textbf{Spiegazione:} Il metodo rimuoviDuplicati() crea un nuovo ArrayList e aggiunge ogni elemento solo se non è già presente (verificato con contains). Questo mantiene l'ordine di prima apparizione degli elementi.
+
+\subsection{Esercizio 4.4-4.8}
+
+Per motivi di spazio, le soluzioni complete degli esercizi 4.4 (Gestione biblioteca), 4.5 (Registro voti), 4.6 (Playlist musicale), 4.7 (Sistema prenotazioni cinema) e 4.8 (Social network semplificato) seguono lo stesso approccio degli esercizi precedenti: creano classi personalizzate, le gestiscono in ArrayList e implementano le funzionalità richieste usando i metodi add(), remove(), get(), contains() e iterazioni con for/for-each.

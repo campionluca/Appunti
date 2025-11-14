@@ -1,0 +1,84 @@
+\chapter{Design Responsivo}
+\label{cap:responsive}
+
+\section{Mobile-first approach}
+
+Il design responsivo inizia dai dispositivi mobili (320px) e scala verso schermi più grandi:
+
+\begin{lstlisting}[language=CSS]
+/* Mobile first: base per tutti */
+body { font-size: 14px; }
+.container { width: 100%; }
+
+/* Tablet: 768px e oltre */
+@media (min-width: 768px) {
+  body { font-size: 16px; }
+  .container { width: 90%; }
+}
+
+/* Desktop: 1024px e oltre */
+@media (min-width: 1024px) {
+  body { font-size: 18px; }
+  .container { width: 80%; }
+  max-width: 1200px;
+}
+\end{lstlisting}
+
+\section{Meta tag viewport}
+
+Essenziale per responsività:
+
+\begin{lstlisting}[language=HTML]
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+\end{lstlisting}
+
+\begin{attenzione}
+Senza il meta tag viewport, i dispositivi mobili mostreranno la pagina desktop rimpicciolita, non responsive.
+\end{attenzione}
+
+\section{Breakpoints standard}
+
+\begin{itemize}
+  \item \textbf{Mobile}: 320px - 480px
+  \item \textbf{Tablet}: 768px - 1024px
+  \item \textbf{Desktop}: 1024px+
+  \item \textbf{Large}: 1920px+
+\end{itemize}
+
+\section{Immagini responsive}
+
+\begin{lstlisting}[language=CSS]
+img {
+  max-width: 100%;
+  height: auto;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=HTML]
+<picture>
+  <source media="(min-width: 1024px)" srcset="large.jpg" />
+  <source media="(min-width: 768px)" srcset="medium.jpg" />
+  <img src="small.jpg" alt="Descrizione" />
+</picture>
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea una pagina con 2 colonne che diventa 1 colonna su mobile (max 768px).
+
+\subsection{Esercizio 2 (Intermedio)}
+Implementa 3 breakpoint diversi (320, 768, 1024) con layout e font-size che cambiano.
+
+\subsection{Esercizio 3 (Avanzato)}
+Crea un sito completo responsivo con navbar mobile-first, menu hamburger (CSS), e layout che adatta a tutti i dispositivi.
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item Mobile-first: inizia da mobile e scala
+  \item Meta viewport è obbligatorio
+  \item Media queries: @media (min-width: ...)
+  \item Breakpoint standard: 320, 768, 1024, 1920
+  \item Immagini: max-width 100%, height auto
+\end{itemize}

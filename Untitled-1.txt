@@ -1,0 +1,1 @@
+Cose da ricordare: Ogni tag deve essere chiuso, anche i <link>

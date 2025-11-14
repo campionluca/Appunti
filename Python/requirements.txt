@@ -1,0 +1,16 @@
+# Dipendenze per il sistema di gestione task TODO.md
+
+# Python standard library - nessuna dipendenza esterna necessaria
+# Il sistema utilizza solo moduli della standard library
+
+# Per testing (opzionale)
+pytest>=7.0.0
+
+# Per sviluppo (opzionale)
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.900
+
+# Per imballaggio (opzionale)
+setuptools>=60.0.0
+twine>=4.0.0

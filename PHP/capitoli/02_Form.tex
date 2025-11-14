@@ -1,0 +1,148 @@
+\chapter{Form HTML e Gestione Input}\label{cap:form_input}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Form e validazione, Processing server-side, PRG pattern, Esempi, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Progettare form HTML accessibili e sicuri.
+  \item Validare e processare input lato server con messaggi chiari.
+  \item Applicare il pattern Post/Redirect/Get per evitare duplicazioni.
+\end{itemize}
+
+\section{Form di contatto con validazione}
+Esempio di form HTML con validazione email lato server.
+
+\subsection{Form}
+\lstinputlisting[language=HTML, caption={Form HTML}, label={lst:formhtml}]{esempi/form.html}
+
+\subsubsection{Analisi tecnica del form HTML}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Form di contatto con validazione HTML5 che raccoglie email utente in modo sicuro.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{<!doctype html>}: Dichiarazione HTML5 per standard moderno
+\item \texttt{<?php session\_start(); ?>}: Avvio sessione PHP per gestione stato
+% Rimosso: elementi relativi a CSRF
+\item \texttt{<input type=\"email\" required>}: Input email con validazione nativa HTML5
+\item \texttt{htmlspecialchars()}: Sanificazione output per prevenire XSS
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Form di login/registrazione
+\item Moduli di contatto e supporto
+\item Sistemi di commenti e feedback
+\item Procedure di checkout e-commerce
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{<form method=\"get\">} per dati non sensibili (ricerche, filtri)
+\item JavaScript validation aggiuntiva lato client
+\item CAPTCHA per protezione bot in form pubblici
+\item AJAX per submit asincrono senza refresh pagina
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Sempre usare POST per dati sensibili, HTTPS in produzione
+\item \textbf{Insidia}: Validazione solo lato client è insufficiente (disabilita JavaScript)
+% Rimosso: riferimento a CSRF
+\item \textbf{Accessibilità}: Label appropriati e attributi ARIA per screen reader
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{OWASP Top 10}: XSS tra vulnerabilità web più comuni
+\item \textbf{HTML5 Form Validation}: Validazione nativa browser con feedback utente
+\item \textbf{Same-Origin Policy}: Restrizioni sicurezza browser tra domini
+\item \textbf{Content Security Policy}: Header aggiuntivi per sicurezza avanzata
+\end{itemize}
+\end{itemize}
+
+\subsection{Processing}
+\lstinputlisting[language=PHP, caption={Elaborazione POST}, label={lst:processaphp}]{esempi/processa.php}
+
+\section{Pattern PRG (Post/Redirect/Get)}
+Per evitare il ri-submit del form con F5, utilizzare \textbf{PRG}: dopo aver processato il POST, inviare un header di redirect e terminare l'esecuzione (vedi \ref{cap:redirect_header_location}).
+\begin{lstlisting}[language=PHP, caption={Esempio PRG minimale}]
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // validazione e salvataggio
+    header('Location: /grazie.html', true, 303);
+    exit; // importante!
+}
+?>
+\end{lstlisting}
+
+\section{Caso di studio: contatto con PRG e feedback}
+Form di contatto con esito memorizzato in sessione e redirect alla pagina di conferma, per separare elaborazione e visualizzazione.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Estendi il form per raccogliere nome e messaggio, valida lato server e applica PRG.
+  \item Implementa una pagina di "grazie" che mostra un feedback se presente in sessione.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Perché PRG evita la duplicazione dell'invio del form?
+  \item Quali campi vanno sempre validati lato server anche con HTML5?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item MDN — HTML Forms: \url{https://developer.mozilla.org/}
+  \item Pattern PRG: vedi \ref{cap:redirect_header_location}
+\end{itemize}
+
+\subsubsection{Analisi tecnica dell'elaborazione PHP}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Script server-side che valida e processa i dati del form con controlli di sicurezza completi (validazione email, sanitizzazione output).
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{declare(strict\_types=1)}: Strict typing per type safety migliorata
+% Rimosso: riferimenti a sessione/CSRF
+\item \texttt{filter\_input(INPUT\_POST, 'email', FILTER\_VALIDATE\_EMAIL)}: Validazione email nativa PHP
+\item \texttt{htmlspecialchars(..., ENT\_QUOTES | ENT\_SUBSTITUTE)}: Sanificazione output completa
+\item \texttt{http\_response\_code(400)}: Status HTTP appropriato per errori
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Endpoint di autenticazione e registrazione
+\item API per moduli di contatto e supporto
+\item Sistemi di checkout e-commerce
+\item Procedure di reset password e verifica email
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{filter\_var(\$\_POST['email'], FILTER\_VALIDATE\_EMAIL)}: Alternativa a filter\_input
+\item Validatori custom con espressioni regolari per formati specifici
+\item Framework di validazione (Symfony Validator, Laravel Validation)
+\item JSON API con validazione strutturata e errori standardizzati
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Validare sempre lato server anche con validazione HTML5
+\item \textbf{Insidia}: \texttt{filter\_input()} restituisce null per input mancanti, false per invalidi
+\item \textbf{Sicurezza}: Mai fidarsi dell'input utente, sempre sanificare output
+\item \textbf{Error handling}: Restituire messaggi di errore generici per evitare information leakage
+\item \textbf{Logging}: Registrare tentativi falliti per monitoraggio sicurezza
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{Input Validation}: Principio di least privilege per dati in ingresso
+% Rimosso: sezione CSRF Protection
+\item \textbf{Output Encoding}: Differenza tra sanitizzazione input e encoding output
+\item \textbf{HTTP Status Codes}: Semantica appropriata dei codici di risposta
+\item \textbf{Data Filtering}: Filtri PHP built-in per diversi tipi di validazione
+\end{itemize}
+\end{itemize}

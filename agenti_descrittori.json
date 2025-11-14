@@ -1,0 +1,1006 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Agent Code Descriptors and Theoretical Explanations v1.0",
+  "description": "Comprehensive documentation for code descriptions, theoretical explanations, and commented examples across all educational courses. This file complements agent_instructions.json with detailed explanations.",
+  "version": "1.0",
+  "last_updated": "2025-11-14",
+  "metadata": {
+    "organization": "Istituto Tecnico Antonio Scarpa ITS",
+    "purpose": "Provide detailed code descriptions and theoretical explanations for students and educators",
+    "target_courses": ["C (Terza)", "HTMLCSS (Quarta)", "Java (Quarta)", "PHP (Quarta)", "Python (Quinta)"],
+    "aligned_with": "agent_instructions.json v4.0 and MASTER-TODO.md v3.0"
+  },
+  "code_descriptors": {
+    "type": "object",
+    "description": "Database of code descriptions and explanations by course and topic",
+    "properties": {
+      "C": {
+        "type": "object",
+        "description": "Code descriptors for C programming (Terza - 11 chapters)",
+        "properties": {
+          "language_basics": [
+            {
+              "concept_id": "C-VARS-001",
+              "topic": "Dichiarazione e inizializzazione di variabili",
+              "explanation": "In C, ogni variabile deve essere dichiarata con un tipo esplicito prima dell'uso. La dichiarazione alloca memoria, mentre l'inizializzazione assegna un valore iniziale. È buona pratica inizializzare sempre le variabili per evitare valori casuali dalla memoria.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Dichiarazione e inizializzazione di variabili */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    // Dichiarazione semplice (valore non definito)\n    int eta;\n    \n    // Dichiarazione con inizializzazione (consigliato)\n    int anni = 17;\n    float altezza = 1.75;\n    char iniziale = 'M';\n    \n    // Inizializzazione successiva\n    eta = 18;\n    \n    printf(\"Eta': %d anni\\n\", eta);\n    printf(\"Altezza: %.2f m\\n\", altezza);\n    printf(\"Iniziale: %c\\n\", iniziale);\n    \n    return 0;\n}",
+              "common_mistakes": [
+                "Non inizializzare le variabili: int x; *x contiene valore casuale*",
+                "Usare una variabile prima di dichiararla",
+                "Confondere dichiarazione (int x;) con inizializzazione (int x = 5;)"
+              ],
+              "best_practices": [
+                "Inizializza sempre le variabili al momento della dichiarazione",
+                "Usa nomi significativi: 'eta' invece di 'x'",
+                "Dichiara le variabili il più vicino possibile al loro primo utilizzo",
+                "Raggruppa dichiarazioni di variabili correlate"
+              ],
+              "learning_objectives": [
+                "Comprendere la differenza tra dichiarazione e inizializzazione",
+                "Conoscere i tipi di dato base (int, float, char)",
+                "Saper dichiarare e inizializzare variabili correttamente",
+                "Evitare l'uso di variabili non inizializzate"
+              ]
+            },
+            {
+              "concept_id": "C-TYPES-001",
+              "topic": "Tipi di dati in C",
+              "explanation": "C è un linguaggio fortemente tipizzato. I tipi principali sono: interi (char, short, int, long), virgola mobile (float, double), e caratteri (char). Ogni tipo ha dimensioni e range specifici che variano in base all'architettura del sistema.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Tipi di dati fondamentali in C */\n#include <stdio.h>\n#include <limits.h>\n\nint main(int argc, char** argv) {\n    // Tipi interi\n    char carattere = 'A';          // 1 byte, range -128 a 127\n    short piccolo = 32000;         // 2 byte\n    int intero = 2147483647;       // 4 byte\n    long lungo = 9223372036854775807L;  // 8 byte su 64-bit\n    \n    // Tipi a virgola mobile\n    float decimale = 3.14159f;     // 4 byte, 6-7 cifre decimali\n    double doppia = 3.141592653589793;  // 8 byte, 15-16 cifre\n    \n    // Unsigned (solo valori positivi)\n    unsigned int positivo = 4294967295U;\n    \n    // Stampa delle dimensioni\n    printf(\"Dimensione char: %lu byte\\n\", sizeof(char));\n    printf(\"Dimensione int: %lu byte\\n\", sizeof(int));\n    printf(\"Dimensione float: %lu byte\\n\", sizeof(float));\n    printf(\"Dimensione double: %lu byte\\n\", sizeof(double));\n    \n    // Stampa dei range\n    printf(\"Range int: %d a %d\\n\", INT_MIN, INT_MAX);\n    \n    return 0;\n}",
+              "common_mistakes": [
+                "Overflow: assegnare un valore troppo grande per il tipo (int x = 3000000000;)",
+                "Usare int per valori decimali (perdita della parte frazionaria)",
+                "Confondere float e double nei calcoli di precisione",
+                "Non usare il suffisso corretto per le costanti (3.14 invece di 3.14f per float)"
+              ],
+              "best_practices": [
+                "Usa int per numeri interi generici",
+                "Usa float solo quando la memoria è limitata, preferisci double per calcoli precisi",
+                "Usa sizeof() per calcolare dimensioni invece di valori hardcoded",
+                "Usa unsigned quando i valori sono sempre positivi",
+                "Controlla overflow con limits.h (INT_MAX, INT_MIN)"
+              ],
+              "learning_objectives": [
+                "Conoscere i tipi di dato fondamentali del C",
+                "Comprendere dimensioni e range di ogni tipo",
+                "Saper scegliere il tipo appropriato per ogni situazione",
+                "Conoscere l'uso di sizeof() e limits.h"
+              ]
+            },
+            {
+              "concept_id": "C-OPS-001",
+              "topic": "Operatori aritmetici",
+              "explanation": "Gli operatori aritmetici permettono di eseguire calcoli matematici. Includono addizione (+), sottrazione (-), moltiplicazione (*), divisione (/) e modulo (%). La divisione tra interi produce sempre un risultato intero (troncato).",
+              "difficulty_level": "beginner",
+              "code_example": "/* Operatori aritmetici in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int a = 10, b = 3;\n    \n    // Operatori binari\n    printf(\"Somma: %d + %d = %d\\n\", a, b, a + b);        // 13\n    printf(\"Differenza: %d - %d = %d\\n\", a, b, a - b);   // 7\n    printf(\"Prodotto: %d * %d = %d\\n\", a, b, a * b);     // 30\n    printf(\"Quoziente: %d / %d = %d\\n\", a, b, a / b);    // 3 (divisione intera!)\n    printf(\"Resto: %d %% %d = %d\\n\", a, b, a % b);       // 1\n    \n    // Divisione con float per risultato decimale\n    float risultato = (float)a / b;  // Cast per divisione float\n    printf(\"Divisione float: %.2f\\n\", risultato);        // 3.33\n    \n    // Incremento e decremento\n    int x = 5;\n    printf(\"x++ (post): %d\\n\", x++);  // Stampa 5, poi x diventa 6\n    printf(\"++x (pre): %d\\n\", ++x);   // x diventa 7, poi stampa 7\n    \n    return 0;\n}",
+              "common_mistakes": [
+                "Divisione intera inattesa: 10 / 3 = 3 (non 3.33)",
+                "Confondere post-incremento (x++) con pre-incremento (++x)",
+                "Dimenticare la precedenza: 2 + 3 * 4 = 14 (non 20)",
+                "Overflow in operazioni: INT_MAX + 1 produce un numero negativo"
+              ],
+              "best_practices": [
+                "Usa parentesi per chiarire la precedenza: (2 + 3) * 4",
+                "Per divisioni con decimali, converti almeno un operando a float",
+                "Usa modulo (%) per verificare divisibilità: if (n % 2 == 0) // pari",
+                "Evita pre/post incremento in espressioni complesse per leggibilità"
+              ],
+              "learning_objectives": [
+                "Conoscere tutti gli operatori aritmetici base",
+                "Comprendere la differenza tra divisione intera e float",
+                "Usare correttamente incremento e decremento",
+                "Applicare la precedenza degli operatori"
+              ]
+            },
+            {
+              "concept_id": "C-IO-001",
+              "topic": "Input/Output con scanf e printf",
+              "explanation": "printf() stampa output formattato su console, mentre scanf() legge input dall'utente. Entrambe usano specificatori di formato (%d, %f, %c, %s) per indicare il tipo di dato. scanf() richiede l'operatore & per passare l'indirizzo della variabile.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Input e Output in C con scanf e printf */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int eta;\n    float altezza;\n    char iniziale;\n    \n    // Output con printf e specificatori di formato\n    printf(\"=== INSERIMENTO DATI ===\\n\");\n    \n    // Input con scanf - IMPORTANTE: usa & prima della variabile\n    printf(\"Inserisci la tua eta': \");\n    scanf(\"%d\", &eta);  // %d per interi, & per indirizzo\n    \n    printf(\"Inserisci la tua altezza (in metri): \");\n    scanf(\"%f\", &altezza);  // %f per float\n    \n    printf(\"Inserisci l'iniziale del tuo nome: \");\n    scanf(\" %c\", &iniziale);  // Nota lo spazio prima di %c!\n    \n    // Output formattato\n    printf(\"\\n=== RIEPILOGO ===\\n\");\n    printf(\"Eta': %d anni\\n\", eta);\n    printf(\"Altezza: %.2f m\\n\", altezza);  // %.2f = 2 decimali\n    printf(\"Iniziale: %c\\n\", iniziale);\n    \n    // Formattazione avanzata\n    int numero = 42;\n    printf(\"Padding: %5d\\n\", numero);      // \"   42\" (5 caratteri)\n    printf(\"Zero-padding: %05d\\n\", numero); // \"00042\"\n    \n    return 0;\n}",
+              "common_mistakes": [
+                "Dimenticare & in scanf: scanf(\"%d\", eta); // ERRORE!",
+                "Non consumare whitespace prima di %c: scanf(\"%c\") dopo scanf(\"%d\")",
+                "Usare specificatore sbagliato: printf(\"%d\", 3.14); // comportamento indefinito",
+                "Buffer overflow con %s senza limite: scanf(\"%s\", str); usa scanf(\"%49s\", str);"
+              ],
+              "best_practices": [
+                "Usa sempre & con scanf per variabili non-array",
+                "Aggiungi uno spazio prima di %c per consumare whitespace: scanf(\" %c\")",
+                "Limita la lunghezza con %s: scanf(\"%49s\", buffer) per array di 50",
+                "Controlla il valore di ritorno di scanf per verificare successo",
+                "Usa fgets() invece di scanf per stringhe più sicure"
+              ],
+              "learning_objectives": [
+                "Usare printf per output formattato",
+                "Usare scanf per input dall'utente",
+                "Conoscere gli specificatori di formato principali",
+                "Comprendere l'uso dell'operatore & con scanf"
+              ]
+            },
+            {
+              "concept_id": "C-CONST-001",
+              "topic": "Costanti con #define e const",
+              "explanation": "Le costanti sono valori che non cambiano durante l'esecuzione. Si possono definire con #define (preprocessore, sostituzione testuale) o const (compilatore, variabile readonly). #define non ha tipo, const sì.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Costanti in C: #define vs const */\n#include <stdio.h>\n\n// Costanti con #define (preprocessore)\n#define PI 3.14159\n#define MAX_STUDENTI 30\n#define SALUTO \"Benvenuto!\"\n\nint main(int argc, char** argv) {\n    // Costanti con const (compilatore)\n    const float GRAVITY = 9.81;\n    const int GIORNI_SETTIMANA = 7;\n    \n    // Uso delle costanti\n    float raggio = 5.0;\n    float area = PI * raggio * raggio;\n    \n    printf(\"Area cerchio: %.2f\\n\", area);\n    printf(\"Gravita': %.2f m/s^2\\n\", GRAVITY);\n    printf(\"%s\\n\", SALUTO);\n    \n    // Tentativo di modifica (errore di compilazione)\n    // PI = 3.14;  // ERRORE: #define non è modificabile\n    // GRAVITY = 10.0;  // ERRORE: const non è modificabile\n    \n    // #define può essere usato in dichiarazioni di array\n    int studenti[MAX_STUDENTI];\n    \n    return 0;\n}\n\n/* DIFFERENZE PRINCIPALI:\n * #define:\n * - Sostituzione testuale dal preprocessore\n * - Nessun tipo esplicito\n * - Scope globale dal punto di definizione\n * - Debug più difficile\n * \n * const:\n * - Variabile con tipo esplicito\n * - Rispetta lo scope delle variabili\n * - Debug più facile\n * - Preferito in C moderno\n */",
+              "common_mistakes": [
+                "Usare ; dopo #define: #define PI 3.14; // IL ; diventa parte della sostituzione!",
+                "Dimenticare che #define è case-sensitive: PI e pi sono diversi",
+                "Tentare di modificare una costante: PI = 3.14; // errore",
+                "Non usare maiuscole per convenzione: #define pi 3.14 (poco leggibile)"
+              ],
+              "best_practices": [
+                "Usa MAIUSCOLE_CON_UNDERSCORE per nomi costanti",
+                "Preferisci const a #define per type safety",
+                "Usa #define per costanti numeriche usate in dimensioni array",
+                "Raggruppa le #define all'inizio del file o in header",
+                "Documenta il significato delle costanti con commenti"
+              ],
+              "learning_objectives": [
+                "Comprendere la differenza tra #define e const",
+                "Saper dichiarare costanti con entrambi i metodi",
+                "Conoscere vantaggi e svantaggi di ciascun approccio",
+                "Applicare le convenzioni di naming per costanti"
+              ]
+            }
+          ],
+          "control_structures": [
+            {
+              "concept_id": "C-IF-001",
+              "topic": "Istruzioni condizionali if/else",
+              "explanation": "Le istruzioni condizionali permettono di eseguire blocchi di codice diversi in base a condizioni booleane. if esegue codice solo se la condizione è vera, else fornisce un'alternativa, if-else if permette condizioni multiple in sequenza.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Istruzioni condizionali in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int voto;\n    printf(\"Inserisci il voto (0-30): \");\n    scanf(\"%d\", &voto);\n    \n    // if semplice\n    if (voto >= 18) {\n        printf(\"Promosso!\\n\");\n    }\n    \n    // if-else\n    if (voto >= 18) {\n        printf(\"Sufficiente\\n\");\n    } else {\n        printf(\"Insufficiente\\n\");\n    }\n    \n    // if-else if-else (condizioni multiple)\n    if (voto < 18) {\n        printf(\"Insufficiente\\n\");\n    } else if (voto >= 18 && voto < 24) {\n        printf(\"Sufficiente\\n\");\n    } else if (voto >= 24 && voto < 27) {\n        printf(\"Buono\\n\");\n    } else if (voto >= 27 && voto <= 30) {\n        printf(\"Ottimo\\n\");\n    } else {\n        printf(\"Voto non valido\\n\");\n    }\n    \n    // Operatore ternario (alternativa compatta)\n    char* esito = (voto >= 18) ? \"Promosso\" : \"Bocciato\";\n    printf(\"Esito: %s\\n\", esito);\n    \n    return 0;\n}",
+              "flowchart_description": "Flusso if-else:\n[Inizio] → [Valuta condizione] → [Vera?]\n   ↓ SI                            ↓ NO\n[Blocco if]                  [Blocco else]\n   ↓                               ↓\n[Fine] ←────────────────────────────",
+              "performance_notes": "Le condizioni sono valutate in ordine sequenziale. Metti le condizioni più probabili per prime per ottimizzare.",
+              "common_mistakes": [
+                "Confondere = (assegnamento) con == (confronto): if (x = 5) assegna invece di confrontare",
+                "Dimenticare le parentesi graffe per blocchi multi-riga",
+                "Condizioni ridondanti: if (x >= 18 && x < 24) else if (x >= 24) // il secondo >= 18 è implicito",
+                "Non gestire tutti i casi: dimenticare else finale per valori invalidi"
+              ]
+            },
+            {
+              "concept_id": "C-SWITCH-001",
+              "topic": "Istruzione switch-case",
+              "explanation": "switch permette di confrontare una variabile con multipli valori costanti. È più efficiente e leggibile di if-else multipli quando si confrontano valori discreti. Il break è essenziale per evitare fall-through.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Istruzione switch-case in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int giorno;\n    printf(\"Inserisci numero giorno (1-7): \");\n    scanf(\"%d\", &giorno);\n    \n    // Switch base\n    switch (giorno) {\n        case 1:\n            printf(\"Lunedi\\n\");\n            break;  // IMPORTANTE: senza break continua al caso successivo!\n        case 2:\n            printf(\"Martedi\\n\");\n            break;\n        case 3:\n            printf(\"Mercoledi\\n\");\n            break;\n        case 4:\n            printf(\"Giovedi\\n\");\n            break;\n        case 5:\n            printf(\"Venerdi\\n\");\n            break;\n        case 6:\n            printf(\"Sabato\\n\");\n            break;\n        case 7:\n            printf(\"Domenica\\n\");\n            break;\n        default:  // Caso di default (opzionale ma consigliato)\n            printf(\"Giorno non valido\\n\");\n    }\n    \n    // Fall-through intenzionale per raggruppare casi\n    int mese;\n    printf(\"Inserisci numero mese (1-12): \");\n    scanf(\"%d\", &mese);\n    \n    int giorni;\n    switch (mese) {\n        case 1: case 3: case 5: case 7:\n        case 8: case 10: case 12:\n            giorni = 31;\n            break;\n        case 4: case 6: case 9: case 11:\n            giorni = 30;\n            break;\n        case 2:\n            giorni = 28;  // Semplificato\n            break;\n        default:\n            printf(\"Mese non valido\\n\");\n            return 1;\n    }\n    printf(\"Il mese %d ha %d giorni\\n\", mese, giorni);\n    \n    return 0;\n}",
+              "flowchart_description": "Flusso switch:\n[Valuta espressione] → [Confronta case 1] → Match? SI → [Esegui case 1] → [break]\n                    ↓ NO\n                [Confronta case 2] → Match? SI → [Esegui case 2] → [break]\n                    ↓ NO\n                    ...\n                    ↓\n                [default]",
+              "performance_notes": "Switch è generalmente compilato come jump table, più efficiente di if-else multipli per molti casi.",
+              "common_mistakes": [
+                "Dimenticare break: il codice continua nel caso successivo (fall-through)",
+                "Usare variabili non costanti nei case: case x: // ERRORE, deve essere case 5:",
+                "Dimenticare default: non gestire valori imprevisti",
+                "Usare switch con stringhe: non supportato in C (solo interi/char)"
+              ]
+            },
+            {
+              "concept_id": "C-LOOP-001",
+              "topic": "Cicli for, while, do-while",
+              "explanation": "I cicli permettono di ripetere blocchi di codice. for è ideale quando si conosce il numero di iterazioni, while quando la condizione è nota prima, do-while quando si vuole eseguire almeno una volta.",
+              "difficulty_level": "beginner",
+              "code_example": "/* Cicli in C: for, while, do-while */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    // CICLO FOR: quando conosci il numero di iterazioni\n    printf(\"Numeri da 1 a 10 con for:\\n\");\n    for (int i = 1; i <= 10; i++) {\n        // inizializzazione; condizione; incremento\n        printf(\"%d \", i);\n    }\n    printf(\"\\n\");\n    \n    // CICLO WHILE: condizione verificata PRIMA dell'esecuzione\n    printf(\"Countdown con while:\\n\");\n    int count = 5;\n    while (count > 0) {\n        printf(\"%d... \", count);\n        count--;\n    }\n    printf(\"Via!\\n\");\n    \n    // CICLO DO-WHILE: esegue ALMENO UNA VOLTA, condizione alla fine\n    printf(\"Input con do-while (1-10):\\n\");\n    int numero;\n    do {\n        printf(\"Inserisci numero (1-10): \");\n        scanf(\"%d\", &numero);\n        if (numero < 1 || numero > 10) {\n            printf(\"Non valido! Riprova.\\n\");\n        }\n    } while (numero < 1 || numero > 10);\n    printf(\"Hai inserito: %d\\n\", numero);\n    \n    // CICLI ANNIDATI: per tabelle/matrici\n    printf(\"Tabella pitagorica 5x5:\\n\");\n    for (int i = 1; i <= 5; i++) {\n        for (int j = 1; j <= 5; j++) {\n            printf(\"%4d\", i * j);  // %4d = padding di 4 caratteri\n        }\n        printf(\"\\n\");\n    }\n    \n    return 0;\n}",
+              "flowchart_description": "FOR: [init] → [condizione?] → SI → [corpo] → [incremento] → [torna a condizione]\n                           ↓ NO\n                          [fine]\n\nWHILE: [condizione?] → SI → [corpo] → [torna a condizione]\n                    ↓ NO\n                   [fine]\n\nDO-WHILE: [corpo] → [condizione?] → SI → [torna a corpo]\n                                 ↓ NO\n                                [fine]",
+              "performance_notes": "Preferisci for per iterazioni note, while per iterazioni condizionali. Evita calcoli complessi nella condizione del ciclo.",
+              "common_mistakes": [
+                "Ciclo infinito: while (1) senza break, for (;;) senza break",
+                "Off-by-one error: for (i = 0; i <= 10; i++) esegue 11 volte (0-10), non 10",
+                "Modificare il contatore dentro il ciclo: for (i=0; i<10; i++) { i += 2; } // confuso!",
+                "Dimenticare di incrementare in while: while (x < 10) senza x++"
+              ]
+            },
+            {
+              "concept_id": "C-BREAK-001",
+              "topic": "Controllo cicli con break e continue",
+              "explanation": "break esce immediatamente dal ciclo più interno. continue salta alla prossima iterazione. Utili per gestire casi speciali senza nidificazioni complesse.",
+              "difficulty_level": "intermediate",
+              "code_example": "/* Break e Continue in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    // BREAK: esce dal ciclo\n    printf(\"Trova primo numero divisibile per 7:\\n\");\n    for (int i = 1; i <= 100; i++) {\n        if (i % 7 == 0) {\n            printf(\"Trovato: %d\\n\", i);\n            break;  // Esce dal ciclo for\n        }\n    }\n    \n    // CONTINUE: salta all'iterazione successiva\n    printf(\"Numeri da 1 a 10, saltando multipli di 3:\\n\");\n    for (int i = 1; i <= 10; i++) {\n        if (i % 3 == 0) {\n            continue;  // Salta il resto del corpo, va a i++\n        }\n        printf(\"%d \", i);  // Non eseguito per 3, 6, 9\n    }\n    printf(\"\\n\");\n    \n    // Esempio pratico: input finché non valido\n    printf(\"Inserisci numeri (0 per uscire):\\n\");\n    while (1) {  // Ciclo infinito\n        int num;\n        scanf(\"%d\", &num);\n        \n        if (num == 0) {\n            break;  // Esce dal ciclo while\n        }\n        \n        if (num < 0) {\n            printf(\"Numero negativo ignorato\\n\");\n            continue;  // Salta alla prossima iterazione\n        }\n        \n        printf(\"Hai inserito: %d\\n\", num);\n    }\n    \n    return 0;\n}",
+              "flowchart_description": "BREAK: [ciclo] → [condizione break?] → SI → [ESCE DAL CICLO]\n                                    ↓ NO\n                               [continua ciclo]\n\nCONTINUE: [ciclo] → [condizione continue?] → SI → [SALTA A PROSSIMA ITERAZIONE]\n                                           ↓ NO\n                                      [continua corpo]",
+              "performance_notes": "Break e continue sono efficienti. Non abusarne però: troppi rendono il codice difficile da seguire.",
+              "common_mistakes": [
+                "Usare break fuori da un ciclo o switch: errore di compilazione",
+                "Confondere break in switch con break in ciclo annidato",
+                "Usare continue quando serve break: il ciclo continua invece di terminare",
+                "Abuso di break/continue: meglio ristrutturare la logica"
+              ]
+            }
+          ],
+          "pointers_memory": [
+            {
+              "concept_id": "C-PTR-001",
+              "topic": "Puntatori: concetti base e dereferenziazione",
+              "explanation": "Un puntatore è una variabile che contiene l'indirizzo di memoria di un'altra variabile. L'operatore & restituisce l'indirizzo, * dereferenzia il puntatore per accedere al valore. I puntatori permettono manipolazione diretta della memoria e passaggio per riferimento.",
+              "difficulty_level": "intermediate",
+              "code_example": "/* Puntatori base in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int x = 42;         // Variabile intera normale\n    int *ptr;           // Dichiarazione puntatore a int\n    \n    ptr = &x;           // & = operatore 'indirizzo di'\n                        // ptr ora contiene l'indirizzo di x\n    \n    // Stampa informazioni\n    printf(\"Valore di x: %d\\n\", x);           // 42\n    printf(\"Indirizzo di x: %p\\n\", (void*)&x); // es: 0x7ffeeb3c4a4c\n    printf(\"Valore di ptr: %p\\n\", (void*)ptr); // stesso indirizzo di x\n    printf(\"Valore puntato da ptr: %d\\n\", *ptr); // * = dereferenziazione, stampa 42\n    \n    // Modifica tramite puntatore\n    *ptr = 100;  // Dereferenzia ptr e modifica il valore\n    printf(\"Nuovo valore di x: %d\\n\", x);  // 100 (x è cambiato!)\n    \n    // Puntatore NULL (non punta a nulla)\n    int *null_ptr = NULL;\n    if (null_ptr == NULL) {\n        printf(\"Puntatore NULL, non dereferenziare!\\n\");\n        // *null_ptr = 5;  // ERRORE: crash del programma!\n    }\n    \n    return 0;\n}",
+              "memory_diagram": "Memoria:\n┌─────────┬──────────┬────────┐\n│ Indirizzo│ Variabile│ Valore │\n├─────────┼──────────┼────────┤\n│ 0x1000  │    x     │   42   │\n│ 0x2000  │   ptr    │ 0x1000 │ <- ptr contiene l'indirizzo di x\n└─────────┴──────────┴────────┘\n\n*ptr accede al valore all'indirizzo 0x1000 → 42",
+              "debugging_tips": [
+                "Usa sempre NULL per inizializzare puntatori non usati subito",
+                "Controlla sempre puntatori prima di dereferenziarli: if (ptr != NULL)",
+                "Stampa indirizzi con %p per debug: printf(\"%p\\n\", (void*)ptr);",
+                "Usa valgrind o sanitizers per trovare errori di memoria"
+              ],
+              "common_errors": [
+                "Puntatore non inizializzato: int *p; *p = 5; // comportamento indefinito",
+                "Dereferenziare NULL: int *p = NULL; *p = 10; // crash",
+                "Confondere & e *: int *p = x; invece di int *p = &x;",
+                "Usare puntatore dopo free: dangling pointer"
+              ]
+            },
+            {
+              "concept_id": "C-PTR-002",
+              "topic": "Puntatori e funzioni: passaggio per riferimento",
+              "explanation": "In C, gli argomenti sono passati per valore (copia). Per modificare variabili nella funzione chiamante, si passano puntatori (passaggio per riferimento simulato). La funzione riceve l'indirizzo e può modificare il valore originale.",
+              "difficulty_level": "intermediate",
+              "code_example": "/* Puntatori e funzioni: passaggio per riferimento */\n#include <stdio.h>\n\n// Passaggio per VALORE: non modifica l'originale\nvoid incrementa_valore(int x) {\n    x = x + 1;  // Modifica solo la copia locale\n    printf(\"Dentro funzione (valore): x = %d\\n\", x);\n}\n\n// Passaggio per RIFERIMENTO: modifica l'originale\nvoid incrementa_riferimento(int *x) {\n    *x = *x + 1;  // Dereferenzia e modifica il valore puntato\n    printf(\"Dentro funzione (riferimento): *x = %d\\n\", *x);\n}\n\n// Scambio di due valori tramite puntatori\nvoid scambia(int *a, int *b) {\n    int temp = *a;  // Salva valore di a\n    *a = *b;        // a riceve valore di b\n    *b = temp;      // b riceve valore originale di a\n}\n\n// Funzione che restituisce più valori tramite puntatori\nvoid dividi(int dividendo, int divisore, int *quoziente, int *resto) {\n    *quoziente = dividendo / divisore;\n    *resto = dividendo % divisore;\n}\n\nint main(int argc, char** argv) {\n    int num = 10;\n    \n    // Passaggio per valore\n    printf(\"Originale: %d\\n\", num);\n    incrementa_valore(num);\n    printf(\"Dopo valore: %d\\n\", num);  // Ancora 10\n    \n    // Passaggio per riferimento\n    incrementa_riferimento(&num);  // Passa l'indirizzo con &\n    printf(\"Dopo riferimento: %d\\n\", num);  // Ora 11\n    \n    // Scambio\n    int x = 5, y = 10;\n    printf(\"Prima: x=%d, y=%d\\n\", x, y);\n    scambia(&x, &y);  // Passa gli indirizzi\n    printf(\"Dopo: x=%d, y=%d\\n\", x, y);  // Scambiati!\n    \n    // Valori multipli\n    int q, r;\n    dividi(17, 5, &q, &r);\n    printf(\"17 / 5 = %d resto %d\\n\", q, r);\n    \n    return 0;\n}",
+              "memory_diagram": "Chiamata incrementa_riferimento(&num):\n\nStack del main:              Stack della funzione:\n┌──────┬──────┐              ┌──────┬──────────┐\n│ num  │  10  │ <───────────┤  x   │ &num     │\n└──────┴──────┘              └──────┴──────────┘\n                                │\n                             *x modifica num",
+              "debugging_tips": [
+                "Ricorda sempre & quando chiami funzioni con puntatori",
+                "Nelle funzioni, usa * per dereferenziare i parametri puntatore",
+                "Per debug, stampa indirizzi: printf(\"&num=%p, x=%p\\n\", &num, x);",
+                "Verifica che i puntatori passati non siano NULL"
+              ],
+              "common_errors": [
+                "Dimenticare & nella chiamata: incrementa_riferimento(num); // ERRORE",
+                "Dimenticare * nella funzione: void f(int *x) { x = x + 1; } // modifica ptr, non valore",
+                "Passare puntatore a variabile locale che poi esce di scope",
+                "Non verificare NULL: void f(int *x) { *x = 10; } // crash se x è NULL"
+              ]
+            },
+            {
+              "concept_id": "C-MEM-001",
+              "topic": "Allocazione dinamica: malloc, calloc, realloc, free",
+              "explanation": "L'allocazione dinamica permette di allocare memoria a runtime con malloc/calloc. La memoria allocata persiste finché non viene liberata con free. realloc ridimensiona memoria allocata. Fondamentale per strutture dati di dimensione variabile.",
+              "difficulty_level": "intermediate",
+              "code_example": "/* Allocazione dinamica della memoria */\n#include <stdio.h>\n#include <stdlib.h>  // Per malloc, calloc, realloc, free\n\nint main(int argc, char** argv) {\n    int n;\n    printf(\"Quanti numeri? \");\n    scanf(\"%d\", &n);\n    \n    // MALLOC: alloca n interi (memoria NON inizializzata)\n    int *arr = (int*)malloc(n * sizeof(int));\n    \n    // Sempre controllare se malloc ha avuto successo\n    if (arr == NULL) {\n        printf(\"Errore: memoria esaurita\\n\");\n        return 1;\n    }\n    \n    // Usa l'array dinamico\n    for (int i = 0; i < n; i++) {\n        arr[i] = i * 2;\n    }\n    printf(\"Array con malloc: \");\n    for (int i = 0; i < n; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    \n    // CALLOC: alloca E inizializza a zero\n    int *zeros = (int*)calloc(5, sizeof(int));  // 5 interi a zero\n    printf(\"Array con calloc (zeri): \");\n    for (int i = 0; i < 5; i++) {\n        printf(\"%d \", zeros[i]);  // Tutti 0\n    }\n    printf(\"\\n\");\n    \n    // REALLOC: ridimensiona array esistente\n    printf(\"Ridimensiono a %d elementi...\\n\", n + 5);\n    arr = (int*)realloc(arr, (n + 5) * sizeof(int));\n    if (arr == NULL) {\n        printf(\"Errore realloc\\n\");\n        free(zeros);  // Libera almeno quello che puoi\n        return 1;\n    }\n    \n    // Inizializza nuovi elementi\n    for (int i = n; i < n + 5; i++) {\n        arr[i] = i * 3;\n    }\n    printf(\"Array ridimensionato: \");\n    for (int i = 0; i < n + 5; i++) {\n        printf(\"%d \", arr[i]);\n    }\n    printf(\"\\n\");\n    \n    // FREE: libera la memoria (FONDAMENTALE!)\n    free(arr);\n    free(zeros);\n    \n    // Buona pratica: imposta a NULL dopo free\n    arr = NULL;\n    zeros = NULL;\n    \n    return 0;\n}",
+              "memory_diagram": "Memoria dinamica (Heap):\n\nmalloc(3 * sizeof(int)):\n┌──────┬──────┬──────┐\n│  ?   │  ?   │  ?   │  <- Valori casuali\n└──────┴──────┴──────┘\n  ↑\n  arr\n\ncalloc(3, sizeof(int)):\n┌──────┬──────┬──────┐\n│  0   │  0   │  0   │  <- Inizializzati a zero\n└──────┴──────┴──────┘\n  ↑\n  zeros\n\nrealloc(arr, 5 * sizeof(int)):\n┌──────┬──────┬──────┬──────┬──────┐\n│  0   │  2   │  4   │  ?   │  ?   │  <- Espanso, nuovi valori casuali\n└──────┴──────┴──────┴──────┴──────┘\n  ↑\n  arr (potrebbe cambiare indirizzo!)",
+              "debugging_tips": [
+                "Usa valgrind per rilevare memory leak: valgrind ./programma",
+                "Controlla sempre il valore di ritorno di malloc/calloc/realloc",
+                "Tieni traccia di quanta memoria allochi per evitare leak",
+                "Usa AddressSanitizer: gcc -fsanitize=address programma.c"
+              ],
+              "common_errors": [
+                "Memory leak: allocare senza liberare con free",
+                "Double free: free(ptr); free(ptr); // crash",
+                "Dangling pointer: usare ptr dopo free(ptr);",
+                "Non controllare NULL: int *p = malloc(...); *p = 5; // crash se malloc fallisce",
+                "Dimensione sbagliata: malloc(n) invece di malloc(n * sizeof(tipo))"
+              ]
+            }
+          ],
+          "functions_scope": [
+            {
+              "concept_id": "C-FUNC-001",
+              "topic": "Definizione e chiamata di funzioni",
+              "explanation": "Le funzioni in C permettono di organizzare il codice in blocchi riutilizzabili. Ogni funzione ha un tipo di ritorno, un nome, parametri opzionali e un corpo. La funzione main() è il punto di ingresso del programma.",
+              "code_example": "/* Funzioni in C */\n#include <stdio.h>\n\n// Prototipo (dichiarazione): dice al compilatore che la funzione esiste\nint somma(int a, int b);\nvoid stampa_messaggio(void);\nfloat calcola_media(int a, int b, int c);\n\n// Funzione senza parametri e senza ritorno\nvoid stampa_messaggio(void) {\n    printf(\"Ciao dal C!\\n\");\n}\n\n// Funzione con parametri e con ritorno\nint somma(int a, int b) {\n    return a + b;  // Restituisce la somma\n}\n\n// Funzione con più parametri\nfloat calcola_media(int a, int b, int c) {\n    float media = (a + b + c) / 3.0;\n    return media;\n}\n\n// Funzione ricorsiva (chiama se stessa)\nint fattoriale(int n) {\n    if (n == 0 || n == 1) {\n        return 1;  // Caso base\n    }\n    return n * fattoriale(n - 1);  // Chiamata ricorsiva\n}\n\nint main(int argc, char** argv) {\n    // Chiamata funzioni\n    stampa_messaggio();\n    \n    int risultato = somma(5, 3);\n    printf(\"5 + 3 = %d\\n\", risultato);\n    \n    float media = calcola_media(8, 7, 9);\n    printf(\"Media: %.2f\\n\", media);\n    \n    int fatt = fattoriale(5);\n    printf(\"5! = %d\\n\", fatt);  // 120\n    \n    return 0;\n}",
+              "scope_rules": [
+                "Le variabili dichiarate dentro una funzione sono LOCALI a quella funzione",
+                "Le variabili locali vengono create quando la funzione è chiamata e distrutte quando ritorna",
+                "Variabili con stesso nome in funzioni diverse sono INDIPENDENTI",
+                "Le funzioni possono accedere solo alle proprie variabili locali e ai parametri",
+                "Variabili static mantengono il valore tra chiamate successive"
+              ],
+              "parameter_passing": "In C, i parametri sono SEMPRE passati per valore (copia). Per modificare variabili del chiamante, passare puntatori."
+            },
+            {
+              "concept_id": "C-SCOPE-001",
+              "topic": "Scope delle variabili: locali, globali, static",
+              "explanation": "Lo scope definisce dove una variabile è visibile e accessibile. Variabili locali esistono solo nella funzione che le dichiara, globali sono visibili ovunque, static locali mantengono il valore tra chiamate.",
+              "code_example": "/* Scope delle variabili in C */\n#include <stdio.h>\n\n// Variabile GLOBALE: visibile in tutto il file\nint contatore_globale = 0;\n\nvoid incrementa_locale() {\n    // Variabile LOCALE: ricreata ad ogni chiamata\n    int contatore_locale = 0;\n    contatore_locale++;\n    printf(\"Locale: %d\\n\", contatore_locale);  // Sempre 1\n}\n\nvoid incrementa_static() {\n    // Variabile STATIC: mantiene il valore tra chiamate\n    static int contatore_static = 0;\n    contatore_static++;\n    printf(\"Static: %d\\n\", contatore_static);  // Si incrementa\n}\n\nvoid incrementa_globale() {\n    // Accede alla variabile globale\n    contatore_globale++;\n    printf(\"Globale: %d\\n\", contatore_globale);\n}\n\nvoid dimostra_scope() {\n    int x = 10;  // Locale a dimostra_scope\n    \n    if (x > 5) {\n        int y = 20;  // Locale al blocco if\n        printf(\"Dentro if: x=%d, y=%d\\n\", x, y);\n    }\n    // y non esiste qui\n    // printf(\"%d\", y);  // ERRORE: y fuori scope\n    \n    for (int i = 0; i < 3; i++) {\n        int z = i * 2;  // Locale al blocco for\n        printf(\"i=%d, z=%d\\n\", i, z);\n    }\n    // i e z non esistono qui\n}\n\nint main(int argc, char** argv) {\n    printf(\"Test variabili locali:\\n\");\n    incrementa_locale();  // 1\n    incrementa_locale();  // 1 (sempre uguale)\n    incrementa_locale();  // 1\n    \n    printf(\"\\nTest variabili static:\\n\");\n    incrementa_static();  // 1\n    incrementa_static();  // 2 (incrementa)\n    incrementa_static();  // 3\n    \n    printf(\"\\nTest variabili globali:\\n\");\n    incrementa_globale();  // 1\n    incrementa_globale();  // 2\n    incrementa_globale();  // 3\n    \n    printf(\"\\nTest scope blocchi:\\n\");\n    dimostra_scope();\n    \n    return 0;\n}",
+              "scope_rules": [
+                "Variabili LOCALI: visibili solo dentro la funzione/blocco che le dichiara",
+                "Variabili GLOBALI: visibili in tutto il file, inizializzate a zero di default",
+                "Variabili STATIC locali: mantengono valore tra chiamate, inizializzate una sola volta",
+                "Scope di blocco: variabili in {} sono visibili solo nel blocco",
+                "Evita variabili globali quando possibile: difficili da debuggare e mantenere"
+              ],
+              "parameter_passing": "I parametri di una funzione sono variabili locali, ricevono copie dei valori passati dal chiamante."
+            }
+          ]
+        }
+      },
+      "HTMLCSS": {
+        "type": "object",
+        "description": "Code descriptors for HTML/CSS (Quarta - 12 chapters)",
+        "properties": {
+          "html_basics": {
+            "type": "array",
+            "description": "HTML fundamentals",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string", "description": "e.g., HTML-TAGS-001" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "html_code": { "type": "string", "description": "HTML code example with comments" },
+                "accessibility_notes": { "type": "string" },
+                "browser_compatibility": { "type": "string" },
+                "semantic_importance": { "type": "string" }
+              }
+            }
+          },
+          "css_styling": {
+            "type": "array",
+            "description": "CSS styling and layout techniques",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "css_properties": { "type": "array", "items": { "type": "string" } },
+                "code_example": { "type": "string" },
+                "visual_effect_description": { "type": "string" },
+                "performance_impact": { "type": "string" },
+                "responsive_design_notes": { "type": "string" }
+              }
+            }
+          },
+          "flexbox_grid": {
+            "type": "array",
+            "description": "Flexbox and CSS Grid layout systems",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "diagram": { "type": "string", "description": "Visual representation of layout" },
+                "css_code": { "type": "string" },
+                "common_use_cases": { "type": "array", "items": { "type": "string" } },
+                "browser_support": { "type": "string" }
+              }
+            }
+          },
+          "responsive_design": {
+            "type": "array",
+            "description": "Responsive web design principles",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "breakpoints": { "type": "object", "description": "Recommended breakpoints" },
+                "best_practices": { "type": "array", "items": { "type": "string" } },
+                "css_example": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "Java": {
+        "type": "object",
+        "description": "Code descriptors for Java (Quarta - 10 chapters)",
+        "properties": {
+          "oop_fundamentals": {
+            "type": "array",
+            "description": "Object-Oriented Programming concepts in Java",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string", "description": "e.g., JAVA-OOP-001" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string", "description": "Detailed explanation of OOP concept" },
+                "java_code": { "type": "string", "description": "Fully commented Java code example" },
+                "uml_diagram": { "type": "string", "description": "UML representation (ASCII or reference)" },
+                "key_principles": { "type": "array", "items": { "type": "string" } },
+                "real_world_example": { "type": "string" },
+                "common_patterns": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "inheritance_polymorphism": {
+            "type": "array",
+            "description": "Inheritance and polymorphism in Java",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "java_code": { "type": "string" },
+                "inheritance_hierarchy": { "type": "string", "description": "Class hierarchy visualization" },
+                "method_overriding_vs_overloading": { "type": "string" },
+                "pitfalls_to_avoid": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "collections_framework": {
+            "type": "array",
+            "description": "Java Collections Framework (Lists, Sets, Maps)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "java_code": { "type": "string" },
+                "time_complexity": { "type": "object", "description": "Big O notation for operations" },
+                "use_cases": { "type": "array", "items": { "type": "string" } },
+                "comparison_with_arrays": { "type": "string" }
+              }
+            }
+          },
+          "exception_handling": {
+            "type": "array",
+            "description": "Exception handling in Java",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "java_code": { "type": "string" },
+                "exception_hierarchy": { "type": "string" },
+                "best_practices": { "type": "array", "items": { "type": "string" } },
+                "common_exceptions": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      },
+      "PHP": {
+        "type": "object",
+        "description": "Code descriptors for PHP (Quarta Web Development - 7 chapters)",
+        "properties": {
+          "php_basics": {
+            "type": "array",
+            "description": "PHP fundamentals and syntax",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string", "description": "e.g., PHP-BASICS-001" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "php_code": { "type": "string", "description": "PHP code with inline comments" },
+                "output_example": { "type": "string", "description": "Expected output" },
+                "server_side_implications": { "type": "string" },
+                "security_considerations": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "database_interaction": {
+            "type": "array",
+            "description": "Database connectivity and queries in PHP",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "php_code": { "type": "string" },
+                "sql_examples": { "type": "array", "items": { "type": "string" } },
+                "prepared_statements_note": { "type": "string", "description": "Importance of prepared statements" },
+                "common_vulnerabilities": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "form_validation": {
+            "type": "array",
+            "description": "Form handling and validation",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "html_form": { "type": "string" },
+                "php_validation": { "type": "string" },
+                "client_vs_server_validation": { "type": "string" },
+                "security_best_practices": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "sessions_cookies": {
+            "type": "array",
+            "description": "Session and cookie management",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "php_code": { "type": "string" },
+                "differences_explained": { "type": "string" },
+                "security_implications": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      },
+      "Python": {
+        "type": "object",
+        "description": "Code descriptors for Python (Quinta - 18 chapters)",
+        "properties": {
+          "data_structures": {
+            "type": "array",
+            "description": "Python data structures (lists, tuples, dicts, sets)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string", "description": "e.g., PY-DS-001" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "python_code": { "type": "string", "description": "Python code with comments" },
+                "performance_characteristics": { "type": "object", "description": "Time/space complexity" },
+                "mutability": { "type": "string", "description": "Mutable or immutable explanation" },
+                "use_cases": { "type": "array", "items": { "type": "string" } },
+                "memory_visualization": { "type": "string" }
+              }
+            }
+          },
+          "object_oriented_programming": {
+            "type": "array",
+            "description": "OOP concepts in Python",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "python_code": { "type": "string" },
+                "class_diagram": { "type": "string" },
+                "inheritance_example": { "type": "string" },
+                "dunder_methods": { "type": "array", "items": { "type": "string" } },
+                "python_specific_notes": { "type": "string" }
+              }
+            }
+          },
+          "functional_programming": {
+            "type": "array",
+            "description": "Functional programming concepts (decorators, generators, lambdas)",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "python_code": { "type": "string" },
+                "use_cases": { "type": "array", "items": { "type": "string" } },
+                "performance_implications": { "type": "string" },
+                "advanced_patterns": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "file_io_modules": {
+            "type": "array",
+            "description": "File I/O and module systems",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "topic": { "type": "string" },
+                "explanation": { "type": "string" },
+                "python_code": { "type": "string" },
+                "error_handling": { "type": "string" },
+                "common_patterns": { "type": "array", "items": { "type": "string" } },
+                "context_managers": { "type": "string" }
+              }
+            }
+          },
+          "libraries_frameworks": {
+            "type": "array",
+            "description": "Popular Python libraries and frameworks",
+            "items": {
+              "type": "object",
+              "properties": {
+                "concept_id": { "type": "string" },
+                "library_name": { "type": "string" },
+                "purpose": { "type": "string" },
+                "installation": { "type": "string" },
+                "basic_usage": { "type": "string" },
+                "code_examples": { "type": "array", "items": { "type": "string" } },
+                "documentation_reference": { "type": "string" },
+                "common_use_cases": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "theoretical_explanations": {
+    "type": "object",
+    "description": "Comprehensive theoretical explanations for core concepts in each course",
+    "properties": {
+      "programming_paradigms": {
+        "type": "object",
+        "description": "Different programming paradigms explained",
+        "properties": {
+          "procedural_programming": {
+            "explanation": "La programmazione procedurale è un paradigma basato sul concetto di chiamate a procedure (funzioni). Il programma è strutturato come una sequenza di istruzioni che modificano lo stato del programma attraverso variabili e funzioni. Il C è il linguaggio procedurale per eccellenza.",
+            "examples": ["C", "Pascal", "Fortran", "BASIC"],
+            "key_concepts": [
+              "Funzioni e procedure: blocchi di codice riutilizzabili",
+              "Variabili e stato del programma: dati globali e locali",
+              "Passaggio di parametri: per valore o per riferimento (puntatori in C)",
+              "Esecuzione sequenziale: le istruzioni sono eseguite in ordine",
+              "Strutture di controllo: if, for, while, switch per il flusso di esecuzione",
+              "Modularità: suddivisione del programma in funzioni più piccole",
+              "Top-down design: scomposizione del problema in sotto-problemi"
+            ],
+            "advantages": [
+              "Semplicità concettuale: facile da comprendere per principianti",
+              "Efficienza: accesso diretto alla memoria e controllo granulare",
+              "Debugging facilitato: il flusso di esecuzione è esplicito e tracciabile",
+              "Riutilizzo del codice: funzioni richiamabili in contesti diversi",
+              "Vicino all'hardware: ideale per sistemi embedded e programmazione di sistema"
+            ],
+            "disadvantages": [
+              "Difficile manutenzione in programmi grandi: le dipendenze tra funzioni possono diventare complesse",
+              "Stato globale problematico: variabili globali rendono difficile il tracking delle modifiche",
+              "Scarsa astrazione: manca l'incapsulamento dei dati",
+              "Riutilizzo limitato: meno flessibile rispetto alla OOP per progetti grandi",
+              "Scalabilità: diventa difficile gestire progetti con migliaia di funzioni"
+            ],
+            "c_specifics": {
+              "memory_management": "Gestione manuale della memoria con malloc/free - il programmatore ha controllo totale ma anche responsabilità totale",
+              "pointers": "I puntatori permettono manipolazione diretta della memoria e implementazione efficiente di strutture dati",
+              "no_classes": "Non esistono classi né ereditarietà - i dati e le funzioni sono separati",
+              "header_files": "Separazione tra dichiarazione (.h) e implementazione (.c) per organizzare il codice",
+              "preprocessor": "Direttive come #include e #define per configurazione del codice pre-compilazione",
+              "type_system": "Sistema di tipi forte ma con conversioni implicite permissive"
+            },
+            "comparison_with_oop": {
+              "data_organization": "Procedurale: dati e funzioni separati. OOP: dati e metodi incapsulati in oggetti",
+              "code_reuse": "Procedurale: riuso tramite funzioni. OOP: riuso tramite ereditarietà e polimorfismo",
+              "abstraction": "Procedurale: astrazione limitata con struct e typedef. OOP: astrazione forte con classi e interfacce",
+              "state_management": "Procedurale: stato spesso globale o passato esplicitamente. OOP: stato incapsulato negli oggetti"
+            },
+            "when_to_use": [
+              "Sistemi embedded e firmware dove efficienza e controllo sono critici",
+              "Programmazione di sistema (kernel, driver)",
+              "Applicazioni real-time con requisiti di performance stringenti",
+              "Programmi piccoli o script con logica lineare",
+              "Interfacciamento con hardware",
+              "Progetti dove la semplicità e la trasparenza sono prioritarie"
+            ]
+          },
+          "object_oriented_programming": {
+            "type": "object",
+            "explanation": "Programming using objects and classes",
+            "examples": { "type": "array", "items": { "type": "string" }, "default": ["Java", "Python", "PHP"] },
+            "pillars": { "type": "array", "items": { "type": "string" }, "default": ["Encapsulation", "Inheritance", "Polymorphism", "Abstraction"] },
+            "design_patterns": { "type": "array", "items": { "type": "string" } },
+            "best_practices": { "type": "array", "items": { "type": "string" } }
+          },
+          "functional_programming": {
+            "type": "object",
+            "explanation": "Programming with functions as first-class citizens",
+            "examples": { "type": "array", "items": { "type": "string" }, "default": ["Python"] },
+            "key_concepts": { "type": "array", "items": { "type": "string" }, "default": ["Pure functions", "Immutability", "First-class functions", "Higher-order functions"] },
+            "advantages": { "type": "array", "items": { "type": "string" } },
+            "in_imperative_languages": { "type": "string" }
+          },
+          "declarative_programming": {
+            "type": "object",
+            "explanation": "Specifying what to achieve rather than how to achieve it",
+            "examples": { "type": "array", "items": { "type": "string" }, "default": ["HTML", "CSS"] },
+            "contrast_with_imperative": { "type": "string" },
+            "applications": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "data_structures_algorithms": {
+        "type": "object",
+        "description": "Fundamental data structures and algorithmic concepts",
+        "properties": {
+          "complexity_analysis": {
+            "type": "object",
+            "explanation": "Big O notation and algorithm complexity",
+            "concepts": { "type": "array", "items": { "type": "string" }, "default": ["Time complexity", "Space complexity", "Best case", "Average case", "Worst case"] },
+            "common_complexities": { "type": "object", "description": "Common complexity classes with examples" },
+            "importance": { "type": "string" }
+          },
+          "arrays_and_lists": {
+            "type": "object",
+            "explanation": "Static and dynamic data structures",
+            "differences": { "type": "string" },
+            "operations_complexity": { "type": "object" },
+            "use_cases": { "type": "array", "items": { "type": "string" } }
+          },
+          "stacks_queues": {
+            "type": "object",
+            "explanation": "LIFO and FIFO data structures",
+            "applications": { "type": "object", "properties": { "stacks": { "type": "array", "items": { "type": "string" } }, "queues": { "type": "array", "items": { "type": "string" } } } },
+            "implementation_details": { "type": "string" }
+          },
+          "trees_graphs": {
+            "type": "object",
+            "explanation": "Hierarchical and network data structures",
+            "types": { "type": "array", "items": { "type": "string" } },
+            "traversal_methods": { "type": "array", "items": { "type": "string" } },
+            "applications": { "type": "array", "items": { "type": "string" } }
+          },
+          "sorting_searching": {
+            "type": "object",
+            "explanation": "Common algorithms for sorting and searching",
+            "algorithms": { "type": "array", "items": { "type": "string" } },
+            "comparison_table": { "type": "string", "description": "Performance comparison of algorithms" },
+            "when_to_use": { "type": "object" }
+          }
+        }
+      },
+      "web_development_concepts": {
+        "type": "object",
+        "description": "Web development theory and concepts",
+        "properties": {
+          "http_protocol": {
+            "type": "object",
+            "explanation": "HyperText Transfer Protocol basics",
+            "methods": { "type": "array", "items": { "type": "string" }, "default": ["GET", "POST", "PUT", "DELETE", "PATCH"] },
+            "status_codes": { "type": "object", "description": "Common HTTP status codes explained" },
+            "request_response_cycle": { "type": "string" }
+          },
+          "dom_manipulation": {
+            "type": "object",
+            "explanation": "Document Object Model structure and manipulation",
+            "core_concepts": { "type": "array", "items": { "type": "string" } },
+            "tree_structure": { "type": "string", "description": "DOM tree visualization" },
+            "common_operations": { "type": "array", "items": { "type": "string" } }
+          },
+          "responsive_web_design": {
+            "type": "object",
+            "explanation": "Design principles for multi-device web applications",
+            "mobile_first": { "type": "string" },
+            "breakpoints": { "type": "object" },
+            "fluid_layouts": { "type": "string" },
+            "best_practices": { "type": "array", "items": { "type": "string" } }
+          },
+          "web_security": {
+            "type": "object",
+            "explanation": "Core web security concepts",
+            "common_vulnerabilities": { "type": "object", "description": "OWASP Top 10 and explanations" },
+            "prevention_strategies": { "type": "array", "items": { "type": "string" } },
+            "https_importance": { "type": "string" }
+          }
+        }
+      },
+      "software_engineering": {
+        "type": "object",
+        "description": "Software engineering principles and practices",
+        "properties": {
+          "design_principles": {
+            "type": "object",
+            "explanation": "SOLID principles and design guidelines",
+            "solid": { "type": "object", "properties": { "single_responsibility": { "type": "string" }, "open_closed": { "type": "string" }, "liskov_substitution": { "type": "string" }, "interface_segregation": { "type": "string" }, "dependency_inversion": { "type": "string" } } },
+            "dry_kiss_yagni": { "type": "object", "properties": { "dry": { "type": "string" }, "kiss": { "type": "string" }, "yagni": { "type": "string" } } }
+          },
+          "design_patterns": {
+            "type": "object",
+            "explanation": "Reusable solutions to common problems",
+            "creational_patterns": { "type": "array", "items": { "type": "string" } },
+            "structural_patterns": { "type": "array", "items": { "type": "string" } },
+            "behavioral_patterns": { "type": "array", "items": { "type": "string" } }
+          },
+          "testing_strategies": {
+            "type": "object",
+            "explanation": "Software testing approaches and types",
+            "unit_testing": { "type": "string" },
+            "integration_testing": { "type": "string" },
+            "system_testing": { "type": "string" },
+            "test_driven_development": { "type": "string" }
+          },
+          "version_control": {
+            "type": "object",
+            "explanation": "Git and version control systems",
+            "concepts": { "type": "array", "items": { "type": "string" }, "default": ["Repository", "Commit", "Branch", "Merge", "Pull request"] },
+            "branching_strategies": { "type": "array", "items": { "type": "string" } },
+            "best_practices": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  },
+  "commented_examples": {
+    "type": "object",
+    "description": "Fully commented code examples demonstrating key concepts",
+    "properties": {
+      "C_examples": {
+        "hello_world": {
+          "code": "/* Primo programma C - Struttura base */\n#include <stdio.h>  /* Include la libreria standard input/output */\n\nint main(int argc, char** argv) {  /* Funzione main - punto di ingresso del programma */\n    printf(\"Hello, World!\\n\");  /* Stampa testo su console */\n    return 0;  /* Ritorna 0 per indicare esecuzione riuscita */\n}",
+          "explanation": "Struttura base di un programma C: ogni programma deve avere una funzione main() che è il punto di ingresso. #include <stdio.h> include le funzioni di I/O standard come printf(). Il valore di ritorno 0 indica successo.",
+          "learning_objectives": ["Comprendere la sintassi C", "Uso di header files", "Funzione main", "Valori di ritorno"]
+        },
+        "variables_types": {
+          "code": "/* Dichiarazione e uso di variabili */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    // Tipi interi\n    int eta = 18;              // Intero a 4 byte\n    short piccolo = 100;       // Intero a 2 byte\n    long grande = 1000000L;    // Intero lungo\n    \n    // Tipi a virgola mobile\n    float altezza = 1.75f;     // Precisione singola (4 byte)\n    double preciso = 3.141592653589793;  // Precisione doppia (8 byte)\n    \n    // Caratteri\n    char iniziale = 'M';       // Singolo carattere\n    \n    // Unsigned (solo positivi)\n    unsigned int positivo = 4000000000U;\n    \n    // Stampa con specificatori di formato\n    printf(\"Eta': %d anni\\n\", eta);           // %d per int\n    printf(\"Altezza: %.2f m\\n\", altezza);     // %.2f per float con 2 decimali\n    printf(\"Iniziale: %c\\n\", iniziale);       // %c per char\n    printf(\"Valore preciso: %.15lf\\n\", preciso);  // %lf per double\n    \n    // Dimensioni dei tipi\n    printf(\"\\nDimensioni in byte:\\n\");\n    printf(\"int: %lu byte\\n\", sizeof(int));\n    printf(\"float: %lu byte\\n\", sizeof(float));\n    printf(\"double: %lu byte\\n\", sizeof(double));\n    printf(\"char: %lu byte\\n\", sizeof(char));\n    \n    return 0;\n}",
+          "explanation": "Dimostrazione dei tipi di dato fondamentali in C. Ogni tipo ha dimensione e range specifici. Gli specificatori di formato in printf() devono corrispondere al tipo della variabile.",
+          "learning_objectives": ["Conoscere i tipi di dato base", "Dichiarare e inizializzare variabili", "Usare specificatori di formato", "Comprendere sizeof()"]
+        },
+        "pointers_basic": {
+          "code": "/* Puntatori - Concetti base */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    int x = 42;        // Variabile intera\n    int *ptr = &x;     // Puntatore che punta a x\n                       // & = operatore 'indirizzo di'\n                       // * nella dichiarazione = \"puntatore a\"\n    \n    printf(\"=== INDIRIZZI E VALORI ===\\n\");\n    printf(\"Valore di x: %d\\n\", x);              // Stampa valore di x\n    printf(\"Indirizzo di x: %p\\n\", (void*)&x);   // Stampa indirizzo di memoria\n    printf(\"Valore di ptr: %p\\n\", (void*)ptr);   // Puntatore contiene l'indirizzo\n    printf(\"Valore puntato: %d\\n\", *ptr);        // * = dereferenziazione\n    \n    // Modifica tramite puntatore\n    *ptr = 100;  // Dereferenzia ptr e assegna 100\n    printf(\"\\n=== DOPO MODIFICA TRAMITE PUNTATORE ===\\n\");\n    printf(\"x ora vale: %d\\n\", x);  // x è cambiato!\n    \n    // Puntatore NULL\n    int *null_ptr = NULL;  // NULL = puntatore che non punta a nulla\n    if (null_ptr == NULL) {\n        printf(\"\\nPuntatore NULL - non dereferenziare!\\n\");\n        // *null_ptr = 5;  // CRASH del programma!\n    }\n    \n    return 0;\n}",
+          "explanation": "I puntatori sono fondamentali in C. Un puntatore contiene l'indirizzo di memoria di una variabile. & ottiene l'indirizzo, * dereferenzia (accede al valore). Sempre verificare NULL prima di dereferenziare.",
+          "learning_objectives": ["Sintassi dei puntatori", "Operatori & e *", "Dereferenziazione", "Puntatori NULL"]
+        },
+        "struct_typedef": {
+          "code": "/* Struct e typedef */\n#include <stdio.h>\n#include <string.h>\n\n// Definizione struct con typedef\ntypedef struct {\n    char nome[30];\n    char cognome[30];\n    int eta;\n    float media_voti;\n} Studente;\n\n// Struct per coordinate\ntypedef struct {\n    float x;\n    float y;\n} Punto;\n\nint main(int argc, char** argv) {\n    // Dichiarazione e inizializzazione\n    Studente s1;\n    strcpy(s1.nome, \"Mario\");      // Assegna al campo s1.nome\n    strcpy(s1.cognome, \"Rossi\");   // Assegna al campo s1.cognome\n    s1.eta = 17;                    // Assegna al campo s1.eta\n    s1.media_voti = 7.5;            // Assegna al campo s1.media_voti\n    \n    // Inizializzazione diretta\n    Studente s2 = {\"Lucia\", \"Bianchi\", 18, 8.2};\n    \n    // Stampa dati\n    printf(\"=== STUDENTE 1 ===\\n\");\n    printf(\"Nome: %s %s\\n\", s1.nome, s1.cognome);\n    printf(\"Eta': %d anni\\n\", s1.eta);\n    printf(\"Media: %.1f\\n\", s1.media_voti);\n    \n    printf(\"\\n=== STUDENTE 2 ===\\n\");\n    printf(\"Nome: %s %s\\n\", s2.nome, s2.cognome);\n    printf(\"Eta': %d anni\\n\", s2.eta);\n    printf(\"Media: %.1f\\n\", s2.media_voti);\n    \n    // Array di struct\n    Punto punti[3] = {\n        {0.0, 0.0},\n        {1.0, 1.0},\n        {2.5, 3.7}\n    };\n    \n    printf(\"\\n=== PUNTI ===\\n\");\n    for (int i = 0; i < 3; i++) {\n        printf(\"Punto %d: (%.1f, %.1f)\\n\", \n               i + 1, punti[i].x, punti[i].y);\n    }\n    \n    return 0;\n}",
+          "explanation": "Le struct raggruppano dati correlati sotto un unico nome. typedef crea un alias per semplificare la sintassi. Si accede ai campi con l'operatore punto (.). Le struct sono fondamentali per organizzare dati complessi.",
+          "learning_objectives": ["Definire struct", "Usare typedef", "Accedere ai campi con .", "Creare array di struct"]
+        },
+        "dynamic_memory": {
+          "code": "/* Allocazione dinamica della memoria */\n#include <stdio.h>\n#include <stdlib.h>  // Per malloc, calloc, free\n\nint main(int argc, char** argv) {\n    int n;\n    printf(\"Quanti numeri vuoi memorizzare? \");\n    scanf(\"%d\", &n);\n    \n    // MALLOC: alloca n interi (NON inizializzati)\n    int *numeri = (int*)malloc(n * sizeof(int));\n    \n    // SEMPRE controllare se malloc ha avuto successo\n    if (numeri == NULL) {\n        printf(\"ERRORE: Memoria esaurita!\\n\");\n        return 1;  // Esce dal programma con codice errore\n    }\n    \n    // Riempie l'array dinamico\n    printf(\"Inserisci %d numeri:\\n\", n);\n    for (int i = 0; i < n; i++) {\n        printf(\"Numero %d: \", i + 1);\n        scanf(\"%d\", &numeri[i]);  // Accesso come array normale\n    }\n    \n    // Calcola somma e media\n    int somma = 0;\n    for (int i = 0; i < n; i++) {\n        somma += numeri[i];\n    }\n    float media = (float)somma / n;\n    \n    printf(\"\\nSomma: %d\\n\", somma);\n    printf(\"Media: %.2f\\n\", media);\n    \n    // FREE: libera la memoria (FONDAMENTALE!)\n    free(numeri);\n    numeri = NULL;  // Buona pratica: imposta a NULL dopo free\n    \n    printf(\"Memoria liberata correttamente.\\n\");\n    \n    return 0;\n}",
+          "explanation": "malloc() alloca memoria dinamicamente sull'heap. La memoria allocata persiste finché non viene liberata con free(). Sempre controllare che malloc non ritorni NULL e sempre liberare la memoria per evitare memory leak.",
+          "learning_objectives": ["Usare malloc() per allocazione dinamica", "Controllare NULL", "Liberare memoria con free()", "Evitare memory leak"]
+        },
+        "file_io": {
+          "code": "/* Gestione file in C */\n#include <stdio.h>\n\nint main(int argc, char** argv) {\n    FILE *file;  // Puntatore a FILE\n    \n    // === SCRITTURA SU FILE ===\n    file = fopen(\"output.txt\", \"w\");  // \"w\" = write (sovrascrive)\n    \n    if (file == NULL) {\n        printf(\"ERRORE: Impossibile creare il file!\\n\");\n        return 1;\n    }\n    \n    fprintf(file, \"=== DATI STUDENTE ===\\n\");  // Scrive come printf\n    fprintf(file, \"Nome: Mario Rossi\\n\");\n    fprintf(file, \"Eta': %d\\n\", 18);\n    fprintf(file, \"Media: %.2f\\n\", 7.5);\n    \n    fclose(file);  // Chiude il file (IMPORTANTE!)\n    printf(\"Dati scritti su output.txt\\n\");\n    \n    // === LETTURA DA FILE ===\n    file = fopen(\"output.txt\", \"r\");  // \"r\" = read\n    \n    if (file == NULL) {\n        printf(\"ERRORE: File non trovato!\\n\");\n        return 1;\n    }\n    \n    printf(\"\\nContenuto del file:\\n\");\n    printf(\"--------------------\\n\");\n    \n    char linea[100];\n    // Legge riga per riga finché non raggiunge EOF\n    while (fgets(linea, sizeof(linea), file) != NULL) {\n        printf(\"%s\", linea);  // Stampa la riga letta\n    }\n    \n    fclose(file);  // Chiude il file\n    \n    // === APPEND (aggiungere in coda) ===\n    file = fopen(\"output.txt\", \"a\");  // \"a\" = append\n    \n    if (file != NULL) {\n        fprintf(file, \"\\n--- Fine dati ---\\n\");\n        fclose(file);\n        printf(\"\\nDati aggiunti in coda al file.\\n\");\n    }\n    \n    return 0;\n}",
+          "explanation": "La gestione file in C usa FILE* e funzioni come fopen(), fprintf(), fgets(), fclose(). Modalità: 'r' (lettura), 'w' (scrittura/sovrascrivi), 'a' (append). Sempre verificare che fopen() non ritorni NULL e chiudere i file con fclose().",
+          "learning_objectives": ["Aprire file con fopen()", "Scrivere con fprintf()", "Leggere con fgets()", "Chiudere file con fclose()"]
+        },
+        "complete_example_student_db": {
+          "code": "/* Esempio completo: Database Studenti */\n#include <stdio.h>\n#include <string.h>\n\n#define MAX_STUDENTI 50\n\ntypedef struct {\n    int matricola;\n    char nome[30];\n    char cognome[30];\n    float media;\n} Studente;\n\n// Funzione per aggiungere studente\nvoid aggiungi_studente(Studente db[], int *count) {\n    if (*count >= MAX_STUDENTI) {\n        printf(\"Database pieno!\\n\");\n        return;\n    }\n    \n    Studente s;\n    printf(\"\\n=== NUOVO STUDENTE ===\\n\");\n    printf(\"Matricola: \");\n    scanf(\"%d\", &s.matricola);\n    printf(\"Nome: \");\n    scanf(\"%s\", s.nome);\n    printf(\"Cognome: \");\n    scanf(\"%s\", s.cognome);\n    printf(\"Media: \");\n    scanf(\"%f\", &s.media);\n    \n    db[*count] = s;  // Aggiunge al database\n    (*count)++;      // Incrementa contatore\n    printf(\"Studente aggiunto con successo!\\n\");\n}\n\n// Funzione per visualizzare tutti gli studenti\nvoid visualizza_studenti(Studente db[], int count) {\n    printf(\"\\n=== ELENCO STUDENTI ===\\n\");\n    for (int i = 0; i < count; i++) {\n        printf(\"%d. Matricola: %d - %s %s - Media: %.2f\\n\",\n               i + 1, db[i].matricola, db[i].nome, \n               db[i].cognome, db[i].media);\n    }\n}\n\n// Funzione per cercare studente per matricola\nvoid cerca_studente(Studente db[], int count, int matricola) {\n    for (int i = 0; i < count; i++) {\n        if (db[i].matricola == matricola) {\n            printf(\"\\nStudente trovato:\\n\");\n            printf(\"Matricola: %d\\n\", db[i].matricola);\n            printf(\"Nome: %s %s\\n\", db[i].nome, db[i].cognome);\n            printf(\"Media: %.2f\\n\", db[i].media);\n            return;\n        }\n    }\n    printf(\"Studente con matricola %d non trovato.\\n\", matricola);\n}\n\nint main(int argc, char** argv) {\n    Studente database[MAX_STUDENTI];  // Array di struct\n    int num_studenti = 0;             // Contatore studenti\n    int scelta, matricola;\n    \n    do {\n        // Menu\n        printf(\"\\n=== GESTIONE STUDENTI ===\\n\");\n        printf(\"1. Aggiungi studente\\n\");\n        printf(\"2. Visualizza tutti\\n\");\n        printf(\"3. Cerca per matricola\\n\");\n        printf(\"0. Esci\\n\");\n        printf(\"Scelta: \");\n        scanf(\"%d\", &scelta);\n        \n        switch (scelta) {\n            case 1:\n                aggiungi_studente(database, &num_studenti);\n                break;\n            case 2:\n                visualizza_studenti(database, num_studenti);\n                break;\n            case 3:\n                printf(\"Inserisci matricola: \");\n                scanf(\"%d\", &matricola);\n                cerca_studente(database, num_studenti, matricola);\n                break;\n            case 0:\n                printf(\"Arrivederci!\\n\");\n                break;\n            default:\n                printf(\"Scelta non valida!\\n\");\n        }\n    } while (scelta != 0);\n    \n    return 0;\n}",
+          "explanation": "Esempio completo che integra struct, array, funzioni, puntatori e controllo di flusso. Dimostra come organizzare un programma C in moduli funzionali per gestire dati strutturati con menu interattivo.",
+          "learning_objectives": ["Organizzare programmi complessi", "Usare struct e array insieme", "Passare array a funzioni", "Creare menu interattivi"]
+        }
+      },
+      "Java_examples": {
+        "type": "object",
+        "description": "Commented Java code examples",
+        "properties": {
+          "hello_world": {
+            "code": "// First Java program - demonstrates class structure\npublic class HelloWorld {  // Public class declaration (public = accessible from anywhere)\n    public static void main(String[] args) {  // Main method - program entry point\n        System.out.println(\"Hello, World!\");  // Print output to console\n    }\n}",
+            "explanation": "Basic Java program with class declaration and main method",
+            "learning_objectives": ["Class structure", "Public keyword", "Static method", "Main method signature"]
+          },
+          "class_and_object": {
+            "code": "// Class definition - blueprint for objects\npublic class Car {\n    // Instance variables (attributes)\n    private String color;  // private = accessible only within this class\n    private String brand;\n    \n    // Constructor - called when creating new object\n    public Car(String color, String brand) {\n        this.color = color;   // this refers to current object instance\n        this.brand = brand;\n    }\n    \n    // Method - behavior of the object\n    public void drive() {\n        System.out.println(brand + \" car is driving\");\n    }\n}\n\n// Usage:\nCar myCar = new Car(\"red\", \"Ferrari\");  // Create new Car object\nmyCar.drive();  // Call method on object",
+            "explanation": "Understanding classes as blueprints, objects as instances, constructors, and methods",
+            "learning_objectives": ["Class definition", "Encapsulation (private/public)", "Constructors", "Instance variables", "Methods", "this keyword"]
+          }
+        }
+      },
+      "Python_examples": {
+        "type": "object",
+        "description": "Commented Python code examples",
+        "properties": {
+          "data_structures": {
+            "code": "# Lists - ordered, mutable collections\nfruits = ['apple', 'banana', 'cherry']  # List literal\nfruits.append('orange')  # Add item to list\nprint(fruits[0])  # Access first item (index 0)\n\n# Tuples - ordered, immutable collections\ncoordinates = (10, 20)  # Tuple literal (parentheses or just commas)\nx, y = coordinates  # Tuple unpacking\n\n# Dictionaries - key-value pairs, mutable\nperson = {'name': 'Alice', 'age': 30, 'city': 'New York'}\nprint(person['name'])  # Access value by key\nperson['age'] = 31  # Modify value\n\n# Sets - unordered, unique elements\nunique_numbers = {1, 2, 3, 3, 2}  # Duplicates automatically removed\nprint(unique_numbers)  # Output: {1, 2, 3}",
+            "explanation": "Understanding Python's four main data structure types and their characteristics",
+            "learning_objectives": ["Lists and mutability", "Tuples and immutability", "Dictionaries and key-value pairs", "Sets and uniqueness", "Indexing and accessing elements"]
+          }
+        }
+      },
+      "HTML_CSS_examples": {
+        "type": "object",
+        "description": "Commented HTML/CSS code examples",
+        "properties": {
+          "semantic_html": {
+            "code": "<!-- Semantic HTML5 structure -->\n<!DOCTYPE html>  <!-- Document type declaration -->\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">  <!-- Character encoding specification -->\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Page Title</title>\n</head>\n<body>\n    <!-- Header with navigation -->\n    <header>\n        <nav>\n            <ul>\n                <li><a href=\"#home\">Home</a></li>\n                <li><a href=\"#about\">About</a></li>\n            </ul>\n        </nav>\n    </header>\n    \n    <!-- Main content -->\n    <main>\n        <article>\n            <h1>Article Title</h1>\n            <section>Content goes here</section>\n        </article>\n    </main>\n    \n    <!-- Footer -->\n    <footer>\n        <p>&copy; 2025 My Website</p>\n    </footer>\n</body>\n</html>",
+            "explanation": "Proper semantic HTML5 structure for accessibility and SEO",
+            "learning_objectives": ["Semantic elements (header, nav, main, article, footer)", "Meta tags", "Document structure", "Accessibility"]
+          }
+        }
+      }
+    }
+  },
+  "learning_paths": {
+    "type": "object",
+    "description": "Recommended learning sequences for each course",
+    "properties": {
+      "C_learning_path": {
+        "type": "array",
+        "description": "Suggested learning sequence for C programming",
+        "items": {
+          "type": "object",
+          "properties": {
+            "phase": { "type": "integer" },
+            "topic": { "type": "string" },
+            "prerequisites": { "type": "array", "items": { "type": "string" } },
+            "estimated_hours": { "type": "number" },
+            "key_concepts": { "type": "array", "items": { "type": "string" } },
+            "exercises": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "Java_learning_path": {
+        "type": "array",
+        "description": "Suggested learning sequence for Java"
+      },
+      "Python_learning_path": {
+        "type": "array",
+        "description": "Suggested learning sequence for Python"
+      }
+    }
+  },
+  "assessment_rubrics": {
+    "type": "object",
+    "description": "Rubrics for assessing student understanding",
+    "properties": {
+      "code_understanding_rubric": {
+        "type": "object",
+        "description": "How to assess if students understand code concepts",
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "criterion": { "type": "string" },
+              "excellent": { "type": "string" },
+              "good": { "type": "string" },
+              "satisfactory": { "type": "string" },
+              "needs_improvement": { "type": "string" }
+            }
+          }
+        }
+      },
+      "concept_explanation_rubric": {
+        "type": "object",
+        "description": "How to assess if students can explain theoretical concepts"
+      }
+    }
+  },
+  "interactive_activities": {
+    "type": "object",
+    "description": "Interactive activities and exercises for learning",
+    "properties": {
+      "code_completion_exercises": {
+        "type": "array",
+        "description": "Fill-in-the-blank code exercises",
+        "items": {
+          "type": "object",
+          "properties": {
+            "exercise_id": { "type": "string" },
+            "language": { "type": "string" },
+            "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+            "partial_code": { "type": "string", "description": "Code with blanks to fill" },
+            "blanks_explanation": { "type": "string" },
+            "solution": { "type": "string" },
+            "learning_objectives": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "debugging_exercises": {
+        "type": "array",
+        "description": "Find and fix errors in code",
+        "items": {
+          "type": "object",
+          "properties": {
+            "exercise_id": { "type": "string" },
+            "buggy_code": { "type": "string" },
+            "bug_count": { "type": "integer" },
+            "hints": { "type": "array", "items": { "type": "string" } },
+            "corrected_code": { "type": "string" },
+            "explanation": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "customization_guide": {
+    "how_to_extend": {
+      "adding_new_concept": "To add a new code descriptor, follow the structure: concept_id, topic, explanation, code_example, and relevant sub-properties",
+      "updating_theoretical_explanations": "Update theoretical_explanations with new concepts aligned with curriculum updates",
+      "adding_examples": "Add fully commented examples to commented_examples following the established format",
+      "language_consistency": "Maintain Italian language for educational content and English for technical terms"
+    },
+    "maintenance": {
+      "review_frequency": "Review and update quarterly with curriculum changes",
+      "version_updates": "Increment version number with significant content updates",
+      "consistency_checks": "Ensure all concept_ids are unique and follow naming conventions",
+      "alignment_with_instructions": "Keep aligned with agent_instructions.json and MASTER-TODO.md"
+    },
+    "integration": {
+      "with_textbooks": "Link descriptors to specific chapters in LaTeX files",
+      "with_agents": "Agents should reference this file for detailed explanations during documentation generation",
+      "with_student_materials": "Use examples and explanations in student handouts and worksheets"
+    }
+  },
+  "metadata": {
+    "created_date": "2025-11-14",
+    "created_by": "Educational Content Team",
+    "review_dates": [],
+    "contributors": [],
+    "next_review_scheduled": "2026-02-14",
+    "external_references": {
+      "agent_instructions": "agent_instructions.json (v4.0)",
+      "master_todo": "MASTER-TODO.md (v3.0)",
+      "textbooks": "C/, HTMLCSS/, Java/, PHP/, Python/ directories"
+    }
+  }
+}

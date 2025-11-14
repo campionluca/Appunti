@@ -1,0 +1,153 @@
+\chapter{Form HTML}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Introduzione, Creazione di form, Gestione dati, Validazione, Sicurezza XSS, Esempi pratici, Caso di studio, Diagrammi, Esercizi, Verifica, Riepilogo, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Progettare form ben strutturati per GET e POST.
+  \item Gestire correttamente input lato server con normalizzazione e escaping.
+  \item Applicare PRG quando si modifica stato e prevenire XSS.
+\end{itemize}
+
+\section{Teoria}
+I form HTML sono la principale modalità con cui un client invia dati al server. PHP riceve i dati tramite le superglobali \verb|$_GET|, \verb|$_POST| e \verb|$_FILES|. La scelta del metodo dipende dal caso d'uso: \textbf{GET} per richieste idempotenti e query string, \textbf{POST} per invio di dati sensibili o variazioni di stato.
+
+\section{Creazione di form (GET/POST)}
+\begin{lstlisting}
+<!-- Esempio GET -->
+<form method="get" action="processa.php">
+  <label>Query: <input type="text" name="q"></label>
+  <button type="submit">Cerca</button>
+</form>
+
+<!-- Esempio POST -->
+<form method="post" action="processa.php">
+  <label>Email: <input type="email" name="email" required></label>
+  <label>Password: <input type="password" name="password" required></label>
+  <button type="submit">Invia</button>
+</form>
+\end{lstlisting}
+
+\section{Gestione dei dati inviati}
+\begin{lstlisting}
+<?php
+// processa.php
+$metodo = $_SERVER['REQUEST_METHOD'];
+$email  = $_POST['email'] ?? '';
+$q      = $_GET['q'] ?? '';
+
+if ($metodo === 'POST') {
+    if ($email === '') {
+        echo 'Email non valida';
+        exit;
+    }
+    echo 'OK';
+} else {
+    echo 'Ricerca: ' . htmlspecialchars($q, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+\end{lstlisting}
+
+\section{Validazione degli input}
+- Validazione lato client (HTML5: \texttt{required}, \texttt{type=email}) e lato server (sempre necessaria).
+- Usare regex e normalizzazione dei dati.
+
+\begin{lstlisting}
+<?php
+// Normalizzazione e validazione
+$name = trim((string)($_POST['name'] ?? ''));
+if ($name === '' || mb_strlen($name) > 100) {
+    echo 'Nome obbligatorio (<=100)';
+    exit;
+}
+\end{lstlisting}
+
+\section{Sicurezza: prevenzione XSS}
+- \textbf{XSS}: effettuare sempre escaping in output con \texttt{htmlspecialchars}.
+
+\begin{lstlisting}
+<?php
+// Esempio di escaping in output
+// Usare htmlspecialchars per prevenire XSS quando si rende input utente
+echo 'Ricerca: ' . htmlspecialchars($q, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best practice]
+- Usare POST per dati sensibili e operazioni che modificano stato.
+- Escaping sistematico dell'output (XSS).
+- Validare e normalizzare sempre lato server.
+- Impostare \texttt{Content-Type} e charset corretti nelle risposte.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Fidarsi della sola validazione lato client.
+- Non effettuare escaping dell'output.
+- Mescolare GET/POST senza gestire i casi distinti.
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Contatto semplice con normalizzazione e escape
+$name  = trim((string)($_POST['name'] ?? ''));
+$email = trim((string)($_POST['email'] ?? ''));
+$msg   = trim((string)($_POST['message'] ?? ''));
+
+$errors = [];
+if ($name === '' || mb_strlen($name) > 100) { $errors[] = 'Nome obbligatorio (<=100)'; }
+if (!preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', $email)) { $errors[] = 'Email non valida'; }
+if ($msg === '') { $errors[] = 'Messaggio obbligatorio'; }
+
+if ($errors) {
+    // PRG: mostra errori su pagina GET
+    header('Location: /contatto_errore.php', true, 303);
+    exit;
+}
+
+echo 'Grazie, ' . htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Progettazione di un form di login minimale con gestione errori e PRG. Si valida l'input, si normalizza e si evita qualsiasi echo diretto di dati utente senza escape.
+
+\begin{lstlisting}
+<?php
+$u = trim((string)($_POST['username'] ?? ''));
+$p = (string)($_POST['password'] ?? '');
+if ($u === '' || $p === '') {
+  header('Location: /login.php?err=1', true, 303);
+  exit;
+}
+// Verifica credenziali (simulata)
+header('Location: /dashboard.php', true, 303);
+exit;
+?>
+\end{lstlisting}
+
+\section{Diagrammi}
+\noindent Flusso PRG: \emph{POST} (valida/aggiorna) \(\rightarrow\) \emph{303 See Other} \(\rightarrow\) \emph{GET} pagina di conferma.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa un form di contatto con validazione lato server e PRG.
+  \item Aggiungi un campo textarea e normalizza gli spazi e le nuove linee.
+  \item Progetta un form di ricerca con GET e escaping dell'output.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Vero/Falso: dopo \texttt{header('Location',...)} è obbligatorio \texttt{exit}.
+  \item Quale metodo usare per mostrare risultati di ricerca? GET o POST e perché?
+\end{itemize}
+
+\section{Riepilogo}
+Form ben progettati separano responsabilità tra input, elaborazione e output. La validazione lato server e l'escaping sono indispensabili; PRG evita ri-submit del POST.
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — superglobali: \url{https://www.php.net/manual/en/reserved.variables.php}
+  \item OWASP XSS: \url{https://owasp.org/www-community/attacks/xss/}
+  \item HTTP Semantics (Redirect): \url{https://www.rfc-editor.org/rfc/rfc9110}
+\end{itemize}

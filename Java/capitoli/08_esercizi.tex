@@ -1,0 +1,439 @@
+% Capitolo 8 - Esercizi
+\chapter{Esercizi}
+\label{cap:esercizi}
+
+Questo capitolo raccoglie tutti gli esercizi organizzati per argomento e livello di difficoltà. Ogni sezione corrisponde a un capitolo del libro e permette di applicare praticamente i concetti teorici esposti nei capitoli precedenti. Gli esercizi sono suddivisi in:
+
+\begin{itemize}
+    \item \textbf{Livello Base}: Applicazione diretta dei concetti fondamentali
+    \item \textbf{Livello Intermedio}: Combinazione di più concetti e ragionamento
+    \item \textbf{Livello Avanzato}: Problemi complessi che richiedono progettazione
+\end{itemize}
+
+Le soluzioni complete e commentate di tutti gli esercizi sono disponibili nell'Appendice.
+
+\section{Esercizi su Classi, Oggetti ed Ereditarietà}
+
+Gli esercizi di questa sezione consolidano i concetti presentati in \autoref{cap:classi_oggetti_ereditarieta}.
+
+\subsection{Esercizio 1.1 - Livello Base}
+\textbf{Classe Libro}
+
+Crea una classe \texttt{Libro} con i seguenti attributi privati:
+\begin{itemize}
+    \item \texttt{titolo} (String)
+    \item \texttt{autore} (String)
+    \item \texttt{numeroPagine} (int)
+    \item \texttt{prezzoCopertina} (double)
+\end{itemize}
+
+Implementa:
+\begin{itemize}
+    \item Costruttore con tutti i parametri
+    \item Metodi getter e setter per tutti gli attributi
+    \item Metodo \texttt{libro.applicaSconto(double percentuale)} che riduce il prezzo del libro in base alla percentuale fornita
+    \item Metodo \texttt{libro.toString()} che restituisce una descrizione completa del libro
+\end{itemize}
+
+Crea una classe di test che crea 3 libri, applica uno sconto del 15\% e stampa le informazioni.
+
+\subsection{Esercizio 1.2 - Livello Base}
+\textbf{Array di Prodotti}
+
+Crea una classe \texttt{Prodotto} con attributi privati: codice, nome, quantita, prezzo e relativi metodi getter/setter. Scrivi un programma che:
+\begin{itemize}
+    \item Crea un array di 5 oggetti \texttt{Prodotto}
+    \item Calcola il valore totale del magazzino usando \texttt{prodotto.getQuantita() * prodotto.getPrezzo()} per ogni prodotto
+    \item Trova e stampa il prodotto con la quantità minima confrontando \texttt{prodotto.getQuantita()} di ciascun prodotto
+    \item Stampa tutti i prodotti con quantità inferiore a 10 (soglia di riordino) verificando \texttt{prodotto.getQuantita() < 10}
+\end{itemize}
+
+\subsection{Esercizio 1.3 - Livello Intermedio}
+\textbf{Gerarchia Dipendenti}
+
+Crea una classe base \texttt{Dipendente} con attributi: nome, cognome, stipendioBase. Crea due sottoclassi che applicano il concetto di ereditarietà (vedi \autoref{cap:classi_oggetti_ereditarieta}):
+\begin{itemize}
+    \item \texttt{DipendenteFullTime}: aggiunge l'attributo bonusAnnuale e il metodo \texttt{dipendenteFullTime.calcolaStipendioAnnuale()} che calcola stipendioBase * 12 + bonusAnnuale
+    \item \texttt{DipendentePartTime}: aggiunge l'attributo oreLavorate e il metodo \texttt{dipendentePartTime.calcolaStipendioMensile()} che calcola stipendioBase * oreLavorate
+\end{itemize}
+
+Implementa l'override del metodo \texttt{dipendente.mostraDettagli()} in entrambe le sottoclassi per visualizzare le informazioni specifiche. Crea un array polimorfo di dipendenti e calcola il costo totale del personale.
+
+\subsection{Esercizio 1.4 - Livello Intermedio}
+\textbf{Sistema Biblioteca}
+
+Crea una classe \texttt{ElementoBiblioteca} con attributi comuni (titolo, anno, codice). Crea sottoclassi:
+\begin{itemize}
+    \item \texttt{Libro}: aggiunge attributi autore e numeroPagine
+    \item \texttt{Rivista}: aggiunge attributi numeroEdizione e mese
+    \item \texttt{DVD}: aggiunge attributi durata e regista
+\end{itemize}
+
+Implementa un metodo \texttt{elemento.calcolaPenaleRitardo(int giorniRitardo)} con logiche diverse per ogni tipo (ad esempio: i libri hanno una penale base, le riviste hanno una penale ridotta, i DVD hanno una penale maggiorata). Crea un array polimorfo e calcola le penali totali per diversi scenari di ritardo.
+
+\subsection{Esercizio 1.5 - Livello Avanzato}
+\textbf{Sistema Gestione Forme Geometriche}
+
+Crea una gerarchia di classi per forme geometriche (approfondisci il concetto di classi astratte in \autoref{cap:interfacce_classi_astratte}):
+\begin{itemize}
+    \item Classe base astratta \texttt{Forma} con metodi astratti \texttt{forma.calcolaArea()} e \texttt{forma.calcolaPerimetro()}
+    \item Sottoclassi concrete: \texttt{Cerchio}, \texttt{Rettangolo}, \texttt{Triangolo}, \texttt{Quadrato} (che estende Rettangolo)
+\end{itemize}
+
+Implementa:
+\begin{itemize}
+    \item Un array polimorfo di forme
+    \item Metodo statico \texttt{Forma.trovaFormaAreaMassima(Forma[] forme)} per trovare la forma con area massima
+    \item Metodo statico \texttt{Forma.ordinaPerPerimetro(Forma[] forme)} per ordinare le forme per perimetro crescente
+    \item Metodo statico \texttt{Forma.calcolaAreaTotale(Forma[] forme)} per calcolare l'area totale di tutte le forme
+    \item Metodo statico \texttt{Forma.contaFormeSopraSoglia(Forma[] forme, double soglia)} per contare quante forme hanno area superiore a una soglia
+\end{itemize}
+
+\begin{errore}
+\textbf{Errore comune}: Dimenticare di inizializzare gli oggetti in un array.
+
+\begin{lstlisting}
+Studente[] classe = new Studente[3];
+String nome = classe[0].getNome(); // NullPointerException!
+// Errore: classe[0] e' null, non possiamo chiamare getNome()
+\end{lstlisting}
+
+Dopo aver creato l'array, ogni elemento deve essere istanziato prima di poter invocare metodi su di esso:
+\begin{lstlisting}
+classe[0] = new Studente("001", "Mario", 7.5);
+String nome = classe[0].getNome(); // Ora funziona!
+\end{lstlisting}
+\end{errore}
+
+\section{Esercizi su Stream e Buffer}
+
+Gli esercizi di questa sezione approfondiscono i concetti di gestione file e I/O presentati in \autoref{cap:stream_buffer}.
+
+\subsection{Esercizi Base}
+
+\textbf{Esercizio 2.1:} Scrivi un programma che legge un file di testo e conta il numero di righe, stampando il risultato.
+
+\textbf{Esercizio 2.2:} Crea un programma che copia il contenuto di un file carattere per carattere in un altro file, utilizzando FileReader e FileWriter.
+
+\textbf{Esercizio 2.3:} Scrivi un programma che chiede all'utente di inserire 5 nomi (da console) e li salva in un file di testo, uno per riga.
+
+\subsection{Esercizi Intermedi}
+
+\textbf{Esercizio 2.4:} Scrivi un programma che legge un file di testo e crea un nuovo file con le righe in ordine inverso (l'ultima riga diventa la prima).
+
+\textbf{Esercizio 2.5:} Crea un programma che legge un file di testo e copia in un nuovo file solo le righe che iniziano con una lettera maiuscola.
+
+\textbf{Esercizio 2.6:} Implementa un programma che unisce (merge) due file di testo in un terzo file, alternando le righe dei due file sorgente.
+
+\subsection{Esercizi Avanzati}
+
+\textbf{Esercizio 2.7:} Scrivi un programma che analizza un file di testo e produce un report con:
+\begin{itemize}
+    \item Numero totale di parole
+    \item Numero totale di caratteri (esclusi spazi)
+    \item Frequenza di ogni parola (quante volte appare)
+\end{itemize}
+
+\textbf{Esercizio 2.8:} Crea un semplice parser CSV che legge un file con dati separati da virgola (es: nome,cognome,età) e li stampa in formato tabellare allineato.
+
+\section{Esercizi su Interfacce e Classi Astratte}
+
+Gli esercizi di questa sezione permettono di praticare i concetti di astrazione, interfacce e polimorfismo presentati in \autoref{cap:interfacce_classi_astratte}.
+
+\subsection{Esercizi Base}
+
+\textbf{Esercizio 3.1:} Crea un'interfaccia \texttt{Volante} con metodo astratto \texttt{volante.vola()} che deve essere implementato dalle classi. Implementa l'interfaccia in due classi: \texttt{Aereo} e \texttt{Uccello}, dove ciascuna classe fornisce la propria implementazione del metodo \texttt{oggetto.vola()}.
+
+\textbf{Esercizio 3.2:} Crea una classe astratta \texttt{Animale} con metodo astratto \texttt{animale.verso()} e metodo concreto \texttt{animale.dorme()}. Implementa due classi concrete: \texttt{Cane} (che implementa \texttt{cane.verso()} restituendo "Bau!") e \texttt{Gatto} (che implementa \texttt{gatto.verso()} restituendo "Miao!").
+
+\textbf{Esercizio 3.3:} Crea un'interfaccia \texttt{Pagabile} con metodo \texttt{lavoratore.calcolaStipendio()}. Implementala in due classi \texttt{Dipendente} (con \texttt{dipendente.calcolaStipendio()} basato su stipendio fisso mensile) e \texttt{Freelance} (con \texttt{freelance.calcolaStipendio()} basato su ore lavorate e tariffa oraria) con logiche di calcolo diverse.
+
+\subsection{Esercizi Intermedi}
+
+\textbf{Esercizio 3.4:} Implementa un'interfaccia \texttt{DispositivoElettronico} con metodi \texttt{dispositivo.accendi()}, \texttt{dispositivo.spegni()} e \texttt{dispositivo.consumoEnergetico()}. Crea 3 classi che la implementano (ad esempio: \texttt{Televisore}, \texttt{Frigorifero}, \texttt{Lavatrice}) e un metodo statico \texttt{DispositivoElettronico.calcolaConsumoTotale(DispositivoElettronico[] dispositivi)} che calcola il consumo totale di un array di dispositivi.
+
+\textbf{Esercizio 3.5:} Crea una classe astratta \texttt{FiguraPiana} con metodi astratti \texttt{figura.calcolaArea()} e \texttt{figura.calcolaPerimetro()}, e un metodo concreto \texttt{figura.confrontaArea(FiguraPiana altra)} che confronta l'area della figura corrente con quella di un'altra figura. Implementa almeno 3 figure concrete (ad esempio: \texttt{Cerchio}, \texttt{Rettangolo}, \texttt{Triangolo}).
+
+\textbf{Esercizio 3.6:} Implementa l'interfaccia \texttt{Comparable<Libro>} per una classe \texttt{Libro}, specificando nel metodo \texttt{libro.compareTo(Libro altro)} il confronto alfabetico per titolo. Crea un array di libri e ordinalo usando \texttt{Arrays.sort(libri)}.
+
+\subsection{Esercizi Avanzati}
+
+\textbf{Esercizio 3.7:} Progetta un sistema per gestire diversi tipi di account bancari (Corrente, Risparmio, Deposito). Usa una classe astratta \texttt{Account} con metodi astratti \texttt{account.calcolaInteressi()} e \texttt{account.applicaCommissioni()}, e metodi concreti \texttt{account.deposita(double importo)} e \texttt{account.preleva(double importo)} per deposito/prelievo. Ogni tipo di account ha regole diverse per calcolo interessi e applicazione commissioni.
+
+\textbf{Esercizio 3.8:} Crea un'interfaccia \texttt{Ordinabile} con metodi \texttt{ordinabile.confronta(Ordinabile altro)} (restituisce int negativo, zero o positivo) e \texttt{ordinabile.getChiave()} (restituisce la chiave di ordinamento). Implementala in classi \texttt{Prodotto}, \texttt{Cliente}, \texttt{Ordine}. Scrivi un metodo statico generico \texttt{Ordinabile.ordina(Ordinabile[] elementi)} che ordina un array di qualsiasi tipo che implementa \texttt{Ordinabile}.
+
+\section{Esercizi su Eccezioni}
+
+Gli esercizi di questa sezione consolidano la gestione degli errori e delle eccezioni in Java, argomento trattato in \autoref{cap:eccezioni}.
+
+\subsection{Esercizi Base}
+
+\textbf{Esercizio 4.1:} Scrivi un programma che chiede all'utente di inserire un numero da console e gestisce l'eccezione se l'input non è un numero valido.
+
+\textbf{Esercizio 4.2:} Crea un metodo che calcola la divisione tra due numeri e gestisce l'eccezione di divisione per zero, restituendo 0 in quel caso.
+
+\textbf{Esercizio 4.3:} Scrivi un programma che legge un array e stampa l'elemento all'indice richiesto dall'utente, gestendo l'eccezione di indice fuori range.
+
+\subsection{Esercizi Intermedi}
+
+\textbf{Esercizio 4.4:} Implementa un metodo \texttt{Matematica.calcolaRadiceQuadrata(double n)} che lancia un'eccezione checked personalizzata \texttt{NumeroNegativoException} se il parametro n è negativo. Il metodo deve restituire la radice quadrata se n è non negativo.
+
+\textbf{Esercizio 4.5:} Crea una classe \texttt{Calcolatrice} con metodi \texttt{calcolatrice.somma(double a, double b)}, \texttt{calcolatrice.sottrazione(double a, double b)}, \texttt{calcolatrice.moltiplicazione(double a, double b)} e \texttt{calcolatrice.divisione(double a, double b)}. Il metodo di divisione deve lanciare un'eccezione \texttt{ArithmeticException} quando il divisore è zero.
+
+\textbf{Esercizio 4.6:} Scrivi un programma che legge un file riga per riga e conta le righe. Gestisci sia l'eccezione di file non trovato che eventuali errori di lettura, usando blocchi catch separati.
+
+\subsection{Esercizi Avanzati}
+
+\textbf{Esercizio 4.7:} Implementa una gerarchia di eccezioni personalizzate per un sistema di prenotazioni:
+\begin{itemize}
+    \item \texttt{PrenotazioneException} (base)
+    \item \texttt{PostiEsauritiException}
+    \item \texttt{DataNonValidaException}
+    \item \texttt{PagamentoFallitoException}
+\end{itemize}
+Crea una classe \texttt{SistemaPrenotazioni} che usa queste eccezioni.
+
+\textbf{Esercizio 4.8:} Scrivi un parser JSON semplificato che legge una stringa e verifica se contiene una struttura valida (coppie chiave:valore tra graffe). Crea eccezioni personalizzate per diversi tipi di errori: \texttt{JsonSyntaxException}, \texttt{JsonKeyException}, \texttt{JsonValueException}.
+
+\section{Esercizi su ArrayList}
+
+Gli esercizi di questa sezione permettono di praticare l'uso delle collezioni dinamiche in Java, argomento presentato in \autoref{cap:arraylist}.
+
+\subsection{Esercizi base}
+
+\begin{enumerate}
+    \item \textbf{Lista della spesa}: Crea un programma che gestisce una lista della spesa usando un \texttt{ArrayList<String>}. L'utente deve poter invocare metodi come \texttt{listaSpesa.add(String prodotto)} per aggiungere prodotti, visualizzare l'intera lista con un ciclo, rimuovere prodotti con \texttt{listaSpesa.remove(String prodotto)} e verificare se un prodotto è già presente con \texttt{listaSpesa.contains(String prodotto)}.
+
+    \item \textbf{Temperature settimanali}: Scrivi un programma che memorizza le temperature massime di una settimana in un \texttt{ArrayList<Double>}. Implementa metodi per calcolare e visualizzare la temperatura media iterando sulla lista, trovare la temperatura massima usando \texttt{Collections.max(temperature)} e quella minima usando \texttt{Collections.min(temperature)}.
+
+    \item \textbf{Rimozione duplicati}: Dato un \texttt{ArrayList<String>} contenente elementi duplicati, scrivi un metodo \texttt{rimuoviDuplicati(ArrayList<String> lista)} che restituisce un nuovo \texttt{ArrayList<String>} contenente solo gli elementi unici, mantenendo l'ordine di prima apparizione usando \texttt{listaUnica.contains(elemento)} per verificare duplicati.
+\end{enumerate}
+
+\subsection{Esercizi intermedi}
+
+\begin{enumerate}
+    \item \textbf{Gestione biblioteca}: Crea una classe \texttt{Libro} con attributi titolo, autore, anno e ISBN. Implementa una classe \texttt{Biblioteca} con un \texttt{ArrayList<Libro>} e metodi come \texttt{biblioteca.aggiungiLibro(Libro libro)}, \texttt{biblioteca.cercaPerAutore(String autore)} che restituisce un \texttt{ArrayList<Libro>}, \texttt{biblioteca.ordinaPerAnno()} che usa \texttt{libri.sort()} con un comparatore, e \texttt{biblioteca.rimuoviPerISBN(String isbn)} che itera sulla lista per trovare e rimuovere il libro.
+
+    \item \textbf{Registro voti}: Realizza un sistema di gestione voti per una classe. Crea una classe \texttt{Studente} con attributi nome, cognome e un \texttt{ArrayList<Double> voti}. Implementa metodi come \texttt{studente.aggiungiVoto(double voto)} usando \texttt{voti.add()}, \texttt{studente.calcolaMedia()} iterando sui voti, un metodo statico \texttt{Studente.trovaMediaPiuAlta(ArrayList<Studente> studenti)} e un metodo \texttt{Studente.filtraPerMedia(ArrayList<Studente> studenti, double soglia)} che restituisce studenti con media superiore alla soglia.
+
+    \item \textbf{Gestione playlist musicale}: Crea una classe \texttt{Canzone} con attributi titolo, artista e durata in secondi. Implementa una classe \texttt{Playlist} con un \texttt{ArrayList<Canzone>} e metodi come \texttt{playlist.aggiungiCanzone(Canzone canzone)}, \texttt{playlist.rimuoviCanzone(Canzone canzone)}, \texttt{playlist.calcolaDurataTotale()} sommando le durate, \texttt{playlist.cercaPerArtista(String artista)} che filtra le canzoni e \texttt{playlist.riproduciCasuale()} che usa \texttt{Collections.shuffle(canzoni)}.
+\end{enumerate}
+
+\subsection{Esercizi avanzati}
+
+\begin{enumerate}
+    \item \textbf{Sistema prenotazioni}: Sviluppa un sistema di prenotazioni per un cinema. Crea classi \texttt{Film} (con attributi titolo, durata, genere), \texttt{Posto} (con attributi fila, numero, occupato), \texttt{Sala} (con attributi numero e \texttt{ArrayList<Posto> posti}) e \texttt{Prenotazione} (con attributi film, sala, \texttt{ArrayList<Posto> postiPrenotati}, nomeCliente). Implementa metodi come \texttt{sala.visualizzaPostiLiberi()}, \texttt{posto.prenota()}, \texttt{prenotazione.conferma()} che aggiorna i posti usando \texttt{posto.setOccupato(true)} e \texttt{prenotazione.annulla()} che libera i posti.
+
+    \item \textbf{Social network semplificato}: Progetta un sistema base di social network dove ogni \texttt{Utente} ha attributi nome, \texttt{ArrayList<Utente> amici} e \texttt{ArrayList<String> post}. Implementa metodi come \texttt{utente.aggiungiAmico(Utente amico)} che usa sia \texttt{this.amici.add(amico)} che \texttt{amico.amici.add(this)} per gestire la bidirezionalità, \texttt{utente.rimuoviAmico(Utente amico)}, \texttt{utente.pubblicaPost(String post)} usando \texttt{post.add()}, \texttt{utente.visualizzaFeed()} che itera sui post propri e degli amici, e un metodo statico \texttt{Utente.cercaUtente(ArrayList<Utente> utenti, String nome)}.
+\end{enumerate}
+
+\section{Esercizi su Interfacce Grafiche}
+
+Gli esercizi di questa sezione permettono di sviluppare competenze nella creazione di interfacce grafiche con Swing, come spiegato in \autoref{cap:interfacce_grafiche}.
+
+\subsection{Esercizio 6.1 - Livello Base}
+\textbf{Calcolatrice Semplice}
+
+Crea una GUI con:
+\begin{itemize}
+    \item Due oggetti \texttt{JTextField} per inserire due numeri (usa \texttt{campo1.getText()} per ottenere il valore)
+    \item Quattro pulsanti \texttt{JButton} per le operazioni: +, -, *, /
+    \item Una \texttt{JLabel} per visualizzare il risultato (usa \texttt{etichetta.setText(String testo)} per aggiornarlo)
+\end{itemize}
+
+Quando l'utente clicca su un pulsante (gestito con un \texttt{ActionListener}), esegui l'operazione corrispondente e mostra il risultato usando \texttt{risultato.setText()}. Gestisci il caso di divisione per zero mostrando un messaggio di errore con \texttt{JOptionPane.showMessageDialog()}.
+
+\subsection{Esercizio 6.2 - Livello Base}
+\textbf{Cambio Colore}
+
+Crea una finestra con:
+\begin{itemize}
+    \item Un oggetto \texttt{JPanel} centrale colorato
+    \item Tre pulsanti \texttt{JButton}: "Rosso", "Verde", "Blu"
+\end{itemize}
+
+Quando l'utente clicca su un pulsante, cambia il colore di sfondo del pannello centrale usando \texttt{pannello.setBackground(Color colore)} e chiama \texttt{pannello.repaint()} per aggiornare la visualizzazione.
+
+\subsection{Esercizio 6.3 - Livello Intermedio}
+\textbf{Lista di Task}
+
+Crea un'applicazione per gestire una lista di task con:
+\begin{itemize}
+    \item Un oggetto \texttt{JTextField} per inserire un nuovo task (usa \texttt{campoTask.getText()} per ottenere il testo)
+    \item Un pulsante \texttt{JButton} "Aggiungi" per aggiungere il task
+    \item Una \texttt{JTextArea} per visualizzare tutti i task (usa \texttt{areaTask.append(String testo)} per aggiungere righe)
+    \item Un pulsante \texttt{JButton} "Cancella Tutto" per svuotare la lista (usa \texttt{areaTask.setText("")})
+\end{itemize}
+
+Ogni task aggiunto deve essere numerato progressivamente. Dopo aver aggiunto un task, svuota il campo di input con \texttt{campoTask.setText("")}.
+
+\subsection{Esercizio 6.4 - Livello Intermedio}
+\textbf{Convertitore di Temperature}
+
+Crea una GUI che converte temperature tra Celsius e Fahrenheit:
+\begin{itemize}
+    \item Un oggetto \texttt{JTextField} per inserire la temperatura (usa \texttt{campoTemp.getText()} per ottenere il valore)
+    \item Due oggetti \texttt{JRadioButton} in un \texttt{ButtonGroup} per selezionare la direzione di conversione (C to F oppure F to C) - usa \texttt{radioButton.isSelected()} per verificare quale è selezionato
+    \item Un pulsante \texttt{JButton} "Converti"
+    \item Una \texttt{JLabel} per visualizzare il risultato (usa \texttt{etichettaRisultato.setText(String testo)})
+\end{itemize}
+
+Formule: F = C * 9/5 + 32, C = (F - 32) * 5/9
+
+\subsection{Esercizio 6.5 - Livello Avanzato}
+\textbf{Disegno con il Mouse}
+
+Crea un'applicazione di disegno semplice che:
+\begin{itemize}
+    \item Usa un oggetto \texttt{JPanel} personalizzato per disegnare
+    \item Permette di disegnare linee trascinando il mouse (implementa \texttt{MouseMotionListener} e usa i metodi \texttt{pannello.mouseDragged(MouseEvent e)} per catturare i movimenti)
+    \item Ha pulsanti \texttt{JButton} per scegliere il colore del disegno (rosso, verde, blu, nero) che modificano una variabile di stato \texttt{coloreCorrente}
+    \item Ha un pulsante \texttt{JButton} "Cancella" per pulire il disegno (svuota la lista dei segmenti e chiama \texttt{pannello.repaint()})
+    \item Tiene traccia di tutti i segmenti disegnati in un \texttt{ArrayList} di oggetti \texttt{Segmento}
+\end{itemize}
+
+Suggerimento: fai l'override del metodo \texttt{pannello.paintComponent(Graphics g)} del JPanel personalizzato per disegnare tutti i segmenti usando \texttt{g.drawLine()}.
+
+\begin{errore}
+\textbf{Errore comune}: Dimenticare di chiamare \texttt{finestra.setVisible(true)}.
+
+Se la finestra non appare, assicurati di aver chiamato il metodo \texttt{finestra.setVisible(true)} sull'oggetto \texttt{JFrame} dopo aver configurato tutti i componenti. Inoltre, verifica di aver impostato una dimensione adeguata con \texttt{finestra.setSize(int larghezza, int altezza)} o \texttt{finestra.pack()}.
+\end{errore}
+
+\section{Esercizi su Model-View-Controller}
+
+Gli esercizi di questa sezione permettono di praticare il pattern architetturale MVC, spiegato in dettaglio in \autoref{cap:model_view_controller}.
+
+\subsection{Esercizio 7.1 - Livello Base}
+\textbf{Contatore MVC}
+
+Implementa un'applicazione contatore seguendo il pattern MVC:
+\begin{itemize}
+    \item \textbf{Model}: classe \texttt{ContatoreModel} che contiene l'attributo \texttt{valore} del contatore e metodi \texttt{model.increment()}, \texttt{model.decrement()}, \texttt{model.reset()} e \texttt{model.getValore()}
+    \item \textbf{View}: classe \texttt{ContatoreView} che estende \texttt{JFrame}, mostra il valore corrente in una \texttt{JLabel} (accessibile con \texttt{view.getLabelValore()}) e ha tre pulsanti \texttt{JButton} (+, -, Reset) accessibili con getter
+    \item \textbf{Controller}: classe \texttt{ContatoreController} che riceve riferimenti a Model e View, gestisce gli eventi dei pulsanti e chiama i metodi del Model (es: \texttt{model.increment()}) e aggiorna la View (es: \texttt{view.aggiorna(model.getValore())})
+\end{itemize}
+
+\subsection{Esercizio 7.2 - Livello Base}
+\textbf{Calcolatrice MVC}
+
+Crea una calcolatrice semplice con il pattern MVC:
+\begin{itemize}
+    \item \textbf{Model}: classe \texttt{CalcolatriceModel} con metodi \texttt{model.somma(double a, double b)}, \texttt{model.sottrazione(double a, double b)}, \texttt{model.moltiplicazione(double a, double b)}, \texttt{model.divisione(double a, double b)}
+    \item \textbf{View}: classe \texttt{CalcolatriceView} con due \texttt{JTextField} per input (accessibili con \texttt{view.getCampo1()} e \texttt{view.getCampo2()}), pulsanti \texttt{JButton} per operazioni, e una \texttt{JLabel} per il risultato (aggiornabile con \texttt{view.setRisultato(String testo)})
+    \item \textbf{Controller}: classe \texttt{CalcolatriceController} che gestisce i click sui pulsanti, ottiene i valori con \texttt{campo.getText()}, chiama i metodi appropriati del Model e aggiorna la View con il risultato
+\end{itemize}
+
+\subsection{Esercizio 7.3 - Livello Intermedio}
+\textbf{Rubrica Telefonica MVC}
+
+Implementa una rubrica telefonica:
+\begin{itemize}
+    \item \textbf{Model}: classe \texttt{RubricaModel} che gestisce un \texttt{ArrayList<Contatto>} con metodi \texttt{model.aggiungiContatto(Contatto c)}, \texttt{model.rimuoviContatto(String nome)}, \texttt{model.cercaContatto(String nome)} che restituisce un \texttt{Contatto}, e \texttt{model.getTuttiContatti()} che restituisce l'intera lista
+    \item \textbf{View}: classe \texttt{RubricaView} con form di inserimento (\texttt{JTextField} per nome e telefono), una \texttt{JList} o \texttt{JTextArea} per visualizzare i contatti, un campo \texttt{JTextField} per la ricerca
+    \item \textbf{Controller}: classe \texttt{RubricaController} che coordina le operazioni CRUD chiamando i metodi del Model (es: \texttt{model.aggiungiContatto()}) e aggiorna la View con \texttt{view.aggiornaLista(model.getTuttiContatti())}
+\end{itemize}
+
+\subsection{Esercizio 7.4 - Livello Intermedio}
+\textbf{Gestione Studenti MVC}
+
+Crea un sistema di gestione studenti:
+\begin{itemize}
+    \item \textbf{Model}: classe \texttt{Studente} (con attributi matricola, nome, \texttt{ArrayList<Double> voti} e metodo \texttt{studente.calcolaMedia()}) e classe \texttt{RegistroModel} con \texttt{ArrayList<Studente>} e metodi \texttt{model.aggiungiStudente(Studente s)}, \texttt{model.rimuoviStudente(String matricola)}, \texttt{model.getStudenti()}
+    \item \textbf{View}: classe \texttt{RegistroView} con form inserimento studente (\texttt{JTextField} per matricola e nome), una \texttt{JTable} per visualizzare gli studenti, pannello per statistiche con \texttt{JLabel}
+    \item \textbf{Controller}: classe \texttt{RegistroController} che gestisce le operazioni CRUD chiamando metodi del Model e aggiorna la View, calcola statistiche iterando su \texttt{model.getStudenti()}
+\end{itemize}
+
+Aggiungi funzionalità per ordinare studenti per nome usando \texttt{Collections.sort(studenti, comparatore)} o per media voti usando un comparatore personalizzato.
+
+\begin{errore}
+\textbf{Errore comune}: Mettere logica di business nel Controller.
+
+\begin{lstlisting}
+// SBAGLIATO: logica nel Controller
+class AddTaskListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+        String task = view.getInputTask();
+        if (task.trim().isEmpty()) { // Validazione nel controller!
+            return;
+        }
+        model.addTask(task); // Il controller delega al model
+    }
+}
+\end{lstlisting}
+
+La validazione deve stare nel Model. Il Controller deve solo delegare:
+\begin{lstlisting}
+// CORRETTO: logica nel Model, Controller che delega
+// Nel Model:
+public boolean addTask(String task) {
+    if (task == null || task.trim().isEmpty()) {
+        return false; // Validazione nel model
+    }
+    todoList.add(task.trim());
+    return true;
+}
+
+// Nel Controller:
+class AddTaskListener implements ActionListener {
+    public void actionPerformed(ActionEvent e) {
+        String task = view.getInputTask();
+        boolean successo = model.addTask(task);
+        if (successo) {
+            view.aggiornaLista(model.getTasks());
+        }
+    }
+}
+\end{lstlisting}
+\end{errore}
+
+\section{Esercizi su Lambda Expressions}
+
+Gli esercizi di questa sezione permettono di sperimentare la programmazione funzionale in Java con le lambda expressions, argomento trattato in \autoref{cap:lambda_expressions}.
+
+\subsection{Esercizio 8.1 - Livello Base}
+\textbf{Ordinamento Studenti}
+
+Data un \texttt{ArrayList<Studente>} (con attributi nome e voto), usa espressioni lambda per:
+\begin{itemize}
+    \item Ordinarli per voto crescente usando \texttt{studenti.sort((s1, s2) -> Double.compare(s1.getVoto(), s2.getVoto()))}
+    \item Ordinarli per voto decrescente usando \texttt{studenti.sort((s1, s2) -> Double.compare(s2.getVoto(), s1.getVoto()))}
+    \item Ordinarli alfabeticamente per nome usando \texttt{studenti.sort((s1, s2) -> s1.getNome().compareTo(s2.getNome()))}
+\end{itemize}
+
+Confronta la sintassi con lambda e quella equivalente con classe anonima \texttt{Comparator}.
+
+\subsection{Esercizio 8.2 - Livello Intermedio}
+\textbf{Filtro Prodotti}
+
+Crea una classe \texttt{Prodotto} con attributi: nome, prezzo, categoria.
+
+Implementa un metodo statico generico \texttt{Prodotto.filtra(ArrayList<Prodotto> prodotti, Predicate<Prodotto> condizione)} che accetta un \texttt{Predicate<Prodotto>} e filtra la lista usando \texttt{condizione.test(prodotto)}. Usa espressioni lambda per creare diversi predicati:
+\begin{itemize}
+    \item Trovare prodotti con prezzo maggiore di 50 euro: \texttt{p -> p.getPrezzo() > 50}
+    \item Trovare prodotti della categoria "Elettronica": \texttt{p -> p.getCategoria().equals("Elettronica")}
+    \item Trovare prodotti con nome che inizia per "A": \texttt{p -> p.getNome().startsWith("A")}
+    \item Combinare più condizioni usando \texttt{Predicate.and()}: \texttt{p -> p.getPrezzo() < 100 && p.getCategoria().equals("Libri")}
+\end{itemize}
+
+\subsection{Esercizio 8.3 - Livello Avanzato}
+\textbf{GUI con Lambda}
+
+Crea una calcolatrice grafica che:
+\begin{itemize}
+    \item Ha due oggetti \texttt{JTextField} per inserire i numeri
+    \item Ha quattro pulsanti \texttt{JButton} per operazioni (+, -, *, /)
+    \item Mostra il risultato in una \texttt{JLabel}
+\end{itemize}
+
+\textbf{Requisiti}:
+\begin{itemize}
+    \item Usa espressioni lambda per tutti gli \texttt{ActionListener}, ad esempio: \texttt{pulsanteSomma.addActionListener(e -> \{...\})}
+    \item Crea un'interfaccia funzionale \texttt{Operazione} con metodo astratto \texttt{operazione.calcola(double a, double b)} che restituisce double
+    \item Assegna a ciascun pulsante una lambda che implementa l'operazione, ad esempio: \texttt{Operazione somma = (a, b) -> a + b}
+    \item Gestisci errori (divisione per zero con \texttt{b == 0}, input non valido con \texttt{try-catch} su \texttt{Double.parseDouble()}) usando blocchi di codice nelle lambda
+\end{itemize}
+
+\begin{nota}
+Le soluzioni complete e commentate di tutti questi esercizi sono disponibili nell'Appendice. Si consiglia di provare a risolvere gli esercizi autonomamente prima di consultare le soluzioni.
+\end{nota}

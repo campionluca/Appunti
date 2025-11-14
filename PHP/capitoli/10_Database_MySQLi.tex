@@ -1,0 +1,145 @@
+\chapter{Database con MySQLi}\label{cap:db_mysqli_ex}
+
+\section{Confronto: query insicura vs prepared}
+\subsection*{Query non sicura (concatenazione)}
+\begin{lstlisting}[language=PHP]
+<?php
+$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
+$sql = "SELECT id, name FROM users WHERE email = '" . $email . "'";
+$res = $mysqli->query($sql);
+// Input malevolo: x' OR '1'='1  -> esegue SELECT di tutti gli utenti
+?>
+\end{lstlisting}
+
+\subsection*{Versione sicura (prepared + bind)}
+\begin{lstlisting}[language=PHP]
+<?php
+$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
+$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) { /* ... */ }
+$stmt->close();
+?>
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Perché la versione sicura risolve]
+Il valore \verb|$email| non viene mai interpretato come codice SQL: è trasmesso separatamente e trattato come dato. La WHERE non può essere alterata con stringhe malevole.
+\end{tcolorbox}
+
+\section{SELECT con Prepared Statements}
+\lstinputlisting[language=PHP, caption={MySQLi SELECT}, label={lst:mysqliselect}]{esempi/mysqli_select.php}
+
+\subsection{Analisi tecnica del SELECT con prepared statements}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione di query SELECT sicure utilizzando prepared statements per prevenire SQL injection, con gestione completa degli errori e fetching dei risultati in modo efficiente e sicuro.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{new mysqli(...)}: Creazione connessione al database MySQL
+\item \texttt{connect\_errno}: Controllo errori di connessione
+\item \texttt{prepare()}: Preparazione statement SQL con parametri placeholder
+\item \texttt{bind\_param('s', \$email)}: Binding parametri con type specification
+\item \texttt{execute()}: Esecuzione query preparata
+\item \texttt{get\_result()}: Recupero risultato come risultato set
+\item \texttt{fetch\_assoc()}: Fetching righe come array associativo
+\item \texttt{close()}: Chiusura corretta statement e connessione
+\item \texttt{RuntimeException}: Gestione errori con eccezioni
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Login systems e autenticazione utente
+\parametri di ricerca e filtri dinamici
+\item Dashboard e report con dati aggregati
+\item Sistemi di inventory e gestione prodotti
+\item API RESTful per data retrieval
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{fetch\_object()} per risultati come oggetti
+\item \texttt{fetch\_all()} per recupero completo in array
+\item PDO (PHP Data Objects) per database abstraction
+\item ORM (Object-Relational Mapping) come Doctrine, Eloquent
+\item Query builders per costruzione dinamica query
+\item Stored procedures per logica database-side
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Sempre usare prepared statements per dati variabili
+\item \textbf{Insidia}: SQL injection se si concatenano stringhe direttamente
+\item \textbf{Sicurezza}: Validare e sanitizzare input prima del binding
+\item \textbf{Performance}: Usare connection pooling per high traffic
+\item \textbf{Error handling}: Loggare errori ma non esporre dettagli al client
+\item \textbf{Resource management}: Chiudere sempre connessioni e statements
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{SQL Injection}: OWASP Top 10 vulnerability prevention
+\item \textbf{Prepared Statements}: Meccanismo di compilazione e esecuzione separata
+\item \textbf{Database Connection Pooling}: Ottimizzazione risorse connessioni
+\item \textbf{ACID Properties}: Atomicity, Consistency, Isolation, Durability
+\item \textbf{CRUD Operations}: Create, Read, Update, Delete patterns
+\item \textbf{Data Normalization}: Database design principles
+\end{itemize}
+\end{itemize}
+
+\section{INSERT con Prepared Statements}
+\lstinputlisting[language=PHP, caption={MySQLi INSERT}, label={lst:mysqlinsert}]{esempi/mysqli_insert.php}
+
+\subsection{Analisi tecnica dell'INSERT con prepared statements}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione di operazioni INSERT sicure utilizzando prepared statements per prevenire SQL injection, con validazione dati e gestione del risultato dell'operazione.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{prepare('INSERT ... VALUES (?, ?)')}: Preparazione statement con multiple placeholders
+\item \texttt{bind\_param('ss', \$nome, \$email)}: Binding multipli parametri con type specification
+\item \texttt{affected\_rows}: Contatore righe modificate dall'operazione
+\item Multi-parameter binding: Supporto per inserimenti complessi
+\item Transaction-ready structure: Base per operazioni atomiche
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item User registration e creazione account
+\item Content management systems
+\item E-commerce order processing
+\item Data import e migration tools
+\item Audit logging e tracciamento attività
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item Batch inserts con multiple value sets
+\item \texttt{INSERT IGNORE} per duplicati non critici
+\item \texttt{ON DUPLICATE KEY UPDATE} per upsert operations
+\item Bulk inserts per grandi volumi dati
+\item Transaction blocks per operazioni atomiche
+\item Database-specific extensions (MySQLi, PDO MySQL)
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Validare dati prima dell'inserimento
+\item \textbf{Insidia}: Race conditions in high concurrency environments
+\item \textbf{Sicurezza}: Usare sempre prepared statements per dati utente
+\item \textbf{Performance}: Usare batch operations per multiple inserts
+\item \textbf{Data integrity}: Implementare constraints e validation database-side
+\item \textbf{Error handling}: Gestire duplicate keys e constraint violations
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{Data Integrity}: Constraint enforcement e validation
+\item \textbf{Database Transactions}: Atomic operations and rollback
+\item \textbf{Concurrency Control}: Locking mechanisms and isolation levels
+\item \textbf{ACID Compliance}: Transaction reliability guarantees
+\item \textbf{Data Validation}: Input sanitization and business rules
+\item \textbf{Performance Optimization}: Indexing and query planning
+\end{itemize}
+\end{itemize}

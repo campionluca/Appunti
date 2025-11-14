@@ -1,0 +1,143 @@
+% Modulo 04 — Stringhe e Formattazione
+\chapter{Stringhe e Formattazione}
+
+\section{Introduzione}
+Le stringhe sono sequenze di caratteri immutabili. In Python si manipolano con operatori, metodi e formattazione moderna.
+
+Questa descrizione copre casi d'uso realistici: pulizia dati, normalizzazione, parsing e produzione di messaggi leggibili per log e interfacce. Accenniamo alle problematiche di encoding Unicode, ai separatori locali e alla formattazione numerica e di date.
+
+Saper lavorare bene con le stringhe è centrale in scripting, reportistica, trasformazioni CSV/JSON e interazione con utenti e sistemi.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Usare metodi delle stringhe comuni (strip, split, join, replace).
+  \item Formattare output con f-string e format.
+  \item Comprendere slicing e manipolazioni di base.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=F-string]
+Esempio: \texttt{name = "Ada"; f"Ciao, {name}!"}
+\end{tcolorbox}
+\begin{tcolorbox}[title=Specifiche di formattazione]
+Numeri: \texttt{:.2f} per due decimali, \texttt{:08d} per zero-padding; Testo: \texttt{:<20} allineamento a sinistra, \texttt{:.10} taglio; Date: usa \texttt{datetime.strftime}. Mantieni separata la logica di formattazione dalla logica di calcolo.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Metodi principali}
+\begin{lstlisting}
+s = "  Python e' fantastico  "
+print(s.strip().replace("fantastico", "potente"))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Immutabilità}: i metodi su `str` ritornano nuove stringhe; `s` resta invariata.  
+- \textbf{Pulizia}: `strip` rimuove spazi ai bordi; `replace` sostituisce occorrenze.  
+- \textbf{Pipeline}: concatenare metodi rende leggibile la trasformazione testuale.
+\end{tcolorbox}
+
+\subsection{Split/Join}
+\begin{lstlisting}
+frase = "uno,due,tre"
+parts = frase.split(",")
+joined = ";".join(parts)
+print(joined)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Tokenizzazione}: `split` crea lista di parti; gestire separatori coerenti.  
+- \textbf{Ricombinazione}: `";".join(parts)` unisce con separatore scelto; richiede elementi `str`.  
+- \textbf{CSV semplice}: valido per casi basici; preferire `csv` per casi complessi.
+\end{tcolorbox}
+
+\subsection{Formattazione}
+\begin{lstlisting}
+user = "Ada"; score = 99.5
+print(f"{user} ha punteggio {score:.1f}")
+print("{} ha punteggio {}".format(user, score))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{f-string}: interpolazione con specifiche (`:.1f` per decimali).  
+- \textbf{format}: alternativa compatibile; utile con template riciclati.  
+- \textbf{Separazione}: tenere formattazione vicino all'output, logica separata.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Generazione di report e output leggibili per utenti.
+  \item Normalizzazione di input/CSV/log per pipeline dati.
+  \item Template di messaggi ed etichette in UI/CLI.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Normalizza una stringa: rimuovi spazi, porta a minuscolo.
+  \item Sostituisci tutte le vocali in una stringa con \texttt{*}.
+  \item Dato un CSV di parole, trasformalo in lista e riuniscilo con separatore \texttt{|}.
+  \item Estrai il dominio da un indirizzo email.
+  \item Verifica se una stringa è palindroma usando slicing.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai visto metodi delle stringhe e tecniche moderne di formattazione.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Pulizia e normalizzazione testi (log, CSV, input utente).
+- Formattazione report e messaggi per CLI/GUI.
+- Localizzazione e formattazione numeri/date.
+- Sanitizzazione input e rendering sicuro.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{f-string vs \texttt{format}}: preferire f-string per leggibilità; \verb|format| resta utile per formattazioni avanzate.
+  \item \textbf{Precisione e allineamento}: specificare \verb|:.2f| per decimali, \verb|:>10| per allineamento; gestire numeri grandi con separatori.
+  \item \textbf{Localizzazione}: separare formattazioni dipendenti dalla lingua; evitare concatenazioni manuali, preferendo template.
+  \item \textbf{Sanitizzazione}: evitare injections e errori; normalizzare input (trim, lower) e validare prima di formattare.
+  \item \textbf{Unicode ed encoding}: usare \verb|utf-8|; attenzione a normalizzazione (NFC/NFD) per confronti affidabili.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Per chi viene da C/Java/JS: stringhe, bytes ed encoding}]
+\textbf{Stringhe}: sono immutabili e Unicode; operazioni come `replace`, `split`, `join` sono metodi sul tipo `str`.  
+\textbf{Formattazione}: preferisci f-string (`f"{x:.2f}"`) per chiarezza; `format` utile per template generici.  
+\textbf{Bytes}: `bytes`/`bytearray` rappresentano dati binari; conversione via `s.encode("utf-8")` e `b.decode("utf-8")`.  
+\textbf{Regex}: usa `re` per parsing robusto; separa regole dai messaggi di output.
+
+Esempi commentati:
+\begin{lstlisting}
+# Normalizzazione testo
+def normalize(s):
+    s = s.strip().lower()
+    return " ".join(s.split())  # collassa spazi multipli
+
+# Formattazione numeri
+amount = 1234.567
+print(f"{amount:,.2f}")  # separatori dipendono dalla locale
+
+# String vs bytes
+data = "ciao".encode("utf-8")   # bytes
+text = data.decode("utf-8")       # str
+
+# Regex (semplice email)
+import re
+pat = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+print(bool(pat.match("ada@example.com")))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Normalizzazione}: trim + lower + collapse spazi per confronti affidabili.  
+- \textbf{Formattazione numeri}: specifiche di locale possono cambiare separatori.  
+- \textbf{Stringhe/bytes}: `encode`/`decode` per confine testo $\rightarrow$ binario.
+- \textbf{Regex}: pattern minimo per email; preferire librerie se requisiti complessi.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Idiomi: split/join, f-string, template}]
+- \textbf{split/join}: `";".join(parts)` e `s.split(",")` per CSV semplici.  
+- \textbf{f-string}: espressioni inline e specifiche di formato; evita concatenazioni con `+`.  
+- \textbf{Template}: centralizza formattazioni e messaggi; separa logica dai testi.
+\end{tcolorbox}
+
+\paragraph{Suggerimenti} Per testo lungo in codice, valutare \verb|\lstinline| per parti inline e spezzare stringhe multi-linea con triple quotes mantenendo indentazione chiara.
+Consulta: \url{https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str}.

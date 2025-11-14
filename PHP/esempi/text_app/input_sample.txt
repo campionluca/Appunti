@@ -1,0 +1,4 @@
+Riga con spazi finali    
+Tab	dentro	la	riga
+Caratteri non ASCII: àèìòù ÄÖÜ ñ
+Fine

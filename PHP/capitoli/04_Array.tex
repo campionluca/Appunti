@@ -1,0 +1,99 @@
+\chapter{Array}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Creazione e manipolazione, Funzioni principali, Iterazione, Array multidimensionali, Esempi pratici, Caso di studio, Esercizi, Verifica, Riepilogo, Riferimenti.
+\end{tcolorbox}
+
+\section{Teoria}
+Gli array in PHP sono strutture flessibili che possono contenere valori di qualunque tipo. Esistono funzioni native per creare, manipolare e iterare.
+
+\section{Creazione e manipolazione}
+\begin{lstlisting}
+<?php
+$nums = [1, 2, 3];
+$mix  = ['a', 10, true];
+array_push($nums, 4); // [1,2,3,4]
+$nums = array_merge([0], $nums); // [0,1,2,3,4]
+unset($mix[1]); // rimuove elemento
+\end{lstlisting}
+
+\section{Funzioni principali}
+- \texttt{count}, \texttt{array\_push}, \texttt{array\_pop}, \texttt{array\_shift}
+- \texttt{in\_array}, \texttt{array\_search}, \texttt{array\_key\_exists}
+
+\begin{lstlisting}
+<?php
+// Esempi senza funzioni di ordine superiore
+// Quadrati
+$squared = [];
+foreach ($nums as $x) { $squared[] = $x * $x; }
+// Pari
+$even = [];
+foreach ($nums as $x) { if ($x % 2 === 0) { $even[] = $x; } }
+// Somma
+$sum = 0;
+foreach ($nums as $x) { $sum += $x; }
+\end{lstlisting}
+
+\section{Iterazione}
+\begin{lstlisting}
+<?php
+for ($i=0; $i<count($nums); $i++) { echo $nums[$i]; }
+foreach ($nums as $n) { echo $n; }
+\end{lstlisting}
+
+\section{Array multidimensionali}
+\begin{lstlisting}
+<?php
+$matrix = [ [1,2], [3,4] ];
+echo $matrix[1][0]; // 3
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best practice]
+- Usare \texttt{foreach} per semplicità e leggibilità.
+- Evitare rimuovere elementi senza reindicizzare se serve l'indice.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Presumere che gli indici si ricalcolino automaticamente dopo \texttt{unset}.
+- Dimenticare che PHP consente tipi misti: gestire coerenza dei dati.
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Reindicizzazione dopo rimozione
+$a = [10,20,30];
+unset($a[1]);           // [0=>10, 2=>30]
+$a = array_values($a);  // [0=>10, 1=>30]
+
+// Aggregazioni
+$prezzi = [10.5, 7.2, 13.0];
+$totale = 0.0;
+foreach ($prezzi as $p) { $totale += $p; }
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Gestione di un carrello: aggiunta, rimozione, calcolo totale e sconti senza funzioni di ordine superiore.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Dato un array di interi, costruisci un nuovo array di quadrati usando solo cicli.
+  \item Reindicizza correttamente dopo rimozioni multiple e verifica gli indici.
+  \item Implementa un carrello con totale e sconto percentuale per importi \textgreater{} 100.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Cosa restituisce \texttt{count} su un array con buchi di indici?
+  \item Quando è necessario usare \texttt{array\_values}?
+\end{itemize}
+
+\section{Riepilogo}
+Gli array in PHP sono dinamici e flessibili: usa cicli per trasformazioni e filtri, e reindicizza quando necessario.
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — Arrays: \url{https://www.php.net/array}
+\end{itemize}

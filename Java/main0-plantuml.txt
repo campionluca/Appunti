@@ -1,0 +1,58 @@
+@startuml
+' Impostazioni estetiche
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam ArrowColor #3366cc
+skinparam ClassBackgroundColor #E6F0FF
+skinparam ClassBorderColor #3366cc
+
+' === CLASSI ===
+class Auto {
+  - marca : String
+  - motore : Motore
+  --
+  + Auto()
+  + accendi()
+}
+
+class Motore {
+  - cilindrata : int
+  - cavalli : int
+  --
+  + avvia()
+  + spegni()
+}
+
+class Scuola {
+  - nome : String
+  - studenti : Studente[]
+  --
+  + aggiungiStudente()
+  + rimuoviStudente()
+}
+
+class Studente {
+  - matricola : String
+  - nome : String
+  --
+  + studia()
+  + sostienEsame()
+}
+
+' === RELAZIONI ===
+Auto *-- Motore : composizione\n(parte-tutto)
+Scuola o-- Studente : aggregazione\n(contenimento)
+
+' === NOTE ===
+note bottom of Auto
+Composizione (diamante pieno):
+il Motore non può esistere senza l'Auto.
+Se l'Auto viene distrutta, il Motore viene distrutto.
+end note
+
+note bottom of Scuola
+Aggregazione (diamante vuoto):
+Gli Studenti esistono indipendentemente dalla Scuola.
+Possono cambiare scuola o esistere senza scuola.
+end note
+@enduml

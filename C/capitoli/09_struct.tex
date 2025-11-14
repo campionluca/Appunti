@@ -1,0 +1,753 @@
+\chapter{Struct}
+\label{cap:struct}
+
+\section{Obiettivi di Apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Definire struct per raggruppare dati correlati
+    \item Dichiarare e inizializzare variabili di tipo struct
+    \item Accedere ai membri di una struct usando l'operatore punto (.)
+    \item Utilizzare puntatori a struct e l'operatore freccia (->) per accedere ai membri
+    \item Creare alias per struct con la parola chiave typedef
+    \item Gestire array di struct
+    \item Implementare struct annidate per rappresentare dati complessi
+    \item Passare struct a funzioni per valore e per riferimento (tramite puntatori)
+    \item Allocare struct dinamicamente con la funzione malloc() della libreria stdlib
+\end{itemize}
+
+\section{Introduzione alle Struct}
+
+Le struct (strutture) permettono di raggruppare variabili di tipi diversi sotto un unico nome, creando nuovi tipi di dati personalizzati.
+
+\subsection{Perché Usare le Struct?}
+
+\begin{itemize}
+    \item Organizzare dati correlati insieme
+    \item Creare tipi di dati complessi
+    \item Migliorare la leggibilità del codice
+    \item Facilitare la gestione di dati strutturati
+\end{itemize}
+
+\begin{nota}
+Le struct sono fondamentali per la programmazione strutturata e permettono di modellare entità del mondo reale nel codice.
+\end{nota}
+
+\section{Definizione di una Struct}
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}
+struct nome_struct {
+    tipo1 campo1;
+    tipo2 campo2;
+    // ... altri campi
+};
+\end{lstlisting}
+
+\subsection{Esempi di Definizione}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Struct per rappresentare un punto 2D
+struct Punto {
+    int x;
+    int y;
+};
+
+// Struct per rappresentare una data
+struct Data {
+    int giorno;
+    int mese;
+    int anno;
+};
+
+// Struct per rappresentare uno studente
+struct Studente {
+    char nome[50];
+    char cognome[50];
+    int matricola;
+    float media;
+};
+
+int main(int argc, char** argv) {
+    // Dichiarazione di variabili struct
+    struct Punto p1;
+    struct Data oggi;
+    struct Studente s1;
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Dichiarazione e Inizializzazione}
+
+\subsection{Dichiarazione}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+struct Persona {
+    char nome[30];
+    int eta;
+    float altezza;
+};
+
+int main(int argc, char** argv) {
+    // Dichiarazione semplice
+    struct Persona p1;
+
+    // Dichiarazione multipla
+    struct Persona p2, p3, p4;
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Inizializzazione}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+struct Punto {
+    int x;
+    int y;
+};
+
+int main(int argc, char** argv) {
+    // Inizializzazione alla dichiarazione
+    struct Punto p1 = {10, 20};
+
+    // Inizializzazione con nomi dei campi (C99)
+    struct Punto p2 = {.x = 5, .y = 15};
+
+    // Inizializzazione parziale
+    struct Punto p3 = {10};  // x=10, y=0
+
+    // Inizializzazione a zero
+    struct Punto p4 = {0};   // x=0, y=0
+
+    printf("p1: (%d, %d)\n", p1.x, p1.y);  // Accesso ai campi p1.x e p1.y della struct Punto
+    printf("p2: (%d, %d)\n", p2.x, p2.y);  // Accesso ai campi p2.x e p2.y della struct Punto
+    printf("p3: (%d, %d)\n", p3.x, p3.y);  // Accesso ai campi p3.x e p3.y della struct Punto
+    printf("p4: (%d, %d)\n", p4.x, p4.y);  // Accesso ai campi p4.x e p4.y della struct Punto
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Accesso ai Membri}
+
+\subsection{Operatore Punto (.)}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+struct Studente {
+    char nome[30];
+    int eta;
+    float media;
+};
+
+int main(int argc, char** argv) {
+    struct Studente s1;
+
+    // Assegnamento ai membri della struct Studente
+    strcpy(s1.nome, "Mario Rossi");  // Assegna al campo s1.nome della struct Studente
+    s1.eta = 20;                     // Assegna al campo s1.eta della struct Studente
+    s1.media = 27.5;                 // Assegna al campo s1.media della struct Studente
+
+    // Lettura dei membri della struct Studente
+    printf("Nome: %s\n", s1.nome);   // Accesso al campo s1.nome della struct Studente
+    printf("Eta': %d\n", s1.eta);    // Accesso al campo s1.eta della struct Studente
+    printf("Media: %.1f\n", s1.media);  // Accesso al campo s1.media della struct Studente
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Input da Utente}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+struct Libro {
+    char titolo[100];
+    char autore[50];
+    int anno;
+    float prezzo;
+};
+
+int main(int argc, char** argv) {
+    struct Libro libro;
+
+    printf("=== INSERIMENTO LIBRO ===\n");
+
+    printf("Titolo: ");
+    fgets(libro.titolo, sizeof(libro.titolo), stdin);  // Legge nel campo libro.titolo della struct Libro
+
+    printf("Autore: ");
+    fgets(libro.autore, sizeof(libro.autore), stdin);  // Legge nel campo libro.autore della struct Libro
+
+    printf("Anno: ");
+    scanf("%d", &libro.anno);  // Legge nel campo libro.anno della struct Libro
+
+    printf("Prezzo: ");
+    scanf("%f", &libro.prezzo);  // Legge nel campo libro.prezzo della struct Libro
+
+    printf("\n=== DATI LIBRO ===\n");
+    printf("Titolo: %s", libro.titolo);    // Stampa il campo libro.titolo della struct Libro
+    printf("Autore: %s", libro.autore);    // Stampa il campo libro.autore della struct Libro
+    printf("Anno: %d\n", libro.anno);      // Stampa il campo libro.anno della struct Libro
+    printf("Prezzo: %.2f euro\n", libro.prezzo);  // Stampa il campo libro.prezzo della struct Libro
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Typedef}
+
+\texttt{typedef} permette di creare alias per i tipi, semplificando la sintassi.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Senza typedef
+struct Punto {
+    int x;
+    int y;
+};
+
+// Con typedef (metodo 1)
+typedef struct {
+    int x;
+    int y;
+} Punto2D;
+
+// Con typedef (metodo 2)
+typedef struct Rettangolo {
+    int larghezza;
+    int altezza;
+} Rettangolo;
+
+int main(int argc, char** argv) {
+    // Senza typedef
+    struct Punto p1 = {10, 20};
+
+    // Con typedef (piu' semplice)
+    Punto2D p2 = {30, 40};
+    Rettangolo r1 = {100, 50};
+
+    printf("p1: (%d, %d)\n", p1.x, p1.y);  // Accesso ai campi p1.x e p1.y della struct Punto
+    printf("p2: (%d, %d)\n", p2.x, p2.y);  // Accesso ai campi p2.x e p2.y della struct Punto2D
+    printf("r1: %dx%d\n", r1.larghezza, r1.altezza);  // Accesso ai campi r1.larghezza e r1.altezza della struct Rettangolo
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Array di Struct}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    char nome[30];
+    int eta;
+    float voto;
+} Studente;
+
+int main(int argc, char** argv) {
+    // Array di 3 studenti
+    Studente classe[3];
+
+    // Inizializzazione degli elementi dell'array classe
+    strcpy(classe[0].nome, "Mario");  // Assegna al campo classe[0].nome della struct Studente
+    classe[0].eta = 20;               // Assegna al campo classe[0].eta della struct Studente
+    classe[0].voto = 28.5;            // Assegna al campo classe[0].voto della struct Studente
+
+    strcpy(classe[1].nome, "Lucia");  // Assegna al campo classe[1].nome della struct Studente
+    classe[1].eta = 19;               // Assegna al campo classe[1].eta della struct Studente
+    classe[1].voto = 30.0;            // Assegna al campo classe[1].voto della struct Studente
+
+    strcpy(classe[2].nome, "Giovanni");  // Assegna al campo classe[2].nome della struct Studente
+    classe[2].eta = 21;                  // Assegna al campo classe[2].eta della struct Studente
+    classe[2].voto = 26.0;               // Assegna al campo classe[2].voto della struct Studente
+
+    // Stampa di tutti gli studenti dell'array classe
+    printf("=== ELENCO STUDENTI ===\n");
+    for (int i = 0; i < 3; i++) {
+        printf("%d. %s - Eta': %d - Voto: %.1f\n",
+               i + 1, classe[i].nome, classe[i].eta, classe[i].voto);  // Accesso ai campi della struct Studente
+    }
+
+    // Calcolo della media dei voti degli studenti
+    float media_voti = 0;
+    for (int i = 0; i < 3; i++) {
+        media_voti += classe[i].voto;  // Somma i campi classe[i].voto delle struct Studente
+    }
+    media_voti /= 3;
+    printf("\nMedia dei voti: %.2f\n", media_voti);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Struct Annidate}
+
+Le struct possono contenere altre struct come membri.
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    int giorno;
+    int mese;
+    int anno;
+} Data;
+
+typedef struct {
+    char via[50];
+    char citta[30];
+    int cap;
+} Indirizzo;
+
+typedef struct {
+    char nome[30];
+    char cognome[30];
+    Data data_nascita;
+    Indirizzo indirizzo;
+} Persona;
+
+int main(int argc, char** argv) {
+    Persona p1;
+
+    // Assegnamento ai campi della struct Persona e delle struct annidate
+    strcpy(p1.nome, "Mario");      // Assegna al campo p1.nome della struct Persona
+    strcpy(p1.cognome, "Rossi");   // Assegna al campo p1.cognome della struct Persona
+
+    p1.data_nascita.giorno = 15;   // Assegna al campo p1.data_nascita.giorno della struct Data annidta
+    p1.data_nascita.mese = 3;      // Assegna al campo p1.data_nascita.mese della struct Data annidata
+    p1.data_nascita.anno = 2000;   // Assegna al campo p1.data_nascita.anno della struct Data annidata
+
+    strcpy(p1.indirizzo.via, "Via Roma 123");  // Assegna al campo p1.indirizzo.via della struct Indirizzo annidata
+    strcpy(p1.indirizzo.citta, "Milano");      // Assegna al campo p1.indirizzo.citta della struct Indirizzo annidata
+    p1.indirizzo.cap = 20100;                  // Assegna al campo p1.indirizzo.cap della struct Indirizzo annidata
+
+    // Stampa dei dati della struct Persona
+    printf("=== DATI PERSONA ===\n");
+    printf("Nome: %s %s\n", p1.nome, p1.cognome);  // Accesso ai campi p1.nome e p1.cognome della struct Persona
+    printf("Data di nascita: %02d/%02d/%04d\n",
+           p1.data_nascita.giorno,   // Accesso al campo p1.data_nascita.giorno della struct Data annidata
+           p1.data_nascita.mese,     // Accesso al campo p1.data_nascita.mese della struct Data annidata
+           p1.data_nascita.anno);    // Accesso al campo p1.data_nascita.anno della struct Data annidata
+    printf("Indirizzo: %s, %s (%d)\n",
+           p1.indirizzo.via,         // Accesso al campo p1.indirizzo.via della struct Indirizzo annidata
+           p1.indirizzo.citta,       // Accesso al campo p1.indirizzo.citta della struct Indirizzo annidata
+           p1.indirizzo.cap);        // Accesso al campo p1.indirizzo.cap della struct Indirizzo annidata
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatori a Struct}
+
+\subsection{Operatore Freccia (->)}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    char titolo[50];
+    int anno;
+    float rating;
+} Film;
+
+int main(int argc, char** argv) {
+    Film f1;
+    Film *ptr = &f1;
+
+    // Accesso con operatore punto (tramite variabile struct)
+    strcpy(f1.titolo, "Il Padrino");  // Assegna al campo f1.titolo della struct Film
+    f1.anno = 1972;                   // Assegna al campo f1.anno della struct Film
+    f1.rating = 9.2;                  // Assegna al campo f1.rating della struct Film
+
+    // Accesso con operatore freccia (tramite puntatore a struct)
+    printf("Titolo: %s\n", ptr->titolo);  // Accesso al campo ptr->titolo tramite puntatore alla struct Film
+    printf("Anno: %d\n", ptr->anno);      // Accesso al campo ptr->anno tramite puntatore alla struct Film
+    printf("Rating: %.1f\n", ptr->rating); // Accesso al campo ptr->rating tramite puntatore alla struct Film
+
+    // Modifica tramite puntatore a struct
+    ptr->anno = 1973;    // Modifica il campo ptr->anno tramite puntatore alla struct Film
+    ptr->rating = 9.5;   // Modifica il campo ptr->rating tramite puntatore alla struct Film
+
+    printf("\nDopo modifica:\n");
+    printf("Anno: %d\n", f1.anno);       // Accesso al campo f1.anno della struct Film
+    printf("Rating: %.1f\n", f1.rating); // Accesso al campo f1.rating della struct Film
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{nota}
+\texttt{ptr->campo} è equivalente a \texttt{(*ptr).campo}, ma la notazione con la freccia è più leggibile.
+\end{nota}
+
+\section{Struct e Funzioni}
+
+\subsection{Passaggio per Valore}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    int x;
+    int y;
+} Punto;
+
+// Passaggio per valore (copia della struct)
+void stampa_punto(Punto p) {
+    printf("Punto: (%d, %d)\n", p.x, p.y);  // Accesso ai campi p.x e p.y della struct Punto
+}
+
+// Modifica non influenza l'originale (passaggio per valore)
+void sposta(Punto p, int dx, int dy) {
+    p.x += dx;  // Modifica locale del campo p.x della struct Punto (copia)
+    p.y += dy;  // Modifica locale del campo p.y della struct Punto (copia)
+    printf("Dentro sposta: (%d, %d)\n", p.x, p.y);  // Accesso ai campi p.x e p.y della struct Punto
+}
+
+int main(int argc, char** argv) {
+    Punto p1 = {10, 20};
+
+    stampa_punto(p1);
+    sposta(p1, 5, 10);
+    stampa_punto(p1);  // Punto ancora (10, 20)
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Passaggio per Riferimento}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    int x;
+    int y;
+} Punto;
+
+// Passaggio per riferimento (tramite puntatore a struct)
+void sposta(Punto *p, int dx, int dy) {
+    p->x += dx;  // Modifica il campo p->x tramite puntatore alla struct Punto
+    p->y += dy;  // Modifica il campo p->y tramite puntatore alla struct Punto
+}
+
+void stampa_punto(Punto *p) {
+    printf("Punto: (%d, %d)\n", p->x, p->y);  // Accesso ai campi p->x e p->y tramite puntatore alla struct Punto
+}
+
+int main(int argc, char** argv) {
+    Punto p1 = {10, 20};
+
+    printf("Originale: ");
+    stampa_punto(&p1);
+
+    sposta(&p1, 5, 10);
+
+    printf("Dopo spostamento: ");
+    stampa_punto(&p1);  // Punto modificato: (15, 30)
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Ritorno di Struct}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+typedef struct {
+    float x;
+    float y;
+} Punto;
+
+// Funzione che restituisce una struct Punto
+Punto crea_punto(float x, float y) {
+    Punto p;
+    p.x = x;  // Assegna al campo p.x della struct Punto
+    p.y = y;  // Assegna al campo p.y della struct Punto
+    return p;
+}
+
+float distanza(Punto p1, Punto p2) {
+    float dx = p2.x - p1.x;  // Calcola la differenza usando i campi p2.x e p1.x delle struct Punto
+    float dy = p2.y - p1.y;  // Calcola la differenza usando i campi p2.y e p1.y delle struct Punto
+    return sqrt(dx * dx + dy * dy);  // La funzione sqrt() è della libreria math
+}
+
+Punto punto_medio(Punto p1, Punto p2) {
+    Punto medio;
+    medio.x = (p1.x + p2.x) / 2;  // Calcola la media dei campi p1.x e p2.x e la assegna a medio.x della struct Punto
+    medio.y = (p1.y + p2.y) / 2;  // Calcola la media dei campi p1.y e p2.y e la assegna a medio.y della struct Punto
+    return medio;
+}
+
+int main(int argc, char** argv) {
+    Punto p1 = crea_punto(0, 0);
+    Punto p2 = crea_punto(3, 4);
+
+    printf("p1: (%.1f, %.1f)\n", p1.x, p1.y);  // Accesso ai campi p1.x e p1.y della struct Punto
+    printf("p2: (%.1f, %.1f)\n", p2.x, p2.y);  // Accesso ai campi p2.x e p2.y della struct Punto
+
+    float dist = distanza(p1, p2);
+    printf("Distanza: %.2f\n", dist);
+
+    Punto medio = punto_medio(p1, p2);
+    printf("Punto medio: (%.1f, %.1f)\n", medio.x, medio.y);  // Accesso ai campi medio.x e medio.y della struct Punto
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Allocazione Dinamica di Struct}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char nome[30];
+    int eta;
+} Persona;
+
+int main(int argc, char** argv) {
+    // Allocazione dinamica di una singola struct con malloc() della libreria stdlib
+    Persona *p1 = (Persona*)malloc(sizeof(Persona));
+
+    if (p1 == NULL) {
+        printf("Errore di allocazione\n");
+        return 1;
+    }
+
+    strcpy(p1->nome, "Mario");  // Assegna al campo p1->nome tramite puntatore alla struct Persona
+    p1->eta = 25;               // Assegna al campo p1->eta tramite puntatore alla struct Persona
+
+    printf("Nome: %s, Eta': %d\n", p1->nome, p1->eta);  // Accesso ai campi tramite puntatore alla struct Persona
+
+    free(p1);  // La funzione free() della libreria stdlib libera la memoria allocata
+
+    // Allocazione dinamica di un array di struct con malloc() della libreria stdlib
+    int n = 3;
+    Persona *persone = (Persona*)malloc(n * sizeof(Persona));
+
+    if (persone == NULL) {
+        printf("Errore di allocazione\n");
+        return 1;
+    }
+
+    // Inizializzazione degli elementi dell'array di struct
+    strcpy(persone[0].nome, "Lucia");  // Assegna al campo persone[0].nome della struct Persona
+    persone[0].eta = 22;               // Assegna al campo persone[0].eta della struct Persona
+
+    strcpy(persone[1].nome, "Giovanni");  // Assegna al campo persone[1].nome della struct Persona
+    persone[1].eta = 28;                  // Assegna al campo persone[1].eta della struct Persona
+
+    strcpy(persone[2].nome, "Anna");   // Assegna al campo persone[2].nome della struct Persona
+    persone[2].eta = 30;               // Assegna al campo persone[2].eta della struct Persona
+
+    // Stampa dell'array di struct
+    printf("\nElenco persone:\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d. %s - %d anni\n",
+               i + 1, persone[i].nome, persone[i].eta);  // Accesso ai campi delle struct Persona
+    }
+
+    free(persone);  // La funzione free() della libreria stdlib libera la memoria allocata
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Sistema di Gestione Studenti}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_STUDENTI 50
+
+typedef struct {
+    int matricola;
+    char nome[30];
+    char cognome[30];
+    float media;
+} Studente;
+
+typedef struct {
+    Studente studenti[MAX_STUDENTI];
+    int numero_studenti;
+} Database;
+
+void aggiungi_studente(Database *db, Studente s) {
+    if (db->numero_studenti < MAX_STUDENTI) {  // Accesso al campo db->numero_studenti tramite puntatore alla struct Database
+        db->studenti[db->numero_studenti++] = s;  // Accesso all'array db->studenti tramite puntatore alla struct Database
+        printf("Studente aggiunto con successo!\n");
+    } else {
+        printf("Database pieno!\n");
+    }
+}
+
+void stampa_studenti(Database *db) {
+    printf("\n=== ELENCO STUDENTI ===\n");
+    for (int i = 0; i < db->numero_studenti; i++) {  // Accesso al campo db->numero_studenti tramite puntatore alla struct Database
+        Studente s = db->studenti[i];  // Accesso all'array db->studenti tramite puntatore alla struct Database
+        printf("%d. Matricola: %d - %s %s - Media: %.2f\n",
+               i + 1, s.matricola, s.nome, s.cognome, s.media);  // Accesso ai campi della struct Studente
+    }
+}
+
+Studente* cerca_per_matricola(Database *db, int matricola) {
+    for (int i = 0; i < db->numero_studenti; i++) {  // Accesso al campo db->numero_studenti tramite puntatore alla struct Database
+        if (db->studenti[i].matricola == matricola) {  // Accesso al campo db->studenti[i].matricola della struct Studente
+            return &db->studenti[i];  // Ritorna l'indirizzo dell'elemento dell'array db->studenti
+        }
+    }
+    return NULL;
+}
+
+int main(int argc, char** argv) {
+    Database db = {.numero_studenti = 0};
+
+    // Aggiungi studenti
+    Studente s1 = {12345, "Mario", "Rossi", 27.5};
+    Studente s2 = {12346, "Lucia", "Bianchi", 29.0};
+    Studente s3 = {12347, "Giovanni", "Verdi", 26.5};
+
+    aggiungi_studente(&db, s1);
+    aggiungi_studente(&db, s2);
+    aggiungi_studente(&db, s3);
+
+    stampa_studenti(&db);
+
+    // Cerca studente
+    int matricola_cerca = 12346;
+    Studente *trovato = cerca_per_matricola(&db, matricola_cerca);
+
+    if (trovato != NULL) {
+        printf("\nStudente trovato:\n");
+        printf("Matricola: %d - %s %s - Media: %.2f\n",
+               trovato->matricola, trovato->nome,  // Accesso ai campi tramite puntatore alla struct Studente
+               trovato->cognome, trovato->media);  // Accesso ai campi tramite puntatore alla struct Studente
+    } else {
+        printf("\nStudente non trovato.\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Sistema di Coordinate 3D}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+typedef struct {
+    float x;
+    float y;
+    float z;
+} Punto3D;
+
+Punto3D crea_punto(float x, float y, float z) {
+    Punto3D p = {x, y, z};
+    return p;
+}
+
+void stampa_punto(Punto3D p) {
+    printf("(%.2f, %.2f, %.2f)", p.x, p.y, p.z);  // Accesso ai campi p.x, p.y e p.z della struct Punto3D
+}
+
+float distanza(Punto3D p1, Punto3D p2) {
+    float dx = p2.x - p1.x;  // Calcola la differenza usando i campi p2.x e p1.x delle struct Punto3D
+    float dy = p2.y - p1.y;  // Calcola la differenza usando i campi p2.y e p1.y delle struct Punto3D
+    float dz = p2.z - p1.z;  // Calcola la differenza usando i campi p2.z e p1.z delle struct Punto3D
+    return sqrt(dx*dx + dy*dy + dz*dz);  // La funzione sqrt() è della libreria math
+}
+
+Punto3D somma_vettori(Punto3D v1, Punto3D v2) {
+    Punto3D risultato;
+    risultato.x = v1.x + v2.x;  // Somma i campi v1.x e v2.x e assegna a risultato.x della struct Punto3D
+    risultato.y = v1.y + v2.y;  // Somma i campi v1.y e v2.y e assegna a risultato.y della struct Punto3D
+    risultato.z = v1.z + v2.z;  // Somma i campi v1.z e v2.z e assegna a risultato.z della struct Punto3D
+    return risultato;
+}
+
+float prodotto_scalare(Punto3D v1, Punto3D v2) {
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;  // Calcola il prodotto scalare usando i campi delle struct Punto3D
+}
+
+int main(int argc, char** argv) {
+    Punto3D p1 = crea_punto(1, 2, 3);
+    Punto3D p2 = crea_punto(4, 5, 6);
+
+    printf("p1 = ");
+    stampa_punto(p1);
+    printf("\n");
+
+    printf("p2 = ");
+    stampa_punto(p2);
+    printf("\n");
+
+    printf("\nDistanza: %.2f\n", distanza(p1, p2));
+
+    Punto3D somma = somma_vettori(p1, p2);
+    printf("Somma: ");
+    stampa_punto(somma);
+    printf("\n");
+
+    printf("Prodotto scalare: %.2f\n", prodotto_scalare(p1, p2));
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Definisci una struct \texttt{Rettangolo} con base e altezza, e scrivi funzioni per calcolare area e perimetro.
+    \item Crea una struct \texttt{Tempo} (ore, minuti, secondi) e una funzione che converte in secondi totali.
+    \item Implementa una struct \texttt{ContoCorrente} con saldo e operazioni di deposito/prelievo.
+    \item Scrivi un programma con struct \texttt{Prodotto} (nome, prezzo, quantità) per gestire un inventario.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Crea un sistema di rubrica telefonica con array di struct \texttt{Contatto}.
+    \item Implementa una struct \texttt{Matrice2D} con allocazione dinamica e operazioni base.
+    \item Scrivi un programma che gestisce un database di libri con ricerca e ordinamento.
+    \item Crea struct per rappresentare poligoni e calcolare perimetro e area.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa una lista collegata usando struct con puntatori.
+    \item Crea un sistema di gestione di un parcheggio con struct per veicoli e posti.
+    \item Implementa un grafo usando struct per nodi e archi.
+    \item Scrivi un programma che simula un sistema bancario completo con conti, transazioni e storici.
+\end{enumerate}

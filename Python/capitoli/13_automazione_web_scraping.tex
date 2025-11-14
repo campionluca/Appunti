@@ -1,0 +1,107 @@
+% Modulo 13 — Automazione e Web Scraping
+\chapter{Automazione e Web Scraping}
+
+\section{Introduzione}
+Automatizzare compiti con script e raccogliere dati dal web.
+
+Questa descrizione copre l'uso di CLI per orchestrare task ripetibili, richieste HTTP robuste con retry/backoff e parsing HTML per estrarre informazioni. Mettiamo l'accento su etica, \texttt{robots.txt}, rate limiting e rispetto dei termini d'uso.
+
+Automazione e scraping abilitano report, aggregazione dati e integrazioni, mantenendo attenzione a performance e correttezza.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Scrivere script CLI.
+  \item Effettuare richieste HTTP e parsing HTML.
+  \item Gestire job schedulati.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Etica e robustezza nello scraping]
+- Rispetta \texttt{robots.txt}, termini d'uso e rate limiting.
+- Gestisci retry/backoff ed errori di rete.
+- Parsing resiliente (selector stabili, fallback).
+- Salvataggio incrementale e deduplicazione.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{CLI con argparse}
+\begin{lstlisting}
+import argparse
+p = argparse.ArgumentParser()
+p.add_argument("name")
+args = p.parse_args(["Ada"])  # esempio
+print("Ciao", args.name)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{argparse} definisce interfacce CLI dichiarative con parsing robusto.
+- Usare tipi, valori di default e help per UX migliore; validare input.
+- Separare parsing (CLI) dalla logica applicativa per testabilità.
+\end{tcolorbox}
+
+\subsection{Richieste HTTP}
+\begin{lstlisting}
+import requests
+r = requests.get("https://example.com")
+print(r.status_code)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{requests} gestisce HTTP in modo semplice; controllare \texttt{status\_code} e errori.
+- Implementare timeout, retry/backoff e headers appropriati; rispettare \texttt{robots.txt}.
+- Serializzare risultati (JSON/CSV) con salvare incrementale e deduplicazione.
+\end{tcolorbox}
+
+\subsection{Parsing HTML}
+\begin{lstlisting}
+from bs4 import BeautifulSoup
+html = "<h1>Titolo</h1>"
+soup = BeautifulSoup(html, "html.parser")
+print(soup.h1.text)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{BeautifulSoup} parse HTML e consente selettori robusti; gestire HTML malformato.
+- Preferire selettori stabili (id/class/data-attr) e fallback per cambi di struttura.
+- Isolare estrattori e coprire con test per resilienza.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Aggregazione di notizie/titoli con filtri.
+- Monitoraggio prezzi/stock e report periodici.
+- Normalizzazione dati e esportazione CSV.
+- CLI per orchestrare pipeline (scarica, parse, salva).
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Scrivi uno scraper per titoli di una pagina.
+  \item Salva dati in CSV e controlla duplicati.
+  \item Aggiungi retry/backoff alle richieste.
+  \item Pianifica uno script giornaliero con \texttt{schedule}.
+  \item Crea un CLI con subcomandi (\texttt{add}, \texttt{list}).
+\end{enumerate}
+
+\section{Riepilogo}
+Hai automatizzato task e raccolto dati di base dal web.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Monitoraggio e report periodici.
+- ETL leggeri con scraping e normalizzazione.
+- Aggregatori di contenuti e feed.
+- Integrazioni con sistemi interni via CLI.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+\item \textbf{Etica e policy}: rispettare \verb|robots.txt| e termini d'uso; impostare rate limiting.
+  \item \textbf{Parsing HTML}: usare selettori robusti (id/class/data-attr); gestire HTML malformato.
+  \item \textbf{Siti dinamici}: quando necessario, ricorrere a WebDriver; preferire API ufficiali.
+  \item \textbf{Persistenza e cache}: archiviare dati normalizzati; usare cache per ridurre richieste ripetute.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Qualità} Loggare richieste, gestire errori di rete, e creare test per estrattori in modo da cogliere cambi di struttura.
+Consulta: \url{https://requests.readthedocs.io/}, \url{https://beautiful-soup-4.readthedocs.io/}.

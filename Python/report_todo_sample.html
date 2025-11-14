@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <title>Report TODO Sample</title>
+    <style>
+      body{font-family:Arial} .ok{color:#2e7d32} .pending{color:#c62828}
+      table{border-collapse:collapse;width:100%} td,th{border:1px solid #ddd;padding:8px} th{background:#f5f5f5}
+    </style>
+  </head>
+  <body>
+    <h1>Report giornaliero TODO - 2025-11-12</h1>
+    <p>Completati: <span class="ok">2</span> | Pendenti: <span class="pending">4</span> | Tempo medio: 1.0 h</p>
+    <h2>Pendenti</h2>
+    <table>
+      <tr><th>Priorità</th><th>Tipo</th><th>Testo</th><th>File</th><th>Linea</th></tr>
+      <tr><td>urgent</td><td>FIXME</td><td>Correggere validazione email - bug critico nel form di contatto</td><td>tools/todo/sample/example.php</td><td>3</td></tr>
+      <tr><td>important</td><td>TODO</td><td>Implementare virtualizzazione per liste molto lunghe</td><td>tools/todo/sample/example.js</td><td>3</td></tr>
+      <tr><td>important</td><td>TODO</td><td>Aggiungere attributo aria-label per accessibilità</td><td>tools/todo/sample/example.html</td><td>5</td></tr>
+      <tr><td>important</td><td>TODO</td><td>Usare custom properties CSS per colore primario</td><td>tools/todo/sample/example.css</td><td>1</td></tr>
+    </table>
+    <h2>Completati oggi</h2>
+    <table>
+      <tr><th>ID</th><th>Testo</th><th>File</th><th>Completato</th></tr>
+      <tr><td>sample-php-todo-1</td><td>Aggiungere supporto lingua per messaggio di saluto (@campi)</td><td>tools/todo/sample/example.php</td><td>2025-11-12T11:00:00+01:00</td></tr>
+      <tr><td>sample-js-note-1</td><td>Migliorare performance nella funzione renderList (debounce input)</td><td>tools/todo/sample/example.js</td><td>2025-11-12T11:00:00+01:00</td></tr>
+    </table>
+  </body>
+</html>
+

@@ -1,0 +1,108 @@
+% Modulo 15 — Database con SQLite e SQLAlchemy
+\chapter{Database con SQLite e SQLAlchemy}
+
+\section{Introduzione}
+Persistenza dati con SQLite e ORM SQLAlchemy.
+
+Questa descrizione spiega come modellare entità e relazioni, eseguire operazioni CRUD in modo sicuro e sfruttare transazioni per consistenza dei dati. Accenniamo a migrazioni e gestione dello schema, separando responsabilità tra layer di accesso e logica applicativa.
+
+Integrare un database consente applicazioni stateful, archiviazione affidabile e analisi su dati strutturati, dal prototipo alla produzione.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Usare \texttt{sqlite3} per query semplici.
+  \item Definire modelli con SQLAlchemy.
+  \item Eseguire CRUD di base.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title={Schema, transazioni e ORM}]
+- Progetta schema con chiavi, vincoli e indici per integrità.
+- Usa transazioni per coerenza (commit/rollback).
+- Ciclo di vita della sessione e lazy loading (N+1 da prevenire).
+- Migrazioni per evolvere lo schema in sicurezza.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{sqlite3}
+\begin{lstlisting}
+import sqlite3
+conn = sqlite3.connect(":memory:")
+c = conn.cursor()
+c.execute("CREATE TABLE users(name TEXT)")
+c.execute("INSERT INTO users VALUES ('Ada')")
+print(list(c.execute("SELECT * FROM users")))
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{sqlite3} offre un DB leggero; usare connessione e cursore per eseguire query.
+- Gestire transazioni con commit/rollback; validare input per evitare SQL injection.
+- Separare accesso dati dalla logica; testare query critiche.
+\end{tcolorbox}
+
+\subsection{SQLAlchemy}
+\begin{lstlisting}
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+engine = create_engine("sqlite:///:memory:")
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+sess = Session()
+sess.add(User(name="Ada")); sess.commit()
+print(sess.query(User).all())
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- L'ORM mappa classi a tabelle; \texttt{declarative\_base} definisce il modello.
+- La sessione gestisce transazioni e lifecycle; attenzione a lazy loading/N+1.
+- Migrazioni (Alembic) per evolvere schema; definire vincoli e indici per integrità.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- CRUD per applicazioni di gestione utenti/dati.
+- Report e analisi su tabelle con vincoli chiari.
+- Servizi stateful con persistenza affidabile.
+- Prototipi con SQLite e migrazione successiva.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Crea una tabella e inserisci dati da input.
+  \item Implementa CRUD completo con SQLAlchemy.
+  \item Aggiungi vincoli e indici.
+  \item Usa transazioni e gestisci rollback.
+  \item Migra schema con Alembic (concettuale).
+\end{enumerate}
+
+\section{Riepilogo}
+Hai gestito dati con SQLite e modellato entità con SQLAlchemy.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Applicazioni CRUD e gestione anagrafiche.
+- Reportistica e analisi dati strutturati.
+- Servizi stateful con persistenza locale.
+- Prototipi con SQLite e migrazione a DB esterni.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Modellazione}: definire entità, relazioni e vincoli; normalizzare dove appropriato.
+  \item \textbf{Sessione e transazioni}: gestire lifecycle; commit/rollback e gestione degli errori.
+  \item \textbf{Lazy vs eager}: scegliere strategie di caricamento; evitare \emph{N+1} query.
+  \item \textbf{Migrazioni}: usare strumenti dedicati (Alembic) per evoluzioni dello schema.
+  \item \textbf{Integrità}: vincoli, indici, e tipi corretti; prevenire inconsistenze e injection.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Pratiche} Isolare accesso ai dati, testare query critiche, e tracciare performance; documentare decisioni di schema e mapping.
+Consulta: \url{https://docs.sqlalchemy.org/}, \url{https://docs.python.org/3/library/sqlite3.html}.

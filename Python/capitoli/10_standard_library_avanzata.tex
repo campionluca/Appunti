@@ -1,0 +1,105 @@
+% Modulo 10 — Standard Library Avanzata
+\chapter{Standard Library Avanzata}
+
+\section{Introduzione}
+Panoramica di moduli utili: \texttt{pathlib}, \texttt{collections}, \texttt{itertools}, \texttt{functools}, \texttt{datetime}.
+
+La descrizione evidenzia come sfruttare la libreria standard per risolvere problemi comuni senza dipendenze esterne: manipolare file e percorsi, contare e raggruppare dati, combinare sequenze e comporre funzioni. Un uso mirato accelera sviluppo e riduce bug.
+
+Conoscere bene questi moduli evita di "reinventare la ruota" e abilita soluzioni più eleganti e concise.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Usare moduli della libreria standard per compiti comuni.
+  \item Combinare strumenti per soluzioni eleganti.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Selezionare gli strumenti giusti]
+- \texttt{pathlib}: percorsi e file system in modo portabile.
+- \texttt{collections}: contatori, code, mapping specializzati.
+- \texttt{itertools}: combinazioni, accumuli, slicing di iterabili.
+- \texttt{functools}: memoization, partial application, composizione.
+- \texttt{datetime}: fusi orari, intervalli, formattazione.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{pathlib}
+\begin{lstlisting}
+from pathlib import Path
+p = Path(".")
+print([f.name for f in p.glob("*.tex")])
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{Path} modella percorsi in modo portabile; \texttt{glob} elenca i file per pattern.
+- Preferire \texttt{Path} a \texttt{os.path}: API orientata a oggetti e più leggibile.
+- Usare metodi come \texttt{read\_text()} e \texttt{write\_text()} per I/O semplice.
+\end{tcolorbox}
+
+\subsection{collections}
+\begin{lstlisting}
+from collections import Counter
+print(Counter("banana"))
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{Counter} conta occorrenze; utile per analisi testi e frequenze.
+- Supporta operazioni tra contatori (somma, sottrazione) e metodi come \texttt{most\_common()}.
+- Per default dict con valori interi; considerare \texttt{defaultdict} per default custom.
+\end{tcolorbox}
+
+\subsection{itertools/functools}
+\begin{lstlisting}
+import itertools, functools
+data = [1,2,3]
+print(list(itertools.accumulate(data)))
+print(functools.reduce(lambda a,b: a+b, data, 0))
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{accumulate} genera prefissi cumulativi; \texttt{reduce} combina una sequenza con una funzione.
+- Usare funzioni pure per \texttt{reduce}; considerare \texttt{operator} per evitare \texttt{lambda}.
+- Comporre trasformazioni con iteratori per evitare liste intermedie.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Analisi testi con \texttt{Counter} e normalizzazione.
+- Pipeline di trasformazione dati con \texttt{itertools}.
+- Strumenti CLI e gestione file con \texttt{pathlib}.
+- Cache di funzioni pure con \texttt{functools.lru\_cache}.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Usa \texttt{Counter} per conteggio parole in un testo.
+  \item Filtra files per estensione con \texttt{pathlib}.
+  \item Genera combinazioni e permutazioni con \texttt{itertools}.
+  \item Applica \texttt{reduce} per calcolare un prodotto.
+  \item Usa \texttt{datetime} per differenze tra date.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai visto moduli chiave della standard library.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Tooling per filesystem e report con \texttt{pathlib}.
+- Analisi e raggruppamenti con \texttt{collections}.
+- Pipeline e combinazioni con \texttt{itertools}.
+- Cache e composizione funzioni con \texttt{functools}.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Collections}: \verb|deque|, \verb|Counter|, \verb|defaultdict| per pattern frequenti.
+  \item \textbf{Itertools}: combinazioni, prodotti, concatenazioni; evitare ricombinazioni manuali.
+  \item \textbf{Functools}: \verb|partial|, \verb|reduce|, \verb|lru_cache| per composizione e performance.
+  \item \textbf{Pathlib e datetime}: gestire percorsi in modo portabile; trattare timezone e formattazioni con attenzione.
+  \item \textbf{Logging e argparse}: standardizzare logging; costruire CLI coerenti e autodescrittive.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Approccio} Preferire libreria standard quando sufficiente, riducendo dipendenze; valutare compatibilità e performance prima di introdurre terze parti. Integrare \verb|typing| e strumenti statici per contratti chiari.
+Consulta: \url{https://docs.python.org/3/library/index.html}.

@@ -1,0 +1,23 @@
+% Sezione aggiuntiva: Diagrammi UML di base
+\section{Diagrammi UML di base}
+\label{sec:uml_base}
+I diagrammi UML aiutano a visualizzare classi e relazioni. Di seguito un esempio minimale di relazione di ereditarietà e associazione.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    class/.style={rectangle, draw, rounded corners, minimum width=4cm, minimum height=1cm, fill=blue!5},
+    relation/.style={-Latex, thick}
+]
+    \node[class] (veicolo) {\textbf{Veicolo}};
+    \node[class, below left=1.8cm and 1.5cm of veicolo] (auto) {\textbf{Auto}};
+    \node[class, below right=1.8cm and 1.5cm of veicolo] (moto) {\textbf{Moto}};
+    \draw[relation] (auto) -- (veicolo);
+    \draw[relation] (moto) -- (veicolo);
+
+    \node[class, right=6cm of auto] (persona) {\textbf{Persona}};
+    \draw[relation] (persona) -- node[above, sloped]{possiede} (auto);
+\end{tikzpicture}
+\caption{UML: ereditarietà (Auto, Moto \(\rightarrow\) Veicolo) e associazione (Persona possiede Auto)}
+\end{figure}
+

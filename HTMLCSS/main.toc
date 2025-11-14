@@ -1,0 +1,45 @@
+\contentsline {chapter}{\numberline {1}Introduzione a HTML5}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Cos'è HTML?}{1}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Struttura base di un documento HTML5}{1}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Anatomia dei tag HTML}{1}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Tag auto-chiudenti (self-closing tags)}{1}{subsection.1.2.2}%
+\contentsline {subsection}{\numberline {1.2.3}Commenti HTML}{2}{subsection.1.2.3}%
+\contentsline {subsection}{\numberline {1.2.4}Attributi HTML}{3}{subsection.1.2.4}%
+\contentsline {subsection}{\numberline {1.2.5}Gli attributi id e class}{3}{subsection.1.2.5}%
+\contentsline {subsection}{\numberline {1.2.6}Attributi per collegamenti e risorse}{3}{subsection.1.2.6}%
+\contentsline {subsubsection}{L'attributo href}{3}{section*.2}%
+\contentsline {subsubsection}{L'attributo src}{4}{section*.3}%
+\contentsline {subsection}{\numberline {1.2.7}Annidamento dei tag}{5}{subsection.1.2.7}%
+\contentsline {subsection}{\numberline {1.2.8}Commenti HTML}{5}{subsection.1.2.8}%
+\contentsline {subsection}{\numberline {1.2.9}Struttura completa documento}{6}{subsection.1.2.9}%
+\contentsline {subsection}{\numberline {1.2.10}Elementi principali}{7}{subsection.1.2.10}%
+\contentsline {section}{\numberline {1.3}Tag semantici}{7}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Meta tag essenziali}{7}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Sintassi generale}{7}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}Meta tag fondamentali}{8}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}Riepilogo}{8}{section.1.5}%
+\contentsline {chapter}{\numberline {2}Tag di Blocco e Riga}{9}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Differenza tra blocco e riga}{9}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Tag di blocco}{9}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Tag blocco comuni}{9}{subsection.2.2.1}%
+\contentsline {section}{\numberline {2.3}Tag inline}{10}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Proprietà display CSS}{10}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Riepilogo}{10}{section.2.5}%
+\contentsline {chapter}{\numberline {3}Form e Input}{11}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduzione ai Form}{11}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Elemento form}{11}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Attributi form}{12}{subsection.3.2.1}%
+\contentsline {section}{\numberline {3.3}Input types}{12}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Label e accessibilità}{12}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Validazione HTML5}{13}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Riepilogo}{13}{section.3.6}%
+\contentsline {chapter}{\numberline {4}Bibliografia e Risorse}{14}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Documentazione ufficiale}{14}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Tutorial e Learning}{14}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Tool online}{14}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Editor e IDE}{14}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Editor e IDE}{14}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Browser Developer Tools}{15}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Libri consigliati}{15}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Community e Forum}{15}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Collegamento con altri corsi}{15}{section.4.9}%

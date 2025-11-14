@@ -1,0 +1,141 @@
+% main.tex - bozza minimale per compilazione
+\documentclass[a4paper,11pt,oneside]{book}
+
+% Pacchetti essenziali
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}    
+\usepackage{lmodern}         
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,trees,shadows,fit}
+\usepackage{titling}            % ← Per il \subtitle
+
+% ... resto del preambolo identico ...
+\usetikzlibrary{shapes,arrows,positioning,trees,shadows,fit}
+
+% Configurazione
+\geometry{margin=2.5cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Definizione colori per HTML
+\definecolor{htmltagcolor}{RGB}{0,0,255}      % Blu brillante per i tag
+\definecolor{htmlattrcolor}{RGB}{128,0,255}   % Viola brillante per gli attributi
+\definecolor{htmlvalcolor}{RGB}{255,0,0}      % Rosso brillante per i valori
+\definecolor{htmlcommentcolor}{RGB}{0,128,0}  % Verde per i commenti
+
+% Definizione base del linguaggio HTML
+\lstdefinelanguage{HTML}{
+  sensitive=true,
+  keywords={DOCTYPE,html,head,meta,tag,link,title,video,source,body,div,p,span,a,img,ul,ol,li,br,h1,h2,h3,h4,h5,h6,form,input,label,script,style,button,section,article,header,footer,nav,main,aside,blockquote,strong,em,code,pre,select,textarea,option,area,hr},
+  ndkeywords={class,id,href,src,rel,type,attributo,charset,lang,control,media,alt,name,content,action,method,enctype,placeholder,required,pattern,min,max,step,minlength,maxlength,rows,cols,value,for,title,shape,coords},
+  comment=[s][\color{htmlcommentcolor}]{<!--}{-->},
+  morestring=[s]{"}{"}
+}
+
+% Configurazione per HTML
+\lstdefinestyle{HTML}{
+  language=HTML,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{htmltagcolor},
+  ndkeywordstyle=\color{htmlattrcolor},
+  commentstyle=\color{htmlcommentcolor},
+  stringstyle=\color{htmlvalcolor},
+  morecomment=[s][\color{htmlcommentcolor}]{<!--}{-->},
+  morestring=[b]",
+  numbers=left,
+  numberstyle=\tiny,
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!30},
+  backgroundcolor=\color{gray!5}
+}
+\lstset{style=HTML,
+    escapeinside={(*@}{@*)},
+    xleftmargin=15pt,
+    xrightmargin=15pt,
+    float=htbp,
+    aboveskip=15pt,
+    belowskip=15pt,literate=
+        {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+        {À}{{\`A}}1 {È}{{\`E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+        {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+        {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+        {più}{{pi\`u}}1 {può}{{pu\`o}}1
+}
+
+% Supporto linguaggi (mapping to supported languages)
+\lstalias{bash}{sh}
+\lstalias{html}{html}
+\lstalias{css}{sh}
+\lstalias{javascript}{java}
+\lstalias{text}{sh}
+
+% Box Colorati per Note Speciali
+\newtcolorbox{attenzione}{
+    colback=yellow!10,
+    colframe=orange!80,
+    title=Attenzione,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{nota}{
+    colback=blue!5,
+    colframe=blue!60,
+    title=Nota,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{errore}{
+    colback=red!5,
+    colframe=red!60,
+    title=Errore Comune,
+    fonttitle=\bfseries
+}
+
+\begin{document}
+\frontmatter
+\title{Programmazione lato client}
+%\subtitle{HTML5, CSS3, SCSS e JavaScript}
+\author{Prof. Luca Campion}
+\date{\today}
+\maketitle
+\tableofcontents
+%\listoffigures
+%\lstlistoflistings
+\mainmatter
+
+% Prefazione
+%\include{capitoli/00_prefazione}
+
+% Capitoli HTML/CSS
+\include{capitoli/01_intro_html}
+\include{capitoli/02_tag_blocco_riga}
+\include{capitoli/03_form_input}
+%\include{capitoli/04_css_base}
+%\include{capitoli/05_flexbox_grid}
+%\include{capitoli/06_responsive}
+%\include{capitoli/07_sass_scss}
+%\include{capitoli/08_esercizi}
+
+% Capitoli JavaScript
+%\include{capitoli/09_javascript_dom}
+%\include{capitoli/10_javascript_async}
+%\include{capitoli/11_javascript_framework}
+
+%\backmatter
+\include{capitoli/12_bibliografia}
+
+\end{document}

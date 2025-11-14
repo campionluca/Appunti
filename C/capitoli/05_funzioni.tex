@@ -1,0 +1,619 @@
+\chapter{Funzioni}
+\label{cap:funzioni}
+
+\section{Introduzione alle Funzioni}
+
+Le funzioni sono blocchi di codice riutilizzabili che eseguono un compito specifico. Permettono di:
+
+\begin{itemize}
+    \item Organizzare il codice in modo modulare
+    \item Evitare la duplicazione del codice
+    \item Rendere il programma più leggibile e manutenibile
+    \item Facilitare il testing e il debugging
+\end{itemize}
+
+\begin{nota}
+Ogni programma C ha almeno una funzione: la funzione \texttt{main()}, che è il punto di ingresso del programma.
+\end{nota}
+
+\subsection{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Definire e dichiarare funzioni con diversi tipi di parametri e valori di ritorno
+    \item Comprendere il meccanismo del passaggio per valore
+    \item Utilizzare i prototipi di funzione per organizzare il codice
+    \item Implementare funzioni ricorsive per risolvere problemi complessi
+    \item Gestire correttamente lo scope e la visibilità delle variabili
+    \item Applicare buone pratiche nella scrittura di funzioni modulari
+\end{itemize}
+
+\section{Definizione di una Funzione}
+
+\subsection{Sintassi}
+
+\begin{lstlisting}
+tipo_ritorno nome_funzione(parametri) {
+    // corpo della funzione
+    return valore;  // se tipo_ritorno != void
+}
+\end{lstlisting}
+
+\subsection{Componenti di una Funzione}
+
+\begin{enumerate}
+    \item \textbf{Tipo di ritorno}: il tipo di dato restituito dalla funzione
+    \item \textbf{Nome}: identificatore della funzione
+    \item \textbf{Parametri}: input della funzione (opzionali)
+    \item \textbf{Corpo}: blocco di codice da eseguire
+    \item \textbf{Return}: valore restituito (se non void)
+\end{enumerate}
+
+\subsection{Esempio Semplice}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione senza parametri che stampa un messaggio di saluto
+void saluta() {
+    printf("Ciao, benvenuto!\n");
+}
+
+int main(int argc, char** argv) {
+    saluta();  // Chiamata alla funzione
+    saluta();  // Chiamata alla funzione (di nuovo)
+    return 0;
+}
+\end{lstlisting}
+
+\section{Parametri e Argomenti}
+
+\subsection{Funzioni con Parametri}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione con un parametro di tipo puntatore a caratteri
+void saluta_nome(char* nome) {
+    printf("Ciao, %s!\n", nome);
+}
+
+// Funzione con piu' parametri
+// Funzione che stampa la somma di due interi
+void stampa_somma(int a, int b) {
+    int somma = a + b;
+    printf("%d + %d = %d\n", a, b, somma);
+}
+
+int main(int argc, char** argv) {
+    saluta_nome("Mario");
+    saluta_nome("Lucia");
+
+    stampa_somma(5, 3);
+    stampa_somma(10, 20);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Passaggio per Valore}
+
+In C, gli argomenti sono passati per valore: la funzione riceve una copia del valore.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che riceve un intero per valore
+void incrementa(int x) {
+    x = x + 1;  // Modifica solo la copia locale del parametro
+    printf("Dentro la funzione: x = %d\n", x);
+}
+
+int main(int argc, char** argv) {
+    int numero = 5;
+    printf("Prima: numero = %d\n", numero);
+
+    incrementa(numero);
+
+    printf("Dopo: numero = %d\n", numero);  // Ancora 5!
+    return 0;
+}
+\end{lstlisting}
+
+Output:
+\begin{verbatim}
+Prima: numero = 5
+Dentro la funzione: x = 6
+Dopo: numero = 5
+\end{verbatim}
+
+\begin{attenzione}
+Le modifiche ai parametri all'interno della funzione non influenzano le variabili originali nel chiamante. Per modificare una variabile passata come parametro, è necessario usare i puntatori (vedi \autoref{cap:puntatori}).
+\end{attenzione}
+
+\section{Valore di Ritorno}
+
+\subsection{Funzioni che Restituiscono un Valore}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che calcola la somma di due interi
+int somma(int a, int b) {
+    return a + b;
+}
+
+// Funzione che calcola il massimo tra due interi
+int massimo(int a, int b) {
+    if (a > b) {
+        return a;
+    } else {
+        return b;
+    }
+}
+
+// Funzione che verifica se un numero intero e' pari
+int is_pari(int n) {
+    return (n % 2 == 0);  // Restituisce 1 (vero) o 0 (falso) al chiamante
+}
+
+int main(int argc, char** argv) {
+    int risultato = somma(5, 3);
+    printf("Somma: %d\n", risultato);
+
+    printf("Massimo tra 10 e 25: %d\n", massimo(10, 25));
+
+    if (is_pari(8)) {
+        printf("8 e' pari\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Funzioni void}
+
+Le funzioni con tipo di ritorno \texttt{void} non restituiscono alcun valore al chiamante.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che stampa una linea di caratteri '-'
+void stampa_linea(int lunghezza) {
+    for (int i = 0; i < lunghezza; i++) {
+        printf("-");
+    }
+    printf("\n");
+}
+
+// Funzione che stampa un menu con opzioni
+void stampa_menu() {
+    stampa_linea(20);  // Chiama la funzione stampa_linea
+    printf("1. Opzione 1\n");
+    printf("2. Opzione 2\n");
+    printf("3. Esci\n");
+    stampa_linea(20);  // Chiama la funzione stampa_linea
+}
+
+int main(int argc, char** argv) {
+    stampa_menu();
+    return 0;
+}
+\end{lstlisting}
+
+\section{Dichiarazione e Prototipo}
+
+\subsection{Prototipo di Funzione}
+
+Il prototipo dichiara l'esistenza di una funzione prima della sua definizione.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Prototipi (dichiarazioni)
+int somma(int a, int b);
+int prodotto(int a, int b);
+void stampa_risultato(int valore);
+
+int main(int argc, char** argv) {
+    int a = 5, b = 3;
+
+    int s = somma(a, b);
+    int p = prodotto(a, b);
+
+    stampa_risultato(s);
+    stampa_risultato(p);
+
+    return 0;
+}
+
+// Definizioni delle funzioni
+int somma(int a, int b) {
+    return a + b;
+}
+
+int prodotto(int a, int b) {
+    return a * b;
+}
+
+void stampa_risultato(int valore) {
+    printf("Risultato: %d\n", valore);
+}
+\end{lstlisting}
+
+\begin{nota}
+I prototipi permettono di definire le funzioni in qualsiasi ordine e di separarle in file diversi.
+\end{nota}
+
+\section{Funzioni Ricorsive}
+
+Una funzione ricorsiva è una funzione che chiama se stessa.
+
+\subsection{Fattoriale Ricorsivo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione ricorsiva che calcola il fattoriale di un intero
+int fattoriale(int n) {
+    // Caso base della ricorsione
+    if (n == 0 || n == 1) {
+        return 1;
+    }
+    // Caso ricorsivo: la funzione chiama se stessa
+    return n * fattoriale(n - 1);
+}
+
+int main(int argc, char** argv) {
+    int n = 5;
+    printf("Fattoriale di %d = %d\n", n, fattoriale(n));
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Fibonacci Ricorsivo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione ricorsiva che calcola l'n-esimo numero di Fibonacci
+int fibonacci(int n) {
+    // Casi base della ricorsione
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return 1;
+    }
+    // Caso ricorsivo: la funzione chiama se stessa due volte
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+int main(int argc, char** argv) {
+    printf("Sequenza di Fibonacci:\n");
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", fibonacci(i));
+    }
+    printf("\n");
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Le funzioni ricorsive devono sempre avere un caso base per evitare la ricorsione infinita. Inoltre, la ricorsione può essere inefficiente per alcuni problemi.
+\end{attenzione}
+
+\section{Ambito delle Variabili (Scope)}
+
+\subsection{Variabili Locali}
+
+Le variabili dichiarate all'interno di una funzione sono locali a quella funzione.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+void funzione1() {
+    int x = 10;  // Variabile locale alla funzione funzione1
+    printf("funzione1: x = %d\n", x);
+}
+
+void funzione2() {
+    int x = 20;  // Diversa variabile locale, indipendente da quella in funzione1
+    printf("funzione2: x = %d\n", x);
+}
+
+int main(int argc, char** argv) {
+    int x = 5;  // Variabile locale alla funzione main
+    printf("main: x = %d\n", x);
+
+    funzione1();
+    funzione2();
+
+    printf("main: x = %d\n", x);  // Ancora 5
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Variabili Globali}
+
+Le variabili dichiarate fuori da tutte le funzioni sono globali e accessibili ovunque.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int contatore = 0;  // Variabile globale
+
+void incrementa() {
+    contatore++;
+    printf("Contatore: %d\n", contatore);
+}
+
+int main(int argc, char** argv) {
+    printf("Contatore iniziale: %d\n", contatore);
+
+    incrementa();
+    incrementa();
+    incrementa();
+
+    printf("Contatore finale: %d\n", contatore);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+L'uso eccessivo di variabili globali rende il codice difficile da gestire e debuggare. Preferisci passare i valori come parametri.
+\end{attenzione}
+
+\subsection{Variabili Static}
+
+Le variabili dichiarate con lo specificatore \texttt{static} mantengono il loro valore tra le diverse chiamate della funzione.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+void conta_chiamate() {
+    static int contatore = 0;  // Variabile static: inizializzata una sola volta
+    contatore++;
+    printf("Questa funzione e' stata chiamata %d volte\n",
+           contatore);
+}
+
+int main(int argc, char** argv) {
+    conta_chiamate();  // 1
+    conta_chiamate();  // 2
+    conta_chiamate();  // 3
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Calcolatrice con Funzioni}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che calcola l'addizione di due numeri float
+float addizione(float a, float b) {
+    return a + b;
+}
+
+// Funzione che calcola la sottrazione di due numeri float
+float sottrazione(float a, float b) {
+    return a - b;
+}
+
+// Funzione che calcola la moltiplicazione di due numeri float
+float moltiplicazione(float a, float b) {
+    return a * b;
+}
+
+// Funzione che calcola la divisione di due numeri float
+float divisione(float a, float b) {
+    if (b != 0) {
+        return a / b;
+    } else {
+        printf("Errore: divisione per zero!\n");
+        return 0;
+    }
+}
+
+// Funzione che stampa il menu della calcolatrice
+void stampa_menu() {
+    printf("\n=== CALCOLATRICE ===\n");
+    printf("1. Addizione\n");
+    printf("2. Sottrazione\n");
+    printf("3. Moltiplicazione\n");
+    printf("4. Divisione\n");
+    printf("0. Esci\n");
+}
+
+int main(int argc, char** argv) {
+    int scelta;
+    float num1, num2, risultato;
+
+    do {
+        stampa_menu();
+        printf("Scelta: ");
+        scanf("%d", &scelta);
+
+        if (scelta == 0) {
+            break;
+        }
+
+        if (scelta < 1 || scelta > 4) {
+            printf("Scelta non valida!\n");
+            continue;
+        }
+
+        printf("Primo numero: ");
+        scanf("%f", &num1);
+        printf("Secondo numero: ");
+        scanf("%f", &num2);
+
+        switch (scelta) {
+            case 1:
+                risultato = addizione(num1, num2);
+                printf("%.2f + %.2f = %.2f\n",
+                       num1, num2, risultato);
+                break;
+            case 2:
+                risultato = sottrazione(num1, num2);
+                printf("%.2f - %.2f = %.2f\n",
+                       num1, num2, risultato);
+                break;
+            case 3:
+                risultato = moltiplicazione(num1, num2);
+                printf("%.2f * %.2f = %.2f\n",
+                       num1, num2, risultato);
+                break;
+            case 4:
+                risultato = divisione(num1, num2);
+                if (num2 != 0) {
+                    printf("%.2f / %.2f = %.2f\n",
+                           num1, num2, risultato);
+                }
+                break;
+        }
+    } while (1);
+
+    printf("Arrivederci!\n");
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Funzioni Matematiche}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che calcola la potenza intera (base^esponente)
+int potenza(int base, int esponente) {
+    int risultato = 1;
+    for (int i = 0; i < esponente; i++) {
+        risultato *= base;
+    }
+    return risultato;
+}
+
+// Funzione che verifica se un intero e' un numero primo
+int is_primo(int n) {
+    if (n <= 1) {
+        return 0;
+    }
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+// Funzione che calcola il Massimo Comune Divisore usando l'algoritmo di Euclide
+int mcd(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+// Funzione che calcola il minimo comune multiplo di due interi
+int mcm(int a, int b) {
+    return (a * b) / mcd(a, b);  // Chiama la funzione mcd
+}
+
+int main(int argc, char** argv) {
+    printf("2^10 = %d\n", potenza(2, 10));
+    printf("17 e' primo? %s\n", is_primo(17) ? "Si" : "No");
+    printf("MCD(48, 18) = %d\n", mcd(48, 18));
+    printf("mcm(12, 18) = %d\n", mcm(12, 18));
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Buone Pratiche}
+
+\subsection{Nomi Descrittivi}
+
+\begin{lstlisting}
+// SBAGLIATO: nomi poco chiari
+int f(int a, int b) {
+    return a * b;
+}
+
+// CORRETTO: nomi descrittivi
+int calcola_area_rettangolo(int base, int altezza) {
+    return base * altezza;  // Restituisce l'area del rettangolo
+}
+\end{lstlisting}
+
+\subsection{Funzioni Piccole e Focalizzate}
+
+\begin{lstlisting}
+// Una funzione dovrebbe fare una sola cosa
+
+// SBAGLIATO: troppo in una funzione
+void gestisci_tutto(int scelta) {
+    // Lettura input
+    // Validazione
+    // Calcolo
+    // Stampa
+    // ...centinaia di righe...
+}
+
+// CORRETTO: dividi in funzioni piu' piccole
+int leggi_scelta();
+int valida_scelta(int scelta);
+float esegui_calcolo(int scelta, float a, float b);
+void stampa_risultato(float risultato);
+\end{lstlisting}
+
+\subsection{Documentazione}
+
+\begin{lstlisting}
+/**
+ * Calcola il fattoriale di un numero intero.
+ *
+ * @param n Il numero intero di cui calcolare il fattoriale (n >= 0)
+ * @return Il fattoriale di n come intero
+ */
+int fattoriale(int n) {
+    if (n == 0 || n == 1) {
+        return 1;
+    }
+    return n * fattoriale(n - 1);  // Chiamata ricorsiva
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi una funzione che converte una temperatura da Celsius a Fahrenheit.
+    \item Crea una funzione che verifica se un numero è pari.
+    \item Implementa una funzione che calcola l'area di un cerchio dato il raggio.
+    \item Scrivi una funzione che stampa un triangolo di asterischi di altezza N.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Crea una funzione che inverte un numero intero (es: 1234 → 4321).
+    \item Scrivi una funzione ricorsiva che calcola la somma delle cifre di un numero.
+    \item Implementa una funzione che verifica se una stringa è un palindromo.
+    \item Crea un set di funzioni per la conversione tra diverse unità di misura (km/miglia, kg/libbre, ecc.).
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa le funzioni Torre di Hanoi in modo ricorsivo.
+    \item Scrivi una funzione che genera numeri primi fino a N usando il Crivello di Eratostene.
+    \item Crea una funzione ricorsiva per il calcolo del coefficiente binomiale.
+    \item Implementa una funzione che risolve il problema delle N regine usando la ricorsione e il backtracking.
+\end{enumerate}

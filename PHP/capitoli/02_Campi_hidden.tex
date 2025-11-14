@@ -1,0 +1,114 @@
+\chapter{Campi Hidden}\label{cap:hidden}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Utilizzo pratico, Scenari di applicazione, Sicurezza, Esempi estesi, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Comprendere il ruolo dei campi \emph{hidden} nei form.
+  \item Applicare validazioni lato server per dati non visibili.
+  \item Integrare hidden con sessione e flussi multi-step mantenendo integrità.
+\end{itemize}
+
+\section{Teoria}
+I campi \emph{hidden} sono input non visibili all'utente ma inviati con il form. Utili per trasmettere metadati, token di sicurezza, identificatori di stato.
+
+\section{Utilizzo pratico}
+\begin{lstlisting}
+<!-- Trasmettere un ID ordine e metadati -->
+<form method="post" action="checkout.php">
+  <input type="hidden" name="order_id" value="12345">
+  <button type="submit">Conferma</button>
+</form>
+\end{lstlisting}
+
+\subsection*{Esempio esteso: token di integrità (concettuale)}
+\begin{lstlisting}
+<?php
+// Generazione lato server (pagina precedente)
+$orderId = 12345;
+$secret  = 'chiave_server';
+$token   = sha1($orderId . '|' . $secret); // firma semplice
+?>
+<form method="post" action="checkout.php">
+  <input type="hidden" name="order_id" value="<?php echo (int)$orderId; ?>">
+  <input type="hidden" name="token" value="<?php echo $token; ?>">
+  <button type="submit">Conferma</button>
+</form>
+
+<?php
+// Verifica lato server (checkout.php)
+$orderId = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
+$token   = isset($_POST['token']) ? (string)$_POST['token'] : '';
+$secret  = 'chiave_server';
+if ($orderId <= 0) {
+    echo 'order_id non valido';
+    exit;
+}
+$expected = sha1($orderId . '|' . $secret);
+if ($token !== $expected) {
+    echo 'Token non valido';
+    exit;
+}
+// OK: procedere con checkout
+?>
+\end{lstlisting}
+
+\section{Scenari di applicazione}
+- Stato dell'applicazione (wizard multi-step, ID risorsa).
+- Parametri non modificabili lato client.
+
+\section{Caso di studio: wizard di checkout a più step}
+\begin{itemize}
+  \item Step 1: selezione prodotti; salvataggio in sessione.
+  \item Step 2: indirizzo e spedizione; hidden con \verb|order_id|.
+  \item Step 3: pagamento; verifica integrità di \verb|order_id| con token.
+  \item Step 4: conferma; controllo finale e generazione ordine.
+\end{itemize}
+
+\section{Considerazioni sulla sicurezza}
+- Non fidarsi dei valori hidden: sono modificabili lato client; validare sempre lato server.
+- Usare \textbf{token} firmati o verificabili (es. HMAC) se necessario.
+- Non inserire mai dati sensibili in chiaro; preferire sessione lato server.
+
+\begin{lstlisting}
+<?php
+// Verifica lato server senza funzioni rimosse
+$orderId = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
+if ($orderId <= 0) {
+    echo 'order_id non valido';
+    exit;
+}
+// Continuare elaborazione
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best practice]
+- Usare hidden per metadati non sensibili; mai per segreti.
+- Convalidare tutti i campi hidden lato server.
+ - Abbinare hidden a sessione o tracciamento lato server per integrità.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Presumere che hidden sia sicuro/inviolabile.
+- Esporre informazioni sensibili (es. ruoli, prezzi calcolati) in hidden.
+- Mancare la validazione server-side dei hidden.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{itemize}
+  \item Progetta un form multi-step che usa hidden solo per ID non sensibili, mantenendo i dati in sessione.
+  \item Implementa una verifica di integrità per un ID trasmesso via hidden.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Perché i campi hidden non sono affidabili come meccanismo di sicurezza?
+  \item Quali dati vanno mantenuti in sessione anziché in hidden?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item MDN — HTML input hidden: \url{https://developer.mozilla.org/}
+  \item OWASP — Tampering dei parametri: \url{https://owasp.org/}
+\end{itemize}

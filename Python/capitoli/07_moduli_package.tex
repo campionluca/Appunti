@@ -1,0 +1,119 @@
+% Modulo 07 — Moduli e Package
+\chapter{Moduli e Package}
+
+\section{Introduzione}
+Organizzare codice in moduli e package, import e percorso di ricerca.
+
+Questa descrizione spiega come strutturare un progetto in unità coerenti, evitare conflitti di nomi e adottare convenzioni di import leggibili. Tocchiamo \texttt{\_\_init\_\_.py}, percorsi relativi/assoluti e il ruolo di \texttt{sys.path}.
+
+Un buon design dei package rende il codice estensibile e manutenibile, facilitando test, riuso e distribuzione.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Creare e importare moduli.
+  \item Strutturare package con \texttt{\_\_init\_\_.py}.
+  \item Comprendere \texttt{sys.path} e import relativi.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Import]
+\texttt{from pkg.mod import func} e \texttt{import pkg.mod as m}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Strutturazione e convenzioni]
+- Usa import assoluti per chiarezza (evita ambiguità dei relativi profondi).
+- Mantieni \texttt{\_\_init\_\_} minimale: re-export selettivo e costanti.
+- Progetta API di package: cosa esporre dal livello radice e cosa no.
+- Evita side-effect all'import: inizializza risorse su richiesta.
+- Documenta dipendenze interne tra moduli per ridurre accoppiamento.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Modulo semplice}
+\begin{lstlisting}
+# file: util.py
+def say(msg):
+    print(msg)
+
+# file: app.py
+import util
+util.say("Ciao")
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- Il modulo \texttt{util.py} definisce una funzione e viene importato in \texttt{app.py}.
+- \texttt{import util} carica il modulo e ne usa il namespace: \texttt{util.say(...)}.
+- Preferire import espliciti (funzioni o nomi) quando la UX lo richiede: \texttt{from util import say}.
+- Evitare side-effect all'import: l'esecuzione dovrebbe avvenire in \texttt{main()} o funzioni dedicate.
+\end{tcolorbox}
+
+\subsection{Package}
+\begin{lstlisting}
+# pkg/__init__.py
+# pkg/tools.py
+def add(a, b):
+    return a + b
+
+# main.py
+from pkg.tools import add
+print(add(2, 3))
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- Un package è una cartella (\texttt{pkg/}) con moduli; \texttt{\_\_init\_\_.py} può essere vuoto o fare re-export.
+- \texttt{from pkg.tools import add} importa simboli dal modulo \texttt{tools} all'interno del package.
+- Mantenere \texttt{\_\_init\_\_.py} minimale e documentare l'API pubblica con \verb|__all__| se necessario.
+- Preferire import assoluti per chiarezza; usare relativi solo all'interno del package.
+\end{tcolorbox}
+
+\subsection{sys.path}
+\begin{lstlisting}
+import sys
+print(sys.path)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{sys.path} è la lista di percorsi in cui Python cerca moduli e package.
+- Modificare \texttt{sys.path} a runtime è possibile ma va limitato a script/CLI, non a librerie.
+- Per la distribuzione, usare package installabili invece di aggiungere path manualmente.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Libreria interna di utilità condivisa tra progetti scollegati.
+- Organizzare un'app in sottopackage (\texttt{core}, \texttt{api}, \texttt{cli}).
+- Separare plugin/estensioni caricati dinamicamente.
+- Re-export dell'API pubblica dal package root per UX migliore.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Crea un package con due moduli e import incrociati.
+  \item Implementa un modulo \texttt{mathutil} con funzioni di base.
+  \item Usa alias negli import e confronta leggibilità.
+  \item Esplora \texttt{sys.path} e aggiungi un percorso temporaneo.
+  \item Organizza un progetto in package e sottopackage.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai organizzato codice con moduli e package in modo pulito.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Organizzare progetti medio-grandi in package coerenti.
+- Definire API pubblica del package con re-export.
+- Isolare plugin/estensioni con moduli dedicati.
+- Preparare distribuzione e riuso interno.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+\item \textbf{Import assoluti vs relativi}: preferire import assoluti per chiarezza; relativi utili all'interno di pacchetti.
+\item \verb|__init__.py|: controlla l'esposizione del pacchetto; usare \verb|__all__| per definire API pubblica.
+  \item \textbf{Struttura dei moduli}: separare responsabilità e evitare cicli di dipendenze; predisporre sottopacchetti coerenti.
+  \item \textbf{Ambienti e dipendenze}: congelare versioni con file di requisiti; documentare vincoli e compatibilità.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Distribuzione} Valutare packaging con \verb|pyproject.toml| e strumenti moderni; integrare test e lint nel processo di rilascio.
+Consulta: \url{https://docs.python.org/3/tutorial/modules.html}.

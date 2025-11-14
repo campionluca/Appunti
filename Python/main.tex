@@ -1,0 +1,125 @@
+% main.tex — Documento principale LaTeX per "Appunti di Programmazione Python"
+\documentclass[a4paper,11pt]{book}
+
+% Lingua e codifica
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Layout
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Hyperlink e colori
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Codice sorgente (Python)
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstdefinestyle{python}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny, 
+  stepnumber=1,
+  frame=single,
+  breaklines=true
+}
+% Supporto UTF-8 nei listati e mappatura caratteri accentati
+\lstset{style=python, inputencoding=utf8,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {À}{{\`A}}1 {È}{{\`E}}1 {É}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+           {–}{{-}}1 {—}{{-}}1 {‑}{{-}}1 {→}{{->}}2 {…}{{...}}3}
+
+% Box informativi
+\usepackage[skins, breakable]{tcolorbox}
+\tcbset{
+  colback=gray!5,
+  colframe=gray!60,
+  coltitle=black,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt
+}
+
+% Rende i box tcolorbox spezzabili su più pagine
+\tcbset{breakable}
+
+% Grafica
+\usepackage{tikz}
+
+% Tipografia e micro-ottimizzazioni
+\usepackage[protrusion=true,expansion=true]{microtype}
+\setlength{\emergencystretch}{3em}
+
+% Metadati documento
+\title{Appunti di Programmazione Python}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Inclusione dei capitoli
+\include{capitoli/00_fondamenti_python}
+\input{capitoli/_guida_non_python}
+\include{capitoli/01_controllo_flusso}
+\input{capitoli/_guida_non_python}
+\include{capitoli/02_funzioni}
+\input{capitoli/_guida_non_python}
+\include{capitoli/03_strutture_dati}
+\input{capitoli/_guida_non_python}
+\include{capitoli/04_stringhe_formattazione}
+\input{capitoli/_guida_non_python}
+\include{capitoli/05_file_io}
+\input{capitoli/_guida_non_python}
+\include{capitoli/06_gestione_errori}
+\input{capitoli/_guida_non_python}
+\include{capitoli/07_moduli_package}
+\input{capitoli/_guida_non_python}
+\include{capitoli/08_programmazione_oggetti}
+\input{capitoli/_guida_non_python}
+\include{capitoli/09_decoratori_iteratori_generatori}
+\input{capitoli/_guida_non_python}
+\include{capitoli/10_standard_library_avanzata}
+\input{capitoli/_guida_non_python}
+\include{capitoli/11_gui_tkinter}
+\input{capitoli/_guida_non_python}
+\include{capitoli/12_web_flask}
+\input{capitoli/_guida_non_python}
+\include{capitoli/13_automazione_web_scraping}
+\input{capitoli/_guida_non_python}
+\include{capitoli/14_testing_debugging}
+\input{capitoli/_guida_non_python}
+\include{capitoli/15_database_sqlite_sqlalchemy}
+\input{capitoli/_guida_non_python}
+
+% Robot NAO (V6)
+\include{capitoli/16_robot_nao_intro}
+\input{capitoli/_guida_non_python}
+\include{capitoli/17_robot_nao_setup_api}
+\input{capitoli/_guida_non_python}
+\include{capitoli/18_robot_nao_motion_vision}
+\input{capitoli/_guida_non_python}
+
+% Appendici e soluzioni
+\appendix
+\include{capitoli/appendice_soluzioni}
+% Appendice generata automaticamente
+\input{appendice_soluzioni/generated_appendice.tex}
+
+\end{document}

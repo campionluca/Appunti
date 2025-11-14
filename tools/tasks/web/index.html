@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <title>Gestione Attività</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Gestione Attività</h1>
+    <div class="actions">
+      <button id="btn-new">Nuova Task</button>
+      <button id="btn-backup">Backup</button>
+      <input id="search" type="search" placeholder="Cerca titolo/descrizione..." />
+    </div>
+  </header>
+
+  <section class="filters">
+    <select id="filter-project">
+      <option value="">Tutti i progetti</option>
+    </select>
+    <select id="filter-status">
+      <option value="">Tutti gli stati</option>
+      <option value="da_fare">Da fare</option>
+      <option value="in_corso">In corso</option>
+      <option value="completato">Completato</option>
+    </select>
+    <select id="filter-priority">
+      <option value="">Tutte le priorità</option>
+      <option value="alta">Alta</option>
+      <option value="media">Media</option>
+      <option value="bassa">Bassa</option>
+    </select>
+    <select id="filter-type">
+      <option value="">Tutti i tipi</option>
+      <option value="Sviluppo">Sviluppo</option>
+      <option value="Test">Test</option>
+      <option value="Documentazione">Documentazione</option>
+      <option value="Bug">Bug</option>
+    </select>
+  </section>
+
+  <nav class="views">
+    <button data-view="list" class="active">Elenco</button>
+    <button data-view="board">Kanban</button>
+  </nav>
+
+  <main>
+    <section id="view-list" class="view active">
+      <table>
+        <thead>
+          <tr>
+            <th>Titolo</th>
+            <th>Priorità</th>
+            <th>Scadenza</th>
+            <th>Assegnatario</th>
+            <th>Progetto</th>
+            <th>Stato</th>
+            <th>Tipo</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody id="list-body"></tbody>
+      </table>
+    </section>
+
+    <section id="view-board" class="view">
+      <div class="board">
+        <div class="column" data-status="da_fare">
+          <h3>Da fare</h3>
+          <div class="cards" id="col-da_fare"></div>
+        </div>
+        <div class="column" data-status="in_corso">
+          <h3>In corso</h3>
+          <div class="cards" id="col-in_corso"></div>
+        </div>
+        <div class="column" data-status="completato">
+          <h3>Completato</h3>
+          <div class="cards" id="col-completato"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dlg-task">
+    <form id="form-task" method="dialog">
+      <h3 id="dlg-title">Nuova Task</h3>
+      <input type="hidden" id="task-id" />
+      <label>Titolo<input id="task-title" required /></label>
+      <label>Descrizione<textarea id="task-desc" rows="4" required></textarea></label>
+      <label>Priorità
+        <select id="task-prio">
+          <option>alta</option>
+          <option selected>media</option>
+          <option>bassa</option>
+        </select>
+      </label>
+      <label>Scadenza<input id="task-deadline" type="date" /></label>
+      <label>Assegnatario<input id="task-assignee" /></label>
+      <label>Progetto<input id="task-project" placeholder="PHP" /></label>
+      <label>Tipo
+        <select id="task-type">
+          <option>Sviluppo</option>
+          <option>Test</option>
+          <option>Documentazione</option>
+          <option>Bug</option>
+        </select>
+      </label>
+      <label>Stato
+        <select id="task-status">
+          <option>da_fare</option>
+          <option>in_corso</option>
+          <option>completato</option>
+        </select>
+      </label>
+      <menu>
+        <button value="cancel">Annulla</button>
+        <button id="btn-save" value="default">Salva</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+\n</html>
+

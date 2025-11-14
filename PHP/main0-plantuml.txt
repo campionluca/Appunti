@@ -1,0 +1,3 @@
+// Placeholder diagrammi PlantUML per flussi PHP
+// Esempio: flusso richiesta/risposta, gestione sessione, upload file
+

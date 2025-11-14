@@ -1,0 +1,457 @@
+\chapter{Makefile e Build Automation}
+\label{cap:makefile}
+
+\section{Introduzione ai Makefile}
+
+Un Makefile è uno strumento che automatizza il processo di compilazione e costruzione (build) di un progetto C. Permette di:
+
+\begin{itemize}
+    \item Automatizzare comandi di compilazione complessi
+    \item Gestire dipendenze tra file oggetto e sorgenti
+    \item Compilare solo i file modificati
+    \item Executare test e pulizia automaticamente
+    \item Rendere il progetto portabile e facile da distribuire
+\end{itemize}
+
+\begin{nota}
+Un Makefile usa il comando \texttt{make} per eseguire le regole definite. La sintassi è sensibile alle tabulazioni (tab, non spazi).
+\end{nota}
+
+\subsection{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere la struttura di un Makefile
+    \item Definire variabili e regole di compilazione
+    \item Creare target per compilazione, pulizia e test
+    \item Gestire dipendenze tra file
+    \item Ottimizzare il processo di build
+    \item Scrivere Makefile portatili e robusti
+\end{itemize}
+
+\section{Struttura Base di un Makefile}
+
+\subsection{Sintassi di una Regola}
+
+\begin{lstlisting}
+target: dipendenze
+	comando1
+	comando2
+\end{lstlisting}
+
+Una regola Makefile contiene:
+\begin{enumerate}
+    \item \textbf{target}: il nome del file o dell'azione da creare
+    \item \textbf{dipendenze}: file da cui dipende il target
+    \item \textbf{comandi}: comandi da eseguire (con tabulazione iniziale)
+\end{enumerate}
+
+\subsection{Esempio Semplice}
+
+\begin{lstlisting}
+# Makefile semplice per compilare un programma C
+
+# Compilazione del programma principale
+programma: main.o funzioni.o
+	gcc -o programma main.o funzioni.o
+
+# Compilazione di main.c in main.o
+main.o: main.c
+	gcc -c main.c
+
+# Compilazione di funzioni.c in funzioni.o
+funzioni.o: funzioni.c
+	gcc -c funzioni.c
+
+# Cancella file oggetto e eseguibile
+clean:
+	rm -f programma main.o funzioni.o
+\end{lstlisting}
+
+\subsection{Esecuzione}
+
+\begin{lstlisting}
+# Compila il target 'programma'
+make programma
+
+# Se 'programma' è il primo target, basta scrivere:
+make
+
+# Pulisce i file compilati
+make clean
+\end{lstlisting}
+
+\section{Variabili e Pattern}
+
+\subsection{Variabili Comuni}
+
+Le variabili permettono di evitare ripetizioni e rendere il Makefile manutenibile.
+
+\begin{lstlisting}
+# Dichiarazione di variabili
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99
+LDFLAGS = -lm
+
+# Variabili automatiche
+# $@  = nome del target
+# $<  = primo file di dipendenza
+# $^  = tutti i file di dipendenza
+# $*  = radice del nome del target
+
+# Utilizzo delle variabili
+main.o: main.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+programma: main.o funzioni.o
+	$(CC) -o $@ $^ $(LDFLAGS)
+\end{lstlisting}
+
+\subsection{Pattern Rules}
+
+Le pattern rule definiscono come compilare categorie di file.
+
+\begin{lstlisting}
+# Pattern rule: compila tutti i file .c in file .o
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Pattern rule: compila tutti i file .c in eseguibili
+%: %.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
+\end{lstlisting}
+
+\subsection{Variabili Integrate}
+
+\begin{lstlisting}
+# Variabili di sistema predefinite in make
+
+CC = gcc              # Compilatore C
+CFLAGS = -Wall       # Flag di compilazione
+LDFLAGS = -lm        # Flag di linking
+RM = rm -f            # Comando per rimuovere
+SOURCES = $(wildcard *.c)    # Espande a tutti i file .c
+OBJECTS = $(SOURCES:.c=.o)   # Sostituisce .c con .o
+
+# Utilizzo
+programma: $(OBJECTS)
+	$(CC) -o programma $^ $(LDFLAGS)
+\end{lstlisting}
+
+\begin{attenzione}
+Ricorda: i comandi dentro le regole devono iniziare con una tabulazione (tab), non con spazi. Questo è un errore comune che causa problemi.
+\end{attenzione}
+
+\section{Makefile Completo con Esercizi}
+
+\subsection{Progetto Multi-File}
+
+\begin{lstlisting}
+# ============================================
+# Makefile per un progetto C multi-file
+# ============================================
+
+# Variabili di compilazione
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -g
+LDFLAGS = -lm
+
+# Nome dell'eseguibile
+EXEC = programma
+
+# File sorgenti e oggetto
+SOURCES = main.c funzioni.c utilita.c
+HEADERS = funzioni.h utilita.h
+OBJECTS = $(SOURCES:.c=.o)
+
+# ============================================
+# TARGET PRINCIPALE
+# ============================================
+
+# Target di default: compilazione
+all: $(EXEC)
+
+# Creazione dell'eseguibile
+$(EXEC): $(OBJECTS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+	@echo "Compilazione completata: $(EXEC)"
+
+# Pattern rule per compilare .c in .o
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# ============================================
+# TARGET AUSILIARIO
+# ============================================
+
+# Pulizia dei file temporanei
+clean:
+	$(RM) $(OBJECTS)
+	@echo "File oggetto rimossi"
+
+# Pulizia totale
+distclean: clean
+	$(RM) $(EXEC)
+	@echo "Eseguibile rimosso"
+
+# Ricompilazione completa
+rebuild: distclean all
+
+# ============================================
+# TARGET DI DEBUG E TEST
+# ============================================
+
+# Compilazione con flag di debug
+debug: CFLAGS += -O0 -g3 -DDEBUG
+debug: clean $(EXEC)
+	@echo "Build di debug completata"
+
+# Test eseguendo il programma
+test: $(EXEC)
+	./$(EXEC)
+
+# ============================================
+# TARGET FITTIZI (non corrispondono a file)
+# ============================================
+
+.PHONY: all clean distclean rebuild debug test
+\end{lstlisting}
+
+\subsection{Progetto con Sottodirectory}
+
+\begin{lstlisting}
+# Makefile per progetto con organizzazione in directory
+
+SRC_DIR = src
+OBJ_DIR = obj
+BIN_DIR = bin
+INC_DIR = include
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -I$(INC_DIR)
+LDFLAGS = -lm
+
+EXEC = $(BIN_DIR)/programma
+
+# Trova tutti i file .c nella directory src
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+all: $(EXEC)
+
+# Crea directory se non esistono
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
+
+# Compilazione dell'eseguibile
+$(EXEC): $(OBJECTS) | $(BIN_DIR)
+	$(CC) -o $@ $^ $(LDFLAGS)
+	@echo "Eseguibile creato: $@"
+
+# Compilazione degli oggetti
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
+	@echo "Pulito"
+
+.PHONY: all clean
+\end{lstlisting}
+
+\subsection{Makefile Avanzato con Documentazione}
+
+\begin{lstlisting}
+# ============================================
+# MAKEFILE AVANZATO - PROGETTO C
+# ============================================
+# Utilizzo: make [target]
+# Targets disponibili:
+#   all      - compila il programma (default)
+#   clean    - rimuove file oggetto
+#   distclean- rimuove tutto
+#   rebuild  - ricompila da zero
+#   run      - esegue il programma
+#   help     - mostra questo messaggio
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99 -D_DEFAULT_SOURCE
+LDFLAGS = -lm
+DEBUGFLAGS = -g3 -O0
+
+EXEC = prog
+SOURCES = $(wildcard *.c)
+OBJECTS = $(SOURCES:.c=.o)
+
+# Verificazione di make version
+ifeq ($(shell make --version | head -1 | grep -o GNU),GNU)
+    SHELL := /bin/bash
+endif
+
+all: $(EXEC)
+
+$(EXEC): $(OBJECTS)
+	@echo "[LINKING] $@"
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+%.o: %.c
+	@echo "[COMPILE] $<"
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	@echo "[CLEAN] Rimozione file oggetto"
+	$(RM) $(OBJECTS)
+
+distclean: clean
+	@echo "[DISTCLEAN] Rimozione eseguibile"
+	$(RM) $(EXEC)
+
+rebuild: distclean all
+
+run: $(EXEC)
+	@echo "[RUN] Esecuzione di $(EXEC)"
+	./$(EXEC)
+
+debug: CFLAGS += $(DEBUGFLAGS)
+debug: clean $(EXEC)
+
+help:
+	@echo "Targets disponibili:"
+	@echo "  all       - Compilazione (default)"
+	@echo "  clean     - Rimozione file oggetto"
+	@echo "  distclean - Rimozione tutto"
+	@echo "  rebuild   - Ricompilazione da zero"
+	@echo "  run       - Esecuzione del programma"
+	@echo "  debug     - Compilazione con debug"
+	@echo "  help      - Questo messaggio"
+
+.PHONY: all clean distclean rebuild run debug help
+\end{lstlisting}
+
+\begin{attenzione}
+Quando usare un Makefile:
+\begin{itemize}
+    \item Progetti con più file sorgenti
+    \item Compilazioni frequenti durante lo sviluppo
+    \item Automazione di task ripetitivi
+    \item Progetti che altri sviluppatori useranno
+\end{itemize}
+\end{attenzione}
+
+\section{Dipendenze e Ottimizzazione}
+
+\subsection{File di Dipendenza Automatiche}
+
+\begin{lstlisting}
+# Generazione automatica delle dipendenze include
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99
+LDFLAGS = -lm
+
+EXEC = programma
+SOURCES = main.c funzioni.c
+OBJECTS = $(SOURCES:.c=.o)
+DEPENDS = $(SOURCES:.c=.d)
+
+all: $(EXEC)
+
+$(EXEC): $(OBJECTS)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -MM $< > $*.d
+
+-include $(DEPENDS)
+
+clean:
+	rm -f $(OBJECTS) $(DEPENDS) $(EXEC)
+
+.PHONY: all clean
+\end{lstlisting}
+
+\subsection{Compilazione Parallela}
+
+\begin{lstlisting}
+# Sfrutta processori multi-core
+
+# Esegui con: make -j 4
+# (-j 4 significa 4 processi paralleli)
+
+CC = gcc
+CFLAGS = -Wall -Wextra -std=c99
+EXEC = programma
+SOURCES = $(wildcard *.c)
+OBJECTS = $(SOURCES:.c=.o)
+
+all: $(EXEC)
+
+$(EXEC): $(OBJECTS)
+	$(CC) -o $@ $^
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(OBJECTS) $(EXEC)
+
+.PHONY: all clean
+
+# Da terminale: make -j
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Crea un Makefile per un progetto con due file: \texttt{main.c} e \texttt{calcoli.c}. Il Makefile deve avere target \texttt{all}, \texttt{clean}.
+
+    \item Scrivi un Makefile che compila un singolo file \texttt{hello.c} con flag \texttt{-Wall -Wextra}. Aggiungi un target \texttt{run} che esegue il programma.
+
+    \item Crea un Makefile per compilare tre file: \texttt{main.c}, \texttt{lettore.c}, \texttt{stampante.c}. Usa variabili per il compilatore e i flag.
+
+    \item Scrivi un Makefile che include pattern rules per compilare automaticamente qualsiasi file \texttt{.c} in \texttt{.o}.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Crea un Makefile per un progetto con directory separate: \texttt{src/}, \texttt{obj/}, \texttt{bin/}. Il compilato deve essere in \texttt{bin/} e gli oggetti in \texttt{obj/}.
+
+    \item Implementa un Makefile con target aggiuntivi: \texttt{debug} (compila con \texttt{-g}), \texttt{release} (con \texttt{-O2}), \texttt{profile} (con \texttt{-pg}).
+
+    \item Scrivi un Makefile che genera automaticamente le dipendenze include tra file con il comando \texttt{gcc -MM}.
+
+    \item Crea un Makefile che visualizza messaggi informativi durante la compilazione (es: "[COMPILE] main.c", "[LINKING] programma").
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa un Makefile che supporta compilazione parallela e misura il tempo di compilazione con \texttt{time make}.
+
+    \item Crea un sistema di Makefile hierarchico: un Makefile principale che chiama Makefile in sottodirectory.
+
+    \item Scrivi un Makefile che genera documentazione con Doxygen, esegue valgrind per memory leak detection, e crea un archivio tar del sorgente.
+
+    \item Implementa un Makefile che gestisce diverse configurazioni di build (debug, release, profiling) con dipendenze condizionali.
+\end{enumerate}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item Un Makefile automatizza la compilazione e la costruzione di progetti C
+    \item Le regole hanno la forma: \texttt{target: dipendenze} seguita da comandi con tabulazione
+    \item Le variabili (come \texttt{CC}, \texttt{CFLAGS}) rendono il Makefile manutenibile
+    \item Le pattern rules (\texttt{\%.o: \%.c}) evitano ripetizioni
+    \item I target fittizi (\texttt{.PHONY}) eseguono azioni senza creare file
+    \item \texttt{make clean} rimuove file compilati, \texttt{make distclean} tutto
+    \item I comandi nelle regole DEVONO iniziare con tabulazione, non spazi
+    \item Usa \texttt{make -j} per compilazione parallela
+\end{itemize}

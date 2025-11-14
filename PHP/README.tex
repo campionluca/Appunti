@@ -1,0 +1,37 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\title{Appunti di Programmazione — Corso PHP}
+\date{\small Ultimo aggiornamento: \today}
+\begin{document}
+\maketitle
+
+\section*{Descrizione}
+Il progetto raccoglie appunti e materiali del corso di PHP, organizzati in capitoli tecnici (LaTeX), manuale discorsivo (LaTeX) e schede di \emph{quick reference}.
+
+\section*{Struttura}
+\begin{itemize}
+  \item \texttt{PHP/main.tex}: libro principale con prefazione, capitoli e appendici.
+  \item \texttt{PHP/capitoli/}: capitoli tecnici in \LaTeX.
+  \item \texttt{PHP/manuale/}: manuale discorsivo (\texttt{main.tex} e capitoli inclusi).
+  \item \texttt{PHP/quick\_reference/}: schede sintetiche (\texttt{main.tex}).
+\end{itemize}
+
+\section*{Compilazione}
+Per compilare il manuale discorsivo:
+\begin{verbatim}
+latexmk -pdf manuale/main.tex
+\end{verbatim}
+Per compilare le schede di quick reference:
+\begin{verbatim}
+latexmk -pdf quick_reference/main.tex
+\end{verbatim}
+
+\section*{Stato}
+Migrazione da Markdown a \LaTeX completata per i capitoli introduttivi del manuale discorsivo e per la configurazione di progetto.
+
+\end{document}
+

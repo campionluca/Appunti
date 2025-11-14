@@ -1,0 +1,33 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\title{PHP — Changelog}
+\date{\small Ultimo aggiornamento: \today}
+\begin{document}
+\maketitle
+
+\section*{v0.37}
+\begin{itemize}
+  \item Rimozione completa di funzioni e costrutti richiesti dai capitoli: \texttt{http\_response\_code()}, \texttt{filter\_input()}, \texttt{headers\_sent()}, \texttt{array\_map()}, \texttt{array\_unshift()}, \texttt{array\_filter()}, \texttt{array\_reduce()}, \texttt{array\_column()}, \texttt{http\_build\_query()}, tag corto \texttt{<?=} e attributo HTML \texttt{enctype}.
+  \item Capitoli aggiornati: \texttt{01\_Form\_HTML.tex}, \texttt{02\_Campi\_hidden.tex}, \texttt{03\_Redirect\_Header\_Location.tex}, \texttt{04\_Array.tex}, \texttt{05\_Array\_associativi.tex}, \texttt{07\_File\_Testo.tex}, \texttt{09\_Database\_MySQLi.tex}.
+  \item Sostituiti esempi con alternative equivalenti (validazione manuale, estrazione con \texttt{foreach}, costruzione query string manuale, gestione errori senza status code espliciti).
+  \item Ricompilazione \LaTeX{} riuscita e verifica visiva del PDF \texttt{main.pdf}.
+\end{itemize}
+
+\section*{v0.36}
+\begin{itemize}
+  \item Migrazione manuale discorsivo: creati \texttt{PHP/manuale/main.tex} e capitoli \texttt{01\_introduzione.tex}, \texttt{02\_sintassi\_e\_tipi.tex}, \texttt{03\_funzioni\_e\_organizzazione.tex}, \texttt{04\_http\_form\_e\_risposte.tex}.
+  \item Aggiornata configurazione: \texttt{agent\_instructions.json} ora preferisce \LaTeX{} e riconosce \texttt{README.tex}, \texttt{TODO.tex}, \texttt{PIANO\_SVILUPPO.tex}.
+  \item Compilazione e validazione: generato \texttt{manuale/main.pdf} e verificata coerenza dei capitoli.
+\end{itemize}
+
+\section*{v0.35}
+\begin{itemize}
+  \item Allineamento struttura del corso PHP al modello Java: aggiunta prefazione, appendice quick reference, bibliografia, template capitolo.
+  \item Aggiornati \texttt{README.md}, \texttt{TODO.md}, \texttt{PIANO\_SVILUPPO.md}.
+\end{itemize}
+
+\end{document}

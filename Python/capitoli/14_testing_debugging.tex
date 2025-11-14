@@ -1,0 +1,108 @@
+% Modulo 14 — Testing e Debugging
+\chapter{Testing e Debugging}
+
+\section{Introduzione}
+Validare il codice con test e diagnosticare problemi con strumenti di debug.
+
+La descrizione illustra come scrivere test isolati e ripetibili, organizzare suite di test e utilizzare strumenti di debug e logging per individuare difetti. Evidenziamo strategie come TDD light, fixture e mocking dove opportuno.
+
+Investire in test e debug sistematici riduce regressioni e accelera lo sviluppo, migliorando qualità e fiducia nel codice.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Scrivere test con \texttt{unittest}/\texttt{pytest}.
+  \item Usare assert e fixture.
+  \item Debuggare con \texttt{pdb} o IDE.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title={Qualità, isolamento e feedback}]
+- Test deterministici e isolati: controlla input/dipendenze.
+- Fixture vs factory: chiarezza vs flessibilità.
+- Mocking mirato: solo dove serve, evita over-mocking.
+- Piramide dei test: unitari veloci, integrazione mirata.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{unittest}
+\begin{lstlisting}
+import unittest
+
+def add(a,b): return a+b
+
+class TestAdd(unittest.TestCase):
+    def test_add(self):
+        self.assertEqual(add(2,3), 5)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{unittest} organizza test in classi/metodi; usare assert chiari e casi minimali.
+- Separare setup/teardown con metodi dedicati o fixture per isolamento.
+- Rendere i test deterministici e veloci; evitare dipendenze tra test.
+\end{tcolorbox}
+
+\subsection{pytest}
+\begin{lstlisting}
+def inc(x): return x+1
+
+def test_inc():
+    assert inc(2) == 3
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{pytest} usa funzioni e assert semplici; fixture per setup flessibile.
+- Strutturare i test per chiarezza e copertura efficace del codice critico.
+- Integrare in CI con report e selezione mirata delle suite.
+\end{tcolorbox}
+
+\subsection{pdb}
+\begin{lstlisting}
+import pdb
+pdb.set_trace()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- \texttt{pdb} inserisce breakpoint per ispezionare stato e flusso.
+- Usare debugger/IDE per navigare stack e variabili; riprodurre bug in modo affidabile.
+- Automatizzare casi che hanno rivelato regressioni per prevenire ricadute.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Validare funzioni critiche con test unitari.
+- Test d'integrazione per componenti principali.
+- Debug di flussi con breakpoint e ispezione stato.
+- Smoke test in CI per prevenire regressioni.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Scrivi test per funzioni aritmetiche.
+  \item Usa fixture per preparare dati.
+  \item Simula errori e verifica eccezioni.
+  \item Integra CI locale per eseguire test.
+  \item Usa un debugger per tracciare un bug.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai impostato test e tecniche base di debugging.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Pipeline di qualità con test automatici.
+- Suite unit/integration per componenti chiave.
+- Debug guidato per riprodurre e risolvere bug.
+- Gate di rilascio in CI/CD.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Tipi di test}: unit, integration, end-to-end; scegliere livelli adeguati e bilanciati.
+  \item \textbf{Fixture e isolamenti}: organizzare setup/teardown; evitare dipendenze tra test.
+  \item \textbf{Copertura}: misurare coverage ma non inseguire il 100\%; concentrarsi su codice critico.
+  \item \textbf{Debug}: usare \verb|pdb|, logging e riproduzioni minimal; automatizzare casi che rivelano regressioni.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{CI/CD} Impostare gate chiari, tempi ragionevoli di esecuzione e reporting utile; fallimenti devono essere informativi e riproducibili.
+Consulta: \url{https://docs.python.org/3/library/unittest.html}, \url{https://docs.pytest.org/}.

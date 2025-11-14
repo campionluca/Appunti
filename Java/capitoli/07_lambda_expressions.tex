@@ -1,0 +1,627 @@
+% Capitolo 7 - Lambda Expressions (cenni)
+\chapter{Lambda Expressions}
+\label{cap:lambda_expressions}
+\label{cap:lambda}
+
+\section{Obiettivi di apprendimento}
+Al termine di questo capitolo sarai in grado di:
+\begin{itemize}
+    \item Comprendere il concetto di lambda expression
+    \item Riconoscere la sintassi delle lambda in Java
+    \item Utilizzare lambda per semplificare il codice
+    \item Applicare lambda con Comparator, ActionListener e Predicate
+    \item Confrontare lambda con classi anonime
+\end{itemize}
+
+\section{Cos'è una lambda expression}
+
+Una \textbf{lambda expression} (o semplicemente lambda) è una funzione anonima che può essere passata come argomento o assegnata a una variabile. Le lambda sono state introdotte in Java 8 per supportare elementi di \textbf{programmazione funzionale}.
+
+\subsection{Cenni sulla programmazione funzionale}
+La programmazione funzionale tratta le funzioni come cittadini di prima classe (first-class citizens), permettendo di:
+\begin{itemize}
+    \item Passare funzioni come parametri
+    \item Restituire funzioni come valori di ritorno
+    \item Assegnare funzioni a variabili
+\end{itemize}
+
+Le lambda in Java permettono di scrivere codice più conciso ed espressivo, riducendo il boilerplate necessario per le classi anonime.
+
+\subsection{Interfacce funzionali}
+Le lambda in Java funzionano con le \textbf{interfacce funzionali} (per un approfondimento sul concetto di interfaccia, vedi \autoref{cap:interfacce_classi_astratte}), ovvero interfacce con un solo metodo astratto. Esempi comuni:
+\begin{itemize}
+    \item \texttt{Runnable} - con il metodo \texttt{oggetto.run()}
+    \item \texttt{Comparator<T>} - con il metodo \texttt{comparator.compare(T o1, T o2)}
+    \item \texttt{ActionListener} - con il metodo \texttt{listener.actionPerformed(ActionEvent e)}
+    \item \texttt{Predicate<T>} - con il metodo \texttt{predicate.test(T elemento)}
+\end{itemize}
+
+\section{Sintassi base}
+
+La sintassi generale di una lambda è:
+\begin{verbatim}
+(parametri) -> espressione
+\end{verbatim}
+
+oppure, per blocchi di codice:
+\begin{verbatim}
+(parametri) -> { istruzioni; }
+\end{verbatim}
+
+\subsection{Forma 1: Sintassi completa}
+
+\begin{lstlisting}
+// Lambda con tipo esplicito dei parametri
+Comparator<Integer> comp1 = (Integer a, Integer b) -> {
+    return a.compareTo(b);
+};
+\end{lstlisting}
+
+Questa forma specifica esplicitamente:
+\begin{itemize}
+    \item I tipi dei parametri (\texttt{Integer a} e \texttt{Integer b})
+    \item Le parentesi graffe per il blocco di codice
+    \item L'istruzione \texttt{return} per restituire il valore dell'espressione \texttt{a.compareTo(b)}
+\end{itemize}
+
+\subsection{Forma 2: Sintassi abbreviata}
+
+\begin{lstlisting}
+// Lambda senza tipo esplicito (inferito dal compilatore)
+Comparator<Integer> comp2 = (a, b) -> {
+    return a.compareTo(b);
+};
+\end{lstlisting}
+
+Il compilatore inferisce automaticamente i tipi dei parametri dal contesto.
+
+\subsection{Forma 3: Sintassi single-statement}
+
+\begin{lstlisting}
+// Lambda con espressione singola (senza return esplicito)
+Comparator<Integer> comp3 = (a, b) -> a.compareTo(b);
+\end{lstlisting}
+
+Per espressioni singole:
+\begin{itemize}
+    \item Si omettono le parentesi graffe
+    \item Si omette la parola chiave \texttt{return}
+    \item Il valore dell'espressione è restituito implicitamente
+\end{itemize}
+
+\begin{nota}
+Quando la lambda ha un solo parametro, si possono omettere anche le parentesi:
+\begin{lstlisting}
+// Un parametro: parentesi opzionali
+Predicate<String> isEmpty = s -> s.isEmpty();
+
+// Zero o piu parametri: parentesi obbligatorie
+Runnable r = () -> System.out.println("Hello");
+Comparator<Integer> c = (a, b) -> a - b;
+\end{lstlisting}
+
+Nel primo esempio, \texttt{s.isEmpty()} invoca il metodo dell'oggetto \texttt{String} rappresentato dal parametro \texttt{s}. Nel secondo esempio, il metodo \texttt{System.out.println("Hello")} viene richiamato sull'oggetto \texttt{PrintStream} di sistema. Nel terzo esempio, l'espressione \texttt{a - b} restituisce la differenza tra i due parametri interi.
+\end{nota}
+
+\section{Quando usare le lambda}
+
+Le lambda sono particolarmente utili in diversi contesti comuni in Java.
+
+\subsection{Comparator per ordinamento}
+
+Le lambda semplificano notevolmente la creazione di comparatori personalizzati (per informazioni sulle interfacce, vedi \autoref{cap:interfacce_classi_astratte}).
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+public class EsempioComparator {
+    public static void main(String[] args) {
+        List<String> nomi = new ArrayList<>();
+        nomi.add("Mario");
+        nomi.add("Anna");
+        nomi.add("Luca");
+        nomi.add("Giulia");
+
+        // Ordinamento per lunghezza con lambda
+        // Il metodo Collections.sort() accetta la lista nomi e un Comparator
+        // La lambda invoca s1.length() e s2.length() per confrontare le stringhe
+        Collections.sort(nomi, (s1, s2) -> s1.length() - s2.length());
+        System.out.println("Per lunghezza: " + nomi);
+
+        // Ordinamento alfabetico inverso con lambda
+        // Il metodo s2.compareTo(s1) confronta le stringhe in ordine inverso
+        Collections.sort(nomi, (s1, s2) -> s2.compareTo(s1));
+        System.out.println("Alfabetico inverso: " + nomi);
+
+        // Method reference (forma ancora piu compatta)
+        // String::compareTo e' un riferimento al metodo compareTo della classe String
+        Collections.sort(nomi, String::compareTo);
+        System.out.println("Alfabetico: " + nomi);
+    }
+}
+\end{lstlisting}
+
+\subsection{ActionListener per GUI}
+
+Le lambda rendono più leggibile la gestione degli eventi nelle interfacce grafiche (per un approfondimento sulle GUI e gli eventi, vedi \autoref{cap:interfacce_grafiche}).
+
+\begin{lstlisting}
+import javax.swing.*;
+import java.awt.*;
+
+public class EsempioActionListener extends JFrame {
+    private JLabel etichetta;
+    private int contatore = 0;
+
+    public EsempioActionListener() {
+        // Configura la finestra usando metodi dell'oggetto JFrame
+        setTitle("Lambda con ActionListener");
+        setSize(300, 150);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        etichetta = new JLabel("Contatore: 0", SwingConstants.CENTER);
+        JButton pulsante = new JButton("Clicca");
+
+        // ActionListener con lambda (forma concisa)
+        // Il metodo pulsante.addActionListener() accetta una lambda
+        // che implementa il metodo actionPerformed(ActionEvent e)
+        pulsante.addActionListener(e -> {
+            contatore++;
+            // Il metodo etichetta.setText() aggiorna il testo della label
+            etichetta.setText("Contatore: " + contatore);
+        });
+
+        // Il metodo this.add() (ereditato da JFrame) aggiunge i componenti
+        add(etichetta, BorderLayout.CENTER);
+        add(pulsante, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        // SwingUtilities.invokeLater() esegue la lambda nel thread della GUI
+        SwingUtilities.invokeLater(() -> new EsempioActionListener());
+    }
+}
+\end{lstlisting}
+
+\subsection{Predicate per filtri}
+
+\texttt{Predicate<T>} è un'interfaccia funzionale che rappresenta un predicato (funzione booleana) su un oggetto.
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+public class EsempioPredicate {
+    public static void main(String[] args) {
+        List<Integer> numeri = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            // Il metodo numeri.add() aggiunge elementi alla lista
+            numeri.add(i);
+        }
+
+        // Filtra numeri pari usando una lambda
+        System.out.println("Numeri pari:");
+        filtra(numeri, n -> n % 2 == 0);
+
+        // Filtra numeri maggiori di 5
+        System.out.println("\nNumeri > 5:");
+        filtra(numeri, n -> n > 5);
+
+        // Filtra numeri dispari e minori di 7
+        System.out.println("\nNumeri dispari < 7:");
+        filtra(numeri, n -> n % 2 != 0 && n < 7);
+    }
+
+    // Metodo generico che accetta un Predicate come parametro
+    public static <T> void filtra(List<T> lista, Predicate<T> condizione) {
+        for (T elemento : lista) {
+            // Il metodo condizione.test() verifica se l'elemento soddisfa il predicato
+            if (condizione.test(elemento)) {
+                System.out.println(elemento);
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\section{Confronto con classi anonime}
+
+Prima dell'introduzione delle lambda, si utilizzavano le classi anonime per implementare interfacce funzionali. Le lambda offrono una sintassi molto più concisa.
+
+\subsection{Confronto side-by-side: Comparator}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+public class ConfrontoSintassi {
+    public static void main(String[] args) {
+        List<String> parole = new ArrayList<>();
+        parole.add("Java");
+        parole.add("Python");
+        parole.add("C");
+        parole.add("JavaScript");
+
+        // === CLASSE ANONIMA (sintassi verbosa) ===
+        // Il metodo Collections.sort() accetta un oggetto Comparator
+        // Qui viene creata una classe anonima che implementa Comparator<String>
+        Collections.sort(parole, new Comparator<String>() {
+            @Override
+            public int compare(String s1, String s2) {
+                // I metodi s1.length() e s2.length() restituiscono le lunghezze
+                return s1.length() - s2.length();
+            }
+        });
+        System.out.println("Con classe anonima: " + parole);
+
+        // === LAMBDA (sintassi concisa) ===
+        // Stessa funzionalita' ma con lambda expression
+        Collections.sort(parole, (s1, s2) -> s1.length() - s2.length());
+        System.out.println("Con lambda: " + parole);
+
+        // === METHOD REFERENCE (forma piu compatta) ===
+        // Il metodo statico Comparator.comparingInt() crea un comparatore
+        // String::length e' un method reference al metodo length() di String
+        Collections.sort(parole, Comparator.comparingInt(String::length));
+        System.out.println("Con method reference: " + parole);
+    }
+}
+\end{lstlisting}
+
+\subsection{Confronto side-by-side: ActionListener}
+
+\begin{lstlisting}
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class ConfrontoActionListener {
+    public static void main(String[] args) {
+        JButton btn1 = new JButton("Classe Anonima");
+        JButton btn2 = new JButton("Lambda");
+
+        // === CLASSE ANONIMA ===
+        // Il metodo btn1.addActionListener() accetta un oggetto ActionListener
+        // Qui viene creata una classe anonima che implementa ActionListener
+        btn1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Click con classe anonima");
+            }
+        });
+
+        // === LAMBDA ===
+        // Il metodo btn2.addActionListener() accetta una lambda che implementa
+        // il metodo actionPerformed(ActionEvent e) dell'interfaccia ActionListener
+        btn2.addActionListener(e ->
+            System.out.println("Click con lambda")
+        );
+    }
+}
+\end{lstlisting}
+
+\subsection{Vantaggi delle lambda}
+\begin{itemize}
+    \item \textbf{Concisione}: meno codice boilerplate
+    \item \textbf{Leggibilità}: focus sull'azione, non sulla struttura
+    \item \textbf{Manutenibilità}: codice più chiaro e diretto
+\end{itemize}
+
+\subsection{Quando usare classi anonime}
+Le classi anonime sono ancora utili quando:
+\begin{itemize}
+    \item L'interfaccia ha più di un metodo astratto
+    \item Serve mantenere stato interno complesso
+    \item Si vogliono override multipli o aggiungere campi
+\end{itemize}
+
+\section{Esempi avanzati}
+
+Questa sezione presenta esempi più complessi che mostrano il potere delle lambda in situazioni realistiche.
+
+\subsection{Esempio 1: Comparator con oggetti personalizzati}
+
+Quando si lavora con oggetti personalizzati, le lambda semplificano enormemente il codice di ordinamento.
+
+\subsubsection{Versione con classe anonima (prima di Java 8)}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+class Studente {
+    private String nome;
+    private String cognome;
+    private double media;
+
+    public Studente(String nome, String cognome, double media) {
+        this.nome = nome;
+        this.cognome = cognome;
+        this.media = media;
+    }
+
+    public String getNome() { return nome; }
+    public String getCognome() { return cognome; }
+    public double getMedia() { return media; }
+
+    @Override
+    public String toString() {
+        return cognome + " " + nome + " (media: " + media + ")";
+    }
+}
+
+public class EsempioComparatorClasseAnonima {
+    public static void main(String[] args) {
+        List<Studente> classe = new ArrayList<>();
+        classe.add(new Studente("Mario", "Rossi", 7.5));
+        classe.add(new Studente("Anna", "Bianchi", 8.2));
+        classe.add(new Studente("Luca", "Verdi", 6.8));
+        classe.add(new Studente("Giulia", "Neri", 9.1));
+
+        // === CLASSE ANONIMA: ordinamento per media (decrescente) ===
+        // Il metodo Collections.sort() accetta un oggetto Comparator
+        // creato con una classe anonima verbosa
+        Collections.sort(classe, new Comparator<Studente>() {
+            @Override
+            public int compare(Studente s1, Studente s2) {
+                // I metodi s1.getMedia() e s2.getMedia() restituiscono double
+                // Double.compare() confronta i valori in modo sicuro
+                // Ordine invertito (s2, s1) per avere decrescente
+                return Double.compare(s2.getMedia(), s1.getMedia());
+            }
+        });
+
+        System.out.println("Studenti ordinati per media (decrescente):");
+        for (Studente s : classe) {
+            System.out.println(s);
+        }
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Versione con lambda (da Java 8 in poi)}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+// La classe Studente rimane identica
+
+public class EsempioComparatorLambda {
+    public static void main(String[] args) {
+        List<Studente> classe = new ArrayList<>();
+        classe.add(new Studente("Mario", "Rossi", 7.5));
+        classe.add(new Studente("Anna", "Bianchi", 8.2));
+        classe.add(new Studente("Luca", "Verdi", 6.8));
+        classe.add(new Studente("Giulia", "Neri", 9.1));
+
+        // === LAMBDA: stessa funzionalita', codice molto piu conciso ===
+        // Il metodo List.sort() (da Java 8) accetta un Comparator
+        // La lambda (s1, s2) -> ... implementa il metodo compare()
+        classe.sort((s1, s2) -> Double.compare(s2.getMedia(), s1.getMedia()));
+
+        System.out.println("Studenti ordinati per media (decrescente):");
+        classe.forEach(s -> System.out.println(s));
+
+        // === METHOD REFERENCE: forma ancora piu elegante ===
+        // Comparator.comparingDouble() crea un comparatore
+        // Studente::getMedia e' un method reference al getter
+        // reversed() inverte l'ordine (da crescente a decrescente)
+        classe.sort(Comparator.comparingDouble(Studente::getMedia).reversed());
+
+        System.out.println("\nOrdinamento multiplo (cognome, poi nome):");
+        // Comparator.comparing() permette ordinamenti concatenati
+        classe.sort(Comparator.comparing(Studente::getCognome)
+                              .thenComparing(Studente::getNome));
+
+        classe.forEach(System.out::println);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Analisi delle differenze}
+
+\begin{itemize}
+    \item \textbf{Righe di codice}: La classe anonima richiede 7 righe solo per definire il comparatore, la lambda ne richiede solo 1
+    \item \textbf{Leggibilità}: La lambda permette di vedere immediatamente la logica di confronto senza boilerplate
+    \item \textbf{Flessibilità}: I method reference e i metodi di Comparator (come \texttt{reversed()}, \texttt{thenComparing()}) offrono potenti combinazioni
+    \item \textbf{Manutenibilità}: Codice più compatto = meno errori e modifiche più rapide
+\end{itemize}
+
+\subsection{Esempio 2: Lambda con Stream API}
+
+Le Stream API (introdotte in Java 8) sfruttano pesantemente le lambda per elaborare collezioni in modo dichiarativo e funzionale.
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+class Prodotto {
+    private String nome;
+    private String categoria;
+    private double prezzo;
+    private int giacenza;
+
+    public Prodotto(String nome, String categoria, double prezzo, int giacenza) {
+        this.nome = nome;
+        this.categoria = categoria;
+        this.prezzo = prezzo;
+        this.giacenza = giacenza;
+    }
+
+    public String getNome() { return nome; }
+    public String getCategoria() { return categoria; }
+    public double getPrezzo() { return prezzo; }
+    public int getGiacenza() { return giacenza; }
+
+    @Override
+    public String toString() {
+        return nome + " (" + categoria + ") - EUR " + prezzo + " [" + giacenza + " pz]";
+    }
+}
+
+public class EsempioStreamAPI {
+    public static void main(String[] args) {
+        List<Prodotto> catalogo = new ArrayList<>();
+        catalogo.add(new Prodotto("Laptop", "Elettronica", 899.99, 15));
+        catalogo.add(new Prodotto("Mouse", "Elettronica", 25.50, 120));
+        catalogo.add(new Prodotto("Tastiera", "Elettronica", 65.00, 80));
+        catalogo.add(new Prodotto("Sedia", "Arredamento", 199.99, 30));
+        catalogo.add(new Prodotto("Scrivania", "Arredamento", 349.00, 12));
+        catalogo.add(new Prodotto("Lampada", "Arredamento", 45.90, 5));
+        catalogo.add(new Prodotto("Monitor", "Elettronica", 279.00, 25));
+
+        // === ESEMPIO 1: Filtrare e raccogliere ===
+        // Trova tutti i prodotti di elettronica con prezzo > 50 EUR
+        System.out.println("=== Elettronica oltre 50 EUR ===");
+        List<Prodotto> elettronicaCostosa = catalogo.stream()
+            // filter() accetta un Predicate (lambda che restituisce boolean)
+            .filter(p -> p.getCategoria().equals("Elettronica"))
+            .filter(p -> p.getPrezzo() > 50)
+            // collect() raccoglie i risultati in una nuova lista
+            .collect(Collectors.toList());
+
+        elettronicaCostosa.forEach(p -> System.out.println(p));
+
+        // === ESEMPIO 2: Trasformare con map() ===
+        // Estrai solo i nomi dei prodotti in giacenza scarsa (< 20 pz)
+        System.out.println("\n=== Prodotti con giacenza scarsa ===");
+        List<String> prodottiScarsi = catalogo.stream()
+            .filter(p -> p.getGiacenza() < 20)
+            // map() trasforma ogni Prodotto in una String (il nome)
+            .map(p -> p.getNome())
+            .collect(Collectors.toList());
+
+        System.out.println(prodottiScarsi);
+
+        // === ESEMPIO 3: Pipeline complessa ===
+        // Calcola il valore totale del magazzino per categoria "Arredamento"
+        System.out.println("\n=== Valore magazzino Arredamento ===");
+        double valoreArredamento = catalogo.stream()
+            .filter(p -> p.getCategoria().equals("Arredamento"))
+            // map() calcola il valore (prezzo * giacenza) per ogni prodotto
+            .map(p -> p.getPrezzo() * p.getGiacenza())
+            // mapToDouble() converte Stream<Double> in DoubleStream
+            .mapToDouble(Double::doubleValue)
+            // sum() somma tutti i valori
+            .sum();
+
+        System.out.println("Valore totale: EUR " + valoreArredamento);
+
+        // === ESEMPIO 4: Ordinamento e limite ===
+        // Top 3 prodotti piu costosi
+        System.out.println("\n=== Top 3 prodotti piu costosi ===");
+        catalogo.stream()
+            // sorted() accetta un Comparator (lambda)
+            .sorted((p1, p2) -> Double.compare(p2.getPrezzo(), p1.getPrezzo()))
+            // limit() prende solo i primi 3 elementi
+            .limit(3)
+            .forEach(p -> System.out.println(p.getNome() + " - EUR " + p.getPrezzo()));
+
+        // === ESEMPIO 5: Conteggio e statistiche ===
+        System.out.println("\n=== Statistiche Elettronica ===");
+        long numProdottiElettronica = catalogo.stream()
+            .filter(p -> p.getCategoria().equals("Elettronica"))
+            // count() restituisce il numero di elementi
+            .count();
+
+        double prezzoMedio = catalogo.stream()
+            .filter(p -> p.getCategoria().equals("Elettronica"))
+            .mapToDouble(Prodotto::getPrezzo)
+            // average() restituisce un OptionalDouble
+            .average()
+            // orElse() fornisce un valore di default se lo stream e' vuoto
+            .orElse(0.0);
+
+        System.out.println("Numero prodotti: " + numProdottiElettronica);
+        System.out.println("Prezzo medio: EUR " + String.format("%.2f", prezzoMedio));
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Operazioni Stream principali con lambda}
+
+\begin{itemize}
+    \item \textbf{filter(Predicate)}: Filtra elementi che soddisfano una condizione
+    \begin{lstlisting}
+.filter(p -> p.getPrezzo() > 100)
+    \end{lstlisting}
+
+    \item \textbf{map(Function)}: Trasforma ogni elemento in un altro tipo
+    \begin{lstlisting}
+.map(p -> p.getNome())  // Prodotto -> String
+    \end{lstlisting}
+
+    \item \textbf{sorted(Comparator)}: Ordina gli elementi
+    \begin{lstlisting}
+.sorted((a, b) -> Double.compare(b.getPrezzo(), a.getPrezzo()))
+    \end{lstlisting}
+
+    \item \textbf{forEach(Consumer)}: Esegue un'azione su ogni elemento
+    \begin{lstlisting}
+.forEach(p -> System.out.println(p))
+    \end{lstlisting}
+
+    \item \textbf{collect(Collector)}: Raccoglie i risultati in una collezione
+    \begin{lstlisting}
+.collect(Collectors.toList())
+    \end{lstlisting}
+\end{itemize}
+
+\subsubsection{Vantaggi degli Stream con lambda}
+
+\begin{itemize}
+    \item \textbf{Codice dichiarativo}: Si specifica \emph{cosa} fare, non \emph{come} farlo
+    \item \textbf{Pipeline leggibili}: Operazioni concatenate che si leggono come frasi
+    \item \textbf{Separazione delle responsabilità}: Ogni operazione ha un compito preciso
+    \item \textbf{Potenziale parallelizzazione}: Usando \texttt{.parallelStream()}, il codice può eseguire in parallelo senza modifiche
+\end{itemize}
+
+\begin{nota}
+Gli Stream sono una tecnica avanzata. Quando elabori collezioni:
+\begin{itemize}
+    \item Per operazioni semplici, i cicli tradizionali possono essere più chiari
+    \item Per trasformazioni complesse o multiple, gli Stream migliorano la leggibilità
+    \item Gli Stream non modificano la collezione originale (sono immutabili)
+    \item Ogni Stream può essere usato una sola volta
+\end{itemize}
+\end{nota}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo introdotto le lambda expressions in Java:
+
+\begin{itemize}
+    \item \textbf{Lambda}: funzioni anonime per programmazione funzionale
+    \item \textbf{Sintassi}: tre forme (completa, abbreviata, single-statement)
+    \item \textbf{Interfacce funzionali}: interfacce con un solo metodo astratto (approfondite in \autoref{cap:interfacce_classi_astratte})
+    \item \textbf{Casi d'uso comuni}: utilizzo con \texttt{Comparator} per ordinamento di collezioni (vedi \autoref{cap:arraylist}), \texttt{ActionListener} per gestione eventi GUI (vedi \autoref{cap:interfacce_grafiche}), e \texttt{Predicate} per filtri
+    \item \textbf{Vantaggi}: codice più conciso e leggibile rispetto a classi anonime
+\end{itemize}
+
+Le lambda sono uno strumento potente per scrivere codice più espressivo e manutenibile, e sono ampiamente utilizzate nelle API moderne di Java.
+
+\begin{nota}
+Concetti avanzati correlati alle lambda (non trattati in questo capitolo):
+\begin{itemize}
+    \item \textbf{Stream API}: elaborazione dichiarativa di collezioni con lambda
+    \item \textbf{Method reference}: forma ancora più compatta (\texttt{String::length})
+    \item \textbf{Closure}: cattura di variabili dal contesto esterno
+    \item \textbf{Interfacce funzionali comuni}: Function, Consumer, Supplier, BiFunction
+\end{itemize}
+
+Questi argomenti possono essere approfonditi in corsi avanzati di Java.
+\end{nota}

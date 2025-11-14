@@ -1,0 +1,88 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\geometry{margin=2cm}
+
+\title{Java Quick Reference Cards}
+\author{Prof. Luca Campion}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\newtcolorbox{qrcard}{colback=blue!5,colframe=blue!60,title=Capitolo}
+
+\begin{qrcard}[title=00 — Classi, Oggetti, Ereditarietà]
+Concetti chiave: classe, oggetto, attributi, metodi, costruttori, incapsulamento, ereditarietà, polimorfismo.\newline
+Tipi di relazioni: is-a (ereditarietà), has-a (composizione/associazione).
+\end{qrcard}
+
+\begin{qrcard}[title=01 — Stream e Buffer]
+I/O di base: InputStream/OutputStream, Reader/Writer, Buffering per performance.\newline
+Try-with-resources per gestione automatica.
+\end{qrcard}
+
+\begin{qrcard}[title=02 — Interfacce e Classi Astratte]
+Interfacce (contratti), classi astratte (struttura parziale).\newline
+Default methods (Java 8), multiple inheritance via interfacce.
+\end{qrcard}
+
+\begin{qrcard}[title=03 — Eccezioni]
+Checked vs Unchecked, try-catch-finally, throws/throw.\newline
+Custom exceptions, best practices di gestione errori.
+\end{qrcard}
+
+\begin{qrcard}[title=04 — ArrayList]
+Liste dinamiche, operazioni: add, remove, get, size.\newline
+Iterazione: for, foreach, Iterator.
+\end{qrcard}
+
+\begin{qrcard}[title=05 — Interfacce Grafiche]
+Swing: JFrame, JPanel, Layouts, Eventi (ActionListener).\newline
+Separazione View/Controller.
+\end{qrcard}
+
+\begin{qrcard}[title=06 — Model View Controller]
+Ruoli: Model (stato/logica), View (presentazione), Controller (coordinatore).\newline
+Eventi e notifiche, testabilità.
+\end{qrcard}
+
+\begin{qrcard}[title=07 — Lambda Expressions]
+Interfacce funzionali: Predicate, Comparator, Runnable.\newline
+Sintassi lambda, method references, Stream API.
+\end{qrcard}
+
+\begin{qrcard}[title=08 — Esercizi]
+Pratica guidata su contenuti capitoli 00–07 con soluzioni.\newline
+Focus: applicazione integrata.
+\end{qrcard}
+
+\begin{qrcard}[title=09 — Generics]
+Tipi parametrici, wildcards (extends/super), type erasure.\newline
+Classi/metodi generici, best practices.
+\end{qrcard}
+
+\begin{qrcard}[title=10 — Collections Framework]
+List/Set/Map/Queue, algoritmi Collections, Comparable/Comparator.\newline
+Iterazione e prestazioni.
+\end{qrcard}
+
+\begin{qrcard}[title=11 — Multithreading]
+Thread, Runnable, sincronizzazione, ExecutorService, concorrency utilities.\newline
+Race conditions e deadlock.
+\end{qrcard}
+
+\begin{qrcard}[title=12 — Design Patterns]
+Creational: Singleton, Factory, Builder.\newline
+Structural/Behavioral: Adapter, Observer, Strategy.
+\end{qrcard}
+
+\begin{qrcard}[title=13 — Stream API]
+Pipeline: filter, map, sorted, collect.\newline
+Optional e parallel streams.
+\end{qrcard}
+
+\end{document}
+

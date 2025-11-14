@@ -1,0 +1,610 @@
+\chapter{Variabili e Tipi di Dati}
+\label{cap:variabili_tipi}
+
+\section{Introduzione}
+
+Le variabili sono uno dei concetti fondamentali della programmazione. Una \textbf{variabile} è un contenitore che memorizza un valore che può cambiare durante l'esecuzione del programma. Pensate a una variabile come a una scatola etichettata dove potete conservare informazioni.
+
+\section{Obiettivi di Apprendimento}
+
+Alla fine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere il concetto di variabile
+    \item Dichiarare e inizializzare variabili
+    \item Conoscere i tipi di dati base del C
+    \item Usare gli specificatori di formato della funzione printf()
+    \item Leggere input dall'utente con la funzione scanf() della libreria stdio
+    \item Lavorare con costanti
+\end{itemize}
+
+\section{Concetto di Variabile}
+
+Una variabile ha tre caratteristiche fondamentali:
+
+\begin{description}
+    \item[Nome] Identificatore univoco (es. \texttt{eta}, \texttt{altezza})
+    \item[Tipo] Determina quali valori può contenere (es. intero, decimale)
+    \item[Valore] Il dato effettivamente memorizzato
+\end{description}
+
+\begin{lstlisting}[caption={Esempio concettuale di variabile}]
+int eta = 17;
+// nome della variabile: eta
+// tipo della variabile: int (intero)
+// valore della variabile: 17
+\end{lstlisting}
+
+\section{Tipi di Dati Base}
+
+Il C è un linguaggio \textbf{fortemente tipizzato}: ogni variabile deve avere un tipo dichiarato esplicitamente.
+
+\subsection{Tipi Interi}
+
+I tipi interi memorizzano numeri senza parte decimale.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Tipo} & \textbf{Dimensione} & \textbf{Range (tipico)} & \textbf{Formato} \\
+\hline
+\texttt{char} & 1 byte & -128 a 127 & \texttt{\%c} \\
+\texttt{unsigned char} & 1 byte & 0 a 255 & \texttt{\%c} \\
+\texttt{short} & 2 byte & -32,768 a 32,767 & \texttt{\%hd} \\
+\texttt{unsigned short} & 2 byte & 0 a 65,535 & \texttt{\%hu} \\
+\texttt{int} & 4 byte & -2.147.483.648 a 2.147.483.647 & \texttt{\%d} \\
+\texttt{unsigned int} & 4 byte & 0 a 4.294.967.295 & \texttt{\%u} \\
+\texttt{long} & 4-8 byte & Dipende dalla piattaforma & \texttt{\%ld} \\
+\texttt{unsigned long} & 4-8 byte & Dipende dalla piattaforma & \texttt{\%lu} \\
+\texttt{long long} & 8 byte & Molto ampio & \texttt{\%lld} \\
+\hline
+\end{tabular}
+\caption{Tipi interi in C}
+\end{table}
+
+\begin{nota}
+La parola chiave \texttt{unsigned} indica che la variabile può contenere solo valori positivi (senza segno). Questo raddoppia il valore massimo rappresentabile.
+\end{nota}
+
+\subsection{Tipi a Virgola Mobile}
+
+I tipi a virgola mobile memorizzano numeri con parte decimale.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Tipo} & \textbf{Dimensione} & \textbf{Precisione} & \textbf{Formato} \\
+\hline
+\texttt{float} & 4 byte & 6-7 cifre decimali & \texttt{\%f} \\
+\texttt{double} & 8 byte & 15-16 cifre decimali & \texttt{\%lf} \\
+\texttt{long double} & 10-16 byte & 18-19 cifre decimali & \texttt{\%Lf} \\
+\hline
+\end{tabular}
+\caption{Tipi a virgola mobile in C}
+\end{table}
+
+\subsection{Tipo Carattere}
+
+\begin{lstlisting}[caption={Tipo char}]
+char lettera = 'A';     // La variabile lettera contiene un singolo carattere
+char simbolo = '#';     // La variabile simbolo contiene il carattere '#'
+char numero = '5';      // La variabile numero contiene il carattere '5', non il numero 5!
+\end{lstlisting}
+
+\begin{attenzione}
+Un carattere deve essere racchiuso tra apici singoli \texttt{'A'}, mentre una stringa usa apici doppi \texttt{"Ciao"}. Non confonderli!
+\end{attenzione}
+
+\section{Dichiarazione di Variabili}
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[caption={Sintassi di dichiarazione}]
+tipo nome_variabile;
+\end{lstlisting}
+
+\subsection{Esempi di Dichiarazione}
+
+\begin{lstlisting}[caption={Dichiarazione di variabili}]
+int eta;              // Dichiarazione semplice
+float altezza;
+char iniziale;
+
+int x, y, z;          // Dichiarazione multipla
+float base, altezza, area;
+\end{lstlisting}
+
+\subsection{Inizializzazione}
+
+\textbf{Inizializzare} una variabile significa assegnarle un valore iniziale al momento della dichiarazione.
+
+\begin{lstlisting}[caption={Inizializzazione di variabili}]
+int eta = 17;                    // Dichiarazione + inizializzazione della variabile eta
+float altezza = 1.75;            // Dichiarazione + inizializzazione della variabile altezza
+char grado = 'A';                // Dichiarazione + inizializzazione della variabile grado
+
+// Si puo' anche fare in due passaggi
+int numero;                      // Dichiarazione della variabile numero
+numero = 42;                     // Assegnamento del valore 42 alla variabile numero
+\end{lstlisting}
+
+\begin{nota}
+È buona pratica inizializzare sempre le variabili. Una variabile non inizializzata contiene un valore casuale (quello che c'era in memoria prima).
+\end{nota}
+
+\section{Regole per i Nomi delle Variabili}
+
+I nomi delle variabili (identificatori) devono seguire queste regole:
+
+\subsection{Regole Obbligatorie}
+
+\begin{enumerate}
+    \item Possono contenere lettere (a-z, A-Z), cifre (0-9) e underscore (\_)
+    \item Devono iniziare con una lettera o underscore (non con una cifra)
+    \item Non possono essere parole chiave del C (es. \texttt{int}, \texttt{return}, \texttt{if})
+    \item Sono case-sensitive: \texttt{eta}, \texttt{Eta} e \texttt{ETA} sono variabili diverse
+\end{enumerate}
+
+\subsection{Convenzioni Consigliate}
+
+\begin{enumerate}
+    \item Usa nomi significativi: \texttt{eta} invece di \texttt{x}
+    \item Per nomi composti usa snake\_case: \texttt{numero\_studenti}
+    \item Usa nomi brevi ma descrittivi
+    \item Evita nomi di una sola lettera (tranne per contatori come \texttt{i}, \texttt{j}, \texttt{k})
+\end{enumerate}
+
+\begin{lstlisting}[caption={Esempi di nomi validi e non}]
+// VALIDI
+int eta;
+int numero_studenti;
+float _temp;
+char scelta1;
+
+// NON VALIDI
+int 1numero;          // Inizia con una cifra
+int for;              // Parola chiave
+int numero-studenti;  // Contiene trattino
+\end{lstlisting}
+
+\section{L'operatore sizeof}
+
+L'operatore \texttt{sizeof} del linguaggio C restituisce la dimensione in byte di un tipo di dato o di una variabile.
+
+\begin{lstlisting}[caption={Uso di sizeof}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    printf("Dimensione di int: %lu byte\n", sizeof(int));
+    printf("Dimensione di float: %lu byte\n", sizeof(float));
+    printf("Dimensione di double: %lu byte\n", sizeof(double));
+    printf("Dimensione di char: %lu byte\n", sizeof(char));
+
+    int x;
+    printf("Dimensione della variabile x: %lu byte\n", sizeof(x));
+
+    return 0;
+}
+\end{lstlisting}
+
+Output tipico:
+\begin{verbatim}
+Dimensione di int: 4 byte
+Dimensione di float: 4 byte
+Dimensione di double: 8 byte
+Dimensione di char: 1 byte
+Dimensione di x: 4 byte
+\end{verbatim}
+
+\begin{nota}
+Le dimensioni possono variare in base all'architettura del sistema (32-bit vs 64-bit) e al compilatore.
+\end{nota}
+
+\section{Specificatori di Formato per printf}
+
+Gli specificatori di formato indicano alla funzione printf() della libreria stdio come stampare un valore.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Specificatore} & \textbf{Tipo} & \textbf{Descrizione} \\
+\hline
+\texttt{\%d} o \texttt{\%i} & int & Intero decimale con segno \\
+\texttt{\%u} & unsigned int & Intero decimale senza segno \\
+\texttt{\%f} & float/double & Numero a virgola mobile \\
+\texttt{\%lf} & double (scanf) & Double (per input) \\
+\texttt{\%c} & char & Singolo carattere \\
+\texttt{\%s} & char* & Stringa \\
+\texttt{\%x} & int & Intero in esadecimale \\
+\texttt{\%o} & int & Intero in ottale \\
+\texttt{\%p} & puntatore & Indirizzo di memoria \\
+\texttt{\%\%} & - & Stampa il simbolo \% \\
+\hline
+\end{tabular}
+\caption{Principali specificatori di formato}
+\end{table}
+
+\subsection{Formattazione Avanzata}
+
+\begin{lstlisting}[caption={Controllo del formato di stampa}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int numero = 42;
+    float pi = 3.14159;
+
+    printf("Numero: %d\n", numero);           // Stampa il valore della variabile numero: 42
+    printf("Con padding: %5d\n", numero);     // Stampa il valore della variabile numero con padding:    42 (5 caratteri)
+    printf("Con zero: %05d\n", numero);       // Stampa il valore della variabile numero con zeri: 00042
+
+    printf("Float: %f\n", pi);                // Stampa il valore della variabile pi: 3.141590
+    printf("2 decimali: %.2f\n", pi);         // Stampa il valore della variabile pi con 2 decimali: 3.14
+    printf("6 decimali: %.6f\n", pi);         // Stampa il valore della variabile pi con 6 decimali: 3.141590
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Input da Tastiera: scanf}
+
+La funzione scanf() della libreria stdio legge input dall'utente.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[caption={Sintassi di scanf}]
+scanf("specificatore", &variabile);
+\end{lstlisting}
+
+\begin{attenzione}
+Nota l'operatore \texttt{\&} (ampersand) prima del nome della variabile! Questo operatore indica alla funzione scanf() l'indirizzo di memoria della variabile dove salvare il valore letto. Dimenticarlo è uno degli errori più comuni.
+\end{attenzione}
+
+\subsection{Esempi di Input}
+
+\begin{lstlisting}[caption={Leggere input con scanf}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int eta;
+    float altezza;
+    char iniziale;
+
+    printf("Inserisci la tua eta': ");
+    scanf("%d", &eta);  // Legge un intero e lo salva nella variabile eta
+
+    printf("Inserisci la tua altezza (in metri): ");
+    scanf("%f", &altezza);  // Legge un float e lo salva nella variabile altezza
+
+    printf("Inserisci l'iniziale del tuo nome: ");
+    scanf(" %c", &iniziale);  // Legge un char e lo salva nella variabile iniziale (nota lo spazio prima di %c)
+
+    printf("\nRiepilogo:\n");
+    printf("Eta': %d anni\n", eta);  // Stampa il valore della variabile eta
+    printf("Altezza: %.2f m\n", altezza);  // Stampa il valore della variabile altezza
+    printf("Iniziale: %c\n", iniziale);  // Stampa il valore della variabile iniziale
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{errore}
+Quando si legge un carattere con la funzione scanf() dopo aver letto numeri, è necessario aggiungere uno spazio prima di \texttt{\%c} per consumare eventuali caratteri di whitespace rimasti nel buffer di input:
+\begin{lstlisting}
+scanf(" %c", &carattere);  // Lo spazio prima di %c e' importante!
+\end{lstlisting}
+\end{errore}
+
+\section{Costanti}
+
+Le \textbf{costanti} sono valori che non possono essere modificati durante l'esecuzione del programma.
+
+\subsection{Costanti con \#define}
+
+\begin{lstlisting}[caption={Costanti con \#define}]
+#include <stdio.h>
+
+#define PI 3.14159
+#define MAX_STUDENTI 30
+#define SALUTO "Ciao a tutti!"
+
+int main(int argc, char** argv) {
+    float raggio = 5.0;
+    float area = PI * raggio * raggio;  // Calcola l'area usando la costante PI e la variabile raggio
+
+    printf("Area del cerchio: %.2f\n", area);  // Stampa il valore della variabile area
+    printf("Numero massimo studenti: %d\n", MAX_STUDENTI);  // Stampa il valore della costante MAX_STUDENTI
+    printf("%s\n", SALUTO);  // Stampa il valore della costante SALUTO
+
+    // PI = 3.14;  // ERRORE: non si puo' modificare il valore della costante PI
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{nota}
+Per convenzione, i nomi delle costanti si scrivono in MAIUSCOLO con underscore.
+\end{nota}
+
+\subsection{Costanti con const}
+
+\begin{lstlisting}[caption={Costanti con const}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    const float PI = 3.14159;
+    const int GIORNI_SETTIMANA = 7;
+
+    float raggio = 3.0;
+    float area = PI * raggio * raggio;  // Calcola l'area usando la costante PI e la variabile raggio
+
+    printf("Area: %.2f\n", area);  // Stampa il valore della variabile area
+    printf("Giorni in una settimana: %d\n", GIORNI_SETTIMANA);  // Stampa il valore della costante GIORNI_SETTIMANA
+
+    // PI = 3.14;  // ERRORE: la costante PI non e' modificabile
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Differenza tra \#define e const}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+\textbf{Aspetto} & \textbf{\#define} & \textbf{const} \\
+\hline
+Elaborazione & Preprocessore (sostituzione testuale) & Compilatore (variabile vera) \\
+Tipo & No tipo esplicito & Ha un tipo esplicito \\
+Debug & Più difficile & Più facile \\
+Scope & Globale (dal punto di definizione) & Rispetta lo scope \\
+\hline
+\end{tabular}
+\caption{Confronto tra \#define e const}
+\end{table}
+
+\section{Conversioni di Tipo}
+
+\subsection{Conversione Implicita}
+
+Il C converte automaticamente i tipi quando necessario:
+
+\begin{lstlisting}[caption={Conversione implicita}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int intero = 10;
+    float decimale = 3.5;
+
+    float risultato = intero + decimale;  // Il valore della variabile intero viene convertito automaticamente in float
+    printf("Risultato: %.2f\n", risultato);  // Stampa il valore della variabile risultato: 13.50
+
+    int troncato = intero + decimale;  // Il risultato float viene troncato e assegnato alla variabile troncato
+    printf("Troncato: %d\n", troncato);  // Stampa il valore della variabile troncato: 13
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Quando si assegna un float a un int, la parte decimale viene \textbf{troncata} (tagliata via), non arrotondata!
+\end{attenzione}
+
+\subsection{Conversione Esplicita (Cast)}
+
+\begin{lstlisting}[caption={Cast esplicito}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int a = 7, b = 2;
+
+    // Divisione intera
+    float ris1 = a / b;  // Le variabili a e b sono int, quindi la divisione e' intera
+    printf("Senza cast: %.2f\n", ris1);  // Stampa il valore della variabile ris1: 3.00 (divisione intera!)
+
+    // Con cast
+    float ris2 = (float)a / b;  // Il valore della variabile a viene convertito in float prima della divisione
+    printf("Con cast: %.2f\n", ris2);  // Stampa il valore della variabile ris2: 3.50 (divisione float)
+
+    // Cast per arrotondamento
+    float x = 3.7;
+    int arrotondato = (int)(x + 0.5);  // Il valore della variabile x viene arrotondato
+    printf("Arrotondato: %d\n", arrotondato);  // Stampa il valore della variabile arrotondato: 4
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici Completi}
+
+\subsection{Esempio 1: Calcolo Area Rettangolo}
+
+\begin{lstlisting}[caption={Calcolo area e perimetro di un rettangolo}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    float base, altezza;
+    float area, perimetro;
+
+    printf("=== CALCOLO AREA RETTANGOLO ===\n\n");
+
+    printf("Inserisci la base: ");
+    scanf("%f", &base);
+
+    printf("Inserisci l'altezza: ");
+    scanf("%f", &altezza);
+
+    area = base * altezza;
+    perimetro = 2 * (base + altezza);
+
+    printf("\nRisultati:\n");
+    printf("Area: %.2f\n", area);
+    printf("Perimetro: %.2f\n", perimetro);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Esempio 2: Conversione Temperature}
+
+\begin{lstlisting}[caption={Conversione da Celsius a Fahrenheit}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    float celsius, fahrenheit;
+
+    printf("Inserisci la temperatura in Celsius: ");
+    scanf("%f", &celsius);
+
+    fahrenheit = (celsius * 9.0 / 5.0) + 32.0;
+
+    printf("%.2f gradi Celsius = %.2f gradi Fahrenheit\n",
+           celsius, fahrenheit);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Esempio 3: Calcolo Media}
+
+\begin{lstlisting}[caption={Calcolo media di tre numeri}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    float num1, num2, num3;
+    float somma, media;
+
+    printf("Inserisci tre numeri:\n");
+
+    printf("Numero 1: ");
+    scanf("%f", &num1);
+
+    printf("Numero 2: ");
+    scanf("%f", &num2);
+
+    printf("Numero 3: ");
+    scanf("%f", &num3);
+
+    somma = num1 + num2 + num3;
+    media = somma / 3.0;
+
+    printf("\nSomma: %.2f\n", somma);
+    printf("Media: %.2f\n", media);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Overflow e Underflow}
+
+\subsection{Overflow}
+
+Si verifica quando un valore supera il massimo rappresentabile:
+
+\begin{lstlisting}[caption={Esempio di overflow}]
+#include <stdio.h>
+#include <limits.h>
+
+int main(int argc, char** argv) {
+    int massimo = INT_MAX;  // Valore massimo per int
+    printf("Valore massimo: %d\n", massimo);
+
+    int overflow = massimo + 1;
+    printf("Dopo overflow: %d\n", overflow);  // Numero negativo!
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Underflow}
+
+Si verifica quando un numero è troppo piccolo per essere rappresentato:
+
+\begin{lstlisting}[caption={Esempio di underflow}]
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    float piccolo = 0.0000001;
+    float piccolissimo = piccolo / 1000000000;
+
+    printf("Numero piccolo: %f\n", piccolo);
+    printf("Numero piccolissimo: %f\n", piccolissimo);  // Potrebbe essere 0
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Libreria limits.h}
+
+La libreria \texttt{limits.h} definisce le costanti per i valori limite dei tipi:
+
+\begin{lstlisting}[caption={Uso di limits.h}]
+#include <stdio.h>
+#include <limits.h>
+
+int main(int argc, char** argv) {
+    printf("Range di char: %d a %d\n", CHAR_MIN, CHAR_MAX);
+    printf("Range di short: %d a %d\n", SHRT_MIN, SHRT_MAX);
+    printf("Range di int: %d a %d\n", INT_MIN, INT_MAX);
+    printf("Range di long: %ld a %ld\n", LONG_MIN, LONG_MAX);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi un programma che chiede nome ed età all'utente e li stampa.
+    \item Crea un programma che legge due numeri interi e stampa la loro somma, differenza, prodotto e quoziente.
+    \item Scrivi un programma che converte un valore in euro in dollari (tasso di cambio fisso: 1 euro = 1.10 dollari).
+    \item Crea un programma che calcola l'area di un cerchio dato il raggio (usa \texttt{\#define} per PI).
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Scrivi un programma che calcola l'IMC (Indice di Massa Corporea): IMC = peso / (altezza * altezza).
+    \item Crea un programma che converte un numero di secondi in ore, minuti e secondi.
+    \item Scrivi un programma che calcola il perimetro e l'area di un triangolo rettangolo dati i due cateti (usa il teorema di Pitagora per l'ipotenusa).
+    \item Crea un programma che simula una cassa: l'utente inserisce il prezzo, la quantità e viene calcolato il totale con IVA al 22\%.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Scrivi un programma che legge tre coefficienti (a, b, c) di un'equazione di secondo grado e calcola il discriminante (delta = b² - 4ac).
+    \item Crea un programma che converte un numero decimale in binario (solo per numeri piccoli, es. 0-15).
+    \item Scrivi un programma che calcola l'interesse composto: M = C(1 + r)ⁿ dove C è il capitale, r il tasso di interesse, n gli anni.
+\end{enumerate}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo imparato:
+
+\begin{itemize}
+    \item Il concetto di variabile e tipo di dato
+    \item I tipi base del C: interi, float, char
+    \item Come dichiarare e inizializzare variabili
+    \item Le regole per i nomi delle variabili
+    \item Gli specificatori di formato per printf
+    \item Come leggere input con scanf
+    \item La differenza tra costanti (\#define e const)
+    \item Le conversioni di tipo implicite ed esplicite
+    \item I problemi di overflow e underflow
+\end{itemize}
+
+\section{Approfondimenti}
+
+\begin{itemize}
+    \item \textbf{Documentazione}: C Data Types Reference
+    \item \textbf{Esercizi online}: HackerRank C Practice
+    \item \textbf{Video}: "C Variables and Data Types" su YouTube
+\end{itemize}
+
+Nel prossimo capitolo vedremo gli operatori ed espressioni, che ci permetteranno di effettuare calcoli e manipolazioni più complesse!

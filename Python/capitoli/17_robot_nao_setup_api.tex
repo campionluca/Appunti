@@ -1,0 +1,58 @@
+% Modulo 17 - Setup ambiente e API NAOqi in Python
+\chapter{Setup Ambiente e API NAOqi}
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Preparazione ambiente di sviluppo e dipendenze.
+- Connessione sicura al robot e gestione rete.
+- Struttura di progetto per script e demo.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+Per NAOqi 2.x in Python si usa tipicamente il pacchetto \texttt{qi} per la sessione e i servizi. Organizzare un piccolo progetto con virtualenv e file di configurazione (host/IP, porte, credenziali se presenti).
+
+\begin{tcolorbox}[title=Sessione e servizi]
+\begin{lstlisting}
+import qi
+
+def connect(address="tcp://nao.local:9559"):
+    session = qi.Session()
+    try:
+        session.connect(address)
+    except RuntimeError as e:
+        print("Connessione fallita:", e)
+        raise
+    return session
+
+session = connect()
+tts = session.service("ALTextToSpeech")
+posture = session.service("ALRobotPosture")
+motion = session.service("ALMotion")
+\end{lstlisting}
+\end{tcolorbox}
+
+\paragraph{Networking} Preferire IP statico o hostname risolvibile; verificare porte aperte e firewall. Per contesti multi-robot, definire discovery e registri di indirizzi.
+
+\begin{tcolorbox}[title=Spiegazione per sviluppatori non-Python]
+\textbf{Virtualenv}: in Python si crea un ambiente isolato per dipendenze con \texttt{python -m venv .venv} e si attiva prima di installare pacchetti.  
+\textbf{Configurazione}: usare un file \texttt{config.json} o variabili d'ambiente per host/porta, quindi leggerli con il modulo \texttt{json}/\texttt{os}.
+
+\textbf{Pattern di connessione}:
+\begin{lstlisting}
+import os, qi
+
+HOST = os.getenv("NAO_HOST", "nao.local")
+PORT = int(os.getenv("NAO_PORT", "9559"))
+
+def get_session():
+    s = qi.Session()
+    s.connect(f"tcp://{HOST}:{PORT}")
+    return s
+
+session = get_session()
+tts = session.service("ALTextToSpeech")
+tts.say("Configurazione caricata da ENV")
+\end{lstlisting}
+
+\textbf{Eccezioni e retry}: implementare un semplice \emph{retry} con backoff se la connessione fallisce; usare \texttt{time.sleep} e un numero massimo di tentativi.
+\end{tcolorbox}

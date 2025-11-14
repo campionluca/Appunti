@@ -1,0 +1,772 @@
+\chapter{Stringhe}
+\label{cap:stringhe}
+
+\section{Introduzione alle Stringhe}
+
+In C, le stringhe sono array di caratteri terminati da un carattere speciale: \texttt{'\textbackslash 0'} (carattere nullo o null terminator).
+
+\subsection{Obiettivi di Apprendimento}
+
+Alla fine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere come le stringhe sono rappresentate in C come array di caratteri
+    \item Utilizzare il terminatore null \texttt{'\textbackslash 0'} correttamente
+    \item Dichiarare e inizializzare stringhe in vari modi
+    \item Leggere e stampare stringhe con diverse tecniche di I/O
+    \item Utilizzare le principali funzioni della libreria \texttt{string.h}
+    \item Manipolare stringhe (conversione, inversione, concatenazione)
+    \item Evitare buffer overflow e altri errori comuni con le stringhe
+    \item Creare array di stringhe e gestire strutture dati complesse
+    \item Convertire tra stringhe e numeri in entrambe le direzioni
+\end{itemize}
+
+\begin{nota}
+A differenza di altri linguaggi, C non ha un tipo di dato "stringa" nativo. Le stringhe sono gestite come array di \texttt{char}.
+\end{nota}
+
+\subsection{Caratteristiche delle Stringhe}
+
+\begin{itemize}
+    \item Array di caratteri con terminatore null
+    \item Il terminatore \texttt{'\textbackslash 0'} marca la fine della stringa
+    \item La dimensione dell'array deve includere spazio per il terminatore
+    \item Possono essere manipolate come array o tramite puntatori
+\end{itemize}
+
+\section{Dichiarazione e Inizializzazione}
+
+\subsection{Modi di Dichiarare Stringhe}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    // Metodo 1: Array di caratteri con inizializzazione
+    char str1[6] = {'H', 'e', 'l', 'l', 'o', '\0'};
+
+    // Metodo 2: Inizializzazione con letterale stringa
+    char str2[] = "Hello";  // Dimensione automatica (6 caratteri)
+
+    // Metodo 3: Specifica dimensione esplicita
+    char str3[20] = "Hello";  // str3 ha 20 caratteri, usa solo 6
+
+    // Metodo 4: Puntatore a stringa letterale (costante)
+    char *str4 = "Hello";  // Non modificabile!
+
+    printf("%s\n", str1);
+    printf("%s\n", str2);
+    printf("%s\n", str3);
+    printf("%s\n", str4);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Le stringhe letterali (come \texttt{"Hello"}) sono memorizzate in una zona di memoria di sola lettura. Non tentare di modificarle!
+\end{attenzione}
+
+\subsection{Differenza tra Array e Puntatore}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    // Array di caratteri (modificabile)
+    char str1[] = "Hello";
+    str1[0] = 'J';  // OK: modifica in "Jello"
+
+    // Puntatore a stringa letterale (non modificabile)
+    char *str2 = "Hello";
+    // str2[0] = 'J';  // ERRORE: crash a runtime!
+
+    printf("%s\n", str1);
+    printf("%s\n", str2);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Input e Output di Stringhe}
+
+\subsection{Funzioni di I/O}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    char nome[50];
+
+    // Metodo 1: scanf (legge fino allo spazio)
+    printf("Inserisci nome: ");
+    scanf("%s", nome);  // Nota: nome, non &nome!
+    printf("Nome: %s\n", nome);
+
+    // Pulisci il buffer
+    while (getchar() != '\n');
+
+    // Metodo 2: gets (deprecato, non usare!)
+    // gets(nome);  // PERICOLOSO: non controlla i limiti!
+
+    // Metodo 3: fgets (sicuro, legge anche spazi)
+    printf("Inserisci nome completo: ");
+    fgets(nome, sizeof(nome), stdin);
+    printf("Nome completo: %s", nome);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+\texttt{scanf("\%s", str)} si ferma al primo spazio. Usa \texttt{fgets()} per leggere stringhe con spazi.
+\end{attenzione}
+
+\subsection{Carattere per Carattere}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    char str[100];
+    char ch;
+    int i = 0;
+
+    printf("Inserisci una stringa (max 99 caratteri):\n");
+
+    // Lettura carattere per carattere
+    while ((ch = getchar()) != '\n' && i < 99) {
+        str[i++] = ch;
+    }
+    str[i] = '\0';  // Aggiungi terminatore
+
+    printf("Hai inserito: %s\n", str);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Funzioni Standard per Stringhe}
+
+La libreria \texttt{string.h} fornisce molte funzioni utili.
+
+\subsection{strlen - Lunghezza della Stringa}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str[] = "Hello World";
+
+    int lunghezza = strlen(str);
+    printf("Lunghezza: %d\n", lunghezza);  // 11
+
+    // Implementazione manuale
+    int len = 0;
+    while (str[len] != '\0') {
+        len++;
+    }
+    printf("Lunghezza (manuale): %d\n", len);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{strcpy - Copia di Stringhe}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char sorgente[] = "Hello";
+    char destinazione[20];
+
+    // Copia sorgente in destinazione
+    strcpy(destinazione, sorgente);
+    printf("Destinazione: %s\n", destinazione);
+
+    // Versione sicura con limite
+    strncpy(destinazione, "World", sizeof(destinazione) - 1);
+    destinazione[sizeof(destinazione) - 1] = '\0';
+    printf("Destinazione: %s\n", destinazione);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{strcat - Concatenazione}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str1[50] = "Hello ";
+    char str2[] = "World";
+
+    // Concatena str2 a str1
+    strcat(str1, str2);
+    printf("Risultato: %s\n", str1);  // "Hello World"
+
+    // Versione sicura con limite
+    char str3[20] = "C ";
+    strncat(str3, "Programming", sizeof(str3) - strlen(str3) - 1);
+    printf("Risultato: %s\n", str3);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{strcmp - Confronto di Stringhe}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str1[] = "apple";
+    char str2[] = "banana";
+    char str3[] = "apple";
+
+    // strcmp restituisce:
+    // < 0 se str1 < str2
+    // 0 se str1 == str2
+    // > 0 se str1 > str2
+
+    if (strcmp(str1, str2) < 0) {
+        printf("%s viene prima di %s\n", str1, str2);
+    }
+
+    if (strcmp(str1, str3) == 0) {
+        printf("%s e' uguale a %s\n", str1, str3);
+    }
+
+    // Confronto case-insensitive (non standard ovunque)
+    #ifdef _WIN32
+    if (stricmp(str1, "APPLE") == 0) {
+        printf("Uguali ignorando maiuscole/minuscole\n");
+    }
+    #else
+    if (strcasecmp(str1, "APPLE") == 0) {
+        printf("Uguali ignorando maiuscole/minuscole\n");
+    }
+    #endif
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Altre Funzioni Utili}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main() {
+    char str[] = "Hello World 123";
+
+    // strchr: trova un carattere
+    char *pos = strchr(str, 'o');
+    if (pos != NULL) {
+        printf("Prima 'o' trovata alla posizione %ld\n",
+               pos - str);
+    }
+
+    // strstr: trova una sottostringa
+    pos = strstr(str, "World");
+    if (pos != NULL) {
+        printf("'World' trovato: %s\n", pos);
+    }
+
+    // strrchr: trova l'ultima occorrenza
+    pos = strrchr(str, 'o');
+    if (pos != NULL) {
+        printf("Ultima 'o' alla posizione %ld\n", pos - str);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Manipolazione di Stringhe}
+
+\subsection{Conversione Maiuscolo/Minuscolo}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+void maiuscolo(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = toupper(str[i]);
+    }
+}
+
+void minuscolo(char *str) {
+    for (int i = 0; str[i] != '\0'; i++) {
+        str[i] = tolower(str[i]);
+    }
+}
+
+int main() {
+    char str1[] = "Hello World";
+    char str2[] = "HELLO WORLD";
+
+    maiuscolo(str1);
+    printf("Maiuscolo: %s\n", str1);
+
+    minuscolo(str2);
+    printf("Minuscolo: %s\n", str2);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Inversione di una Stringa}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+void inverti(char *str) {
+    int n = strlen(str);
+    for (int i = 0; i < n / 2; i++) {
+        char temp = str[i];
+        str[i] = str[n - 1 - i];
+        str[n - 1 - i] = temp;
+    }
+}
+
+int main() {
+    char str[] = "Hello";
+
+    printf("Originale: %s\n", str);
+    inverti(str);
+    printf("Invertita: %s\n", str);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Rimozione degli Spazi}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+void rimuovi_spazi(char *str) {
+    int i = 0, j = 0;
+
+    while (str[i] != '\0') {
+        if (!isspace(str[i])) {
+            str[j++] = str[i];
+        }
+        i++;
+    }
+    str[j] = '\0';
+}
+
+int main() {
+    char str[] = "H e l l o   W o r l d";
+
+    printf("Originale: [%s]\n", str);
+    rimuovi_spazi(str);
+    printf("Senza spazi: [%s]\n", str);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Conta Parole}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+int conta_parole(char *str) {
+    int conta = 0;
+    int in_parola = 0;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (isspace(str[i])) {
+            in_parola = 0;
+        } else if (!in_parola) {
+            in_parola = 1;
+            conta++;
+        }
+    }
+
+    return conta;
+}
+
+int main() {
+    char str[] = "Questa e' una frase di esempio";
+
+    int parole = conta_parole(str);
+    printf("La stringa contiene %d parole\n", parole);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Array di Stringhe}
+
+\subsection{Array Bidimensionale di char}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    // Array di 5 stringhe, ognuna max 20 caratteri
+    char nomi[5][20] = {
+        "Mario",
+        "Lucia",
+        "Giovanni",
+        "Anna",
+        "Francesco"
+    };
+
+    printf("Lista nomi:\n");
+    for (int i = 0; i < 5; i++) {
+        printf("%d. %s\n", i + 1, nomi[i]);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Array di Puntatori a Stringhe}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    // Array di puntatori a stringhe
+    char *giorni[] = {
+        "Lunedi",
+        "Martedi",
+        "Mercoledi",
+        "Giovedi",
+        "Venerdi",
+        "Sabato",
+        "Domenica"
+    };
+
+    printf("Giorni della settimana:\n");
+    for (int i = 0; i < 7; i++) {
+        printf("%s\n", giorni[i]);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Conversioni tra Stringhe e Numeri}
+
+\subsection{Da Stringa a Numero}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    char str_int[] = "12345";
+    char str_float[] = "3.14159";
+    char str_long[] = "9876543210";
+
+    // Conversione a int
+    int num = atoi(str_int);
+    printf("Intero: %d\n", num);
+
+    // Conversione a float
+    float fnum = atof(str_float);
+    printf("Float: %.2f\n", fnum);
+
+    // Conversione a long
+    long lnum = atol(str_long);
+    printf("Long: %ld\n", lnum);
+
+    // Conversione con strtol (piu' robusta)
+    char *endptr;
+    long val = strtol("  123abc", &endptr, 10);
+    printf("Valore: %ld, Resto: %s\n", val, endptr);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Da Numero a Stringa}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int num = 12345;
+    float fnum = 3.14159;
+
+    char buffer[50];
+
+    // sprintf: stampa su stringa
+    sprintf(buffer, "%d", num);
+    printf("Intero come stringa: %s\n", buffer);
+
+    sprintf(buffer, "%.2f", fnum);
+    printf("Float come stringa: %s\n", buffer);
+
+    // Formato complesso
+    sprintf(buffer, "x=%d, y=%.1f", num, fnum);
+    printf("Formato: %s\n", buffer);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Tokenizzazione di Stringhe}
+
+\subsection{Uso di strtok}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    char str[] = "apple,banana,cherry,date";
+    char *token;
+
+    printf("Parole separate da virgola:\n");
+
+    // Primo token
+    token = strtok(str, ",");
+
+    // Token successivi
+    while (token != NULL) {
+        printf("- %s\n", token);
+        token = strtok(NULL, ",");
+    }
+
+    // Esempio con spazi multipli
+    char frase[] = "Questa  e'   una   frase";
+    printf("\nParole nella frase:\n");
+
+    token = strtok(frase, " ");
+    while (token != NULL) {
+        printf("- %s\n", token);
+        token = strtok(NULL, " ");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+\texttt{strtok()} modifica la stringa originale inserendo caratteri null. Se hai bisogno della stringa originale, fai prima una copia.
+\end{attenzione}
+
+\section{Validazione di Stringhe}
+
+\subsection{Verifica se è un Numero}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+int is_numero(char *str) {
+    if (*str == '-' || *str == '+') {
+        str++;  // Salta il segno
+    }
+
+    if (*str == '\0') {
+        return 0;  // Stringa vuota o solo segno
+    }
+
+    while (*str != '\0') {
+        if (!isdigit(*str)) {
+            return 0;
+        }
+        str++;
+    }
+
+    return 1;
+}
+
+int main() {
+    char str1[] = "12345";
+    char str2[] = "-678";
+    char str3[] = "123abc";
+    char str4[] = "";
+
+    printf("%s: %s\n", str1, is_numero(str1) ? "Numero" : "Non numero");
+    printf("%s: %s\n", str2, is_numero(str2) ? "Numero" : "Non numero");
+    printf("%s: %s\n", str3, is_numero(str3) ? "Numero" : "Non numero");
+    printf("%s: %s\n", str4, is_numero(str4) ? "Numero" : "Non numero");
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Verifica Palindromo}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int is_palindromo(char *str) {
+    int sinistra = 0;
+    int destra = strlen(str) - 1;
+
+    while (sinistra < destra) {
+        // Salta caratteri non alfanumerici
+        while (sinistra < destra && !isalnum(str[sinistra])) {
+            sinistra++;
+        }
+        while (sinistra < destra && !isalnum(str[destra])) {
+            destra--;
+        }
+
+        // Confronta ignorando maiuscole/minuscole
+        if (tolower(str[sinistra]) != tolower(str[destra])) {
+            return 0;
+        }
+
+        sinistra++;
+        destra--;
+    }
+
+    return 1;
+}
+
+int main() {
+    char str1[] = "radar";
+    char str2[] = "hello";
+    char str3[] = "A man, a plan, a canal: Panama";
+
+    printf("%s: %s\n", str1,
+           is_palindromo(str1) ? "Palindromo" : "Non palindromo");
+    printf("%s: %s\n", str2,
+           is_palindromo(str2) ? "Palindromo" : "Non palindromo");
+    printf("%s: %s\n", str3,
+           is_palindromo(str3) ? "Palindromo" : "Non palindromo");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Sistema di Login}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_USERNAME 20
+#define MAX_PASSWORD 20
+
+int verifica_login(char *username, char *password) {
+    // Username e password corretti (esempio)
+    char user_corretto[] = "admin";
+    char pass_corretta[] = "password123";
+
+    return (strcmp(username, user_corretto) == 0 &&
+            strcmp(password, pass_corretta) == 0);
+}
+
+int main() {
+    char username[MAX_USERNAME];
+    char password[MAX_PASSWORD];
+
+    printf("=== SISTEMA DI LOGIN ===\n");
+    printf("Username: ");
+    scanf("%s", username);
+
+    printf("Password: ");
+    scanf("%s", password);
+
+    if (verifica_login(username, password)) {
+        printf("\nAccesso consentito!\n");
+    } else {
+        printf("\nCredenziali non valide!\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Analisi di Testo}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+void analizza_testo(char *testo) {
+    int lettere = 0, cifre = 0, spazi = 0, altri = 0;
+
+    for (int i = 0; testo[i] != '\0'; i++) {
+        if (isalpha(testo[i])) {
+            lettere++;
+        } else if (isdigit(testo[i])) {
+            cifre++;
+        } else if (isspace(testo[i])) {
+            spazi++;
+        } else {
+            altri++;
+        }
+    }
+
+    printf("=== ANALISI TESTO ===\n");
+    printf("Lunghezza: %lu\n", strlen(testo));
+    printf("Lettere: %d\n", lettere);
+    printf("Cifre: %d\n", cifre);
+    printf("Spazi: %d\n", spazi);
+    printf("Altri caratteri: %d\n", altri);
+}
+
+int main() {
+    char testo[200];
+
+    printf("Inserisci un testo:\n");
+    fgets(testo, sizeof(testo), stdin);
+
+    // Rimuovi newline finale se presente
+    testo[strcspn(testo, "\n")] = '\0';
+
+    analizza_testo(testo);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi una funzione che conta quante vocali ci sono in una stringa.
+    \item Crea una funzione che verifica se una stringa contiene solo caratteri alfabetici.
+    \item Implementa una funzione che rimuove tutti i caratteri non alfanumerici da una stringa.
+    \item Scrivi un programma che legge una frase e stampa ogni parola su una riga separata.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Implementa una funzione che sostituisce tutte le occorrenze di una sottostringa con un'altra.
+    \item Crea una funzione che verifica se due stringhe sono anagrammi.
+    \item Scrivi un programma che ordina un array di stringhe in ordine alfabetico.
+    \item Implementa una funzione che comprime una stringa (es: "aaabbc" → "a3b2c1").
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa un parser di espressioni matematiche semplici (es: "3 + 5 * 2").
+    \item Crea un programma che valida indirizzi email usando analisi di stringhe.
+    \item Scrivi una funzione che implementa il pattern matching semplice (con wildcard * e ?).
+    \item Implementa un sistema di cifratura/decifratura Caesar per stringhe.
+\end{enumerate}

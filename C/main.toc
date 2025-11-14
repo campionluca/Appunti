@@ -1,0 +1,511 @@
+\babel@toc {italian}{}\relax 
+\babel@toc {italian}{}\relax 
+\contentsline {chapter}{Prefazione}{19}{chapter*.4}%
+\contentsline {chapter}{\numberline {1}Introduzione al C}{25}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Storia del Linguaggio C}{25}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Timeline Storica}{25}{subsection.1.1.1}%
+\contentsline {section}{\numberline {1.2}Caratteristiche del Linguaggio C}{25}{section.1.2}%
+\contentsline {subsection}{\numberline {1.2.1}Punti di Forza}{26}{subsection.1.2.1}%
+\contentsline {subsection}{\numberline {1.2.2}Limitazioni}{26}{subsection.1.2.2}%
+\contentsline {section}{\numberline {1.3}Compilazione vs Interpretazione}{26}{section.1.3}%
+\contentsline {subsection}{\numberline {1.3.1}Linguaggi Interpretati}{26}{subsection.1.3.1}%
+\contentsline {subsection}{\numberline {1.3.2}Linguaggi Compilati}{27}{subsection.1.3.2}%
+\contentsline {subsection}{\numberline {1.3.3}Il Processo di Compilazione in C}{27}{subsection.1.3.3}%
+\contentsline {section}{\numberline {1.4}Ambiente di Sviluppo}{27}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Installazione del Compilatore GCC}{28}{subsection.1.4.1}%
+\contentsline {subsubsection}{Su Linux}{28}{section*.22}%
+\contentsline {subsubsection}{Su macOS}{28}{section*.23}%
+\contentsline {subsubsection}{Su Windows}{28}{section*.24}%
+\contentsline {subsection}{\numberline {1.4.2}Editor e IDE Consigliati}{28}{subsection.1.4.2}%
+\contentsline {section}{\numberline {1.5}Struttura di un Programma C}{29}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}Direttiva \#include}{29}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}Funzione main()}{29}{subsection.1.5.2}%
+\contentsline {subsection}{\numberline {1.5.3}Commenti}{30}{subsection.1.5.3}%
+\contentsline {section}{\numberline {1.6}Il Primo Programma: Hello World}{30}{section.1.6}%
+\contentsline {subsection}{\numberline {1.6.1}Analisi del Codice}{30}{subsection.1.6.1}%
+\contentsline {subsection}{\numberline {1.6.2}Compilazione ed Esecuzione}{30}{subsection.1.6.2}%
+\contentsline {subsubsection}{Da Terminale}{30}{section*.25}%
+\contentsline {section}{\numberline {1.7}Esempi Guidati}{31}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}Esempio 1: Stampare Più Righe}{31}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}Esempio 2: Caratteri Speciali}{31}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}Esempio 3: Stampare Numeri}{32}{subsection.1.7.3}%
+\contentsline {section}{\numberline {1.8}Errori Comuni e Debugging}{32}{section.1.8}%
+\contentsline {subsection}{\numberline {1.8.1}Errore 1: Punto e Virgola Mancante}{32}{subsection.1.8.1}%
+\contentsline {subsection}{\numberline {1.8.2}Errore 2: Include Mancante}{33}{subsection.1.8.2}%
+\contentsline {subsection}{\numberline {1.8.3}Errore 3: Parentesi Graffe}{33}{subsection.1.8.3}%
+\contentsline {section}{\numberline {1.9}Librerie Standard del C}{33}{section.1.9}%
+\contentsline {section}{\numberline {1.10}Best Practices}{33}{section.1.10}%
+\contentsline {section}{\numberline {1.11}Esercizi}{34}{section.1.11}%
+\contentsline {subsection}{\numberline {1.11.1}Livello Base}{34}{subsection.1.11.1}%
+\contentsline {subsection}{\numberline {1.11.2}Livello Intermedio}{34}{subsection.1.11.2}%
+\contentsline {subsection}{\numberline {1.11.3}Livello Avanzato}{34}{subsection.1.11.3}%
+\contentsline {section}{\numberline {1.12}Riepilogo}{34}{section.1.12}%
+\contentsline {section}{\numberline {1.13}Approfondimenti}{35}{section.1.13}%
+\contentsline {chapter}{\numberline {2}Variabili e Tipi di Dati}{36}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Introduzione}{36}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Obiettivi di Apprendimento}{36}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Concetto di Variabile}{36}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Tipi di Dati Base}{37}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Tipi Interi}{37}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Tipi a Virgola Mobile}{37}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Tipo Carattere}{37}{subsection.2.4.3}%
+\contentsline {section}{\numberline {2.5}Dichiarazione di Variabili}{38}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Sintassi Base}{38}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Esempi di Dichiarazione}{38}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Inizializzazione}{38}{subsection.2.5.3}%
+\contentsline {section}{\numberline {2.6}Regole per i Nomi delle Variabili}{38}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Regole Obbligatorie}{39}{subsection.2.6.1}%
+\contentsline {subsection}{\numberline {2.6.2}Convenzioni Consigliate}{39}{subsection.2.6.2}%
+\contentsline {section}{\numberline {2.7}L'operatore sizeof}{39}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Specificatori di Formato per printf}{40}{section.2.8}%
+\contentsline {subsection}{\numberline {2.8.1}Formattazione Avanzata}{40}{subsection.2.8.1}%
+\contentsline {section}{\numberline {2.9}Input da Tastiera: scanf}{41}{section.2.9}%
+\contentsline {subsection}{\numberline {2.9.1}Sintassi Base}{41}{subsection.2.9.1}%
+\contentsline {subsection}{\numberline {2.9.2}Esempi di Input}{41}{subsection.2.9.2}%
+\contentsline {section}{\numberline {2.10}Costanti}{42}{section.2.10}%
+\contentsline {subsection}{\numberline {2.10.1}Costanti con \#define}{42}{subsection.2.10.1}%
+\contentsline {subsection}{\numberline {2.10.2}Costanti con const}{42}{subsection.2.10.2}%
+\contentsline {subsection}{\numberline {2.10.3}Differenza tra \#define e const}{43}{subsection.2.10.3}%
+\contentsline {section}{\numberline {2.11}Conversioni di Tipo}{43}{section.2.11}%
+\contentsline {subsection}{\numberline {2.11.1}Conversione Implicita}{43}{subsection.2.11.1}%
+\contentsline {subsection}{\numberline {2.11.2}Conversione Esplicita (Cast)}{44}{subsection.2.11.2}%
+\contentsline {section}{\numberline {2.12}Esempi Pratici Completi}{44}{section.2.12}%
+\contentsline {subsection}{\numberline {2.12.1}Esempio 1: Calcolo Area Rettangolo}{44}{subsection.2.12.1}%
+\contentsline {subsection}{\numberline {2.12.2}Esempio 2: Conversione Temperature}{45}{subsection.2.12.2}%
+\contentsline {subsection}{\numberline {2.12.3}Esempio 3: Calcolo Media}{45}{subsection.2.12.3}%
+\contentsline {section}{\numberline {2.13}Overflow e Underflow}{46}{section.2.13}%
+\contentsline {subsection}{\numberline {2.13.1}Overflow}{46}{subsection.2.13.1}%
+\contentsline {subsection}{\numberline {2.13.2}Underflow}{46}{subsection.2.13.2}%
+\contentsline {section}{\numberline {2.14}Libreria limits.h}{46}{section.2.14}%
+\contentsline {section}{\numberline {2.15}Esercizi}{47}{section.2.15}%
+\contentsline {subsection}{\numberline {2.15.1}Livello Base}{47}{subsection.2.15.1}%
+\contentsline {subsection}{\numberline {2.15.2}Livello Intermedio}{47}{subsection.2.15.2}%
+\contentsline {subsection}{\numberline {2.15.3}Livello Avanzato}{47}{subsection.2.15.3}%
+\contentsline {section}{\numberline {2.16}Riepilogo}{48}{section.2.16}%
+\contentsline {section}{\numberline {2.17}Approfondimenti}{48}{section.2.17}%
+\contentsline {chapter}{\numberline {3}Operatori ed Espressioni}{49}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Introduzione agli Operatori}{49}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Operatori Aritmetici}{49}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Operatori Binari}{49}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Operatori Unari}{49}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Differenza tra Pre e Post Incremento}{50}{subsection.3.2.3}%
+\contentsline {section}{\numberline {3.3}Operatori di Assegnamento}{50}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Assegnamento Semplice}{50}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Operatori di Assegnamento Composto}{50}{subsection.3.3.2}%
+\contentsline {section}{\numberline {3.4}Operatori Relazionali}{50}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Operatori Logici}{51}{section.3.5}%
+\contentsline {subsection}{\numberline {3.5.1}Valutazione in Cortocircuito}{51}{subsection.3.5.1}%
+\contentsline {section}{\numberline {3.6}Operatori Bit a Bit}{51}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Operatore Ternario}{52}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Sintassi}{52}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.2}Esempi}{52}{subsection.3.7.2}%
+\contentsline {section}{\numberline {3.8}Precedenza degli Operatori}{52}{section.3.8}%
+\contentsline {subsection}{\numberline {3.8.1}Tabella di Precedenza (dal più alto al più basso)}{52}{subsection.3.8.1}%
+\contentsline {subsection}{\numberline {3.8.2}Esempi di Precedenza}{53}{subsection.3.8.2}%
+\contentsline {section}{\numberline {3.9}Conversioni di Tipo}{53}{section.3.9}%
+\contentsline {subsection}{\numberline {3.9.1}Conversione Implicita (Casting Automatico)}{53}{subsection.3.9.1}%
+\contentsline {subsection}{\numberline {3.9.2}Conversione Esplicita (Cast)}{54}{subsection.3.9.2}%
+\contentsline {section}{\numberline {3.10}Espressioni Complesse}{54}{section.3.10}%
+\contentsline {subsection}{\numberline {3.10.1}Combinazione di Operatori}{54}{subsection.3.10.1}%
+\contentsline {subsection}{\numberline {3.10.2}Uso dell'Operatore sizeof}{54}{subsection.3.10.2}%
+\contentsline {section}{\numberline {3.11}Errori Comuni}{55}{section.3.11}%
+\contentsline {subsection}{\numberline {3.11.1}Confusione tra = e ==}{55}{subsection.3.11.1}%
+\contentsline {subsection}{\numberline {3.11.2}Divisione Intera Inaspettata}{55}{subsection.3.11.2}%
+\contentsline {subsection}{\numberline {3.11.3}Overflow in Operazioni Aritmetiche}{55}{subsection.3.11.3}%
+\contentsline {section}{\numberline {3.12}Esercizi}{56}{section.3.12}%
+\contentsline {subsection}{\numberline {3.12.1}Livello Base}{56}{subsection.3.12.1}%
+\contentsline {subsection}{\numberline {3.12.2}Livello Intermedio}{56}{subsection.3.12.2}%
+\contentsline {subsection}{\numberline {3.12.3}Livello Avanzato}{56}{subsection.3.12.3}%
+\contentsline {chapter}{\numberline {4}Controllo di Flusso}{57}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Introduzione}{57}{section.4.1}%
+\contentsline {subsection}{\numberline {4.1.1}Obiettivi di Apprendimento}{57}{subsection.4.1.1}%
+\contentsline {section}{\numberline {4.2}Istruzioni Condizionali}{57}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Istruzione if}{57}{subsection.4.2.1}%
+\contentsline {subsubsection}{Sintassi Base}{58}{section*.26}%
+\contentsline {subsubsection}{Esempi}{58}{section*.27}%
+\contentsline {subsection}{\numberline {4.2.2}Istruzione if-else}{58}{subsection.4.2.2}%
+\contentsline {subsubsection}{Sintassi}{58}{section*.28}%
+\contentsline {subsubsection}{Esempi}{58}{section*.29}%
+\contentsline {subsection}{\numberline {4.2.3}Istruzione if-else if-else}{59}{subsection.4.2.3}%
+\contentsline {subsubsection}{Sintassi}{59}{section*.30}%
+\contentsline {subsubsection}{Esempi}{59}{section*.31}%
+\contentsline {subsection}{\numberline {4.2.4}if Annidati}{60}{subsection.4.2.4}%
+\contentsline {subsection}{\numberline {4.2.5}Istruzione switch}{60}{subsection.4.2.5}%
+\contentsline {subsubsection}{Sintassi}{60}{section*.32}%
+\contentsline {subsubsection}{Esempi}{60}{section*.33}%
+\contentsline {subsubsection}{Fall-through}{61}{section*.34}%
+\contentsline {section}{\numberline {4.3}Cicli (Loop)}{62}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Ciclo while}{62}{subsection.4.3.1}%
+\contentsline {subsubsection}{Sintassi}{62}{section*.35}%
+\contentsline {subsubsection}{Esempi}{62}{section*.36}%
+\contentsline {subsection}{\numberline {4.3.2}Ciclo do-while}{63}{subsection.4.3.2}%
+\contentsline {subsubsection}{Sintassi}{63}{section*.37}%
+\contentsline {subsubsection}{Esempi}{63}{section*.38}%
+\contentsline {subsection}{\numberline {4.3.3}Ciclo for}{64}{subsection.4.3.3}%
+\contentsline {subsubsection}{Sintassi}{64}{section*.39}%
+\contentsline {subsubsection}{Componenti del for}{64}{section*.40}%
+\contentsline {subsubsection}{Esempi}{64}{section*.41}%
+\contentsline {subsubsection}{for Annidati}{65}{section*.42}%
+\contentsline {section}{\numberline {4.4}Istruzioni di Controllo dei Cicli}{65}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Istruzione break}{65}{subsection.4.4.1}%
+\contentsline {subsection}{\numberline {4.4.2}Istruzione continue}{66}{subsection.4.4.2}%
+\contentsline {subsection}{\numberline {4.4.3}Istruzione goto}{67}{subsection.4.4.3}%
+\contentsline {section}{\numberline {4.5}Confronto tra i Cicli}{67}{section.4.5}%
+\contentsline {subsection}{\numberline {4.5.1}Quando usare quale ciclo}{67}{subsection.4.5.1}%
+\contentsline {subsection}{\numberline {4.5.2}Equivalenza tra i Cicli}{68}{subsection.4.5.2}%
+\contentsline {section}{\numberline {4.6}Esempi Completi}{68}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Calcolatrice con Menu}{68}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Gioco: Indovina il Numero}{69}{subsection.4.6.2}%
+\contentsline {section}{\numberline {4.7}Esercizi}{70}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}Livello Base}{70}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Livello Intermedio}{70}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Livello Avanzato}{70}{subsection.4.7.3}%
+\contentsline {chapter}{\numberline {5}Funzioni}{71}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Introduzione alle Funzioni}{71}{section.5.1}%
+\contentsline {subsection}{\numberline {5.1.1}Obiettivi di apprendimento}{71}{subsection.5.1.1}%
+\contentsline {section}{\numberline {5.2}Definizione di una Funzione}{72}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Sintassi}{72}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Componenti di una Funzione}{72}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Esempio Semplice}{72}{subsection.5.2.3}%
+\contentsline {section}{\numberline {5.3}Parametri e Argomenti}{72}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Funzioni con Parametri}{72}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Passaggio per Valore}{73}{subsection.5.3.2}%
+\contentsline {section}{\numberline {5.4}Valore di Ritorno}{73}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Funzioni che Restituiscono un Valore}{73}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Funzioni void}{74}{subsection.5.4.2}%
+\contentsline {section}{\numberline {5.5}Dichiarazione e Prototipo}{75}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Prototipo di Funzione}{75}{subsection.5.5.1}%
+\contentsline {section}{\numberline {5.6}Funzioni Ricorsive}{75}{section.5.6}%
+\contentsline {subsection}{\numberline {5.6.1}Fattoriale Ricorsivo}{75}{subsection.5.6.1}%
+\contentsline {subsection}{\numberline {5.6.2}Fibonacci Ricorsivo}{76}{subsection.5.6.2}%
+\contentsline {section}{\numberline {5.7}Ambito delle Variabili (Scope)}{77}{section.5.7}%
+\contentsline {subsection}{\numberline {5.7.1}Variabili Locali}{77}{subsection.5.7.1}%
+\contentsline {subsection}{\numberline {5.7.2}Variabili Globali}{77}{subsection.5.7.2}%
+\contentsline {subsection}{\numberline {5.7.3}Variabili Static}{78}{subsection.5.7.3}%
+\contentsline {section}{\numberline {5.8}Esempi Pratici}{78}{section.5.8}%
+\contentsline {subsection}{\numberline {5.8.1}Calcolatrice con Funzioni}{78}{subsection.5.8.1}%
+\contentsline {subsection}{\numberline {5.8.2}Funzioni Matematiche}{80}{subsection.5.8.2}%
+\contentsline {section}{\numberline {5.9}Buone Pratiche}{81}{section.5.9}%
+\contentsline {subsection}{\numberline {5.9.1}Nomi Descrittivi}{81}{subsection.5.9.1}%
+\contentsline {subsection}{\numberline {5.9.2}Funzioni Piccole e Focalizzate}{81}{subsection.5.9.2}%
+\contentsline {subsection}{\numberline {5.9.3}Documentazione}{81}{subsection.5.9.3}%
+\contentsline {section}{\numberline {5.10}Esercizi}{82}{section.5.10}%
+\contentsline {subsection}{\numberline {5.10.1}Livello Base}{82}{subsection.5.10.1}%
+\contentsline {subsection}{\numberline {5.10.2}Livello Intermedio}{82}{subsection.5.10.2}%
+\contentsline {subsection}{\numberline {5.10.3}Livello Avanzato}{82}{subsection.5.10.3}%
+\contentsline {chapter}{\numberline {6}Array}{83}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduzione agli Array}{83}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}Obiettivi di Apprendimento}{83}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}Caratteristiche degli Array}{83}{subsection.6.1.2}%
+\contentsline {section}{\numberline {6.2}Dichiarazione e Inizializzazione}{84}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Sintassi Base}{84}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Esempi di Dichiarazione}{84}{subsection.6.2.2}%
+\contentsline {section}{\numberline {6.3}Accesso agli Elementi}{84}{section.6.3}%
+\contentsline {subsection}{\numberline {6.3.1}Lettura e Scrittura}{84}{subsection.6.3.1}%
+\contentsline {subsection}{\numberline {6.3.2}Esempio di Errore}{85}{subsection.6.3.2}%
+\contentsline {section}{\numberline {6.4}Attraversamento di un Array}{85}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Uso del Ciclo for}{85}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Dimensione Dinamica}{85}{subsection.6.4.2}%
+\contentsline {section}{\numberline {6.5}Input e Output di Array}{86}{section.6.5}%
+\contentsline {subsection}{\numberline {6.5.1}Lettura da Tastiera}{86}{subsection.6.5.1}%
+\contentsline {section}{\numberline {6.6}Operazioni sugli Array}{87}{section.6.6}%
+\contentsline {subsection}{\numberline {6.6.1}Ricerca del Massimo e del Minimo}{87}{subsection.6.6.1}%
+\contentsline {subsection}{\numberline {6.6.2}Ricerca di un Elemento}{87}{subsection.6.6.2}%
+\contentsline {subsection}{\numberline {6.6.3}Inversione di un Array}{88}{subsection.6.6.3}%
+\contentsline {subsection}{\numberline {6.6.4}Copia di un Array}{88}{subsection.6.6.4}%
+\contentsline {section}{\numberline {6.7}Array e Funzioni}{89}{section.6.7}%
+\contentsline {subsection}{\numberline {6.7.1}Passaggio di Array a Funzioni}{89}{subsection.6.7.1}%
+\contentsline {section}{\numberline {6.8}Array Multidimensionali}{90}{section.6.8}%
+\contentsline {subsection}{\numberline {6.8.1}Array Bidimensionali (Matrici)}{90}{subsection.6.8.1}%
+\contentsline {subsection}{\numberline {6.8.2}Operazioni su Matrici}{90}{subsection.6.8.2}%
+\contentsline {section}{\numberline {6.9}Algoritmi di Ordinamento}{92}{section.6.9}%
+\contentsline {subsection}{\numberline {6.9.1}Bubble Sort}{92}{subsection.6.9.1}%
+\contentsline {subsection}{\numberline {6.9.2}Selection Sort}{93}{subsection.6.9.2}%
+\contentsline {section}{\numberline {6.10}Esempi Pratici}{93}{section.6.10}%
+\contentsline {subsection}{\numberline {6.10.1}Statistiche su un Array}{93}{subsection.6.10.1}%
+\contentsline {subsection}{\numberline {6.10.2}Rimozione Duplicati}{94}{subsection.6.10.2}%
+\contentsline {section}{\numberline {6.11}Esercizi}{95}{section.6.11}%
+\contentsline {subsection}{\numberline {6.11.1}Livello Base}{95}{subsection.6.11.1}%
+\contentsline {subsection}{\numberline {6.11.2}Livello Intermedio}{95}{subsection.6.11.2}%
+\contentsline {subsection}{\numberline {6.11.3}Livello Avanzato}{96}{subsection.6.11.3}%
+\contentsline {chapter}{\numberline {7}Puntatori}{97}{chapter.7}%
+\contentsline {section}{\numberline {7.1}Introduzione ai Puntatori}{97}{section.7.1}%
+\contentsline {subsection}{\numberline {7.1.1}Obiettivi di Apprendimento}{97}{subsection.7.1.1}%
+\contentsline {subsection}{\numberline {7.1.2}Perché Usare i Puntatori?}{97}{subsection.7.1.2}%
+\contentsline {section}{\numberline {7.2}Concetti Fondamentali}{98}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}Indirizzi di Memoria}{98}{subsection.7.2.1}%
+\contentsline {subsection}{\numberline {7.2.2}Operatori dei Puntatori}{98}{subsection.7.2.2}%
+\contentsline {section}{\numberline {7.3}Dichiarazione e Inizializzazione}{98}{section.7.3}%
+\contentsline {subsection}{\numberline {7.3.1}Sintassi}{98}{subsection.7.3.1}%
+\contentsline {subsection}{\numberline {7.3.2}Esempi}{98}{subsection.7.3.2}%
+\contentsline {subsection}{\numberline {7.3.3}Inizializzazione Diretta}{99}{subsection.7.3.3}%
+\contentsline {section}{\numberline {7.4}Dereferenziazione}{99}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Puntatori e Funzioni}{99}{section.7.5}%
+\contentsline {subsection}{\numberline {7.5.1}Passaggio per Riferimento}{99}{subsection.7.5.1}%
+\contentsline {subsection}{\numberline {7.5.2}Scambio di Valori}{100}{subsection.7.5.2}%
+\contentsline {subsection}{\numberline {7.5.3}Ritorno di Valori Multipli}{101}{subsection.7.5.3}%
+\contentsline {section}{\numberline {7.6}Puntatori e Array}{101}{section.7.6}%
+\contentsline {subsection}{\numberline {7.6.1}Relazione tra Array e Puntatori}{101}{subsection.7.6.1}%
+\contentsline {subsection}{\numberline {7.6.2}Aritmetica dei Puntatori}{102}{subsection.7.6.2}%
+\contentsline {subsection}{\numberline {7.6.3}Passaggio di Array a Funzioni con Puntatori}{102}{subsection.7.6.3}%
+\contentsline {section}{\numberline {7.7}Puntatori a Puntatori}{103}{section.7.7}%
+\contentsline {section}{\numberline {7.8}Puntatori void}{103}{section.7.8}%
+\contentsline {section}{\numberline {7.9}Puntatori Costanti}{104}{section.7.9}%
+\contentsline {subsection}{\numberline {7.9.1}Tipi di Costanti}{104}{subsection.7.9.1}%
+\contentsline {section}{\numberline {7.10}Puntatore NULL}{105}{section.7.10}%
+\contentsline {section}{\numberline {7.11}Allocazione Dinamica della Memoria}{105}{section.7.11}%
+\contentsline {subsection}{\numberline {7.11.1}malloc}{105}{subsection.7.11.1}%
+\contentsline {subsection}{\numberline {7.11.2}calloc}{106}{subsection.7.11.2}%
+\contentsline {subsection}{\numberline {7.11.3}realloc}{106}{subsection.7.11.3}%
+\contentsline {section}{\numberline {7.12}Errori Comuni con i Puntatori}{107}{section.7.12}%
+\contentsline {subsection}{\numberline {7.12.1}Puntatore Non Inizializzato}{107}{subsection.7.12.1}%
+\contentsline {subsection}{\numberline {7.12.2}Dereferenziazione di NULL}{107}{subsection.7.12.2}%
+\contentsline {subsection}{\numberline {7.12.3}Memory Leak}{107}{subsection.7.12.3}%
+\contentsline {subsection}{\numberline {7.12.4}Dangling Pointer}{108}{subsection.7.12.4}%
+\contentsline {section}{\numberline {7.13}Esempi Pratici}{108}{section.7.13}%
+\contentsline {subsection}{\numberline {7.13.1}Lista Dinamica di Numeri}{108}{subsection.7.13.1}%
+\contentsline {section}{\numberline {7.14}Esercizi}{109}{section.7.14}%
+\contentsline {subsection}{\numberline {7.14.1}Livello Base}{109}{subsection.7.14.1}%
+\contentsline {subsection}{\numberline {7.14.2}Livello Intermedio}{109}{subsection.7.14.2}%
+\contentsline {subsection}{\numberline {7.14.3}Livello Avanzato}{109}{subsection.7.14.3}%
+\contentsline {chapter}{\numberline {8}Stringhe}{110}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Introduzione alle Stringhe}{110}{section.8.1}%
+\contentsline {subsection}{\numberline {8.1.1}Obiettivi di Apprendimento}{110}{subsection.8.1.1}%
+\contentsline {subsection}{\numberline {8.1.2}Caratteristiche delle Stringhe}{110}{subsection.8.1.2}%
+\contentsline {section}{\numberline {8.2}Dichiarazione e Inizializzazione}{111}{section.8.2}%
+\contentsline {subsection}{\numberline {8.2.1}Modi di Dichiarare Stringhe}{111}{subsection.8.2.1}%
+\contentsline {subsection}{\numberline {8.2.2}Differenza tra Array e Puntatore}{111}{subsection.8.2.2}%
+\contentsline {section}{\numberline {8.3}Input e Output di Stringhe}{112}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}Funzioni di I/O}{112}{subsection.8.3.1}%
+\contentsline {subsection}{\numberline {8.3.2}Carattere per Carattere}{112}{subsection.8.3.2}%
+\contentsline {section}{\numberline {8.4}Funzioni Standard per Stringhe}{113}{section.8.4}%
+\contentsline {subsection}{\numberline {8.4.1}strlen - Lunghezza della Stringa}{113}{subsection.8.4.1}%
+\contentsline {subsection}{\numberline {8.4.2}strcpy - Copia di Stringhe}{113}{subsection.8.4.2}%
+\contentsline {subsection}{\numberline {8.4.3}strcat - Concatenazione}{113}{subsection.8.4.3}%
+\contentsline {subsection}{\numberline {8.4.4}strcmp - Confronto di Stringhe}{114}{subsection.8.4.4}%
+\contentsline {subsection}{\numberline {8.4.5}Altre Funzioni Utili}{114}{subsection.8.4.5}%
+\contentsline {section}{\numberline {8.5}Manipolazione di Stringhe}{115}{section.8.5}%
+\contentsline {subsection}{\numberline {8.5.1}Conversione Maiuscolo/Minuscolo}{115}{subsection.8.5.1}%
+\contentsline {subsection}{\numberline {8.5.2}Inversione di una Stringa}{116}{subsection.8.5.2}%
+\contentsline {subsection}{\numberline {8.5.3}Rimozione degli Spazi}{116}{subsection.8.5.3}%
+\contentsline {subsection}{\numberline {8.5.4}Conta Parole}{117}{subsection.8.5.4}%
+\contentsline {section}{\numberline {8.6}Array di Stringhe}{117}{section.8.6}%
+\contentsline {subsection}{\numberline {8.6.1}Array Bidimensionale di char}{117}{subsection.8.6.1}%
+\contentsline {subsection}{\numberline {8.6.2}Array di Puntatori a Stringhe}{118}{subsection.8.6.2}%
+\contentsline {section}{\numberline {8.7}Conversioni tra Stringhe e Numeri}{118}{section.8.7}%
+\contentsline {subsection}{\numberline {8.7.1}Da Stringa a Numero}{118}{subsection.8.7.1}%
+\contentsline {subsection}{\numberline {8.7.2}Da Numero a Stringa}{119}{subsection.8.7.2}%
+\contentsline {section}{\numberline {8.8}Tokenizzazione di Stringhe}{119}{section.8.8}%
+\contentsline {subsection}{\numberline {8.8.1}Uso di strtok}{119}{subsection.8.8.1}%
+\contentsline {section}{\numberline {8.9}Validazione di Stringhe}{120}{section.8.9}%
+\contentsline {subsection}{\numberline {8.9.1}Verifica se è un Numero}{120}{subsection.8.9.1}%
+\contentsline {subsection}{\numberline {8.9.2}Verifica Palindromo}{121}{subsection.8.9.2}%
+\contentsline {section}{\numberline {8.10}Esempi Pratici}{121}{section.8.10}%
+\contentsline {subsection}{\numberline {8.10.1}Sistema di Login}{121}{subsection.8.10.1}%
+\contentsline {subsection}{\numberline {8.10.2}Analisi di Testo}{122}{subsection.8.10.2}%
+\contentsline {section}{\numberline {8.11}Esercizi}{123}{section.8.11}%
+\contentsline {subsection}{\numberline {8.11.1}Livello Base}{123}{subsection.8.11.1}%
+\contentsline {subsection}{\numberline {8.11.2}Livello Intermedio}{123}{subsection.8.11.2}%
+\contentsline {subsection}{\numberline {8.11.3}Livello Avanzato}{123}{subsection.8.11.3}%
+\contentsline {chapter}{\numberline {9}Struct}{124}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Obiettivi di Apprendimento}{124}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Introduzione alle Struct}{124}{section.9.2}%
+\contentsline {subsection}{\numberline {9.2.1}Perché Usare le Struct?}{124}{subsection.9.2.1}%
+\contentsline {section}{\numberline {9.3}Definizione di una Struct}{125}{section.9.3}%
+\contentsline {subsection}{\numberline {9.3.1}Sintassi Base}{125}{subsection.9.3.1}%
+\contentsline {subsection}{\numberline {9.3.2}Esempi di Definizione}{125}{subsection.9.3.2}%
+\contentsline {section}{\numberline {9.4}Dichiarazione e Inizializzazione}{126}{section.9.4}%
+\contentsline {subsection}{\numberline {9.4.1}Dichiarazione}{126}{subsection.9.4.1}%
+\contentsline {subsection}{\numberline {9.4.2}Inizializzazione}{126}{subsection.9.4.2}%
+\contentsline {section}{\numberline {9.5}Accesso ai Membri}{127}{section.9.5}%
+\contentsline {subsection}{\numberline {9.5.1}Operatore Punto (.)}{127}{subsection.9.5.1}%
+\contentsline {subsection}{\numberline {9.5.2}Input da Utente}{127}{subsection.9.5.2}%
+\contentsline {section}{\numberline {9.6}Typedef}{128}{section.9.6}%
+\contentsline {section}{\numberline {9.7}Array di Struct}{129}{section.9.7}%
+\contentsline {section}{\numberline {9.8}Struct Annidate}{130}{section.9.8}%
+\contentsline {section}{\numberline {9.9}Puntatori a Struct}{131}{section.9.9}%
+\contentsline {subsection}{\numberline {9.9.1}Operatore Freccia (->)}{131}{subsection.9.9.1}%
+\contentsline {section}{\numberline {9.10}Struct e Funzioni}{132}{section.9.10}%
+\contentsline {subsection}{\numberline {9.10.1}Passaggio per Valore}{132}{subsection.9.10.1}%
+\contentsline {subsection}{\numberline {9.10.2}Passaggio per Riferimento}{133}{subsection.9.10.2}%
+\contentsline {subsection}{\numberline {9.10.3}Ritorno di Struct}{133}{subsection.9.10.3}%
+\contentsline {section}{\numberline {9.11}Allocazione Dinamica di Struct}{134}{section.9.11}%
+\contentsline {section}{\numberline {9.12}Esempi Pratici}{136}{section.9.12}%
+\contentsline {subsection}{\numberline {9.12.1}Sistema di Gestione Studenti}{136}{subsection.9.12.1}%
+\contentsline {subsection}{\numberline {9.12.2}Sistema di Coordinate 3D}{137}{subsection.9.12.2}%
+\contentsline {section}{\numberline {9.13}Esercizi}{138}{section.9.13}%
+\contentsline {subsection}{\numberline {9.13.1}Livello Base}{138}{subsection.9.13.1}%
+\contentsline {subsection}{\numberline {9.13.2}Livello Intermedio}{139}{subsection.9.13.2}%
+\contentsline {subsection}{\numberline {9.13.3}Livello Avanzato}{139}{subsection.9.13.3}%
+\contentsline {chapter}{\numberline {10}Gestione dei File}{140}{chapter.10}%
+\contentsline {section}{\numberline {10.1}Introduzione ai File}{140}{section.10.1}%
+\contentsline {subsection}{\numberline {10.1.1}Tipi di File}{140}{subsection.10.1.1}%
+\contentsline {section}{\numberline {10.2}Apertura e Chiusura di File}{140}{section.10.2}%
+\contentsline {subsection}{\numberline {10.2.1}Funzione fopen}{140}{subsection.10.2.1}%
+\contentsline {subsection}{\numberline {10.2.2}Modalità di Apertura}{140}{subsection.10.2.2}%
+\contentsline {subsection}{\numberline {10.2.3}Esempio Base}{141}{subsection.10.2.3}%
+\contentsline {section}{\numberline {10.3}Scrittura su File}{141}{section.10.3}%
+\contentsline {subsection}{\numberline {10.3.1}fprintf}{141}{subsection.10.3.1}%
+\contentsline {subsection}{\numberline {10.3.2}fputs}{142}{subsection.10.3.2}%
+\contentsline {subsection}{\numberline {10.3.3}fputc}{142}{subsection.10.3.3}%
+\contentsline {section}{\numberline {10.4}Lettura da File}{143}{section.10.4}%
+\contentsline {subsection}{\numberline {10.4.1}fscanf}{143}{subsection.10.4.1}%
+\contentsline {subsection}{\numberline {10.4.2}fgets}{143}{subsection.10.4.2}%
+\contentsline {subsection}{\numberline {10.4.3}fgetc}{144}{subsection.10.4.3}%
+\contentsline {section}{\numberline {10.5}Controllo Fine File e Errori}{144}{section.10.5}%
+\contentsline {subsection}{\numberline {10.5.1}feof e ferror}{144}{subsection.10.5.1}%
+\contentsline {section}{\numberline {10.6}Posizionamento nel File}{145}{section.10.6}%
+\contentsline {subsection}{\numberline {10.6.1}fseek}{145}{subsection.10.6.1}%
+\contentsline {subsection}{\numberline {10.6.2}ftell}{145}{subsection.10.6.2}%
+\contentsline {section}{\numberline {10.7}File Binari}{146}{section.10.7}%
+\contentsline {subsection}{\numberline {10.7.1}fwrite}{146}{subsection.10.7.1}%
+\contentsline {subsection}{\numberline {10.7.2}fread}{147}{subsection.10.7.2}%
+\contentsline {section}{\numberline {10.8}Esempi Pratici}{147}{section.10.8}%
+\contentsline {subsection}{\numberline {10.8.1}Copia di File}{147}{subsection.10.8.1}%
+\contentsline {subsection}{\numberline {10.8.2}Conta Righe, Parole e Caratteri}{148}{subsection.10.8.2}%
+\contentsline {subsection}{\numberline {10.8.3}Database Studenti su File}{149}{subsection.10.8.3}%
+\contentsline {subsection}{\numberline {10.8.4}File CSV}{151}{subsection.10.8.4}%
+\contentsline {section}{\numberline {10.9}Gestione Errori}{152}{section.10.9}%
+\contentsline {subsection}{\numberline {10.9.1}perror}{152}{subsection.10.9.1}%
+\contentsline {section}{\numberline {10.10}Esercizi}{152}{section.10.10}%
+\contentsline {subsection}{\numberline {10.10.1}Livello Base}{152}{subsection.10.10.1}%
+\contentsline {subsection}{\numberline {10.10.2}Livello Intermedio}{152}{subsection.10.10.2}%
+\contentsline {subsection}{\numberline {10.10.3}Livello Avanzato}{153}{subsection.10.10.3}%
+\contentsline {chapter}{\numberline {11}Esercizi Completi}{154}{chapter.11}%
+\contentsline {section}{\numberline {11.1}Variabili e Tipi di Dati}{154}{section.11.1}%
+\contentsline {subsection}{\numberline {11.1.1}Livello Base}{154}{subsection.11.1.1}%
+\contentsline {subsection}{\numberline {11.1.2}Livello Intermedio}{154}{subsection.11.1.2}%
+\contentsline {subsection}{\numberline {11.1.3}Livello Avanzato}{154}{subsection.11.1.3}%
+\contentsline {section}{\numberline {11.2}Operatori ed Espressioni}{155}{section.11.2}%
+\contentsline {subsection}{\numberline {11.2.1}Livello Base}{155}{subsection.11.2.1}%
+\contentsline {subsection}{\numberline {11.2.2}Livello Intermedio}{155}{subsection.11.2.2}%
+\contentsline {subsection}{\numberline {11.2.3}Livello Avanzato}{155}{subsection.11.2.3}%
+\contentsline {section}{\numberline {11.3}Controllo di Flusso}{155}{section.11.3}%
+\contentsline {subsection}{\numberline {11.3.1}Livello Base}{155}{subsection.11.3.1}%
+\contentsline {subsection}{\numberline {11.3.2}Livello Intermedio}{156}{subsection.11.3.2}%
+\contentsline {subsection}{\numberline {11.3.3}Livello Avanzato}{156}{subsection.11.3.3}%
+\contentsline {section}{\numberline {11.4}Funzioni}{156}{section.11.4}%
+\contentsline {subsection}{\numberline {11.4.1}Livello Base}{156}{subsection.11.4.1}%
+\contentsline {subsection}{\numberline {11.4.2}Livello Intermedio}{156}{subsection.11.4.2}%
+\contentsline {subsection}{\numberline {11.4.3}Livello Avanzato}{156}{subsection.11.4.3}%
+\contentsline {section}{\numberline {11.5}Array}{157}{section.11.5}%
+\contentsline {subsection}{\numberline {11.5.1}Livello Base}{157}{subsection.11.5.1}%
+\contentsline {subsection}{\numberline {11.5.2}Livello Intermedio}{157}{subsection.11.5.2}%
+\contentsline {subsection}{\numberline {11.5.3}Livello Avanzato}{157}{subsection.11.5.3}%
+\contentsline {section}{\numberline {11.6}Puntatori}{157}{section.11.6}%
+\contentsline {subsection}{\numberline {11.6.1}Livello Base}{157}{subsection.11.6.1}%
+\contentsline {subsection}{\numberline {11.6.2}Livello Intermedio}{157}{subsection.11.6.2}%
+\contentsline {subsection}{\numberline {11.6.3}Livello Avanzato}{158}{subsection.11.6.3}%
+\contentsline {section}{\numberline {11.7}Stringhe}{158}{section.11.7}%
+\contentsline {subsection}{\numberline {11.7.1}Livello Base}{158}{subsection.11.7.1}%
+\contentsline {subsection}{\numberline {11.7.2}Livello Intermedio}{158}{subsection.11.7.2}%
+\contentsline {subsection}{\numberline {11.7.3}Livello Avanzato}{158}{subsection.11.7.3}%
+\contentsline {section}{\numberline {11.8}Struct}{158}{section.11.8}%
+\contentsline {subsection}{\numberline {11.8.1}Livello Base}{158}{subsection.11.8.1}%
+\contentsline {subsection}{\numberline {11.8.2}Livello Intermedio}{159}{subsection.11.8.2}%
+\contentsline {subsection}{\numberline {11.8.3}Livello Avanzato}{159}{subsection.11.8.3}%
+\contentsline {section}{\numberline {11.9}File}{159}{section.11.9}%
+\contentsline {subsection}{\numberline {11.9.1}Livello Base}{159}{subsection.11.9.1}%
+\contentsline {subsection}{\numberline {11.9.2}Livello Intermedio}{159}{subsection.11.9.2}%
+\contentsline {subsection}{\numberline {11.9.3}Livello Avanzato}{159}{subsection.11.9.3}%
+\contentsline {section}{\numberline {11.10}Progetti Completi}{160}{section.11.10}%
+\contentsline {subsection}{\numberline {11.10.1}Progetto 1: Sistema di Gestione Biblioteca}{160}{subsection.11.10.1}%
+\contentsline {subsection}{\numberline {11.10.2}Progetto 2: Gioco del Tris}{160}{subsection.11.10.2}%
+\contentsline {subsection}{\numberline {11.10.3}Progetto 3: Gestionale Studenti}{160}{subsection.11.10.3}%
+\contentsline {subsection}{\numberline {11.10.4}Progetto 4: Calcolatrice Avanzata}{161}{subsection.11.10.4}%
+\contentsline {subsection}{\numberline {11.10.5}Progetto 5: Sistema di Prenotazioni}{161}{subsection.11.10.5}%
+\contentsline {section}{\numberline {11.11}Esercizi di Riepilogo}{161}{section.11.11}%
+\contentsline {subsection}{\numberline {11.11.1}Esercizio Complessivo 1: Gestione Magazzino}{161}{subsection.11.11.1}%
+\contentsline {subsection}{\numberline {11.11.2}Esercizio Complessivo 2: Agenda Personale}{162}{subsection.11.11.2}%
+\contentsline {subsection}{\numberline {11.11.3}Esercizio Complessivo 3: Analizzatore di Testo}{162}{subsection.11.11.3}%
+\contentsline {section}{\numberline {11.12}Consigli per gli Esercizi}{162}{section.11.12}%
+\contentsline {subsection}{\numberline {11.12.1}Come Affrontare gli Esercizi}{162}{subsection.11.12.1}%
+\contentsline {subsection}{\numberline {11.12.2}Debugging}{162}{subsection.11.12.2}%
+\contentsline {subsection}{\numberline {11.12.3}Best Practices}{163}{subsection.11.12.3}%
+\contentsline {section}{\numberline {11.13}Risorse Aggiuntive}{163}{section.11.13}%
+\contentsline {subsection}{\numberline {11.13.1}Compilazione}{163}{subsection.11.13.1}%
+\contentsline {subsection}{\numberline {11.13.2}Online Judge per Esercitarsi}{164}{subsection.11.13.2}%
+\contentsline {subsection}{\numberline {11.13.3}Documenta zione di Riferimento}{164}{subsection.11.13.3}%
+\contentsline {chapter}{\numberline {12}Makefile e Build Automation}{165}{chapter.12}%
+\contentsline {section}{\numberline {12.1}Introduzione ai Makefile}{165}{section.12.1}%
+\contentsline {subsection}{\numberline {12.1.1}Obiettivi di apprendimento}{165}{subsection.12.1.1}%
+\contentsline {section}{\numberline {12.2}Struttura Base di un Makefile}{166}{section.12.2}%
+\contentsline {subsection}{\numberline {12.2.1}Sintassi di una Regola}{166}{subsection.12.2.1}%
+\contentsline {subsection}{\numberline {12.2.2}Esempio Semplice}{166}{subsection.12.2.2}%
+\contentsline {subsection}{\numberline {12.2.3}Esecuzione}{166}{subsection.12.2.3}%
+\contentsline {section}{\numberline {12.3}Variabili e Pattern}{166}{section.12.3}%
+\contentsline {subsection}{\numberline {12.3.1}Variabili Comuni}{166}{subsection.12.3.1}%
+\contentsline {subsection}{\numberline {12.3.2}Pattern Rules}{167}{subsection.12.3.2}%
+\contentsline {subsection}{\numberline {12.3.3}Variabili Integrate}{167}{subsection.12.3.3}%
+\contentsline {section}{\numberline {12.4}Makefile Completo con Esercizi}{168}{section.12.4}%
+\contentsline {subsection}{\numberline {12.4.1}Progetto Multi-File}{168}{subsection.12.4.1}%
+\contentsline {subsection}{\numberline {12.4.2}Progetto con Sottodirectory}{169}{subsection.12.4.2}%
+\contentsline {subsection}{\numberline {12.4.3}Makefile Avanzato con Documentazione}{170}{subsection.12.4.3}%
+\contentsline {section}{\numberline {12.5}Dipendenze e Ottimizzazione}{171}{section.12.5}%
+\contentsline {subsection}{\numberline {12.5.1}File di Dipendenza Automatiche}{171}{subsection.12.5.1}%
+\contentsline {subsection}{\numberline {12.5.2}Compilazione Parallela}{172}{subsection.12.5.2}%
+\contentsline {section}{\numberline {12.6}Esercizi}{172}{section.12.6}%
+\contentsline {subsection}{\numberline {12.6.1}Livello Base}{172}{subsection.12.6.1}%
+\contentsline {subsection}{\numberline {12.6.2}Livello Intermedio}{172}{subsection.12.6.2}%
+\contentsline {subsection}{\numberline {12.6.3}Livello Avanzato}{173}{subsection.12.6.3}%
+\contentsline {section}{\numberline {12.7}Riepilogo}{173}{section.12.7}%
+\contentsline {chapter}{\numberline {13}GDB Debugger}{174}{chapter.13}%
+\contentsline {section}{\numberline {13.1}Introduzione al Debugging}{174}{section.13.1}%
+\contentsline {subsection}{\numberline {13.1.1}Obiettivi di apprendimento}{174}{subsection.13.1.1}%
+\contentsline {section}{\numberline {13.2}Compilazione per il Debugging}{175}{section.13.2}%
+\contentsline {subsection}{\numberline {13.2.1}Flag -g}{175}{subsection.13.2.1}%
+\contentsline {subsection}{\numberline {13.2.2}Esempio Programma con Bug}{175}{subsection.13.2.2}%
+\contentsline {section}{\numberline {13.3}Comandi Fondamentali di GDB}{176}{section.13.3}%
+\contentsline {subsection}{\numberline {13.3.1}Avviare GDB}{176}{subsection.13.3.1}%
+\contentsline {subsection}{\numberline {13.3.2}Breakpoint}{176}{subsection.13.3.2}%
+\contentsline {subsection}{\numberline {13.3.3}Esecuzione del Programma}{176}{subsection.13.3.3}%
+\contentsline {subsection}{\numberline {13.3.4}Ispezionare Variabili}{177}{subsection.13.3.4}%
+\contentsline {subsection}{\numberline {13.3.5}Watchpoint}{177}{subsection.13.3.5}%
+\contentsline {section}{\numberline {13.4}Stack e Funzioni}{177}{section.13.4}%
+\contentsline {subsection}{\numberline {13.4.1}Stack Trace}{177}{subsection.13.4.1}%
+\contentsline {subsection}{\numberline {13.4.2}Esempio di Debugging con Stack}{178}{subsection.13.4.2}%
+\contentsline {section}{\numberline {13.5}Comandi Avanzati}{178}{section.13.5}%
+\contentsline {subsection}{\numberline {13.5.1}Memoria e Puntatori}{178}{subsection.13.5.1}%
+\contentsline {subsection}{\numberline {13.5.2}Modificare Valori}{179}{subsection.13.5.2}%
+\contentsline {subsection}{\numberline {13.5.3}Script e Automazione}{179}{subsection.13.5.3}%
+\contentsline {section}{\numberline {13.6}Esempi Pratici di Debugging}{179}{section.13.6}%
+\contentsline {subsection}{\numberline {13.6.1}Debug di Segmentation Fault}{179}{subsection.13.6.1}%
+\contentsline {subsection}{\numberline {13.6.2}Debug di Buffer Overflow}{180}{subsection.13.6.2}%
+\contentsline {subsection}{\numberline {13.6.3}Debug di Loop Infinito}{180}{subsection.13.6.3}%
+\contentsline {section}{\numberline {13.7}Comandi Utili Riassunti}{181}{section.13.7}%
+\contentsline {subsection}{\numberline {13.7.1}Tabella Veloce}{181}{subsection.13.7.1}%
+\contentsline {section}{\numberline {13.8}Esercizi}{181}{section.13.8}%
+\contentsline {subsection}{\numberline {13.8.1}Livello Base}{181}{subsection.13.8.1}%
+\contentsline {subsection}{\numberline {13.8.2}Livello Intermedio}{182}{subsection.13.8.2}%
+\contentsline {subsection}{\numberline {13.8.3}Livello Avanzato}{182}{subsection.13.8.3}%
+\contentsline {section}{\numberline {13.9}Riepilogo}{182}{section.13.9}%
+\contentsline {chapter}{\numberline {14}Librerie Standard Avanzate}{183}{chapter.14}%
+\contentsline {section}{\numberline {14.1}Introduzione alle Librerie Standard}{183}{section.14.1}%
+\contentsline {subsection}{\numberline {14.1.1}Obiettivi di apprendimento}{183}{subsection.14.1.1}%
+\contentsline {section}{\numberline {14.2}string.h - Manipolazione di Stringhe}{184}{section.14.2}%
+\contentsline {subsection}{\numberline {14.2.1}Funzioni Base}{184}{subsection.14.2.1}%
+\contentsline {subsection}{\numberline {14.2.2}Copia di Stringhe}{184}{subsection.14.2.2}%
+\contentsline {subsection}{\numberline {14.2.3}Concatenazione e Ricerca}{184}{subsection.14.2.3}%
+\contentsline {subsection}{\numberline {14.2.4}Funzioni Avanzate}{185}{subsection.14.2.4}%
+\contentsline {section}{\numberline {14.3}math.h - Operazioni Matematiche}{186}{section.14.3}%
+\contentsline {subsection}{\numberline {14.3.1}Funzioni Trigonometriche}{186}{subsection.14.3.1}%
+\contentsline {subsection}{\numberline {14.3.2}Potenze e Radici}{186}{subsection.14.3.2}%
+\contentsline {subsection}{\numberline {14.3.3}Logaritmi e Funzioni Esponenziali}{187}{subsection.14.3.3}%
+\contentsline {subsection}{\numberline {14.3.4}Funzioni di Arrotondamento e Valore Assoluto}{187}{subsection.14.3.4}%
+\contentsline {section}{\numberline {14.4}time.h - Gestione del Tempo}{188}{section.14.4}%
+\contentsline {subsection}{\numberline {14.4.1}Funzioni Base di Tempo}{188}{subsection.14.4.1}%
+\contentsline {subsection}{\numberline {14.4.2}Misurazione del Tempo Trascorso}{188}{subsection.14.4.2}%
+\contentsline {subsection}{\numberline {14.4.3}Formattazione della Data}{189}{subsection.14.4.3}%
+\contentsline {section}{\numberline {14.5}stdlib.h - Allocazione Memoria e Utilità}{189}{section.14.5}%
+\contentsline {subsection}{\numberline {14.5.1}Allocazione Dinamica}{189}{subsection.14.5.1}%
+\contentsline {subsection}{\numberline {14.5.2}calloc e realloc}{190}{subsection.14.5.2}%
+\contentsline {subsection}{\numberline {14.5.3}Ordinamento e Ricerca}{191}{subsection.14.5.3}%
+\contentsline {subsection}{\numberline {14.5.4}bsearch - Ricerca Binaria}{191}{subsection.14.5.4}%
+\contentsline {section}{\numberline {14.6}Esempio Completo: Gestione Database di Studenti}{192}{section.14.6}%
+\contentsline {section}{\numberline {14.7}Esercizi}{194}{section.14.7}%
+\contentsline {subsection}{\numberline {14.7.1}Livello Base}{194}{subsection.14.7.1}%
+\contentsline {subsection}{\numberline {14.7.2}Livello Intermedio}{194}{subsection.14.7.2}%
+\contentsline {subsection}{\numberline {14.7.3}Livello Avanzato}{194}{subsection.14.7.3}%
+\contentsline {section}{\numberline {14.8}Riepilogo}{194}{section.14.8}%
+\contentsline {chapter}{Bibliografia e Risorse}{196}{chapter*.43}%
+\contentsline {chapter}{Appendice: Soluzioni ad Alcuni Esercizi}{202}{chapter*.64}%

@@ -1,0 +1,76 @@
+% Modulo 16 - Introduzione a NAO (V6) e NAOqi
+\chapter{Introduzione a NAO (V6) e NAOqi}
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Didattica STEM e laboratori universitari.
+- Social robotics, interazione uomo-robot (HRI).
+- Demo e prototipi per mostre ed eventi.
+- Sperimentazione di visione, linguaggio e movimento.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+NAO (V6) utilizza NAOqi 2.x: un framework di servizi (\emph{AL\*}) accessibili via rete. La programmazione in Python avviene tipicamente creando una sessione (\texttt{qi}) e recuperando i servizi, come \texttt{ALTextToSpeech}, \texttt{ALMotion}, \texttt{ALRobotPosture}, \texttt{ALVideoDevice}.
+
+\begin{tcolorbox}[title=Prime connessioni]
+\begin{lstlisting}
+# Connessione ai servizi NAOqi (NAO V6)
+import qi
+
+session = qi.Session()
+session.connect("tcp://nao.local:9559")  # sostituisci host/IP
+
+tts = session.service("ALTextToSpeech")
+tts.say("Ciao! Sono NAO")
+
+motion = session.service("ALMotion")
+posture = session.service("ALRobotPosture")
+# Passa alla postura base prima di muovere
+posture.goToPosture("StandInit", 0.5)
+\end{lstlisting}
+\end{tcolorbox}
+
+\paragraph{Note pratiche} Assicurare connettività (Wi-Fi/Ethernet) e versione corretta del SDK. Per stabilità, gestire eccezioni di rete e latenza; loggare operazioni critiche.
+
+\begin{tcolorbox}[title=Guida rapida per programmatori non-Python]
+Python è tipizzato dinamicamente e l'indentazione fa parte della sintassi (blocchi). Le eccezioni sono il meccanismo standard di errore; non si usano codici di ritorno come in C. Le liste (array dinamici) e i dizionari (mappe chiave->valore) sono strutture fondamentali.
+
+- Import: \texttt{import qi} carica il modulo del SDK NAOqi.  
+- Sessione: \texttt{qi.Session()} crea un oggetto che gestisce la connessione TCP verso il robot.  
+- Servizi: \texttt{session.service("ALMotion")} risolve il servizio remoto e ritorna un proxy su cui invocare metodi.
+
+\textbf{Gestione errori}: usare \texttt{try/except} per catturare \texttt{RuntimeError} quando la connessione fallisce.  
+\textbf{Stringhe}: sono Unicode; passare testo direttamente a \texttt{tts.say}.  
+\textbf{Convenzione}: nomi come \texttt{goToPosture} sono in stile CamelCase perché ereditati dalle API NAOqi.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Connessione commentata passo-passo]
+\begin{lstlisting}
+import qi
+
+def connect(host="nao.local", port=9559):
+    """Stabilisce una sessione TCP con NAO.
+    - host: hostname o IP del robot
+    - port: porta NAOqi (default 9559)
+    Ritorna: qi.Session connessa.
+    """
+    session = qi.Session()
+    try:
+        session.connect(f"tcp://{host}:{port}")
+    except RuntimeError as e:
+        # In Python le eccezioni si catturano per tipo; qui gestiamo problemi di rete
+        print("Connessione fallita:", e)
+        raise
+    return session
+
+session = connect()
+tts = session.service("ALTextToSpeech")  # Proxy al servizio TTS
+motion = session.service("ALMotion")      # Proxy al servizio di movimento
+posture = session.service("ALRobotPosture")
+
+# Prima di muovere: posizionare NAO in postura stabile
+posture.goToPosture("StandInit", 0.5)  # 0.5 = fattore di velocità (0..1)
+tts.say("Pronto a muovermi!")
+\end{lstlisting}
+\end{tcolorbox}
+

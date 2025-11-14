@@ -1,0 +1,74 @@
+\chapter{Redirect mediante Header Location}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Implementazione corretta, Header già inviati, Best practice, Codici di stato, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Teoria}
+Il redirect HTTP si effettua impostando l'header \texttt{Location} e un codice di stato appropriato. Dopo aver inviato l'header, l'esecuzione deve terminare con \texttt{exit}.
+
+\section{Implementazione corretta}
+\begin{lstlisting}
+<?php
+// Redirect dopo una creazione (POST)
+// Usare 303 See Other per evitare ri-submit del POST
+header('Location: /success.php', true, 303);
+exit;
+\end{lstlisting}
+
+\section{Gestione degli header già inviati}
+Se è già stato generato output, l'invio degli header fallisce. Evitare output prima degli header o utilizzare buffer di output se necessario.
+
+\section{Best practice per i redirect}
+- Post/Redirect/Get (PRG) per evitare doppio submit.
+- Usare codici 302/303/307 in base al contesto.
+- Impostare sempre \texttt{exit} dopo l'header \texttt{Location}.
+- Evitare output prima degli header: attivare output buffering o controllare flussi.
+
+\section{Codici di stato appropriati}
+- \textbf{302 Found}: redirect temporaneo generico.
+- \textbf{303 See Other}: dopo POST per puntare a risorsa GET.
+- \textbf{307 Temporary Redirect}: preserva il metodo (POST resta POST).
+- \textbf{301 Moved Permanently}: redirect permanente (SEO, attenzione ai cache).
+
+\begin{tcolorbox}[title=Errori comuni]
+- Dimenticare \texttt{exit} dopo il redirect.
+- Inviare contenuto prima degli header.
+- Usare sempre 302 anche dopo POST (meglio 303 per PRG).
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// 307: preserva il metodo
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  header('Location: /conferma.php', true, 303); // PRG
+  exit;
+}
+
+// 301: migrazione URL permanente
+header('Location: https://www.esempio.it/nuovo-percorso', true, 301);
+exit;
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Workflow di registrazione utente: POST /register \(\rightarrow\) valida e crea \(\rightarrow\) 303 See Other su /welcome.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa PRG su un form di contatto.
+  \item Esegui un redirect 307 per ripetere POST verso un endpoint differente.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Qual è il codice preferibile dopo POST nel pattern PRG?
+  \item Cosa accade se invii output prima degli header?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item RFC 9110: Semantics of HTTP — Redirect status codes.
+  \item Manuale PHP — \texttt{header}: \url{https://www.php.net/header}
+\end{itemize}

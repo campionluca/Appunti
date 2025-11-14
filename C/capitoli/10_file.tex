@@ -1,0 +1,738 @@
+\chapter{Gestione dei File}
+\label{cap:file}
+
+\section{Introduzione ai File}
+
+La gestione dei file permette di salvare dati in modo permanente su disco e di leggerli in seguito. In C, i file vengono gestiti attraverso puntatori a \texttt{FILE}.
+
+\subsection{Tipi di File}
+
+\begin{itemize}
+    \item \textbf{File di testo}: contengono caratteri leggibili (es: .txt, .csv)
+    \item \textbf{File binari}: contengono dati in formato binario (es: immagini, eseguibili)
+\end{itemize}
+
+\begin{nota}
+Per gestire i file in C è necessario includere la libreria \texttt{stdio.h}.
+\end{nota}
+
+\section{Apertura e Chiusura di File}
+
+\subsection{Funzione fopen}
+
+\begin{lstlisting}
+FILE *fopen(const char *nome_file, const char *modalita);
+\end{lstlisting}
+
+\subsection{Modalità di Apertura}
+
+\begin{itemize}
+    \item \texttt{"r"}: lettura (read) - il file deve esistere
+    \item \texttt{"w"}: scrittura (write) - crea nuovo file o sovrascrive
+    \item \texttt{"a"}: append - aggiunge in coda al file
+    \item \texttt{"r+"}: lettura e scrittura - il file deve esistere
+    \item \texttt{"w+"}: lettura e scrittura - crea nuovo file
+    \item \texttt{"a+"}: lettura e append
+    \item \texttt{"rb"}, \texttt{"wb"}, ecc.: modalità binaria
+\end{itemize}
+
+\subsection{Esempio Base}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    FILE *file;
+
+    // Apertura file
+    file = fopen("test.txt", "w");
+
+    // Controlla se l'apertura e' riuscita
+    if (file == NULL) {
+        printf("Errore nell'apertura del file!\n");
+        return 1;
+    }
+
+    printf("File aperto con successo!\n");
+
+    // Chiusura file
+    fclose(file);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Controlla sempre che \texttt{fopen()} non restituisca NULL prima di usare il file. Ricorda sempre di chiudere i file con \texttt{fclose()}.
+\end{attenzione}
+
+\section{Scrittura su File}
+
+\subsection{fprintf}
+
+Scrive dati formattati su file (simile a printf).
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("output.txt", "w");
+
+    if (file == NULL) {
+        printf("Errore apertura file!\n");
+        return 1;
+    }
+
+    // Scrittura formattata
+    fprintf(file, "Questa e' la prima riga\n");
+    fprintf(file, "Numero: %d\n", 42);
+    fprintf(file, "Float: %.2f\n", 3.14159);
+
+    fclose(file);
+    printf("Dati scritti su output.txt\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{fputs}
+
+Scrive una stringa su file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("testo.txt", "w");
+
+    if (file == NULL) {
+        printf("Errore!\n");
+        return 1;
+    }
+
+    fputs("Prima riga\n", file);
+    fputs("Seconda riga\n", file);
+    fputs("Terza riga\n", file);
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{fputc}
+
+Scrive un singolo carattere.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("caratteri.txt", "w");
+
+    if (file == NULL) {
+        printf("Errore!\n");
+        return 1;
+    }
+
+    // Scrive caratteri singoli
+    fputc('H', file);
+    fputc('e', file);
+    fputc('l', file);
+    fputc('l', file);
+    fputc('o', file);
+    fputc('\n', file);
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Lettura da File}
+
+\subsection{fscanf}
+
+Legge dati formattati da file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("dati.txt", "r");
+
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return 1;
+    }
+
+    int numero;
+    float decimale;
+    char parola[50];
+
+    // Legge dati formattati
+    fscanf(file, "%d", &numero);
+    fscanf(file, "%f", &decimale);
+    fscanf(file, "%s", parola);
+
+    printf("Numero: %d\n", numero);
+    printf("Decimale: %.2f\n", decimale);
+    printf("Parola: %s\n", parola);
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{fgets}
+
+Legge una riga da file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("testo.txt", "r");
+
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return 1;
+    }
+
+    char linea[200];
+
+    // Legge riga per riga
+    while (fgets(linea, sizeof(linea), file) != NULL) {
+        printf("%s", linea);
+    }
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{fgetc}
+
+Legge un carattere alla volta.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("testo.txt", "r");
+
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return 1;
+    }
+
+    char c;
+
+    // Legge carattere per carattere
+    while ((c = fgetc(file)) != EOF) {
+        putchar(c);
+    }
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Controllo Fine File e Errori}
+
+\subsection{feof e ferror}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("dati.txt", "r");
+
+    if (file == NULL) {
+        perror("Errore apertura file");
+        return 1;
+    }
+
+    int num;
+
+    while (1) {
+        int result = fscanf(file, "%d", &num);
+
+        // Controlla fine file
+        if (feof(file)) {
+            printf("Fine del file raggiunta\n");
+            break;
+        }
+
+        // Controlla errori
+        if (ferror(file)) {
+            printf("Errore di lettura!\n");
+            break;
+        }
+
+        // Controlla risultato fscanf
+        if (result != 1) {
+            printf("Formato non valido\n");
+            break;
+        }
+
+        printf("Numero letto: %d\n", num);
+    }
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Posizionamento nel File}
+
+\subsection{fseek}
+
+Sposta il puntatore del file in una posizione specifica.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("test.txt", "r");
+
+    if (file == NULL) {
+        printf("Errore!\n");
+        return 1;
+    }
+
+    // Vai all'inizio del file
+    fseek(file, 0, SEEK_SET);
+
+    // Vai alla fine del file
+    fseek(file, 0, SEEK_END);
+
+    // Ottieni la dimensione del file
+    long dimensione = ftell(file);
+    printf("Dimensione del file: %ld byte\n", dimensione);
+
+    // Torna all'inizio
+    rewind(file);  // Equivalente a fseek(file, 0, SEEK_SET)
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{ftell}
+
+Restituisce la posizione corrente nel file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("test.txt", "r");
+
+    if (file == NULL) {
+        printf("Errore!\n");
+        return 1;
+    }
+
+    printf("Posizione iniziale: %ld\n", ftell(file));
+
+    fgetc(file);  // Legge un carattere
+    printf("Dopo 1 carattere: %ld\n", ftell(file));
+
+    fgetc(file);
+    printf("Dopo 2 caratteri: %ld\n", ftell(file));
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{File Binari}
+
+\subsection{fwrite}
+
+Scrive dati binari su file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    int id;
+    char nome[30];
+    float voto;
+} Studente;
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("studenti.dat", "wb");
+
+    if (file == NULL) {
+        printf("Errore!\n");
+        return 1;
+    }
+
+    Studente s1 = {1, "Mario Rossi", 27.5};
+    Studente s2 = {2, "Lucia Bianchi", 29.0};
+
+    // Scrivi struct binarie
+    fwrite(&s1, sizeof(Studente), 1, file);
+    fwrite(&s2, sizeof(Studente), 1, file);
+
+    fclose(file);
+    printf("Dati scritti in formato binario\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{fread}
+
+Legge dati binari da file.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    int id;
+    char nome[30];
+    float voto;
+} Studente;
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("studenti.dat", "rb");
+
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return 1;
+    }
+
+    Studente s;
+
+    // Leggi struct dal file
+    while (fread(&s, sizeof(Studente), 1, file) == 1) {
+        printf("ID: %d\n", s.id);
+        printf("Nome: %s\n", s.nome);
+        printf("Voto: %.1f\n\n", s.voto);
+    }
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Copia di File}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    FILE *sorgente, *destinazione;
+    char ch;
+
+    sorgente = fopen("originale.txt", "r");
+    if (sorgente == NULL) {
+        printf("Impossibile aprire il file sorgente!\n");
+        return 1;
+    }
+
+    destinazione = fopen("copia.txt", "w");
+    if (destinazione == NULL) {
+        printf("Impossibile creare il file destinazione!\n");
+        fclose(sorgente);
+        return 1;
+    }
+
+    // Copia carattere per carattere
+    while ((ch = fgetc(sorgente)) != EOF) {
+        fputc(ch, destinazione);
+    }
+
+    printf("File copiato con successo!\n");
+
+    fclose(sorgente);
+    fclose(destinazione);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Conta Righe, Parole e Caratteri}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("testo.txt", "r");
+
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return 1;
+    }
+
+    int righe = 0, parole = 0, caratteri = 0;
+    int in_parola = 0;
+    char c;
+
+    while ((c = fgetc(file)) != EOF) {
+        caratteri++;
+
+        if (c == '\n') {
+            righe++;
+        }
+
+        if (isspace(c)) {
+            in_parola = 0;
+        } else if (!in_parola) {
+            in_parola = 1;
+            parole++;
+        }
+    }
+
+    printf("Statistiche del file:\n");
+    printf("Righe: %d\n", righe);
+    printf("Parole: %d\n", parole);
+    printf("Caratteri: %d\n", caratteri);
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Database Studenti su File}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    int matricola;
+    char nome[30];
+    char cognome[30];
+    float media;
+} Studente;
+
+void aggiungi_studente() {
+    FILE *file = fopen("studenti.dat", "ab");
+    if (file == NULL) {
+        printf("Errore apertura file!\n");
+        return;
+    }
+
+    Studente s;
+    printf("Matricola: ");
+    scanf("%d", &s.matricola);
+    printf("Nome: ");
+    scanf("%s", s.nome);
+    printf("Cognome: ");
+    scanf("%s", s.cognome);
+    printf("Media: ");
+    scanf("%f", &s.media);
+
+    fwrite(&s, sizeof(Studente), 1, file);
+    printf("Studente aggiunto!\n");
+
+    fclose(file);
+}
+
+void visualizza_studenti() {
+    FILE *file = fopen("studenti.dat", "rb");
+    if (file == NULL) {
+        printf("Nessun dato disponibile!\n");
+        return;
+    }
+
+    Studente s;
+    printf("\n=== ELENCO STUDENTI ===\n");
+
+    while (fread(&s, sizeof(Studente), 1, file) == 1) {
+        printf("Matricola: %d\n", s.matricola);
+        printf("Nome: %s %s\n", s.nome, s.cognome);
+        printf("Media: %.2f\n", s.media);
+        printf("-------------------\n");
+    }
+
+    fclose(file);
+}
+
+void cerca_studente(int matricola) {
+    FILE *file = fopen("studenti.dat", "rb");
+    if (file == NULL) {
+        printf("Nessun dato disponibile!\n");
+        return;
+    }
+
+    Studente s;
+    int trovato = 0;
+
+    while (fread(&s, sizeof(Studente), 1, file) == 1) {
+        if (s.matricola == matricola) {
+            printf("\nStudente trovato:\n");
+            printf("Matricola: %d\n", s.matricola);
+            printf("Nome: %s %s\n", s.nome, s.cognome);
+            printf("Media: %.2f\n", s.media);
+            trovato = 1;
+            break;
+        }
+    }
+
+    if (!trovato) {
+        printf("Studente non trovato!\n");
+    }
+
+    fclose(file);
+}
+
+int main(int argc, char** argv) {
+    int scelta, matricola;
+
+    do {
+        printf("\n=== GESTIONE STUDENTI ===\n");
+        printf("1. Aggiungi studente\n");
+        printf("2. Visualizza tutti\n");
+        printf("3. Cerca studente\n");
+        printf("0. Esci\n");
+        printf("Scelta: ");
+        scanf("%d", &scelta);
+
+        switch (scelta) {
+            case 1:
+                aggiungi_studente();
+                break;
+            case 2:
+                visualizza_studenti();
+                break;
+            case 3:
+                printf("Inserisci matricola: ");
+                scanf("%d", &matricola);
+                cerca_studente(matricola);
+                break;
+            case 0:
+                printf("Arrivederci!\n");
+                break;
+            default:
+                printf("Scelta non valida!\n");
+        }
+    } while (scelta != 0);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{File CSV}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+typedef struct {
+    char nome[30];
+    char cognome[30];
+    int eta;
+    char citta[30];
+} Persona;
+
+void scrivi_csv() {
+    FILE *file = fopen("persone.csv", "w");
+    if (file == NULL) {
+        printf("Errore!\n");
+        return;
+    }
+
+    // Intestazione
+    fprintf(file, "Nome,Cognome,Eta,Citta\n");
+
+    // Dati
+    fprintf(file, "Mario,Rossi,30,Milano\n");
+    fprintf(file, "Lucia,Bianchi,25,Roma\n");
+    fprintf(file, "Giovanni,Verdi,35,Napoli\n");
+
+    fclose(file);
+    printf("File CSV creato!\n");
+}
+
+void leggi_csv() {
+    FILE *file = fopen("persone.csv", "r");
+    if (file == NULL) {
+        printf("File non trovato!\n");
+        return;
+    }
+
+    char linea[200];
+    Persona p;
+
+    // Salta l'intestazione
+    fgets(linea, sizeof(linea), file);
+
+    printf("\n=== DATI DA CSV ===\n");
+
+    while (fgets(linea, sizeof(linea), file) != NULL) {
+        // Parse della riga CSV
+        sscanf(linea, "%[^,],%[^,],%d,%[^\n]",
+               p.nome, p.cognome, &p.eta, p.citta);
+
+        printf("%s %s, %d anni, %s\n",
+               p.nome, p.cognome, p.eta, p.citta);
+    }
+
+    fclose(file);
+}
+
+int main(int argc, char** argv) {
+    scrivi_csv();
+    leggi_csv();
+    return 0;
+}
+\end{lstlisting}
+
+\section{Gestione Errori}
+
+\subsection{perror}
+
+Stampa un messaggio di errore descrittivo.
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <errno.h>
+
+int main(int argc, char** argv) {
+    FILE *file = fopen("nonexistent.txt", "r");
+
+    if (file == NULL) {
+        perror("Errore");  // Stampa: "Errore: No such file or directory"
+        return 1;
+    }
+
+    fclose(file);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi un programma che crea un file di testo e ci scrive 10 numeri casuali.
+    \item Crea un programma che legge un file di testo e stampa solo le righe che contengono una parola specifica.
+    \item Implementa un programma che conta quante volte appare un carattere in un file.
+    \item Scrivi un programma che unisce due file di testo in un terzo file.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Crea un programma che ordina le righe di un file in ordine alfabetico.
+    \item Implementa un sistema di log che registra data, ora e messaggio su file.
+    \item Scrivi un programma che cifra e decifra un file di testo con cifrario di Cesare.
+    \item Crea un programma che gestisce una rubrica telefonica salvata su file CSV.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa un editor di testo semplice che permette di modificare righe specifiche di un file.
+    \item Crea un sistema di gestione inventario con salvataggio su file binario e funzioni di ricerca.
+    \item Scrivi un programma che comprime un file di testo eliminando spazi multipli e righe vuote.
+    \item Implementa un sistema di backup incrementale che salva solo le modifiche rispetto all'ultima versione.
+\end{enumerate}

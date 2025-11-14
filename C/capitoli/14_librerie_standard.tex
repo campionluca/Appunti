@@ -1,0 +1,666 @@
+\chapter{Librerie Standard Avanzate}
+\label{cap:librerie_standard}
+
+\section{Introduzione alle Librerie Standard}
+
+Le librerie standard C forniscono funzioni predefinite per compiti comuni. Questo capitolo affronta le librerie più utili per:
+
+\begin{itemize}
+    \item Manipolazione di stringhe con \texttt{string.h}
+    \item Operazioni matematiche avanzate con \texttt{math.h}
+    \item Gestione del tempo con \texttt{time.h}
+    \item Allocazione e gestione della memoria con \texttt{stdlib.h}
+    \item Ordinamento e ricerca di dati
+\end{itemize}
+
+\begin{nota}
+Per usare la libreria matematica, compila con \texttt{gcc -lm} (opzione -lm aggiunge il linking alla libreria math).
+\end{nota}
+
+\subsection{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Usare le funzioni di manipolazione stringhe (strcmp, strcpy, strlen, strcat)
+    \item Sfruttare funzioni matematiche avanzate (sqrt, pow, sin, cos, tan, log, exp)
+    \item Gestire il tempo e le date (time, difftime, localtime, gmtime)
+    \item Allocare e liberare memoria dinamica (malloc, free, realloc, calloc)
+    \item Ordinare e cercare dati (qsort, bsearch)
+    \item Implementare algoritmi efficienti usando le librerie standard
+\end{itemize}
+
+\section{string.h - Manipolazione di Stringhe}
+
+\subsection{Funzioni Base}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char** argv) {
+    // strlen - lunghezza della stringa
+    char stringa[] = "Ciao";
+    printf("Lunghezza: %lu\n", strlen(stringa));
+
+    // strcmp - confronto tra stringhe
+    char str1[] = "abc";
+    char str2[] = "abc";
+    char str3[] = "def";
+
+    if (strcmp(str1, str2) == 0) {
+        printf("str1 e str2 sono uguali\n");
+    }
+
+    if (strcmp(str1, str3) < 0) {
+        printf("str1 viene prima di str3 alfabeticamente\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Copia di Stringhe}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char** argv) {
+    char sorgente[] = "Programmazione";
+    char destinazione[50];
+
+    // strcpy - copia una stringa
+    strcpy(destinazione, sorgente);
+    printf("Copia: %s\n", destinazione);
+
+    // strncpy - copia massimo n caratteri (piu' sicuro)
+    char buffer[10];
+    strncpy(buffer, sorgente, 9);
+    buffer[9] = '\0';  // Assicura terminazione
+    printf("Copia limitata: %s\n", buffer);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Concatenazione e Ricerca}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char** argv) {
+    char testo[] = "Ciao Mondo";
+
+    // strchr - trova primo carattere
+    char* pos = strchr(testo, 'M');
+    if (pos != NULL) {
+        printf("'M' trovato a posizione %ld\n", pos - testo);
+    }
+
+    // strstr - trova sottostringa
+    char* sottostringaPos = strstr(testo, "Mondo");
+    if (sottostringaPos != NULL) {
+        printf("Sottostringa trovata: %s\n", sottostringaPos);
+    }
+
+    // strcat - concatena stringhe
+    char str1[50] = "Ciao ";
+    char str2[] = "Mondo";
+    strcat(str1, str2);
+    printf("Concatenazione: %s\n", str1);
+
+    // strncat - concatena massimo n caratteri
+    char str3[50] = "Buon ";
+    strncat(str3, "Pomeriggio Amico", 8);
+    printf("Concatenazione limitata: %s\n", str3);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Funzioni Avanzate}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main(int argc, char** argv) {
+    // strcspn - lunghezza prima di caratteri specifici
+    char testo[] = "Ciao, Mondo!";
+    int pos = strcspn(testo, ",!");
+    printf("Posizione punteggiatura: %d\n", pos);
+
+    // strpbrk - trova primo di vari caratteri
+    char* p = strpbrk(testo, ",!");
+    if (p != NULL) {
+        printf("Primo carattere speciale: %c\n", *p);
+    }
+
+    // strtok - divide una stringa (distruttivo!)
+    char copia[50] = "Uno,Due,Tre,Quattro";
+    char* token = strtok(copia, ",");
+
+    while (token != NULL) {
+        printf("Token: %s\n", token);
+        token = strtok(NULL, ",");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+\texttt{strtok} modifica la stringa originale inserendo '\textbackslash 0'. Non usare su stringhe costanti o che devi riutilizzare.
+\end{attenzione}
+
+\section{math.h - Operazioni Matematiche}
+
+\subsection{Funzioni Trigonometriche}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+int main(int argc, char** argv) {
+    // Conversione da gradi a radianti
+    double gradi = 45.0;
+    double radianti = gradi * M_PI / 180.0;
+
+    printf("Seno di 45$^\circ$: %.4f\n", sin(radianti));
+    printf("Coseno di 45$^\circ$: %.4f\n", cos(radianti));
+    printf("Tangente di 45$^\circ$: %.4f\n", tan(radianti));
+
+    // Funzioni inverse
+    printf("Arcsin(0.5): %.4f rad\n", asin(0.5));
+    printf("Arccos(0.5): %.4f rad\n", acos(0.5));
+    printf("Arctan(1.0): %.4f rad\n", atan(1.0));
+
+    // atan2(y, x) - calcola angolo nel piano cartesiano
+    printf("atan2(1, 1): %.4f rad\n", atan2(1.0, 1.0));
+
+    return 0;
+}
+\end{lstlisting}
+
+Compila con: \texttt{gcc -lm -o programma main.c}
+
+\subsection{Potenze e Radici}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+int main(int argc, char** argv) {
+    // pow(base, esponente) - elevamento a potenza
+    printf("2^10 = %.0f\n", pow(2, 10));
+    printf("3^3 = %.0f\n", pow(3, 3));
+    printf("5^0.5 = %.4f\n", pow(5, 0.5));
+
+    // sqrt(x) - radice quadrata
+    printf("Radice di 16: %.2f\n", sqrt(16.0));
+    printf("Radice di 2: %.4f\n", sqrt(2.0));
+
+    // cbrt(x) - radice cubica
+    printf("Radice cubica di 27: %.2f\n", cbrt(27.0));
+
+    // hypot(x, y) - ipotenusa: sqrt(x^2 + y^2)
+    printf("Ipotenusa(3, 4): %.2f\n", hypot(3.0, 4.0));
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Logaritmi e Funzioni Esponenziali}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+int main(int argc, char** argv) {
+    // exp(x) - e^x
+    printf("e^1 = %.4f\n", exp(1.0));
+    printf("e^2 = %.4f\n", exp(2.0));
+
+    // log(x) - logaritmo naturale (base e)
+    printf("ln(10) = %.4f\n", log(10.0));
+
+    // log10(x) - logaritmo in base 10
+    printf("log10(100) = %.2f\n", log10(100.0));
+
+    // log2(x) - logaritmo in base 2
+    printf("log2(8) = %.2f\n", log2(8.0));
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Funzioni di Arrotondamento e Valore Assoluto}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <math.h>
+
+int main(int argc, char** argv) {
+    double num = 3.7;
+
+    // floor - arrotonda per difetto
+    printf("floor(3.7) = %.0f\n", floor(num));
+
+    // ceil - arrotonda per eccesso
+    printf("ceil(3.7) = %.0f\n", ceil(num));
+
+    // round - arrotonda al piu' vicino
+    printf("round(3.7) = %.0f\n", round(num));
+
+    // trunc - trunca la parte decimale
+    printf("trunc(3.7) = %.0f\n", trunc(num));
+
+    // fabs - valore assoluto (float/double)
+    printf("fabs(-5.5) = %.1f\n", fabs(-5.5));
+
+    // Resto della divisione con decimali
+    printf("fmod(7.5, 2.5) = %.1f\n", fmod(7.5, 2.5));
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{time.h - Gestione del Tempo}
+
+\subsection{Funzioni Base di Tempo}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <time.h>
+
+int main(int argc, char** argv) {
+    // time(NULL) - secondi dal 1 gennaio 1970
+    time_t ora_attuale = time(NULL);
+    printf("Secondi da epoch: %ld\n", (long)ora_attuale);
+
+    // ctime - converte a stringa leggibile
+    printf("Data e ora: %s", ctime(&ora_attuale));
+
+    // localtime - scompone in struttura
+    struct tm* info_tempo = localtime(&ora_attuale);
+
+    printf("Anno: %d\n", info_tempo->tm_year + 1900);
+    printf("Mese: %d\n", info_tempo->tm_mon + 1);
+    printf("Giorno: %d\n", info_tempo->tm_mday);
+    printf("Ora: %d\n", info_tempo->tm_hour);
+    printf("Minuti: %d\n", info_tempo->tm_min);
+    printf("Secondi: %d\n", info_tempo->tm_sec);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Misurazione del Tempo Trascorso}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <time.h>
+
+int main(int argc, char** argv) {
+    // Metodo 1: clock()
+    clock_t inizio = clock();
+
+    // Codice da misurare
+    int somma = 0;
+    for (int i = 0; i < 1000000; i++) {
+        somma += i;
+    }
+
+    clock_t fine = clock();
+    double tempo_cpu = (double)(fine - inizio) / CLOCKS_PER_SEC;
+    printf("Tempo CPU: %.4f secondi\n", tempo_cpu);
+
+    // Metodo 2: time() per tempo reale
+    time_t t1 = time(NULL);
+
+    sleep(2);  // Aspetta 2 secondi
+
+    time_t t2 = time(NULL);
+    printf("Tempo reale: %ld secondi\n", (long)(t2 - t1));
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Formattazione della Data}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <time.h>
+
+int main(int argc, char** argv) {
+    time_t ora = time(NULL);
+    struct tm* info = localtime(&ora);
+
+    char buffer[100];
+
+    // strftime - formatta la data/ora
+    strftime(buffer, sizeof(buffer), "%d/%m/%Y", info);
+    printf("Data: %s\n", buffer);
+
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", info);
+    printf("Ora: %s\n", buffer);
+
+    strftime(buffer, sizeof(buffer), "%A, %d %B %Y", info);
+    printf("Data estesa: %s\n", buffer);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+I mesi in \texttt{tm} vanno da 0-11 (gennaio=0), gli anni vanno aggiunti a 1900. Questo è un comune source di bug!
+\end{attenzione}
+
+\section{stdlib.h - Allocazione Memoria e Utilità}
+
+\subsection{Allocazione Dinamica}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    // malloc - alloca memoria non inizializzata
+    int* array = (int*)malloc(10 * sizeof(int));
+
+    if (array == NULL) {
+        printf("Errore allocazione!\n");
+        return 1;
+    }
+
+    // Usa l'array
+    for (int i = 0; i < 10; i++) {
+        array[i] = i * 2;
+    }
+
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+
+    // Libera memoria
+    free(array);
+    array = NULL;  // Buona pratica
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{calloc e realloc}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    // calloc - alloca e inizializza a zero
+    int* array1 = (int*)calloc(5, sizeof(int));
+
+    printf("Calloc (inizializzato a zero): ");
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", array1[i]);
+    }
+    printf("\n");
+
+    // realloc - ridimensiona un blocco di memoria
+    int* array2 = (int*)malloc(3 * sizeof(int));
+    array2[0] = 10;
+    array2[1] = 20;
+    array2[2] = 30;
+
+    // Espandi a 6 elementi
+    array2 = (int*)realloc(array2, 6 * sizeof(int));
+
+    if (array2 == NULL) {
+        printf("Errore realloc!\n");
+        return 1;
+    }
+
+    printf("Dopo realloc: ");
+    for (int i = 0; i < 6; i++) {
+        printf("%d ", array2[i]);
+    }
+    printf("\n");
+
+    free(array1);
+    free(array2);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Ordinamento e Ricerca}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+// Funzione di confronto per qsort (interi)
+int compara_interi(const void* a, const void* b) {
+    int val_a = *(int*)a;
+    int val_b = *(int*)b;
+
+    if (val_a < val_b) return -1;
+    if (val_a > val_b) return 1;
+    return 0;
+}
+
+// Funzione di confronto per stringhe
+int compara_stringhe(const void* a, const void* b) {
+    return strcmp(*(char**)a, *(char**)b);
+}
+
+int main(int argc, char** argv) {
+    // qsort - ordinamento generico
+    int array[] = {64, 34, 25, 12, 22, 11, 90};
+    int n = 7;
+
+    printf("Prima: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+
+    // Ordina l'array
+    qsort(array, n, sizeof(int), compara_interi);
+
+    printf("Dopo: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{bsearch - Ricerca Binaria}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int compara_interi(const void* a, const void* b) {
+    return *(int*)a - *(int*)b;
+}
+
+int main(int argc, char** argv) {
+    int array[] = {10, 20, 30, 40, 50, 60, 70};
+    int n = 7;
+
+    // L'array DEVE essere ordinato per bsearch
+    qsort(array, n, sizeof(int), compara_interi);
+
+    int valore_cercato = 40;
+    int* risultato = (int*)bsearch(&valore_cercato, array, n,
+                                    sizeof(int), compara_interi);
+
+    if (risultato != NULL) {
+        printf("Trovato: %d\n", *risultato);
+    } else {
+        printf("Non trovato\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempio Completo: Gestione Database di Studenti}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+
+typedef struct {
+    int id;
+    char nome[30];
+    float voti[5];
+    int num_voti;
+    time_t data_iscrizione;
+} Studente;
+
+// Calcola media dei voti
+float calcola_media(Studente* s) {
+    if (s->num_voti == 0) return 0.0;
+
+    float somma = 0.0;
+    for (int i = 0; i < s->num_voti; i++) {
+        somma += s->voti[i];
+    }
+
+    return somma / s->num_voti;
+}
+
+// Deviazione standard
+float calcola_deviazione(Studente* s) {
+    if (s->num_voti <= 1) return 0.0;
+
+    float media = calcola_media(s);
+    float somma_quadrati = 0.0;
+
+    for (int i = 0; i < s->num_voti; i++) {
+        float diff = s->voti[i] - media;
+        somma_quadrati += diff * diff;
+    }
+
+    return sqrt(somma_quadrati / (s->num_voti - 1));
+}
+
+// Confronto per qsort
+int compara_studenti(const void* a, const void* b) {
+    float media_a = calcola_media((Studente*)a);
+    float media_b = calcola_media((Studente*)b);
+
+    if (media_a > media_b) return -1;
+    if (media_a < media_b) return 1;
+    return 0;
+}
+
+int main(int argc, char** argv) {
+    // Alloca array di studenti
+    int num_studenti = 3;
+    Studente* studenti = (Studente*)malloc(num_studenti * sizeof(Studente));
+
+    // Popola dati
+    studenti[0] = {1, "Mario Rossi", {28, 27, 25}, 3, time(NULL)};
+    studenti[1] = {2, "Lucia Bianchi", {30, 29, 28}, 3, time(NULL)};
+    studenti[2] = {3, "Giovanni Verdi", {20, 22, 21}, 3, time(NULL)};
+
+    // Ordina per media (decrescente)
+    qsort(studenti, num_studenti, sizeof(Studente), compara_studenti);
+
+    printf("=== STATISTICHE STUDENTI ===\n");
+    for (int i = 0; i < num_studenti; i++) {
+        float media = calcola_media(&studenti[i]);
+        float dev = calcola_deviazione(&studenti[i]);
+
+        printf("\n%s:\n", studenti[i].nome);
+        printf("  Media: %.2f\n", media);
+        printf("  Deviazione: %.2f\n", dev);
+        printf("  Voti: ");
+        for (int j = 0; j < studenti[i].num_voti; j++) {
+            printf("%.0f ", studenti[i].voti[j]);
+        }
+        printf("\n");
+    }
+
+    free(studenti);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Quando allochi memoria con \texttt{malloc}, devi sempre:
+\begin{itemize}
+    \item Controllare che il puntatore non sia NULL
+    \item Liberare la memoria con \texttt{free} quando finisci
+    \item Non accedere a memoria già liberata
+    \item Non fare doppi \texttt{free}
+\end{itemize}
+\end{attenzione}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi un programma che legge due stringhe, le confronta con \texttt{strcmp}, e stampa quale viene prima alfabeticamente.
+
+    \item Crea un programma che calcola seno, coseno, tangente di un angolo fornito in gradi.
+
+    \item Implementa un programma che stampa la data e l'ora attuali in formato leggibile usando \texttt{ctime}.
+
+    \item Scrivi un programma che alloca dinamicamente un array di 10 interi, lo riempie, e poi lo libera.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Crea un programma che prende una stringa come input, la divide usando \texttt{strtok}, e stampa i token.
+
+    \item Implementa una calcolatrice scientifica che usa funzioni da \texttt{math.h} per seno, coseno, sqrt, pow, etc.
+
+    \item Scrivi un programma che misura il tempo di esecuzione di diversi algoritmi di ordinamento.
+
+    \item Crea un programma che ordina un array di numeri casuali usando \texttt{qsort} e poi cerca un valore con \texttt{bsearch}.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa un sistema di gestione studenti che calcola media, mediana, deviazione standard dei voti usando \texttt{stdlib.h} e \texttt{math.h}.
+
+    \item Crea un programma che legge un file CSV di dati, alloca memoria dinamica, ordina i dati, e li salva in un nuovo file.
+
+    \item Scrivi un programma che misura prestazioni di memoria: alloca, ridimensiona, e libera blocchi usando \texttt{malloc}, \texttt{realloc}, \texttt{free}.
+
+    \item Implementa una struttura dati dinamica (lista collegata) che usa \texttt{malloc}/\texttt{free} e supporta operazioni di ricerca/ordinamento.
+\end{enumerate}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item \texttt{string.h}: \texttt{strlen}, \texttt{strcmp}, \texttt{strcpy}, \texttt{strcat}, \texttt{strchr}, \texttt{strstr}, \texttt{strtok}
+    \item \texttt{math.h}: trigonometriche (sin, cos, tan), potenze (pow, sqrt), logaritmi (log, log10), arrotondamento (floor, ceil, round)
+    \item Compila con \texttt{gcc -lm} per linkare la libreria matematica
+    \item \texttt{time.h}: \texttt{time()}, \texttt{ctime()}, \texttt{localtime()}, \texttt{strftime()} per date/ore
+    \item \texttt{stdlib.h}: \texttt{malloc}, \texttt{calloc}, \texttt{realloc}, \texttt{free} per memoria dinamica
+    \item \texttt{qsort} per ordinamento generico con funzione di comparazione
+    \item \texttt{bsearch} per ricerca binaria (array deve essere ordinato)
+    \item Sempre controllare il ritorno di \texttt{malloc} (NULL = errore)
+    \item Sempre liberare memoria allocata dinamicamente
+    \item \texttt{strtok} modifica la stringa originale - usa su una copia
+    \item I mesi da 0-11, gli anni aggiunti a 1900 in \texttt{struct tm}
+\end{itemize}

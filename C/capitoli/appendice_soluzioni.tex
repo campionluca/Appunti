@@ -1,0 +1,709 @@
+\chapter*{Appendice: Soluzioni ad Alcuni Esercizi}
+\addcontentsline{toc}{chapter}{Appendice: Soluzioni ad Alcuni Esercizi}
+
+Questa appendice contiene le soluzioni di alcuni esercizi selezionati dai capitoli precedenti. Per ogni esercizio viene fornita una soluzione commentata.
+
+\section*{Capitolo 2: Variabili e Tipi di Dati}
+
+\subsection*{Esercizio Base 2: Area di un Cerchio}
+
+\begin{lstlisting}
+#include <stdio.h>
+#define PI 3.14159
+
+int main() {
+    float raggio, area;
+
+    printf("Inserisci il raggio del cerchio: ");
+    scanf("%f", &raggio);
+
+    // Formula: area = PI * r^2
+    area = PI * raggio * raggio;
+
+    printf("L'area del cerchio e': %.2f\n", area);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 1: Secondi in Ore, Minuti, Secondi}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int secondi_totali, ore, minuti, secondi;
+
+    printf("Inserisci il numero di secondi: ");
+    scanf("%d", &secondi_totali);
+
+    ore = secondi_totali / 3600;
+    minuti = (secondi_totali % 3600) / 60;
+    secondi = secondi_totali % 60;
+
+    printf("%d secondi corrispondono a:\n", secondi_totali);
+    printf("%d ore, %d minuti, %d secondi\n", ore, minuti, secondi);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 3: Operatori ed Espressioni}
+
+\subsection*{Esercizio Base 3: Pari o Dispari}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int numero;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    if (numero % 2 == 0) {
+        printf("%d e' pari\n", numero);
+    } else {
+        printf("%d e' dispari\n", numero);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 3: Anno Bisestile}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int anno;
+
+    printf("Inserisci un anno: ");
+    scanf("%d", &anno);
+
+    // Un anno e' bisestile se:
+    // - divisibile per 4 E
+    // - (non divisibile per 100 OPPURE divisibile per 400)
+    if ((anno % 4 == 0) && (anno % 100 != 0 || anno % 400 == 0)) {
+        printf("%d e' un anno bisestile\n", anno);
+    } else {
+        printf("%d non e' un anno bisestile\n", anno);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 4: Controllo di Flusso}
+
+\subsection*{Esercizio Intermedio 1: Numero Primo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int numero, i, primo = 1;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    if (numero <= 1) {
+        primo = 0;
+    } else {
+        for (i = 2; i * i <= numero; i++) {
+            if (numero % i == 0) {
+                primo = 0;
+                break;
+            }
+        }
+    }
+
+    if (primo) {
+        printf("%d e' un numero primo\n", numero);
+    } else {
+        printf("%d non e' un numero primo\n", numero);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 2: Inversione di un Numero}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int numero, inverso = 0, cifra;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    int originale = numero;
+
+    while (numero != 0) {
+        cifra = numero % 10;
+        inverso = inverso * 10 + cifra;
+        numero /= 10;
+    }
+
+    printf("Il numero %d invertito e': %d\n", originale, inverso);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Avanzato 1: Sequenza di Fibonacci}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int n, i;
+    int primo = 0, secondo = 1, successivo;
+
+    printf("Quanti termini della sequenza Fibonacci? ");
+    scanf("%d", &n);
+
+    printf("Sequenza di Fibonacci:\n");
+
+    for (i = 0; i < n; i++) {
+        if (i <= 1) {
+            successivo = i;
+        } else {
+            successivo = primo + secondo;
+            primo = secondo;
+            secondo = successivo;
+        }
+        printf("%d ", successivo);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 5: Funzioni}
+
+\subsection*{Esercizio Base 2: Verifica Numero Pari}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int is_pari(int n) {
+    return (n % 2 == 0);
+}
+
+int main() {
+    int numero;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    if (is_pari(numero)) {
+        printf("%d e' pari\n", numero);
+    } else {
+        printf("%d e' dispari\n", numero);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 1: Inversione Numero con Funzione}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int inverti_numero(int n) {
+    int inverso = 0;
+
+    while (n != 0) {
+        inverso = inverso * 10 + (n % 10);
+        n /= 10;
+    }
+
+    return inverso;
+}
+
+int main() {
+    int numero;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    int invertito = inverti_numero(numero);
+
+    printf("%d invertito e': %d\n", numero, invertito);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 2: Somma Cifre Ricorsiva}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int somma_cifre(int n) {
+    // Caso base
+    if (n == 0) {
+        return 0;
+    }
+    // Caso ricorsivo
+    return (n % 10) + somma_cifre(n / 10);
+}
+
+int main() {
+    int numero;
+
+    printf("Inserisci un numero: ");
+    scanf("%d", &numero);
+
+    int somma = somma_cifre(numero);
+
+    printf("La somma delle cifre di %d e': %d\n", numero, somma);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 6: Array}
+
+\subsection*{Esercizio Base 1: Conta Pari e Dispari}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int numeri[10];
+    int pari = 0, dispari = 0;
+
+    printf("Inserisci 10 numeri:\n");
+    for (int i = 0; i < 10; i++) {
+        printf("Numero %d: ", i + 1);
+        scanf("%d", &numeri[i]);
+
+        if (numeri[i] % 2 == 0) {
+            pari++;
+        } else {
+            dispari++;
+        }
+    }
+
+    printf("\nNumeri pari: %d\n", pari);
+    printf("Numeri dispari: %d\n", dispari);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Base 4: Array Palindromo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    int arr[] = {1, 2, 3, 2, 1};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int palindromo = 1;
+
+    for (int i = 0; i < n / 2; i++) {
+        if (arr[i] != arr[n - 1 - i]) {
+            palindromo = 0;
+            break;
+        }
+    }
+
+    if (palindromo) {
+        printf("L'array e' palindromo\n");
+    } else {
+        printf("L'array non e' palindromo\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 1: Ricerca Binaria}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int ricerca_binaria(int arr[], int n, int valore) {
+    int sinistra = 0, destra = n - 1;
+
+    while (sinistra <= destra) {
+        int medio = sinistra + (destra - sinistra) / 2;
+
+        if (arr[medio] == valore) {
+            return medio;
+        }
+
+        if (arr[medio] < valore) {
+            sinistra = medio + 1;
+        } else {
+            destra = medio - 1;
+        }
+    }
+
+    return -1;  // Non trovato
+}
+
+int main() {
+    int arr[] = {2, 5, 8, 12, 16, 23, 38, 45, 56, 67, 78};
+    int n = sizeof(arr) / sizeof(arr[0]);
+    int valore = 23;
+
+    int posizione = ricerca_binaria(arr, n, valore);
+
+    if (posizione != -1) {
+        printf("%d trovato alla posizione %d\n", valore, posizione);
+    } else {
+        printf("%d non trovato\n", valore);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 7: Puntatori}
+
+\subsection*{Esercizio Base 1: Scambio Ciclico}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+void scambio_ciclico(int *a, int *b, int *c) {
+    int temp = *a;
+    *a = *b;
+    *b = *c;
+    *c = temp;
+}
+
+int main() {
+    int x = 1, y = 2, z = 3;
+
+    printf("Prima: x=%d, y=%d, z=%d\n", x, y, z);
+    scambio_ciclico(&x, &y, &z);
+    printf("Dopo: x=%d, y=%d, z=%d\n", x, y, z);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Base 3: Max e Min con Puntatori}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+void trova_max_min(int arr[], int n, int *max, int *min) {
+    *max = arr[0];
+    *min = arr[0];
+
+    for (int i = 1; i < n; i++) {
+        if (arr[i] > *max) {
+            *max = arr[i];
+        }
+        if (arr[i] < *min) {
+            *min = arr[i];
+        }
+    }
+}
+
+int main() {
+    int numeri[] = {45, 12, 78, 23, 67, 89, 34};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+    int max, min;
+
+    trova_max_min(numeri, n, &max, &min);
+
+    printf("Massimo: %d\n", max);
+    printf("Minimo: %d\n", min);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 8: Stringhe}
+
+\subsection*{Esercizio Base 1: Conta Vocali}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+int conta_vocali(char *str) {
+    int conta = 0;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        char c = tolower(str[i]);
+        if (c == 'a' || c == 'e' || c == 'i' ||
+            c == 'o' || c == 'u') {
+            conta++;
+        }
+    }
+
+    return conta;
+}
+
+int main() {
+    char frase[100];
+
+    printf("Inserisci una frase: ");
+    fgets(frase, sizeof(frase), stdin);
+
+    int vocali = conta_vocali(frase);
+
+    printf("Numero di vocali: %d\n", vocali);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 2: Anagrammi}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int sono_anagrammi(char *str1, char *str2) {
+    int freq1[26] = {0}, freq2[26] = {0};
+
+    // Conta frequenza caratteri prima stringa
+    for (int i = 0; str1[i] != '\0'; i++) {
+        if (isalpha(str1[i])) {
+            freq1[tolower(str1[i]) - 'a']++;
+        }
+    }
+
+    // Conta frequenza caratteri seconda stringa
+    for (int i = 0; str2[i] != '\0'; i++) {
+        if (isalpha(str2[i])) {
+            freq2[tolower(str2[i]) - 'a']++;
+        }
+    }
+
+    // Confronta frequenze
+    for (int i = 0; i < 26; i++) {
+        if (freq1[i] != freq2[i]) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+int main() {
+    char str1[] = "listen";
+    char str2[] = "silent";
+
+    if (sono_anagrammi(str1, str2)) {
+        printf("\"%s\" e \"%s\" sono anagrammi\n", str1, str2);
+    } else {
+        printf("\"%s\" e \"%s\" non sono anagrammi\n", str1, str2);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 9: Struct}
+
+\subsection*{Esercizio Base 1: Struct Rettangolo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    float base;
+    float altezza;
+} Rettangolo;
+
+float area(Rettangolo r) {
+    return r.base * r.altezza;
+}
+
+float perimetro(Rettangolo r) {
+    return 2 * (r.base + r.altezza);
+}
+
+int main() {
+    Rettangolo r;
+
+    printf("Inserisci base: ");
+    scanf("%f", &r.base);
+    printf("Inserisci altezza: ");
+    scanf("%f", &r.altezza);
+
+    printf("\nArea: %.2f\n", area(r));
+    printf("Perimetro: %.2f\n", perimetro(r));
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Base 3: Conto Corrente}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+typedef struct {
+    int numero;
+    char intestatario[50];
+    float saldo;
+} ContoCorrente;
+
+void deposita(ContoCorrente *conto, float importo) {
+    if (importo > 0) {
+        conto->saldo += importo;
+        printf("Depositati %.2f euro\n", importo);
+        printf("Nuovo saldo: %.2f euro\n", conto->saldo);
+    } else {
+        printf("Importo non valido!\n");
+    }
+}
+
+void preleva(ContoCorrente *conto, float importo) {
+    if (importo > 0 && importo <= conto->saldo) {
+        conto->saldo -= importo;
+        printf("Prelevati %.2f euro\n", importo);
+        printf("Nuovo saldo: %.2f euro\n", conto->saldo);
+    } else {
+        printf("Operazione non consentita!\n");
+    }
+}
+
+void stampa_saldo(ContoCorrente conto) {
+    printf("\n=== Conto %d ===\n", conto.numero);
+    printf("Intestatario: %s\n", conto.intestatario);
+    printf("Saldo: %.2f euro\n", conto.saldo);
+}
+
+int main() {
+    ContoCorrente conto = {12345, "Mario Rossi", 1000.00};
+
+    stampa_saldo(conto);
+
+    deposita(&conto, 500.00);
+    preleva(&conto, 200.00);
+    preleva(&conto, 2000.00);  // Saldo insufficiente
+
+    stampa_saldo(conto);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Capitolo 10: File}
+
+\subsection*{Esercizio Base 3: Conta Carattere in File}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+    FILE *file;
+    char nome_file[100];
+    char carattere_cerca, c;
+    int conta = 0;
+
+    printf("Nome del file: ");
+    scanf("%s", nome_file);
+
+    printf("Carattere da cercare: ");
+    scanf(" %c", &carattere_cerca);
+
+    file = fopen(nome_file, "r");
+    if (file == NULL) {
+        printf("Impossibile aprire il file!\n");
+        return 1;
+    }
+
+    while ((c = fgetc(file)) != EOF) {
+        if (c == carattere_cerca) {
+            conta++;
+        }
+    }
+
+    fclose(file);
+
+    printf("Il carattere '%c' appare %d volte\n",
+           carattere_cerca, conta);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection*{Esercizio Intermedio 3: Cifrario di Cesare}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <ctype.h>
+
+void cifra_file(char *input, char *output, int chiave) {
+    FILE *fin = fopen(input, "r");
+    FILE *fout = fopen(output, "w");
+
+    if (fin == NULL || fout == NULL) {
+        printf("Errore apertura file!\n");
+        return;
+    }
+
+    char c;
+    while ((c = fgetc(fin)) != EOF) {
+        if (isalpha(c)) {
+            char base = isupper(c) ? 'A' : 'a';
+            c = base + (c - base + chiave) % 26;
+        }
+        fputc(c, fout);
+    }
+
+    fclose(fin);
+    fclose(fout);
+    printf("File cifrato con successo!\n");
+}
+
+void decifra_file(char *input, char *output, int chiave) {
+    cifra_file(input, output, 26 - chiave);
+}
+
+int main() {
+    int scelta, chiave;
+    char input[100], output[100];
+
+    printf("1. Cifra file\n");
+    printf("2. Decifra file\n");
+    printf("Scelta: ");
+    scanf("%d", &scelta);
+
+    printf("File input: ");
+    scanf("%s", input);
+    printf("File output: ");
+    scanf("%s", output);
+    printf("Chiave (0-25): ");
+    scanf("%d", &chiave);
+
+    if (scelta == 1) {
+        cifra_file(input, output, chiave);
+    } else if (scelta == 2) {
+        decifra_file(input, output, chiave);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section*{Note Finali}
+
+Queste soluzioni rappresentano solo uno dei possibili approcci per risolvere gli esercizi. Ci sono spesso modi alternativi, ugualmente validi, per affrontare un problema.
+
+Quando studi queste soluzioni:
+\begin{itemize}
+    \item Cerca di capire la logica, non solo copiare il codice
+    \item Prova a modificare le soluzioni per renderle migliori
+    \item Confronta le tue soluzioni con queste
+    \item Impara dai diversi approcci utilizzati
+\end{itemize}

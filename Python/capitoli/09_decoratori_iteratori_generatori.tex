@@ -1,0 +1,120 @@
+% Modulo 09 — Decoratori, Iteratori e Generatori
+\chapter{Decoratori, Iteratori e Generatori}
+
+\section{Introduzione}
+Pattern avanzati per estendere comportamento di funzioni e gestire serie di dati.
+
+Questa descrizione mostra come comporre comportamenti senza modificare il codice esistente (decoratori), come iterare su flussi in modo lazy (iteratori) e generare sequenze efficienti (generatori) riducendo uso di memoria.
+
+Questi strumenti rendono il codice più espressivo e performante in logging, validazione, pipeline di dati e elaborazioni su grandi volumi.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Scrivere decoratori semplici.
+  \item Implementare iteratori personalizzati.
+  \item Usare generatori con \texttt{yield} e comprensioni generator.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Decoratori]
+\texttt{@decorator} avvolge funzioni per aggiungere comportamento.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Iterazione e valutazione lazy]
+- Gli iteratori consumano elementi uno alla volta, riducendo memoria.
+- I generatori con \texttt{yield} modellano pipeline e flussi.
+- Componi trasformazioni con generator expression e \texttt{itertools}.
+- Backpressure: produci solo quanto richiesto dal consumatore.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Decoratore}
+\begin{lstlisting}
+def log_calls(fn):
+    def wrapper(*a, **k):
+        print("chiamata", fn.__name__)
+        return fn(*a, **k)
+    return wrapper
+
+@log_calls
+def hello():
+    print("hello")
+hello()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- Il decoratore \texttt{log\_calls} avvolge la funzione per eseguire codice prima/dopo.
+- Usare \verb|functools.wraps| su \texttt{wrapper} per preservare metadati (nome, docstring).
+- I decoratori sono ottimi per logging, validazione, caching e autorizzazioni.
+\end{tcolorbox}
+
+\subsection{Iteratore}
+\begin{lstlisting}
+class Count:
+    def __init__(self, n):
+        self.n = n; self.i = 0
+    def __iter__(self): return self
+    def __next__(self):
+        if self.i >= self.n: raise StopIteration
+        v = self.i; self.i += 1; return v
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- Implementa il protocollo iteratore con \verb|__iter__| e \verb|__next__|.
+- Solleva \texttt{StopIteration} per segnalare fine; consuma elemento per chiamata.
+- Preferire iteratori/generatori per flussi potenzialmente grandi o infiniti.
+\end{tcolorbox}
+
+\subsection{Generatore}
+\begin{lstlisting}
+def gen(n):
+    for i in range(n):
+        yield i
+print(list(gen(3)))
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione]
+- I generatori producono valori lazily con \texttt{yield}; consumati da \texttt{for} o \texttt{list(...)}.
+- Consentono pipeline efficienti e gestione di risorse con \verb|try/finally|.
+- Comporre trasformazioni con generator expression e moduli come \texttt{itertools}.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+- Logging/monitoring trasparente con decoratori.
+- Streaming di file/HTTP con trasformazioni lazy.
+- Validazione/autorità dei parametri senza cambiare funzioni originali.
+- Rate limiting e retry come decoratori riutilizzabili.
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Crea un decoratore che misura il tempo di esecuzione.
+  \item Implementa un iteratore sui numeri pari fino a N.
+  \item Scrivi un generatore di Fibonacci.
+  \item Usa una generator expression per filtrare valori.
+  \item Implementa un decoratore che valida tipi di argomenti.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai esplorato decoratori, iteratori e generatori in pratica.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Strumentazione trasparente (logging, timing) con decoratori.
+- Pipeline dati lazy e streaming efficiente.
+- Validazioni, autorizzazioni e caching via decoratori.
+- Generator expression per filtri e trasformazioni.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Protocollo iteratore}: implementare \verb|__iter__| e \verb|__next__| per oggetti iterabili.
+  \item \textbf{Generatori}: usare \verb|yield| per pipeline lazy e flussi di dati; gestire cleanup con \verb|finally|.
+  \item \textbf{Decoratori}: incapsulare cross-cutting concerns (logging, caching, autorizzazione); usare \verb|functools.wraps|.
+  \item \textbf{Caching}: \verb|functools.lru_cache| per funzioni pure; definire dimensioni e politiche di invalidazione.
+\end{itemize}
+\end{tcolorbox}
+
+\paragraph{Pattern} Combinare generatori e decoratori per pipeline efficienti e componibili; preferire iterazione lazy per dataset grandi.
+Consulta: \url{https://docs.python.org/3/faq/programming.html#what-are-decorators}.

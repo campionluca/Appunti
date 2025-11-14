@@ -1,0 +1,669 @@
+\chapter{Puntatori}
+\label{cap:puntatori}
+
+\section{Introduzione ai Puntatori}
+
+I puntatori sono una delle caratteristiche più potenti e complesse del linguaggio C. Un puntatore è una variabile speciale che contiene l'indirizzo di memoria di un'altra variabile, permettendo l'accesso e la manipolazione indiretta dei dati.
+
+\subsection{Obiettivi di Apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere il concetto di indirizzo di memoria e puntatore
+    \item Dichiarare e inizializzare correttamente i puntatori
+    \item Utilizzare gli operatori \texttt{\&} (indirizzo) e \texttt{*} (dereferenziazione) del linguaggio C
+    \item Applicare l'aritmetica dei puntatori per navigare in memoria
+    \item Comprendere la relazione tra array e puntatori (vedi \autoref{cap:array})
+    \item Passare puntatori alle funzioni per modificare variabili (vedi \autoref{cap:funzioni})
+    \item Allocare e deallocare memoria dinamicamente
+    \item Riconoscere ed evitare gli errori comuni con i puntatori
+\end{itemize}
+
+\subsection{Perché Usare i Puntatori?}
+
+\begin{itemize}
+    \item Manipolazione diretta della memoria
+    \item Passaggio efficiente di dati alle funzioni
+    \item Allocazione dinamica della memoria
+    \item Implementazione di strutture dati complesse
+    \item Accesso efficiente agli array
+\end{itemize}
+
+\begin{attenzione}
+I puntatori sono potenti ma possono causare errori gravi se usati incorrettamente. È fondamentale comprenderli bene prima di usarli.
+\end{attenzione}
+
+\section{Concetti Fondamentali}
+
+\subsection{Indirizzi di Memoria}
+
+Ogni variabile è memorizzata in una specifica posizione di memoria, identificata da un indirizzo.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 10;  // Variabile intera
+
+    printf("Valore di x: %d\n", x);
+    printf("Indirizzo di x: %p\n", (void*)&x);  // Stampa l'indirizzo di memoria della variabile x
+
+    return 0;
+}
+\end{lstlisting}
+
+Output (esempio):
+\begin{verbatim}
+Valore di x: 10
+Indirizzo di x: 0x7ffeeb3c4a4c
+\end{verbatim}
+
+\subsection{Operatori dei Puntatori}
+
+\begin{itemize}
+    \item \texttt{\&} (operatore di indirizzo del linguaggio C): restituisce l'indirizzo di memoria di una variabile
+    \item \texttt{*} (operatore di dereferenziazione del linguaggio C): accede al valore contenuto all'indirizzo puntato da un puntatore
+\end{itemize}
+
+\section{Dichiarazione e Inizializzazione}
+
+\subsection{Sintassi}
+
+\begin{lstlisting}
+tipo *nome_puntatore;
+\end{lstlisting}
+
+\subsection{Esempi}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 10;  // Variabile intera
+    int *ptr;  // Dichiarazione di un puntatore a variabile di tipo int
+
+    ptr = &x;  // Il puntatore ptr contiene l'indirizzo di memoria della variabile x
+
+    printf("Valore di x: %d\n", x);
+    printf("Indirizzo di x: %p\n", (void*)&x);
+    printf("Valore di ptr: %p\n", (void*)ptr);  // Stampa l'indirizzo contenuto nel puntatore
+    printf("Valore puntato da ptr: %d\n", *ptr);  // Dereferenzia il puntatore per ottenere il valore
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Inizializzazione Diretta}
+
+\begin{lstlisting}
+int x = 42;  // Variabile intera
+int *ptr = &x;  // Dichiarazione e inizializzazione del puntatore all'indirizzo di x
+
+// Oppure
+int y = 100;  // Variabile intera
+int *p1 = &y, *p2 = &y;  // Due puntatori distinti che puntano alla stessa variabile y
+\end{lstlisting}
+
+\section{Dereferenziazione}
+
+La dereferenziazione, tramite l'operatore \texttt{*}, permette di accedere o modificare il valore contenuto all'indirizzo di memoria puntato da un puntatore.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 10;  // Variabile intera
+    int *ptr = &x;  // Puntatore che punta alla variabile x
+
+    printf("Valore originale: %d\n", x);
+
+    // Modifica del valore tramite dereferenziazione del puntatore
+    *ptr = 20;  // Modifica indirettamente la variabile x
+
+    printf("Valore modificato: %d\n", x);      // 20
+    printf("Valore tramite puntatore: %d\n", *ptr);  // 20, dereferenzia il puntatore
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatori e Funzioni}
+
+\subsection{Passaggio per Riferimento}
+
+I puntatori permettono di modificare le variabili passate alle funzioni.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione con passaggio per valore (non modifica la variabile originale)
+void incrementa_valore(int x) {
+    x = x + 1;  // Modifica solo la copia locale del parametro
+}
+
+// Funzione con passaggio per riferimento tramite puntatore (modifica la variabile originale)
+void incrementa_riferimento(int *x) {
+    *x = *x + 1;  // Dereferenzia il puntatore e modifica il valore puntato
+}
+
+int main(int argc, char** argv) {
+    int numero = 10;
+
+    printf("Valore iniziale: %d\n", numero);
+
+    incrementa_valore(numero);  // Passa il valore per copia
+    printf("Dopo incrementa_valore: %d\n", numero);  // Ancora 10 (non modificato)
+
+    incrementa_riferimento(&numero);  // Passa l'indirizzo della variabile
+    printf("Dopo incrementa_riferimento: %d\n", numero);  // 11 (modificato)
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Scambio di Valori}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che scambia i valori di due variabili intere tramite puntatori
+void scambia(int *a, int *b) {
+    int temp = *a;  // Salva il valore puntato da a
+    *a = *b;  // Assegna il valore puntato da b alla variabile puntata da a
+    *b = temp;  // Assegna il valore salvato alla variabile puntata da b
+}
+
+int main(int argc, char** argv) {
+    int x = 5, y = 10;
+
+    printf("Prima: x = %d, y = %d\n", x, y);
+    scambia(&x, &y);  // Passa gli indirizzi delle variabili x e y alla funzione
+    printf("Dopo: x = %d, y = %d\n", x, y);  // I valori sono stati scambiati
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Ritorno di Valori Multipli}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che calcola quoziente e resto e li restituisce tramite puntatori
+void dividi(int dividendo, int divisore,
+            int *quoziente, int *resto) {
+    *quoziente = dividendo / divisore;  // Assegna il quoziente alla variabile puntata
+    *resto = dividendo % divisore;  // Assegna il resto alla variabile puntata
+}
+
+int main(int argc, char** argv) {
+    int q, r;  // Variabili per quoziente e resto
+
+    dividi(17, 5, &q, &r);  // Passa gli indirizzi delle variabili q e r alla funzione
+
+    printf("17 / 5 = %d con resto %d\n", q, r);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatori e Array}
+
+\subsection{Relazione tra Array e Puntatori}
+
+Il nome di un array in C è un puntatore costante al primo elemento dell'array stesso (vedi \autoref{cap:array}).
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int arr[5] = {10, 20, 30, 40, 50};  // Array di 5 interi
+    int *ptr = arr;  // Il puntatore ptr punta al primo elemento (equivalente a &arr[0])
+
+    printf("arr[0] = %d\n", arr[0]);    // 10, accesso con notazione array
+    printf("*arr = %d\n", *arr);        // 10, dereferenzia il puntatore al primo elemento
+    printf("*ptr = %d\n", *ptr);        // 10, dereferenzia il puntatore ptr
+
+    // Accesso agli elementi con diverse notazioni
+    printf("arr[2] = %d\n", arr[2]);    // 30, accesso con indice
+    printf("*(arr + 2) = %d\n", *(arr + 2));  // 30, aritmetica dei puntatori e dereferenziazione
+    printf("*(ptr + 2) = %d\n", *(ptr + 2));  // 30, aritmetica dei puntatori e dereferenziazione
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Aritmetica dei Puntatori}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int arr[5] = {10, 20, 30, 40, 50};  // Array di 5 interi
+    int *ptr = arr;  // Puntatore che punta al primo elemento dell'array
+
+    printf("Attraversamento con aritmetica dei puntatori:\n");
+    for (int i = 0; i < 5; i++) {
+        printf("*(ptr + %d) = %d\n", i, *(ptr + i));  // Dereferenzia puntatore + offset
+    }
+
+    printf("\nUsando incremento del puntatore:\n");
+    ptr = arr;  // Reset del puntatore al primo elemento
+    for (int i = 0; i < 5; i++) {
+        printf("*ptr = %d\n", *ptr);  // Dereferenzia il puntatore corrente
+        ptr++;  // Incrementa il puntatore per avanzare al prossimo elemento
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Passaggio di Array a Funzioni con Puntatori}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che stampa un array usando notazione puntatore
+// Queste dichiarazioni di parametro sono equivalenti: int *arr e int arr[]
+void stampa1(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);  // Accesso con notazione array
+    }
+    printf("\n");
+}
+
+// Funzione che stampa un array usando aritmetica dei puntatori
+void stampa2(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", *(arr + i));  // Accesso con aritmetica dei puntatori
+    }
+    printf("\n");
+}
+
+// Funzione che modifica gli elementi di un array tramite puntatore
+void modifica(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        arr[i] *= 2;  // Modifica l'elemento nell'array originale
+    }
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {1, 2, 3, 4, 5};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    stampa1(numeri, n);
+    stampa2(numeri, n);
+
+    modifica(numeri, n);
+    printf("Dopo modifica: ");
+    stampa1(numeri, n);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatori a Puntatori}
+
+Un puntatore può puntare a un altro puntatore, creando una catena di indirezioni.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 100;  // Variabile intera
+    int *ptr1 = &x;        // Puntatore a variabile int che punta a x
+    int **ptr2 = &ptr1;    // Puntatore a puntatore a int che punta a ptr1
+
+    printf("Valore di x: %d\n", x);
+    printf("Valore tramite *ptr1: %d\n", *ptr1);  // Dereferenzia ptr1
+    printf("Valore tramite **ptr2: %d\n", **ptr2);  // Doppia dereferenziazione: prima ptr2 poi ptr1
+
+    // Modifica tramite puntatore a puntatore
+    **ptr2 = 200;  // Dereferenzia due volte per modificare x
+    printf("Nuovo valore di x: %d\n", x);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatori void}
+
+Un puntatore di tipo \texttt{void*} può puntare a qualsiasi tipo di dato, ma richiede un cast esplicito prima della dereferenziazione.
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 10;  // Variabile intera
+    float y = 3.14;  // Variabile float
+    char c = 'A';  // Variabile char
+
+    void *ptr;  // Puntatore generico void
+
+    // Il puntatore void punta a una variabile int
+    ptr = &x;
+    printf("Intero: %d\n", *(int*)ptr);  // Cast a int* prima di dereferenziare
+
+    // Il puntatore void punta a una variabile float
+    ptr = &y;
+    printf("Float: %.2f\n", *(float*)ptr);  // Cast a float* prima di dereferenziare
+
+    // Il puntatore void punta a una variabile char
+    ptr = &c;
+    printf("Char: %c\n", *(char*)ptr);  // Cast a char* prima di dereferenziare
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Prima di dereferenziare un puntatore di tipo void, devi fare il cast esplicito al tipo appropriato del dato puntato, altrimenti il compilatore non sa come interpretare i dati in memoria.
+\end{attenzione}
+
+\section{Puntatori Costanti}
+
+\subsection{Tipi di Costanti}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int x = 10, y = 20;
+
+    // 1. Puntatore a costante
+    const int *ptr1 = &x;
+    // *ptr1 = 20;  // ERRORE: non puoi modificare il valore
+    ptr1 = &y;      // OK: puoi cambiare dove punta
+
+    // 2. Puntatore costante
+    int *const ptr2 = &x;
+    *ptr2 = 30;     // OK: puoi modificare il valore
+    // ptr2 = &y;   // ERRORE: non puoi cambiare dove punta
+
+    // 3. Puntatore costante a costante
+    const int *const ptr3 = &x;
+    // *ptr3 = 40;  // ERRORE: non puoi modificare il valore
+    // ptr3 = &y;   // ERRORE: non puoi cambiare dove punta
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Puntatore NULL}
+
+Il puntatore NULL è un puntatore che non punta a nulla.
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    int *ptr = NULL;  // Inizializzazione sicura
+
+    if (ptr == NULL) {
+        printf("Il puntatore e' NULL\n");
+    }
+
+    // Sempre verificare prima di dereferenziare
+    if (ptr != NULL) {
+        printf("Valore: %d\n", *ptr);
+    } else {
+        printf("Impossibile dereferenziare: puntatore NULL\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{nota}
+È buona pratica inizializzare sempre i puntatori a NULL se non vengono immediatamente assegnati a un indirizzo valido.
+\end{nota}
+
+\section{Allocazione Dinamica della Memoria}
+
+\subsection{malloc}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    int n;
+    printf("Quanti numeri? ");
+    scanf("%d", &n);
+
+    // Alloca memoria per n interi
+    int *arr = (int*)malloc(n * sizeof(int));
+
+    if (arr == NULL) {
+        printf("Errore di allocazione memoria\n");
+        return 1;
+    }
+
+    // Usa l'array
+    for (int i = 0; i < n; i++) {
+        arr[i] = i * 2;
+    }
+
+    printf("Array: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    // Libera la memoria
+    free(arr);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{calloc}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    int n = 5;
+
+    // calloc inizializza a zero
+    int *arr = (int*)calloc(n, sizeof(int));
+
+    if (arr == NULL) {
+        printf("Errore di allocazione\n");
+        return 1;
+    }
+
+    printf("Array inizializzato da calloc: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);  // Tutti zero
+    }
+    printf("\n");
+
+    free(arr);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{realloc}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    int *arr = (int*)malloc(3 * sizeof(int));
+
+    arr[0] = 10;
+    arr[1] = 20;
+    arr[2] = 30;
+
+    printf("Array originale: ");
+    for (int i = 0; i < 3; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    // Ridimensiona l'array
+    arr = (int*)realloc(arr, 5 * sizeof(int));
+
+    arr[3] = 40;
+    arr[4] = 50;
+
+    printf("Array ridimensionato: ");
+    for (int i = 0; i < 5; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    free(arr);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Errori Comuni con i Puntatori}
+
+\subsection{Puntatore Non Inizializzato}
+
+\begin{lstlisting}
+// SBAGLIATO
+int *ptr;
+*ptr = 10;  // Comportamento indefinito!
+
+// CORRETTO
+int x;
+int *ptr = &x;
+*ptr = 10;  // OK
+\end{lstlisting}
+
+\subsection{Dereferenziazione di NULL}
+
+\begin{lstlisting}
+// SBAGLIATO
+int *ptr = NULL;
+*ptr = 10;  // Crash!
+
+// CORRETTO
+int *ptr = NULL;
+if (ptr != NULL) {
+    *ptr = 10;
+}
+\end{lstlisting}
+
+\subsection{Memory Leak}
+
+\begin{lstlisting}
+// SBAGLIATO
+void funzione() {
+    int *ptr = (int*)malloc(100 * sizeof(int));
+    // ... uso del puntatore ...
+    // Manca free(ptr)!
+}
+
+// CORRETTO
+void funzione() {
+    int *ptr = (int*)malloc(100 * sizeof(int));
+    if (ptr == NULL) return;
+
+    // ... uso del puntatore ...
+
+    free(ptr);  // Libera la memoria
+}
+\end{lstlisting}
+
+\subsection{Dangling Pointer}
+
+\begin{lstlisting}
+// SBAGLIATO
+int *ptr = (int*)malloc(sizeof(int));
+*ptr = 10;
+free(ptr);
+*ptr = 20;  // Errore: ptr punta a memoria liberata!
+
+// CORRETTO
+int *ptr = (int*)malloc(sizeof(int));
+*ptr = 10;
+free(ptr);
+ptr = NULL;  // Imposta a NULL dopo free
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Lista Dinamica di Numeri}
+
+\begin{lstlisting}
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char** argv) {
+    int capacita = 2;
+    int dimensione = 0;
+    int *arr = (int*)malloc(capacita * sizeof(int));
+
+    if (arr == NULL) {
+        printf("Errore di allocazione\n");
+        return 1;
+    }
+
+    int numero;
+    printf("Inserisci numeri (0 per terminare):\n");
+
+    while (1) {
+        scanf("%d", &numero);
+        if (numero == 0) break;
+
+        // Espandi l'array se necessario
+        if (dimensione == capacita) {
+            capacita *= 2;
+            arr = (int*)realloc(arr, capacita * sizeof(int));
+            if (arr == NULL) {
+                printf("Errore di riallocazione\n");
+                return 1;
+            }
+            printf("Array espanso a capacita %d\n", capacita);
+        }
+
+        arr[dimensione++] = numero;
+    }
+
+    printf("\nNumeri inseriti:\n");
+    for (int i = 0; i < dimensione; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    free(arr);
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi una funzione che usa i puntatori per scambiare tre valori ciclicamente (a→b, b→c, c→a).
+    \item Crea una funzione che inverte un array usando i puntatori.
+    \item Implementa una funzione che trova il massimo e il minimo di un array restituendo entrambi tramite puntatori.
+    \item Scrivi un programma che alloca dinamicamente un array e lo riempie con i quadrati dei numeri da 1 a N.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Implementa una funzione che concatena due array allocati dinamicamente in un nuovo array.
+    \item Crea una funzione che rimuove gli elementi duplicati da un array allocato dinamicamente.
+    \item Scrivi un programma che implementa una matrice dinamica (array 2D allocato dinamicamente).
+    \item Implementa una funzione di ordinamento che usa solo aritmetica dei puntatori (senza indici).
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa una lista collegata semplice con operazioni di inserimento, ricerca e cancellazione.
+    \item Crea un programma che implementa uno stack dinamico usando puntatori.
+    \item Scrivi un programma che gestisce una matrice sparsa usando allocazione dinamica.
+    \item Implementa un albero binario di ricerca con allocazione dinamica dei nodi.
+\end{enumerate}

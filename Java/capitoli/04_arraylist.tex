@@ -1,0 +1,836 @@
+\chapter{ArrayList}
+\label{cap:arraylist}
+
+\section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Comprendere le differenze fondamentali tra array tradizionali e ArrayList
+    \item Dichiarare, inizializzare e utilizzare ArrayList con il corretto tipo generico
+    \item Applicare i metodi principali per manipolare elementi in una lista dinamica
+    \item Iterare su ArrayList utilizzando diverse tecniche (for, for-each, Iterator)
+    \item Creare e gestire ArrayList di oggetti personalizzati
+    \item Comprendere i concetti base dei Generics e il meccanismo di boxing/unboxing
+    \item Sviluppare applicazioni pratiche utilizzando ArrayList per la gestione di collezioni di dati
+\end{itemize}
+
+\section{Array vs ArrayList}
+
+Gli array tradizionali e gli ArrayList rappresentano due approcci differenti alla gestione di collezioni di elementi in Java (per un ripasso completo sui concetti fondamentali di classi e oggetti, vedi Capitolo \ref{cap:classi_oggetti_ereditarieta}). Mentre gli array sono strutture primitive con dimensione fissa, gli ArrayList offrono maggiore flessibilità e un'interfaccia più ricca di metodi.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Caratteristica} & \textbf{Array} & \textbf{ArrayList} \\
+\hline
+Dimensione & Fissa al momento della creazione & Dinamica, ridimensionabile automaticamente \\
+\hline
+Tipo di dato & Tipi primitivi e oggetti & Solo oggetti (wrapper per primitivi) \\
+\hline
+Sintassi & \texttt{int[] arr = new int[5]} & \texttt{ArrayList<Integer> list = new ArrayList<>()} \\
+\hline
+Accesso elementi & Notazione parentesi quadre \texttt{arr[0]} & Metodi dell'oggetto ArrayList: \texttt{lista.get(0)}, \texttt{lista.set(0, val)} \\
+\hline
+Aggiunta elementi & Non possibile modificare dimensione & Metodi dell'oggetto ArrayList: \texttt{lista.add()}, \texttt{lista.add(index, element)} \\
+\hline
+Rimozione elementi & Non possibile ridurre dimensione & Metodi dell'oggetto ArrayList: \texttt{lista.remove(index)}, \texttt{lista.remove(object)} \\
+\hline
+Performance & Più veloce per accesso diretto & Leggera overhead, ma più funzionalità \\
+\hline
+Package & Parte del linguaggio Java & \texttt{java.util.ArrayList} \\
+\hline
+Type Safety & No con array di Object & Sì con Generics \\
+\hline
+\end{tabular}
+\caption{Confronto tra Array e ArrayList}
+\end{table}
+
+L'ArrayList fa parte del Java Collections Framework e implementa l'interfaccia List (per approfondimenti sulle interfacce, vedi Capitolo \ref{cap:interfacce_classi_astratte}). Internamente utilizza un array ridimensionabile che viene automaticamente espanso quando necessario. Questo comportamento dinamico rende ArrayList particolarmente adatto quando non si conosce a priori il numero di elementi da memorizzare o quando la collezione deve crescere e ridursi frequentemente durante l'esecuzione del programma.
+
+\section{Dichiarazione e inizializzazione}
+
+La dichiarazione di un ArrayList richiede l'importazione della classe dal package \texttt{java.util} e l'utilizzo della sintassi dei Generics per specificare il tipo di elementi contenuti.
+
+\subsection{Dichiarazione base con tipo generico}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class EsempioArrayList {
+    public static void main(String[] args) {
+        // Dichiarazione con tipo generico esplicito
+        ArrayList<String> nomi = new ArrayList<String>();
+
+        // Da Java 7: diamond operator (inferenza del tipo)
+        ArrayList<Integer> numeri = new ArrayList<>();
+
+        // ArrayList di tipo Double
+        ArrayList<Double> prezzi = new ArrayList<>();
+    }
+}
+\end{lstlisting}
+
+Questo esempio mostra la sintassi base per dichiarare ArrayList con i \textbf{tipi generici}. La prima dichiarazione usa la sintassi completa, specificando il tipo \texttt{String} sia a sinistra che a destra: questo garantisce che l'ArrayList \texttt{nomi} possa contenere solo oggetti di tipo \texttt{String}. La seconda e terza dichiarazione sfruttano il \textbf{diamond operator} (\texttt{<>}) introdotto in Java 7, che permette al compilatore di \textbf{inferire automaticamente} il tipo dalla parte sinistra della dichiarazione. Questo riduce la verbosità del codice mantenendo la stessa sicurezza dei tipi. Nota l'uso dei \textbf{wrapper classes}: \texttt{Integer} invece di \texttt{int}, \texttt{Double} invece di \texttt{double}. Gli ArrayList possono contenere solo oggetti, non tipi primitivi, quindi è necessario usare le classi wrapper. Java gestisce automaticamente la conversione tra tipi primitivi e wrapper (autoboxing/unboxing), quindi puoi aggiungere un \texttt{int} direttamente a un \texttt{ArrayList<Integer>} usando il metodo dell'oggetto \texttt{numeri.add()}. È importante specificare sempre il tipo generico per avere \textbf{type safety}: il compilatore può verificare a tempo di compilazione che stai usando i tipi corretti, prevenendo errori runtime.
+
+\subsection{Inizializzazione con capacità iniziale}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class CapacitaIniziale {
+    public static void main(String[] args) {
+        // Specifica capacità iniziale per ottimizzare performance
+        ArrayList<String> listaGrande = new ArrayList<>(100);
+
+        // La capacità viene aumentata automaticamente se necessario
+        System.out.println("Dimensione iniziale: " + listaGrande.size());
+        // Output: 0 (capacità != dimensione)
+    }
+}
+\end{lstlisting}
+
+Questo esempio mostra come specificare la \textbf{capacità iniziale} di un ArrayList per ottimizzare le performance. È importante distinguere tra \textbf{capacità} e \textbf{dimensione}: la capacità è lo spazio interno allocato dall'ArrayList \texttt{listaGrande} (quanti elementi può contenere senza dover riallocare memoria), mentre la dimensione è il numero effettivo di elementi presenti. Nell'esempio, creiamo un ArrayList \texttt{listaGrande} con capacità iniziale di 100 elementi, ma la dimensione iniziale è 0 perché non abbiamo ancora aggiunto nulla (verificabile con il metodo dell'oggetto \texttt{listaGrande.size()}). Quando la capacità viene superata, l'ArrayList automaticamente ne alloca una nuova più grande (tipicamente 1.5 volte la precedente), copiando tutti gli elementi. Questo processo di ridimensionamento ha un costo: se sai approssimativamente quanti elementi dovrai memorizzare, specificare una capacità iniziale adeguata evita ridimensionamenti multipli, migliorando l'efficienza. Ad esempio, se devi caricare 1000 record da un database, creare l'ArrayList con capacità iniziale 1000 è più efficiente che partire dalla capacità di default (10) e subire molteplici ridimensionamenti. Tuttavia, se non conosci la dimensione, il comportamento di default funziona bene per la maggior parte dei casi.
+
+\subsection{Inizializzazione con elementi predefiniti}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class InizializzazioneConElementi {
+    public static void main(String[] args) {
+        // Metodo 1: aggiungere elementi uno per uno
+        ArrayList<String> colori = new ArrayList<>();
+        colori.add("Rosso");
+        colori.add("Verde");
+        colori.add("Blu");
+
+        // Metodo 2: inizializzazione da array (Java 8+)
+        ArrayList<Integer> numeri = new ArrayList<>(
+            Arrays.asList(1, 2, 3, 4, 5)
+        );
+
+        // Metodo 3: List.of() con ArrayList (Java 9+)
+        ArrayList<String> giorni = new ArrayList<>(
+            Arrays.asList("Lunedì", "Martedì", "Mercoledì")
+        );
+    }
+}
+\end{lstlisting}
+
+Questo esempio presenta tre modi diversi per \textbf{inizializzare un ArrayList con elementi predefiniti}. Il primo metodo è il più semplice e diretto: creare un ArrayList vuoto e aggiungere elementi uno per uno con il metodo dell'oggetto \texttt{colori.add()}. Questo approccio è chiaro ma può essere verboso quando ci sono molti elementi. Il secondo metodo usa \texttt{Arrays.asList()} per creare rapidamente una lista da valori separati da virgola, che viene poi usata per inizializzare l'ArrayList \texttt{numeri}. Questo metodo è più conciso quando hai già tutti i valori: \texttt{Arrays.asList()} crea una lista a dimensione fissa, ma passandola al costruttore di ArrayList otteniamo una lista dinamica modificabile. Il terzo metodo è simile al secondo, mostrando che lo stesso pattern funziona con tipi diversi per l'ArrayList \texttt{giorni}. È importante notare che \texttt{Arrays.asList()} richiede l'import di \texttt{java.util.Arrays}. Questi pattern di inizializzazione sono molto utili nei test e quando si vogliono creare rapidamente liste di esempio. Scegli il metodo in base al contesto: usa il primo quando aggiungi elementi dinamicamente, il secondo quando conosci tutti i valori iniziali al momento della dichiarazione.
+
+\section{Metodi principali}
+
+Gli ArrayList forniscono un'ampia gamma di metodi per manipolare la collezione. Di seguito vengono presentati i metodi più utilizzati con esempi pratici.
+
+\subsection{Metodo add()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoAdd {
+    public static void main(String[] args) {
+        ArrayList<String> frutta = new ArrayList<>();
+
+        // Aggiunge elemento alla fine della lista
+        frutta.add("Mela");
+        frutta.add("Banana");
+        frutta.add("Arancia");
+
+        // Aggiunge elemento in posizione specifica
+        frutta.add(1, "Pera"); // Inserisce in posizione 1
+
+        System.out.println(frutta);
+        // Output: [Mela, Pera, Banana, Arancia]
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{frutta.add()} è il modo principale per aggiungere elementi a un ArrayList ed esiste in due varianti. La prima variante, \texttt{frutta.add(elemento)}, aggiunge l'elemento \textbf{alla fine della lista}, incrementando automaticamente la dimensione. Questo è il metodo più comune ed è molto veloce nella maggior parte dei casi. La seconda variante, \texttt{frutta.add(indice, elemento)}, inserisce l'elemento in una \textbf{posizione specifica}. Nell'esempio, \texttt{frutta.add(1, "Pera")} inserisce "Pera" all'indice 1, spostando tutti gli elementi successivi di una posizione a destra: "Banana" che era all'indice 1 si sposta all'indice 2, e così via. Questo metodo richiede più tempo perché deve spostare gli elementi. Gli indici in Java partono da 0: il primo elemento è all'indice 0, il secondo all'indice 1, ecc. Nota che puoi inserire solo in posizioni valide: da 0 a \texttt{frutta.size()} (incluso). Inserire all'indice \texttt{frutta.size()} equivale ad aggiungere alla fine. Tentare di inserire in un indice maggiore causa \texttt{IndexOutOfBoundsException}.
+
+\subsection{Metodo remove()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoRemove {
+    public static void main(String[] args) {
+        ArrayList<String> animali = new ArrayList<>();
+        animali.add("Gatto");
+        animali.add("Cane");
+        animali.add("Coniglio");
+        animali.add("Cane");
+
+        // Rimuove per indice
+        animali.remove(0); // Rimuove "Gatto"
+        System.out.println(animali); // [Cane, Coniglio, Cane]
+
+        // Rimuove per oggetto (rimuove la prima occorrenza)
+        animali.remove("Cane"); // Rimuove il primo "Cane"
+        System.out.println(animali); // [Coniglio, Cane]
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{animali.remove()} permette di rimuovere elementi da un ArrayList in due modi diversi. La prima variante, \texttt{animali.remove(indice)}, rimuove l'elemento alla posizione specificata e restituisce l'elemento rimosso. Dopo la rimozione, tutti gli elementi successivi vengono spostati di una posizione a sinistra per riempire lo spazio. Nell'esempio, rimuovendo l'indice 0 con \texttt{animali.remove(0)} ("Gatto"), l'elemento "Cane" che era all'indice 1 si sposta all'indice 0. La seconda variante, \texttt{animali.remove(oggetto)}, cerca l'oggetto nella lista usando il metodo \texttt{equals()} e rimuove la \textbf{prima occorrenza} trovata. Questo è importante: se ci sono duplicati (come "Cane" nell'esempio), viene rimosso solo il primo. Se l'oggetto non è presente, il metodo restituisce \texttt{false} e la lista rimane invariata. Con ArrayList di tipo \texttt{Integer}, c'è una potenziale ambiguità: \texttt{numeri.remove(5)} rimuove l'indice 5 o il valore 5? Per risolvere, usa \texttt{numeri.remove(Integer.valueOf(5))} per rimuovere il valore. La rimozione può richiedere tempo perché deve spostare gli elementi.
+
+\subsection{Metodo get()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoGet {
+    public static void main(String[] args) {
+        ArrayList<Integer> numeri = new ArrayList<>();
+        numeri.add(10);
+        numeri.add(20);
+        numeri.add(30);
+
+        // Accede all'elemento in posizione specificata
+        int primo = numeri.get(0);
+        int secondo = numeri.get(1);
+
+        System.out.println("Primo elemento: " + primo);   // 10
+        System.out.println("Secondo elemento: " + secondo); // 20
+
+        // ATTENZIONE: IndexOutOfBoundsException se indice non valido
+        // int errore = numeri.get(5); // Errore!
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{numeri.get(indice)} è l'equivalente dell'operatore \texttt{[]} degli array tradizionali: restituisce l'elemento alla posizione specificata. A differenza degli array dove si usa \texttt{array[0]}, con ArrayList si usa \texttt{numeri.get(0)}. Questo metodo è molto efficiente e veloce perché l'ArrayList internamente usa un array e può accedere direttamente alla posizione richiesta. È fondamentale che l'indice sia valido: deve essere maggiore o uguale a 0 e minore di \texttt{numeri.size()}. Tentare di accedere a un indice fuori range (come \texttt{numeri.get(5)} quando ci sono solo 3 elementi) causa un'\texttt{IndexOutOfBoundsException} che interrompe il programma se non gestita (per gestire correttamente le eccezioni, vedi Capitolo \ref{cap:eccezioni}). Per evitare questo errore, verifica sempre la dimensione prima: \texttt{if (indice >= 0 \&\& indice < numeri.size())}. Nota l'\textbf{unboxing automatico}: il metodo \texttt{numeri.get()} restituisce un oggetto \texttt{Integer}, ma Java lo converte automaticamente al tipo primitivo \texttt{int} quando lo assegniamo alla variabile. Il metodo \texttt{numeri.get()} è il modo standard per leggere elementi da un ArrayList ed è molto usato nei cicli for tradizionali.
+
+\subsection{Metodo set()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoSet {
+    public static void main(String[] args) {
+        ArrayList<String> materie = new ArrayList<>();
+        materie.add("Matematica");
+        materie.add("Storia");
+        materie.add("Inglese");
+
+        // Sostituisce elemento in posizione specificata
+        String vecchio = materie.set(1, "Geografia");
+
+        System.out.println("Elemento sostituito: " + vecchio); // Storia
+        System.out.println(materie); // [Matematica, Geografia, Inglese]
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{materie.set(indice, elemento)} sostituisce l'elemento in una posizione specifica con un nuovo valore, restituendo l'elemento precedente. A differenza di \texttt{materie.add()} che inserisce spostando gli elementi, \texttt{materie.set()} \textbf{rimpiazza} l'elemento esistente senza modificare la dimensione della lista. Nell'esempio, \texttt{materie.set(1, "Geografia")} sostituisce "Storia" (che era all'indice 1) con "Geografia", e il metodo restituisce "Storia" (il valore vecchio). Questo metodo è utile quando vuoi aggiornare un valore esistente conoscendone la posizione. L'indice deve essere valido (da 0 a \texttt{materie.size()-1}): non puoi usare \texttt{materie.set()} per aggiungere elementi oltre la fine della lista. Se l'ArrayList è vuoto o l'indice è maggiore di \texttt{materie.size()-1}, ottieni un'\texttt{IndexOutOfBoundsException}. Il metodo \texttt{materie.set()} è molto veloce perché accede direttamente alla posizione senza spostare elementi. È particolarmente utile nei cicli quando vuoi modificare elementi in base al loro indice, come raddoppiare tutti i valori di una lista di numeri: \texttt{numeri.set(i, numeri.get(i) * 2)}.
+
+\subsection{Metodo size()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoSize {
+    public static void main(String[] args) {
+        ArrayList<Double> voti = new ArrayList<>();
+
+        System.out.println("Dimensione iniziale: " + voti.size()); // 0
+
+        voti.add(7.5);
+        voti.add(8.0);
+        voti.add(6.5);
+
+        System.out.println("Dimensione dopo aggiunte: " + voti.size()); // 3
+
+        voti.remove(0);
+        System.out.println("Dimensione dopo rimozione: " + voti.size()); // 2
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{voti.size()} restituisce il numero di elementi attualmente presenti nell'ArrayList. A differenza degli array dove usi \texttt{array.length}, con ArrayList usi \texttt{voti.size()} (è un metodo, non una proprietà, quindi richiede le parentesi). La dimensione parte da 0 per una lista vuota e aumenta o diminuisce dinamicamente quando aggiungi o rimuovi elementi. Questo metodo è fondamentale per i cicli: quando itteri con un for tradizionale, la condizione è sempre \texttt{i < voti.size()}. È importante ricordare che \texttt{voti.size()} restituisce il numero di elementi, non l'indice dell'ultimo elemento: se \texttt{voti.size()} è 3, gli indici validi sono 0, 1 e 2. Il metodo \texttt{voti.size()} è molto veloce perché l'ArrayList mantiene un contatore interno. Un errore comune è confondere \texttt{voti.size()} con la \textbf{capacità} interna: la capacità è lo spazio allocato (invisibile dall'esterno), mentre \texttt{voti.size()} è il numero reale di elementi. Puoi avere un ArrayList con capacità 100 ma \texttt{size()} 0 se non hai ancora aggiunto elementi.
+
+\subsection{Metodo contains()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoContains {
+    public static void main(String[] args) {
+        ArrayList<String> linguaggi = new ArrayList<>();
+        linguaggi.add("Java");
+        linguaggi.add("Python");
+        linguaggi.add("C++");
+
+        // Verifica presenza di un elemento
+        boolean haJava = linguaggi.contains("Java");
+        boolean haRuby = linguaggi.contains("Ruby");
+
+        System.out.println("Contiene Java? " + haJava);   // true
+        System.out.println("Contiene Ruby? " + haRuby);   // false
+
+        // Utilizzo in condizioni
+        if (linguaggi.contains("Python")) {
+            System.out.println("Python è presente nella lista");
+        }
+    }
+}
+\end{lstlisting}
+
+Il metodo dell'oggetto ArrayList \texttt{linguaggi.contains(oggetto)} verifica se un elemento è presente nell'ArrayList, restituendo \texttt{true} se trovato, \texttt{false} altrimenti. Internamente, il metodo scorre la lista confrontando ogni elemento con quello cercato usando il metodo \texttt{equals()}. Questo significa che per oggetti personalizzati, devi sovrascrivere correttamente \texttt{equals()} se vuoi che \texttt{linguaggi.contains()} funzioni come previsto. Il metodo può richiedere tempo proporzionale al numero di elementi perché nel caso peggiore deve controllare tutti gli elementi. È particolarmente utile nelle condizioni: invece di scorrere manualmente la lista per cercare un elemento, puoi usare direttamente \texttt{if (linguaggi.contains(elemento))}. Attenzione con i tipi numerici: confronta i valori, non i riferimenti. Con stringhe, \texttt{linguaggi.contains()} confronta il contenuto delle stringhe, non i riferimenti in memoria. Un pattern comune è verificare la presenza prima di aggiungere un elemento per evitare duplicati: \texttt{if (!linguaggi.contains(elemento)) linguaggi.add(elemento)}. Questo metodo è perfetto quando ti interessa solo sapere se un elemento esiste, senza bisogno di conoscerne la posizione.
+
+\subsection{Metodo indexOf()}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class MetodoIndexOf {
+    public static void main(String[] args) {
+        ArrayList<String> nomi = new ArrayList<>();
+        nomi.add("Marco");
+        nomi.add("Laura");
+        nomi.add("Giuseppe");
+        nomi.add("Laura");
+
+        // Trova indice della prima occorrenza
+        int indice1 = nomi.indexOf("Laura");
+        System.out.println("Indice di Laura: " + indice1); // 1
+
+        // lastIndexOf trova l'ultima occorrenza
+        int indice2 = nomi.lastIndexOf("Laura");
+        System.out.println("Ultimo indice di Laura: " + indice2); // 3
+
+        // Restituisce -1 se elemento non trovato
+        int nonTrovato = nomi.indexOf("Paolo");
+        System.out.println("Indice di Paolo: " + nonTrovato); // -1
+    }
+}
+\end{lstlisting}
+
+I metodi dell'oggetto ArrayList \texttt{nomi.indexOf()} e \texttt{nomi.lastIndexOf()} permettono di trovare la \textbf{posizione} di un elemento nella lista. Il metodo \texttt{nomi.indexOf(oggetto)} restituisce l'indice della prima occorrenza dell'elemento, mentre \texttt{nomi.lastIndexOf(oggetto)} restituisce l'indice dell'ultima occorrenza. Entrambi usano \texttt{equals()} per il confronto e possono richiedere tempo proporzionale al numero di elementi. Un aspetto importante: se l'elemento non è presente, restituiscono \texttt{-1} (non lanciano eccezione). Questo permette di verificare facilmente la presenza: \texttt{if (nomi.indexOf(elemento) != -1)} indica che l'elemento esiste. Nell'esempio, "Laura" appare due volte: \texttt{nomi.indexOf("Laura")} trova la prima occorrenza all'indice 1, mentre \texttt{nomi.lastIndexOf("Laura")} trova l'ultima all'indice 3. Questi metodi sono utili quando non solo vuoi sapere se un elemento esiste, ma anche dove si trova, ad esempio per rimuoverlo o modificarlo. Un pattern comune è: \texttt{int pos = nomi.indexOf(elemento); if (pos != -1) nomi.remove(pos);}. Con oggetti personalizzati, assicurati di aver implementato correttamente \texttt{equals()} altrimenti il confronto non funzionerà come previsto.
+
+\section{Tecniche di iterazione}
+
+Esistono diverse modalità per iterare sugli elementi di un ArrayList, ciascuna con vantaggi specifici a seconda del contesto d'uso.
+
+\subsection{Ciclo for tradizionale}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class IterazioneFor {
+    public static void main(String[] args) {
+        ArrayList<Integer> numeri = new ArrayList<>();
+        numeri.add(10);
+        numeri.add(20);
+        numeri.add(30);
+        numeri.add(40);
+        numeri.add(50);
+
+        // Ciclo for con indice (utile quando serve modificare elementi)
+        for (int i = 0; i < numeri.size(); i++) {
+            int valore = numeri.get(i);
+            System.out.println("Elemento " + i + ": " + valore);
+
+            // Possibile modificare elementi durante iterazione
+            numeri.set(i, valore * 2);
+        }
+
+        System.out.println("Lista modificata: " + numeri);
+        // Output: [20, 40, 60, 80, 100]
+    }
+}
+\end{lstlisting}
+
+Il \textbf{ciclo for tradizionale} è la tecnica più versatile per iterare su un ArrayList quando hai bisogno dell'indice o vuoi modificare gli elementi. La struttura è identica a quella usata con gli array: inizializzi un contatore \texttt{i} a 0, continui finché \texttt{i < numeri.size()}, e incrementi \texttt{i} ad ogni iterazione. Accedi agli elementi con il metodo dell'oggetto \texttt{numeri.get(i)} invece della notazione \texttt{[i]} degli array. Il grande vantaggio di questo approccio è che conosci sempre l'indice corrente, utile per stampare la posizione o per accedere ad elementi correlati. Inoltre, puoi \textbf{modificare gli elementi} durante l'iterazione usando il metodo dell'oggetto \texttt{numeri.set(i, nuovoValore)}, come nell'esempio dove raddoppiamo ogni numero. Puoi anche rimuovere elementi in modo sicuro iterando all'indietro: \texttt{for (int i = numeri.size()-1; i >= 0; i--)}. Questo evita problemi di indici che cambiano durante la rimozione. Il ciclo for tradizionale è preferibile al for-each quando: hai bisogno dell'indice, devi modificare elementi, o devi confrontare elementi a posizioni diverse.
+
+\subsection{Ciclo for-each}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class IterazioneForEach {
+    public static void main(String[] args) {
+        ArrayList<String> città = new ArrayList<>();
+        città.add("Roma");
+        città.add("Milano");
+        città.add("Napoli");
+        città.add("Torino");
+
+        // For-each: sintassi più semplice e leggibile
+        System.out.println("Elenco città:");
+        for (String città_corrente : città) {
+            System.out.println("- " + città_corrente);
+        }
+
+        // ATTENZIONE: non è possibile modificare la lista durante for-each
+        // Non si può usare add() o remove() senza causare ConcurrentModificationException
+
+        // Calcolo somma con for-each
+        ArrayList<Integer> valori = new ArrayList<>();
+        valori.add(5);
+        valori.add(10);
+        valori.add(15);
+
+        int somma = 0;
+        for (int valore : valori) {
+            somma += valore;
+        }
+        System.out.println("Somma: " + somma); // 30
+    }
+}
+\end{lstlisting}
+
+Il \textbf{ciclo for-each} (o enhanced for loop) offre una sintassi più semplice e leggibile quando vuoi solo scorrere tutti gli elementi senza bisogno dell'indice. La sintassi è \texttt{for (Tipo elemento : lista)}, che si legge "per ogni elemento nella lista". Java gestisce automaticamente l'iterazione: non serve incrementare contatori o chiamare il metodo \texttt{città.get()}. Il for-each è ideale per operazioni di sola lettura come stampare elementi, calcolare somme o cercare valori. Nell'esempio mostriamo due usi tipici: stampare città e calcolare una somma. La sintassi è più concisa e meno soggetta a errori rispetto al for tradizionale. Tuttavia, ha una \textbf{limitazione importante}: non puoi modificare la struttura della lista (aggiungere o rimuovere elementi) durante l'iterazione, altrimenti ottieni una \texttt{ConcurrentModificationException}. Puoi modificare i valori degli elementi se sono oggetti mutabili, ma non puoi usare i metodi dell'oggetto \texttt{città.add()} o \texttt{città.remove()}. Non hai accesso all'indice corrente, quindi se ti serve la posizione, usa il for tradizionale. Il for-each è perfetto per la maggior parte dei casi di lettura, rendendo il codice più pulito e espressivo.
+
+\subsection{Iterator}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class IterazioneIterator {
+    public static void main(String[] args) {
+        ArrayList<String> studenti = new ArrayList<>();
+        studenti.add("Mario");
+        studenti.add("Luca");
+        studenti.add("Anna");
+        studenti.add("Sofia");
+
+        // Iterator: permette rimozione sicura durante iterazione
+        Iterator<String> iterator = studenti.iterator();
+
+        System.out.println("Iterazione con Iterator:");
+        while (iterator.hasNext()) {
+            String studente = iterator.next();
+            System.out.println(studente);
+
+            // È possibile rimuovere elementi in modo sicuro
+            if (studente.equals("Luca")) {
+                iterator.remove(); // Rimuove "Luca"
+            }
+        }
+
+        System.out.println("Lista dopo rimozione: " + studenti);
+        // Output: [Mario, Anna, Sofia]
+    }
+}
+\end{lstlisting}
+
+L'\textbf{Iterator} è un oggetto specializzato per iterare su collezioni con la possibilità di rimuovere elementi in modo sicuro durante l'iterazione. Si ottiene chiamando il metodo dell'oggetto ArrayList \texttt{studenti.iterator()} e offre tre metodi principali: il metodo dell'oggetto Iterator \texttt{iterator.hasNext()} verifica se ci sono altri elementi, il metodo \texttt{iterator.next()} restituisce l'elemento successivo e avanza l'iteratore, e il metodo \texttt{iterator.remove()} rimuove l'ultimo elemento restituito da \texttt{iterator.next()}. Il pattern di utilizzo è sempre lo stesso: un ciclo while che continua finché \texttt{iterator.hasNext()} è vero, all'interno del quale chiami \texttt{iterator.next()} per ottenere l'elemento. Il grande vantaggio dell'Iterator rispetto al for-each è che puoi \textbf{rimuovere elementi durante l'iterazione} senza causare \texttt{ConcurrentModificationException}. Nell'esempio, rimuoviamo "Luca" dalla lista mentre stiamo iterando: questo è sicuro perché usiamo \texttt{iterator.remove()}, non \texttt{studenti.remove()}. Nota che puoi chiamare \texttt{iterator.remove()} solo dopo aver chiamato \texttt{iterator.next()}, e solo una volta per ogni \texttt{iterator.next()}. L'Iterator è meno leggibile del for-each ma è l'unica soluzione quando devi rimuovere elementi selettivamente durante l'iterazione. È anche usato internamente dal for-each.
+
+\section{ArrayList di oggetti personalizzati}
+
+Gli ArrayList possono contenere non solo tipi primitivi wrapper, ma anche oggetti di classi personalizzate. Questo è uno degli usi più comuni e potenti degli ArrayList.
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+// Classe Studente personalizzata
+class Studente {
+    private String nome;
+    private String cognome;
+    private int matricola;
+    private double media;
+
+    // Costruttore
+    public Studente(String nome, String cognome, int matricola, double media) {
+        this.nome = nome;
+        this.cognome = cognome;
+        this.matricola = matricola;
+        this.media = media;
+    }
+
+    // Getter
+    public String getNome() { return nome; }
+    public String getCognome() { return cognome; }
+    public int getMatricola() { return matricola; }
+    public double getMedia() { return media; }
+
+    // Setter
+    public void setMedia(double media) { this.media = media; }
+
+    // Override toString per stampa formattata
+    @Override
+    public String toString() {
+        return String.format("%s %s (Matr: %d) - Media: %.2f",
+            nome, cognome, matricola, media);
+    }
+}
+
+public class GestioneStudenti {
+    public static void main(String[] args) {
+        // Creazione ArrayList di oggetti Studente
+        ArrayList<Studente> classe = new ArrayList<>();
+
+        // Aggiunta studenti
+        classe.add(new Studente("Mario", "Rossi", 1001, 7.5));
+        classe.add(new Studente("Laura", "Bianchi", 1002, 8.2));
+        classe.add(new Studente("Giuseppe", "Verdi", 1003, 6.8));
+        classe.add(new Studente("Anna", "Neri", 1004, 9.0));
+
+        // Stampa tutti gli studenti
+        System.out.println("Elenco studenti:");
+        for (Studente s : classe) {
+            System.out.println(s);
+        }
+
+        // Ricerca studente per matricola
+        int matricolaCercata = 1002;
+        Studente trovato = null;
+        for (Studente s : classe) {
+            if (s.getMatricola() == matricolaCercata) {
+                trovato = s;
+                break;
+            }
+        }
+
+        if (trovato != null) {
+            System.out.println("\nStudente trovato: " + trovato);
+        }
+
+        // Calcolo media classe
+        double sommaVoti = 0;
+        for (Studente s : classe) {
+            sommaVoti += s.getMedia();
+        }
+        double mediaClasse = sommaVoti / classe.size();
+        System.out.printf("\nMedia classe: %.2f\n", mediaClasse);
+
+        // Trova studenti con media superiore a 8.0
+        System.out.println("\nStudenti eccellenti (media > 8.0):");
+        for (Studente s : classe) {
+            if (s.getMedia() > 8.0) {
+                System.out.println("- " + s.getNome() + " " + s.getCognome());
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+Questo esempio completo dimostra l'uso pratico di ArrayList con \textbf{oggetti personalizzati}, un pattern fondamentale nelle applicazioni reali. La classe \texttt{Studente} è una tipica classe modello con campi privati (nome, cognome, matricola, media), costruttore, getter/setter e un metodo \texttt{toString()} sovrascritto per facilitare la stampa. L'ArrayList \texttt{classe} memorizza oggetti \texttt{Studente} completi, non solo dati primitivi. L'esempio mostra operazioni comuni: aggiungere studenti con il metodo dell'oggetto \texttt{classe.add()}, stampare l'intera lista (Java usa automaticamente il metodo dell'oggetto Studente \texttt{s.toString()}), cercare uno studente specifico per matricola iterando con un for-each, calcolare statistiche aggregate (media della classe) sommando i valori ottenuti con il metodo dell'oggetto \texttt{s.getMedia()} e dividendo per \texttt{classe.size()}, e filtrare elementi in base a criteri (studenti con media alta). Nota come il metodo \texttt{toString()} formattato rende leggibile l'output. Questo approccio è scalabile: puoi gestire centinaia di studenti con operazioni complesse. La key lesson è che ArrayList non è limitato a tipi semplici: può contenere qualsiasi oggetto, permettendo di modellare dati complessi del mondo reale in modo naturale e intuitivo. È la base per applicazioni di gestione dati.
+
+\section{Generics: cenni introduttivi}
+
+I Generics sono una funzionalità fondamentale di Java che permette di scrivere codice type-safe e riutilizzabile. Con gli ArrayList, i Generics garantiscono che la lista contenga solo oggetti del tipo specificato.
+
+\subsection{Type Safety}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class TypeSafety {
+    public static void main(String[] args) {
+        // Senza Generics (sconsigliato, raw type)
+        ArrayList listaSenzaTipo = new ArrayList();
+        listaSenzaTipo.add("Stringa");
+        listaSenzaTipo.add(123); // Accetta qualsiasi Object
+        listaSenzaTipo.add(45.6);
+
+        // Necessario cast esplicito, rischio errori runtime
+        String s = (String) listaSenzaTipo.get(0); // OK
+        // String errore = (String) listaSenzaTipo.get(1); // ClassCastException!
+
+        // Con Generics (corretto)
+        ArrayList<String> listaConTipo = new ArrayList<>();
+        listaConTipo.add("Stringa");
+        // listaConTipo.add(123); // ERRORE compilazione: type mismatch
+
+        // Non serve cast, type safety garantito
+        String str = listaConTipo.get(0); // Sicuro e semplice
+
+        System.out.println("Type safety garantisce codice piu sicuro");
+    }
+}
+\end{lstlisting}
+
+Questo esempio evidenzia l'importanza dei \textbf{Generics} e della \textbf{type safety}. Senza Generics (raw type \texttt{ArrayList} senza \texttt{<>}), puoi aggiungere qualsiasi tipo di oggetto alla lista con il metodo \texttt{listaSenzaTipo.add()}: stringhe, numeri, oggetti diversi mescolati insieme. Quando recuperi un elemento con \texttt{listaSenzaTipo.get()}, ottieni un generico \texttt{Object} che devi castare esplicitamente al tipo desiderato. Questo è pericoloso: il compilatore non può verificare che il cast sia corretto, quindi errori di tipo emergono solo a runtime con \texttt{ClassCastException}, rendendo il debugging difficile. Con i Generics (\texttt{ArrayList<String>}), specifichi esplicitamente che la lista \texttt{listaConTipo} può contenere solo \texttt{String}. Il compilatore \textbf{verifica a tempo di compilazione} che tutti gli inserimenti con \texttt{listaConTipo.add()} siano del tipo corretto: tentare di aggiungere un intero a un \texttt{ArrayList<String>} causa un errore di compilazione immediato, non un crash runtime. Inoltre, non serve più il cast quando recuperi elementi con \texttt{listaConTipo.get()}: il compilatore sa che il metodo restituisce una \texttt{String}. I Generics sono un esempio di \textit{compile-time type checking}: spostare la rilevazione degli errori dal runtime al compile-time rende il codice più robusto e sicuro. Usa sempre i Generics con ArrayList.
+
+\subsection{Autoboxing e Unboxing}
+
+\begin{lstlisting}
+import java.util.ArrayList;
+
+public class BoxingUnboxing {
+    public static void main(String[] args) {
+        // ArrayList accetta solo oggetti, non tipi primitivi
+        // Java effettua automaticamente boxing/unboxing
+
+        ArrayList<Integer> numeri = new ArrayList<>();
+
+        // Autoboxing: int -> Integer automaticamente
+        numeri.add(10);      // int convertito in Integer
+        numeri.add(20);
+        numeri.add(30);
+
+        // Unboxing: Integer -> int automaticamente
+        int primo = numeri.get(0); // Integer convertito in int
+        int somma = numeri.get(0) + numeri.get(1); // Unboxing automatico
+
+        System.out.println("Somma: " + somma); // 30
+
+        // Corrispondenza tipi primitivi - wrapper
+        ArrayList<Integer> interi = new ArrayList<>();     // int
+        ArrayList<Double> decimali = new ArrayList<>();    // double
+        ArrayList<Boolean> booleani = new ArrayList<>();   // boolean
+        ArrayList<Character> caratteri = new ArrayList<>(); // char
+
+        // Esempio operazioni con autoboxing
+        ArrayList<Double> prezzi = new ArrayList<>();
+        prezzi.add(19.99);  // Autoboxing
+        prezzi.add(29.50);
+
+        double totale = 0;
+        for (double prezzo : prezzi) {  // Unboxing automatico
+            totale += prezzo;
+        }
+        System.out.printf("Totale: %.2f euro\n", totale);
+    }
+}
+\end{lstlisting}
+
+Questo esempio spiega i meccanismi di \textbf{autoboxing} e \textbf{unboxing}, fondamentali per usare tipi primitivi con ArrayList. Gli ArrayList possono contenere solo oggetti, non tipi primitivi: non esiste \texttt{ArrayList<int>}, solo \texttt{ArrayList<Integer>}. Java fornisce classi wrapper per ogni tipo primitivo: \texttt{Integer} per \texttt{int}, \texttt{Double} per \texttt{double}, \texttt{Boolean} per \texttt{boolean}, \texttt{Character} per \texttt{char}, ecc. L'\textbf{autoboxing} è la conversione automatica da tipo primitivo a wrapper: quando scrivi il metodo dell'oggetto \texttt{numeri.add(10)}, Java converte automaticamente l'int 10 in un oggetto \texttt{Integer}. L'\textbf{unboxing} è l'inverso: quando scrivi \texttt{int x = numeri.get(0)}, Java converte automaticamente l'oggetto \texttt{Integer} restituito dal metodo \texttt{numeri.get()} in un int primitivo. Questo avviene trasparentemente, permettendoti di scrivere codice naturale senza conversioni esplicite. Nell'esempio con i prezzi, il metodo dell'oggetto \texttt{prezzi.add(19.99)} fa autoboxing del double in \texttt{Double}, e il for-each fa unboxing automatico nella variabile \texttt{prezzo}. Attenzione: boxing/unboxing ha un costo in termini di performance (creazione oggetti, dereferenziazione), quindi per calcoli intensivi su grandi quantità di numeri, gli array primitivi sono più efficienti.
+
+\begin{nota}
+Il boxing/unboxing automatico è comodo ma ha un costo in termini di performance. Per applicazioni critiche con molte operazioni numeriche, considerare l'uso di array primitivi invece di ArrayList di wrapper.
+\end{nota}
+
+\section{Esempio pratico: gestione lista contatti}
+
+Realizziamo un'applicazione completa per la gestione di una rubrica telefonica utilizzando ArrayList.
+
+\begin{lstlisting}
+import java.util.ArrayList;
+import java.util.Scanner;
+
+// Classe che rappresenta un contatto
+class Contatto {
+    private String nome;
+    private String cognome;
+    private String telefono;
+    private String email;
+
+    public Contatto(String nome, String cognome, String telefono, String email) {
+        this.nome = nome;
+        this.cognome = cognome;
+        this.telefono = telefono;
+        this.email = email;
+    }
+
+    public String getNome() { return nome; }
+    public String getCognome() { return cognome; }
+    public String getTelefono() { return telefono; }
+    public String getEmail() { return email; }
+
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getNomeCompleto() {
+        return nome + " " + cognome;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%-20s | Tel: %-15s | Email: %s",
+            getNomeCompleto(), telefono, email);
+    }
+}
+
+public class RubricaTelefonica {
+    private static ArrayList<Contatto> rubrica = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        // Aggiunta contatti di esempio
+        rubrica.add(new Contatto("Mario", "Rossi", "333-1234567", "mario.rossi@email.it"));
+        rubrica.add(new Contatto("Laura", "Bianchi", "348-7654321", "laura.b@email.it"));
+
+        boolean continua = true;
+        while (continua) {
+            mostraMenu();
+            int scelta = scanner.nextInt();
+            scanner.nextLine(); // Consuma newline
+
+            switch (scelta) {
+                case 1:
+                    aggiungiContatto();
+                    break;
+                case 2:
+                    visualizzaRubrica();
+                    break;
+                case 3:
+                    cercaContatto();
+                    break;
+                case 4:
+                    modificaContatto();
+                    break;
+                case 5:
+                    eliminaContatto();
+                    break;
+                case 6:
+                    continua = false;
+                    System.out.println("Arrivederci!");
+                    break;
+                default:
+                    System.out.println("Scelta non valida");
+            }
+        }
+    }
+
+    private static void mostraMenu() {
+        System.out.println("\n=== RUBRICA TELEFONICA ===");
+        System.out.println("1. Aggiungi contatto");
+        System.out.println("2. Visualizza tutti i contatti");
+        System.out.println("3. Cerca contatto");
+        System.out.println("4. Modifica contatto");
+        System.out.println("5. Elimina contatto");
+        System.out.println("6. Esci");
+        System.out.print("Scelta: ");
+    }
+
+    private static void aggiungiContatto() {
+        System.out.print("Nome: ");
+        String nome = scanner.nextLine();
+        System.out.print("Cognome: ");
+        String cognome = scanner.nextLine();
+        System.out.print("Telefono: ");
+        String telefono = scanner.nextLine();
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+
+        rubrica.add(new Contatto(nome, cognome, telefono, email));
+        System.out.println("Contatto aggiunto con successo!");
+    }
+
+    private static void visualizzaRubrica() {
+        if (rubrica.isEmpty()) {
+            System.out.println("Rubrica vuota");
+            return;
+        }
+
+        System.out.println("\n--- ELENCO CONTATTI ---");
+        for (int i = 0; i < rubrica.size(); i++) {
+            System.out.printf("%d. %s\n", i + 1, rubrica.get(i));
+        }
+    }
+
+    private static void cercaContatto() {
+        System.out.print("Inserisci nome o cognome da cercare: ");
+        String termine = scanner.nextLine().toLowerCase();
+
+        ArrayList<Contatto> risultati = new ArrayList<>();
+        for (Contatto c : rubrica) {
+            if (c.getNome().toLowerCase().contains(termine) ||
+                c.getCognome().toLowerCase().contains(termine)) {
+                risultati.add(c);
+            }
+        }
+
+        if (risultati.isEmpty()) {
+            System.out.println("Nessun contatto trovato");
+        } else {
+            System.out.println("\n--- RISULTATI RICERCA ---");
+            for (Contatto c : risultati) {
+                System.out.println(c);
+            }
+        }
+    }
+
+    private static void modificaContatto() {
+        visualizzaRubrica();
+        System.out.print("\nNumero contatto da modificare: ");
+        int indice = scanner.nextInt() - 1;
+        scanner.nextLine();
+
+        if (indice < 0 || indice >= rubrica.size()) {
+            System.out.println("Numero non valido");
+            return;
+        }
+
+        Contatto c = rubrica.get(indice);
+        System.out.print("Nuovo telefono (Enter per non modificare): ");
+        String telefono = scanner.nextLine();
+        if (!telefono.isEmpty()) {
+            c.setTelefono(telefono);
+        }
+
+        System.out.print("Nuova email (Enter per non modificare): ");
+        String email = scanner.nextLine();
+        if (!email.isEmpty()) {
+            c.setEmail(email);
+        }
+
+        System.out.println("Contatto aggiornato!");
+    }
+
+    private static void eliminaContatto() {
+        visualizzaRubrica();
+        System.out.print("\nNumero contatto da eliminare: ");
+        int indice = scanner.nextInt() - 1;
+        scanner.nextLine();
+
+        if (indice < 0 || indice >= rubrica.size()) {
+            System.out.println("Numero non valido");
+            return;
+        }
+
+        Contatto rimosso = rubrica.remove(indice);
+        System.out.println("Contatto eliminato: " + rimosso.getNomeCompleto());
+    }
+}
+\end{lstlisting}
+
+Questo esempio pratico completo rappresenta un'\textbf{applicazione reale} che integra tutti i concetti appresi: ArrayList di oggetti personalizzati, iterazione, ricerca, modifica e rimozione. La struttura è tipica delle applicazioni CRUD (Create, Read, Update, Delete). La classe \texttt{Contatto} modella un'entità del dominio con tutti i dati necessari e metodi di accesso. L'ArrayList \texttt{rubrica} è dichiarato \texttt{static} per essere accessibile da tutti i metodi. Il programma usa un \textbf{menu interattivo} con un ciclo while e uno switch per gestire le scelte dell'utente (per l'input da tastiera con Scanner, vedi Capitolo \ref{cap:stream_buffer}). Ogni operazione è implementata in un metodo dedicato: \texttt{aggiungiContatto()} legge input e crea nuovi oggetti usando il metodo dell'oggetto \texttt{rubrica.add()}, \texttt{visualizzaRubrica()} itera stampando tutti i contatti con indici numerati usando \texttt{rubrica.get(i)}, \texttt{cercaContatto()} filtra elementi in base a criteri parziali usando i metodi dell'oggetto Contatto \texttt{c.getNome()} e \texttt{c.getCognome()} (ricerca case-insensitive con \texttt{toLowerCase()} e \texttt{contains()}), \texttt{modificaContatto()} permette di aggiornare campi specifici mantenendo gli altri usando i metodi setter dell'oggetto Contatto \texttt{c.setTelefono()}, e \texttt{eliminaContatto()} rimuove elementi per indice con \texttt{rubrica.remove(indice)}. Nota le tecniche professionali: validazione input (\texttt{indice < 0 || indice >= rubrica.size()}), uso del metodo dell'oggetto \texttt{rubrica.isEmpty()} per verificare liste vuote, formattazione output con \texttt{printf()}, e ricerca flessibile che crea una lista temporanea di risultati con \texttt{risultati.add(c)}. Questo pattern è la base per applicazioni di gestione dati più complesse come gestionali aziendali o app mobile.
+
+\section{Riepilogo}
+
+I concetti chiave appresi in questo capitolo:
+
+\begin{itemize}
+    \item Gli ArrayList sono collezioni dinamiche che si ridimensionano automaticamente, a differenza degli array a dimensione fissa
+    \item La sintassi dei Generics (\texttt{ArrayList<Tipo>}) garantisce type safety a tempo di compilazione
+    \item I metodi fondamentali dell'oggetto ArrayList: \texttt{lista.add()}, \texttt{lista.remove()}, \texttt{lista.get()}, \texttt{lista.set()}, \texttt{lista.size()}, \texttt{lista.contains()} e \texttt{lista.indexOf()} permettono la manipolazione completa della lista
+    \item L'iterazione può avvenire con ciclo for tradizionale usando \texttt{lista.get(i)} (quando serve l'indice), for-each (più leggibile) o Iterator con \texttt{lista.iterator()} (per rimozioni sicure durante iterazione)
+    \item Gli ArrayList possono contenere oggetti di classi personalizzate, rendendo possibile gestire collezioni di entità complesse
+    \item Il meccanismo di autoboxing/unboxing converte automaticamente tra tipi primitivi e wrapper classes
+    \item Per applicazioni reali è importante considerare la capacità iniziale per ottimizzare le performance
+\end{itemize}
+
+\begin{nota}[Best Practices]
+\begin{itemize}
+    \item Specifica sempre il tipo generico per garantire type safety: \texttt{ArrayList<String>} invece di \texttt{ArrayList}
+    \item Se conosci approssimativamente il numero di elementi, specifica la capacità iniziale per evitare ridimensionamenti frequenti
+    \item Usa for-each quando non serve l'indice, per codice più leggibile
+    \item Usa Iterator quando devi rimuovere elementi durante l'iterazione
+    \item Preferisci l'interfaccia List per le dichiarazioni: \texttt{List<String> lista = new ArrayList<>()}
+    \item Sovrascrivi \texttt{toString()}, \texttt{equals()} e \texttt{hashCode()} nelle classi custom per un comportamento corretto con ArrayList
+    \item Valuta l'uso di ArrayList rispetto ad array: usa ArrayList quando la dimensione è variabile, array quando è fissa e serve massima performance
+\end{itemize}
+\end{nota}
+
+\begin{errore}[Errori comuni]
+\begin{itemize}
+    \item \textbf{IndexOutOfBoundsException}: Accesso a indice non valido con \texttt{lista.get()} o \texttt{lista.set()}. Verifica sempre che \texttt{indice >= 0 \&\& indice < lista.size()}
+    \item \textbf{ConcurrentModificationException}: Modifica della lista con \texttt{lista.add()} o \texttt{lista.remove()} durante for-each. Usa Iterator con \texttt{iterator.remove()} o ciclo for tradizionale inverso per rimozioni
+    \item \textbf{NullPointerException}: Accesso a metodi su elementi null. Controlla sempre con \texttt{if (elemento != null)} prima di usare metodi dell'oggetto
+    \item \textbf{Confusione remove()}: il metodo \texttt{lista.remove(int)} rimuove per indice, \texttt{lista.remove(Object)} per valore. Con ArrayList<Integer>, usa \texttt{lista.remove(Integer.valueOf(5))} per rimuovere il valore 5
+    \item \textbf{Confronto oggetti}: Usare \texttt{==} invece di \texttt{equals()} per confrontare oggetti in ArrayList (confronta riferimenti, non contenuto)
+    \item \textbf{Capacità vs dimensione}: La capacità interna è diversa da \texttt{lista.size()}. Non confondere i due concetti
+    \item \textbf{Dimenticare import}: \texttt{import java.util.ArrayList} è necessario all'inizio del file
+\end{itemize}
+\end{errore}
+
+\section{Riferimenti e approfondimenti}
+
+Per approfondire ulteriormente gli ArrayList e le Collections in Java:
+
+\begin{itemize}
+    \item Oracle Java Documentation - ArrayList: \url{https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ArrayList.html}
+    \item Oracle Java Tutorials - Collections Framework: \url{https://docs.oracle.com/javase/tutorial/collections/}
+    \item Oracle Java Tutorials - Generics: \url{https://docs.oracle.com/javase/tutorial/java/generics/}
+    \item Approfondimento sulle performance: confronto ArrayList vs LinkedList vs Array
+    \item Studio delle altre implementazioni di List: LinkedList, Vector, CopyOnWriteArrayList
+    \item Java Collections Framework completo: Set, Map, Queue e relative implementazioni
+\end{itemize}

@@ -1,0 +1,35 @@
+% Box riutilizzabile: Guida per programmatori non-Python
+\begin{tcolorbox}[title=Guida per programmatori non-Python]
+Questa guida riassume come leggere e capire codice Python se provieni da altri linguaggi.
+
+- Sintassi a indentazione: blocchi definiti da indentazione (4 spazi), niente `{}`.
+- Tipi dinamici: il tipo appartiene all'oggetto; le variabili sono riferimenti.
+- Truthiness: oggetti vuoti e zero sono `False`; altrimenti `True`.
+- Strutture chiave: `list` (array dinamico), `dict` (mappa), `set` (insieme), `tuple` (immutabile).
+- Slice e comprensioni: `seq[a:b:c]` e `[f(x) for x in xs if cond]`.
+- Funzioni: prima classe, closure e default arguments; attenzione ai default mutabili.
+- Errori: eccezioni con `try/except`; EAFP (fallo e gestisci) spesso preferito a LBYL.
+- Moduli e package: import espliciti, nomi in \verb|snake_case|, \verb|__name__ == "__main__"| per entrypoint.
+- Stile: PEP 8 per nomi, lunghezza righe, spazi; scrivere docstring.
+
+Esempio di lettura codice:
+\begin{lstlisting}
+def process(items):
+    """Filtra e trasforma i dati; nessun I/O qui."""
+    # Comprensione: compatta, dichiarativa
+    return [x * 2 for x in items if x > 0]
+
+def main():
+    data = [1, -1, 3]
+    result = process(data)
+    print(result)  # I/O separato dalla logica
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+Suggerimenti pratici:
+- Separare logica pura (facile da testare) e I/O.
+- Usare ambienti virtuali per dipendenze; evitare globali.
+- Preferire nomi descrittivi e funzioni piccole; aggiungere docstring.
+\end{tcolorbox}

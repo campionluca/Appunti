@@ -1,0 +1,180 @@
+% Modulo 02 — Funzioni
+\chapter{Funzioni}
+
+\section{Introduzione}
+Le funzioni sono blocchi riutilizzabili di codice. In Python si definiscono con \texttt{def}, possono avere parametri, valori di default, \texttt{*args} e \texttt{**kwargs}, e restituiscono valori con \texttt{return}.
+
+Questa descrizione illustra come strutturare funzioni piccole e focalizzate, come documentarle con docstring e come scegliere le firme per rendere il codice facile da testare e riutilizzare. Discuteremo anche gli effetti dello scope e delle chiusure per evitare comportamenti inattesi.
+
+Padroneggiare le funzioni consente di organizzare il progetto in unità logiche, ridurre duplicazioni e migliorare la leggibilità, con impatto diretto su manutenzione e qualità.
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+  \item Definire funzioni con parametri e valori di default.
+  \item Usare \texttt{*args} e \texttt{**kwargs} per flessibilità negli argomenti.
+  \item Comprendere la visibilità delle variabili (LEGB) e le docstring.
+\end{itemize}
+
+\section{Concetti Fondamentali}
+\begin{tcolorbox}[title=Firma delle Funzioni]
+Esempio: \texttt{def greet(name: str, upper: bool = False) -> str: ...}
+Docstring: descrive comportamento, parametri e return.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Purezza ed effetti collaterali]
+Preferisci funzioni pure (stessa input $\rightarrow$ stessa output, senza effetti esterni) quando possibile. Riduci dipendenze globali e I/O nella logica, isolandole in layer dedicati per facilitare test e riuso.
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+\subsection{Funzione semplice}
+\begin{lstlisting}
+def add(a, b):
+    """Ritorna la somma di a e b."""
+    return a + b
+
+print(add(2, 3))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Definizione}: `def add(a, b)` crea una funzione; il docstring descrive contratto.  
+- \textbf{Return}: restituisce somma di due argomenti; pura, senza I/O.  
+- \textbf{Invocazione}: `print(add(...))` compone I/O con logica; separare in pratica.
+\end{tcolorbox}
+
+\subsection{Default, *args e **kwargs}
+\begin{lstlisting}
+def greet(name, upper=False):
+    msg = f"Ciao, {name}!"
+    return msg.upper() if upper else msg
+
+def total(*args):
+    return sum(args)
+
+def describe(**kwargs):
+    return ", ".join(f"{k}={v}" for k, v in kwargs.items())
+
+print(greet("Ada", upper=True))
+print(total(1, 2, 3))
+print(describe(lang="Python", version=3.11))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Default}: `upper=False` definisce parametro opzionale; evita default mutabili.  
+- \textbf{*args}: raccoglie posizione variabile di argomenti in una tupla.  
+- \textbf{**kwargs}: raccoglie coppie chiave/valore in un dizionario; utile per parametri nominati flessibili.
+\end{tcolorbox}
+
+\subsection{Scope e lambda}
+\begin{lstlisting}
+factor = 2
+def mul(x):
+    return x * factor  # legge dalla closure globale
+
+double = lambda x: x * 2
+print(mul(5), double(5))
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Scope}: `mul` legge `factor` dallo scope esterno (E nel LEGB).  
+- \textbf{Lambda}: funzioni anonime per espressioni semplici; preferire `def` per logiche complesse.  
+- \textbf{Effetti}: nessun I/O dentro `mul`; la stampa è separata.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Casi d'uso]
+\begin{itemize}
+  \item Librerie di utilità con funzioni riusabili e ben documentate.
+\item Calcoli e trasformazioni di dati separati dall'I/O.
+  \item API interne con firme stabili e test unitari.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+\begin{enumerate}
+  \item Scrivi una funzione che calcola il fattoriale di un numero (iterativa e ricorsiva).
+  \item Crea una funzione \texttt{safe\_div(a, b)} che gestisce divisione per zero.
+  \item Implementa una funzione che normalizza una lista di numeri tra 0 e 1.
+  \item Usa \texttt{*args} per sommare un numero variabile di valori.
+  \item Scrivi una funzione che formatta una stringa con parametri via \texttt{**kwargs}.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai imparato a definire funzioni, gestire parametri flessibili e comprendere scope e lambda.
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Progettare API di modulo e funzioni riutilizzabili.
+- Funzioni pure per testabilità e caching.
+- Higher-order functions per composizione.
+- Validazione e parsing input incapsulati.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\begin{itemize}
+  \item \textbf{Parametri e firme}: preferire parametri nominali (keyword) per chiarezza; usare argomenti obbligatori per input essenziali.
+  \item \textbf{Default mutabili}: evitare \verb|def f(x=[])|; usare \verb|None| e inizializzare internamente.
+  \item \textbf{\*args e \*\*kwargs}: utili per passare collezioni di argomenti; documentare cosa viene accettato e quali chiavi sono supportate.
+\item \textbf{Docstring e annotazioni}: spiegare contratti, esempi d'uso e complessità; usare type annotations per favore l'inferenza e la comunicazione.
+  \item \textbf{Purezza e effetti collaterali}: preferire funzioni pure quando possibile; isolare effetti (I/O, mutazioni) ai confini del sistema.
+\item \textbf{Closure e currying}: chiudere valori nell'ambiente per creare funzioni specializzate; attenzione alla cattura di variabili mutevoli.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Per chi viene da C/Java/JS: firme e scope]
+\textbf{Annotazioni di tipo}: sono opzionali e non vincolanti a runtime; servono a lettori e strumenti.  
+\textbf{Keyword arguments}: chiamate come `func(x=1, y=2)` aumentano la chiarezza rispetto agli argomenti posizionali.  
+\textbf{LEGB scope}: Local, Enclosing, Global, Built-in: risoluzione dei nomi dall'interno verso l'esterno; evita dipendenze da globali.
+
+Esempi commentati:
+\begin{lstlisting}
+# Default mutabile: anti-pattern
+def append_item_bad(item, bucket=[]):
+    bucket.append(item)
+    return bucket
+
+# Uso corretto
+def append_item(item, bucket=None):
+    if bucket is None:
+        bucket = []
+    bucket.append(item)
+    return bucket
+
+# Keyword arguments e type hint
+from typing import Iterable, Callable
+
+def transform(xs: Iterable[int], fn: Callable[[int], int]) -> list[int]:
+    return [fn(x) for x in xs]
+
+data = [1, 2, 3]
+res = transform(xs=data, fn=lambda x: x * 2)
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Default mutabile}: `bucket=[]` condivide lista tra chiamate; bug classico.  
+- \textbf{Pattern corretto}: usa `None` e inizializza all'interno per isolare stato.
+- \textbf{Type hints}: `Iterable[int]` e `Callable` comunicano contratto; non impongono a runtime.  
+- \textbf{Keyword args}: chiamata `transform(xs=data, fn=...)` aumenta chiarezza dei parametri.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title={Idiomi: funzioni piccole, composizione, map/filter}]
+- \textbf{Composizione}: costruisci pipeline con funzioni pure e piccole.  
+- \textbf{map/filter}: usa `map(f, xs)`/`filter(pred, xs)` oppure comprensioni per leggibilità.  
+- \textbf{Docstring}: inserisci esempio d'uso e contratti; evita commenti superflui dentro la funzione.
+
+\begin{lstlisting}
+def normalize(xs):
+    """Riporta i valori in [0, 1]."""
+    m = max(xs) or 1
+    return [x / m for x in xs]
+
+def pipeline(xs):
+    return normalize([x for x in xs if x > 0])
+
+print(pipeline([-2, 3, 6]))  # [0.5, 1.0]
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{Docstring}: descrive contratto e output atteso.  
+- \textbf{max or 1}: fallback per evitare divisione per zero su lista vuota.  
+- \textbf{Comprensione}: crea nuova lista normalizzata; `pipeline` mostra composizione filtrando positivi.
+\end{tcolorbox}
+\end{tcolorbox}
+
+\paragraph{Composizione} Creare pipeline di funzioni piccole e testabili; separare parsing, validazione e trasformazione, restituendo strutture dati chiare.
+Consulta: \url{https://docs.python.org/3/tutorial/controlflow.html#defining-functions} e PEP 8 per docstring.

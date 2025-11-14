@@ -1,0 +1,99 @@
+\chapter{File di Testo}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Teoria, Lettura e scrittura, Permessi, Bloccaggio, CSV, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\end{tcolorbox}
+
+\section{Teoria}
+La gestione dei file include apertura, lettura/scrittura, permessi e lock per evitare corruzione in accessi concorrenti.
+
+\section{Lettura e scrittura}
+\begin{lstlisting}
+<?php
+$path = __DIR__ . '/dati.txt';
+file_put_contents($path, "Prima riga\n", FILE_APPEND | LOCK_EX);
+$contenuto = file_get_contents($path);
+echo $contenuto;
+\end{lstlisting}
+
+\section{Gestione dei permessi}
+- Verificare \texttt{is\_readable}, \texttt{is\_writable} e gestire errori con messaggi chiari.
+
+\begin{lstlisting}
+<?php
+if (!is_writable($path)) {
+    echo 'File non scrivibile';
+}
+\end{lstlisting}
+
+\section{Bloccaggio dei file}
+\begin{lstlisting}
+<?php
+$fp = fopen($path, 'c+');
+if (flock($fp, LOCK_EX)) {
+    fwrite($fp, "Riga sicura\n");
+    fflush($fp);
+    flock($fp, LOCK_UN);
+}
+fclose($fp);
+\end{lstlisting}
+
+\section{Operazioni su CSV}
+\begin{lstlisting}
+<?php
+$fp = fopen(__DIR__ . '/utenti.csv', 'r');
+while (($row = fgetcsv($fp, 0, ';')) !== false) {
+    // $row è un array di campi
+}
+fclose($fp);
+
+// Scrittura
+$fp = fopen(__DIR__ . '/out.csv', 'w');
+fputcsv($fp, ['id','name'], ';');
+fclose($fp);
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best practice]
+- Usare \texttt{LOCK\_EX} o \texttt{flock} per scritture concorrenti.
+- Gestire gli errori con codici HTTP e log.
+- Validare i dati prima di scrivere su disco.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+- Ignorare permessi e fallimenti di I/O.
+- Non chiudere i file o non flushare i buffer.
+- Usare separatori inconsistenti in CSV.
+\end{tcolorbox}
+
+\section{Esempi pratici}
+\begin{lstlisting}
+<?php
+// Lettura riga-per-riga con controllo errori
+$fp = fopen($path, 'r');
+if (!$fp) { echo 'Apertura fallita'; }
+while (($line = fgets($fp)) !== false) {
+    echo htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+fclose($fp);
+?>
+\end{lstlisting}
+
+\section{Caso di studio}
+Semplice logger applicativo su file con rotazione: quando la dimensione supera una soglia, rinomina il file con timestamp e riparte.
+
+\section{Esercizi}
+\begin{itemize}
+  \item Implementa una funzione che scrive JSON su file con lock e controlla permessi.
+  \item Leggi un CSV e costruisci un array associativo indicizzato per chiave.
+\end{itemize}
+
+\section{Verifica}
+\begin{itemize}
+  \item Qual è la differenza tra \texttt{LOCK\_EX} e \texttt{LOCK\_SH}?
+  \item Perché è importante impostare un encoding coerente?
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item Manuale PHP — File system: \url{https://www.php.net/manual/en/book.filesystem.php}
+\end{itemize}

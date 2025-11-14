@@ -1,0 +1,709 @@
+\chapter{Array}
+\label{cap:array}
+
+\section{Introduzione agli Array}
+
+Un array è una struttura dati che contiene una collezione di elementi dello stesso tipo, memorizzati in locazioni di memoria contigue. Gli array sono fondamentali in programmazione perché permettono di gestire insiemi di dati correlati in modo efficiente, come liste di numeri, sequenze di caratteri, tabelle di valori e molto altro.
+
+\subsection{Obiettivi di Apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Dichiarare e inizializzare array monodimensionali e multidimensionali
+    \item Accedere e modificare gli elementi di un array
+    \item Iterare su array utilizzando cicli
+    \item Passare array a funzioni e comprendere il passaggio per riferimento
+    \item Implementare operazioni comuni sugli array (ricerca, ordinamento, inversione)
+    \item Lavorare con matrici e operazioni bidimensionali
+    \item Applicare algoritmi di ordinamento di base
+    \item Evitare errori comuni nella gestione degli array
+\end{itemize}
+
+\subsection{Caratteristiche degli Array}
+
+\begin{itemize}
+    \item Tutti gli elementi hanno lo stesso tipo
+    \item Gli elementi sono indicizzati a partire da 0
+    \item La dimensione è fissa (definita alla creazione)
+    \item Gli elementi sono memorizzati in memoria contigua
+\end{itemize}
+
+\begin{nota}
+Gli array in C sono a base zero: il primo elemento ha indice 0, il secondo ha indice 1, e così via.
+\end{nota}
+
+\section{Dichiarazione e Inizializzazione}
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}
+tipo nome_array[dimensione];
+\end{lstlisting}
+
+\subsection{Esempi di Dichiarazione}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    // Dichiarazione di un array di 5 interi
+    int numeri[5];
+
+    // Inizializzazione esplicita
+    int valori[5] = {10, 20, 30, 40, 50};
+
+    // Inizializzazione parziale (gli altri elementi sono 0)
+    int parziale[5] = {1, 2};  // {1, 2, 0, 0, 0}
+
+    // Dimensione automatica
+    int auto_size[] = {5, 10, 15, 20};  // 4 elementi
+
+    // Inizializzazione a zero
+    int tutti_zero[100] = {0};
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Accesso agli Elementi}
+
+\subsection{Lettura e Scrittura}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int numeri[5] = {10, 20, 30, 40, 50};
+
+    // Accesso in lettura
+    printf("Primo elemento: %d\n", numeri[0]);   // 10
+    printf("Terzo elemento: %d\n", numeri[2]);   // 30
+    printf("Ultimo elemento: %d\n", numeri[4]);  // 50
+
+    // Accesso in scrittura
+    numeri[0] = 100;
+    numeri[2] = 300;
+
+    printf("Primo elemento modificato: %d\n", numeri[0]);  // 100
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Accedere a un indice fuori dai limiti dell'array causa comportamento indefinito. Il C non controlla automaticamente i limiti degli array!
+\end{attenzione}
+
+\subsection{Esempio di Errore}
+
+\begin{lstlisting}
+int numeri[5] = {1, 2, 3, 4, 5};
+
+// SBAGLIATO: indice fuori dai limiti
+numeri[5] = 100;   // Errore! Gli indici validi sono 0-4
+numeri[10] = 200;  // Errore! Accesso a memoria non allocata
+\end{lstlisting}
+
+\section{Attraversamento di un Array}
+
+\subsection{Uso del Ciclo for}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int numeri[5] = {10, 20, 30, 40, 50};
+
+    // Stampa di tutti gli elementi
+    printf("Elementi dell'array:\n");
+    for (int i = 0; i < 5; i++) {
+        printf("numeri[%d] = %d\n", i, numeri[i]);
+    }
+
+    // Calcolo della somma degli elementi dell'array
+    int somma = 0;
+    for (int i = 0; i < 5; i++) {
+        somma += numeri[i];
+    }
+    printf("Somma: %d\n", somma);
+
+    // Calcolo della media degli elementi dell'array
+    float media = (float)somma / 5;  // Cast a float per divisione decimale
+    printf("Media: %.2f\n", media);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Dimensione Dinamica}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+#define DIM 10
+
+int main(int argc, char** argv) {
+    int array[DIM];
+
+    // Inizializzazione dell'array con multipli di 2
+    for (int i = 0; i < DIM; i++) {
+        array[i] = i * 2;
+    }
+
+    // Stampa di tutti gli elementi dell'array
+    for (int i = 0; i < DIM; i++) {
+        printf("%d ", array[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Input e Output di Array}
+
+\subsection{Lettura da Tastiera}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int n;
+    printf("Quanti numeri vuoi inserire? ");
+    scanf("%d", &n);
+
+    int numeri[n];  // Array di interi di dimensione variabile (standard C99)
+
+    // Lettura degli elementi dell'array da tastiera
+    printf("Inserisci %d numeri:\n", n);
+    for (int i = 0; i < n; i++) {
+        printf("Elemento %d: ", i + 1);
+        scanf("%d", &numeri[i]);  // Legge l'i-esimo elemento
+    }
+
+    // Stampa degli elementi
+    printf("\nHai inserito:\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", numeri[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Operazioni sugli Array}
+
+\subsection{Ricerca del Massimo e del Minimo}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int numeri[] = {45, 23, 78, 12, 67, 89, 34};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    // Ricerca del massimo elemento nell'array
+    int max = numeri[0];  // Inizializza il massimo al primo elemento
+    for (int i = 1; i < n; i++) {
+        if (numeri[i] > max) {
+            max = numeri[i];  // Aggiorna il massimo se trovato elemento maggiore
+        }
+    }
+    printf("Massimo: %d\n", max);
+
+    // Ricerca del minimo elemento nell'array
+    int min = numeri[0];  // Inizializza il minimo al primo elemento
+    for (int i = 1; i < n; i++) {
+        if (numeri[i] < min) {
+            min = numeri[i];  // Aggiorna il minimo se trovato elemento minore
+        }
+    }
+    printf("Minimo: %d\n", min);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Ricerca di un Elemento}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int numeri[] = {10, 25, 30, 45, 50, 60, 75};
+    int n = sizeof(numeri) / sizeof(numeri[0]);  // Calcola la dimensione dell'array
+    int da_cercare = 45;
+    int trovato = 0;
+    int posizione = -1;
+
+    // Ricerca lineare dell'elemento da_cercare nell'array
+    for (int i = 0; i < n; i++) {
+        if (numeri[i] == da_cercare) {
+            trovato = 1;  // Elemento trovato
+            posizione = i;  // Salva la posizione dell'elemento
+            break;
+        }
+    }
+
+    if (trovato) {
+        printf("%d trovato alla posizione %d\n",
+               da_cercare, posizione);
+    } else {
+        printf("%d non trovato\n", da_cercare);
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Inversione di un Array}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che stampa tutti gli elementi di un array di interi
+void stampa_array(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+// Funzione che inverte un array di interi sul posto
+void inverti_array(int* arr, int n) {
+    for (int i = 0; i < n / 2; i++) {
+        // Scambia l'elemento arr[i] con l'elemento arr[n-1-i]
+        int temp = arr[i];
+        arr[i] = arr[n - 1 - i];
+        arr[n - 1 - i] = temp;
+    }
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {1, 2, 3, 4, 5, 6, 7};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    printf("Array originale: ");
+    stampa_array(numeri, n);
+
+    inverti_array(numeri, n);
+
+    printf("Array invertito: ");
+    stampa_array(numeri, n);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Copia di un Array}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che copia gli elementi da un array sorgente a un array destinazione
+void copia_array(int* sorgente, int* destinazione, int n) {
+    for (int i = 0; i < n; i++) {
+        destinazione[i] = sorgente[i];  // Copia l'i-esimo elemento
+    }
+}
+
+int main(int argc, char** argv) {
+    int originale[] = {10, 20, 30, 40, 50};
+    int n = sizeof(originale) / sizeof(originale[0]);
+    int copia[n];
+
+    copia_array(originale, copia, n);
+
+    printf("Array originale: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", originale[i]);
+    }
+    printf("\n");
+
+    printf("Array copiato: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", copia[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Array e Funzioni}
+
+\subsection{Passaggio di Array a Funzioni}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che stampa gli elementi di un array di interi
+// La dimensione deve essere passata come parametro
+void stampa(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+// Funzione che calcola la somma degli elementi di un array di interi
+int somma(int* arr, int n) {
+    int totale = 0;
+    for (int i = 0; i < n; i++) {
+        totale += arr[i];
+    }
+    return totale;
+}
+
+// Funzione che raddoppia ogni elemento di un array di interi
+// Gli array sono passati per riferimento (come puntatori)
+void raddoppia(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        arr[i] *= 2;  // Modifica l'elemento nell'array originale
+    }
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {1, 2, 3, 4, 5};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    printf("Array originale: ");
+    stampa(numeri, n);
+
+    printf("Somma: %d\n", somma(numeri, n));
+
+    raddoppia(numeri, n);
+    printf("Array dopo raddoppio: ");
+    stampa(numeri, n);
+
+    return 0;
+}
+\end{lstlisting}
+
+\begin{nota}
+Quando passi un array a una funzione, in realtà passi un puntatore al primo elemento dell'array (vedi \autoref{cap:puntatori}). Qualsiasi modifica all'array all'interno della funzione influisce sull'array originale nel chiamante.
+\end{nota}
+
+\section{Array Multidimensionali}
+
+\subsection{Array Bidimensionali (Matrici)}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    // Dichiarazione e inizializzazione
+    int matrice[3][4] = {
+        {1, 2, 3, 4},
+        {5, 6, 7, 8},
+        {9, 10, 11, 12}
+    };
+
+    // Accesso agli elementi
+    printf("Elemento [1][2]: %d\n", matrice[1][2]);  // 7
+
+    // Stampa della matrice
+    printf("\nMatrice:\n");
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            printf("%3d ", matrice[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Operazioni su Matrici}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+#define RIGHE 3
+#define COLONNE 3
+
+// Funzione che stampa una matrice di interi
+void stampa_matrice(int* mat, int righe) {
+    for (int i = 0; i < righe; i++) {
+        for (int j = 0; j < COLONNE; j++) {
+            printf("%4d", mat[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+// Funzione che calcola la somma elemento per elemento di due matrici di interi
+void somma_matrici(int a[][COLONNE], int b[][COLONNE],
+                   int risultato[][COLONNE], int righe) {
+    for (int i = 0; i < righe; i++) {
+        for (int j = 0; j < COLONNE; j++) {
+            risultato[i][j] = a[i][j] + b[i][j];  // Somma gli elementi corrispondenti
+        }
+    }
+}
+
+// Funzione che calcola la trasposta di una matrice di interi
+void trasposta(int mat[][COLONNE], int trasposta[][RIGHE],
+               int righe, int colonne) {
+    for (int i = 0; i < righe; i++) {
+        for (int j = 0; j < colonne; j++) {
+            trasposta[j][i] = mat[i][j];  // Scambia righe con colonne
+        }
+    }
+}
+
+int main(int argc, char** argv) {
+    int A[RIGHE][COLONNE] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+
+    int B[RIGHE][COLONNE] = {
+        {9, 8, 7},
+        {6, 5, 4},
+        {3, 2, 1}
+    };
+
+    int C[RIGHE][COLONNE];
+    int T[COLONNE][RIGHE];
+
+    printf("Matrice A:\n");
+    stampa_matrice(A, RIGHE);
+
+    printf("\nMatrice B:\n");
+    stampa_matrice(B, RIGHE);
+
+    somma_matrici(A, B, C, RIGHE);
+    printf("\nSomma A + B:\n");
+    stampa_matrice(C, RIGHE);
+
+    trasposta(A, T, RIGHE, COLONNE);
+    printf("\nTrasposta di A:\n");
+    for (int i = 0; i < COLONNE; i++) {
+        for (int j = 0; j < RIGHE; j++) {
+            printf("%4d", T[i][j]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Algoritmi di Ordinamento}
+
+\subsection{Bubble Sort}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che implementa l'algoritmo Bubble Sort per ordinare un array di interi
+void bubble_sort(int* arr, int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                // Scambia gli elementi arr[j] e arr[j+1]
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Funzione che stampa tutti gli elementi di un array di interi
+void stampa_array(int* arr, int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {64, 34, 25, 12, 22, 11, 90};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    printf("Array non ordinato: ");
+    stampa_array(numeri, n);
+
+    bubble_sort(numeri, n);
+
+    printf("Array ordinato: ");
+    stampa_array(numeri, n);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Selection Sort}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che implementa l'algoritmo Selection Sort per ordinare un array di interi
+void selection_sort(int* arr, int n) {
+    for (int i = 0; i < n - 1; i++) {
+        // Trova l'indice dell'elemento minimo nell'array non ordinato
+        int min_idx = i;
+        for (int j = i + 1; j < n; j++) {
+            if (arr[j] < arr[min_idx]) {
+                min_idx = j;
+            }
+        }
+        // Scambia l'elemento minimo trovato con il primo elemento non ordinato
+        int temp = arr[min_idx];
+        arr[min_idx] = arr[i];
+        arr[i] = temp;
+    }
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {64, 25, 12, 22, 11};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    printf("Array non ordinato: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", numeri[i]);
+    }
+    printf("\n");
+
+    selection_sort(numeri, n);
+
+    printf("Array ordinato: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", numeri[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\subsection{Statistiche su un Array}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che calcola e stampa statistiche di un array di interi
+void statistiche(int* arr, int n) {
+    // Calcola somma, media, massimo e minimo degli elementi
+    int somma = 0;
+    int max = arr[0];  // Inizializza il massimo al primo elemento
+    int min = arr[0];  // Inizializza il minimo al primo elemento
+
+    for (int i = 0; i < n; i++) {
+        somma += arr[i];
+        if (arr[i] > max) max = arr[i];
+        if (arr[i] < min) min = arr[i];
+    }
+
+    float media = (float)somma / n;  // Cast a float per divisione decimale
+
+    printf("Statistiche:\n");
+    printf("- Somma: %d\n", somma);
+    printf("- Media: %.2f\n", media);
+    printf("- Massimo: %d\n", max);
+    printf("- Minimo: %d\n", min);
+}
+
+int main(int argc, char** argv) {
+    int voti[] = {28, 24, 30, 26, 27, 30, 25};
+    int n = sizeof(voti) / sizeof(voti[0]);
+
+    printf("Voti: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", voti[i]);
+    }
+    printf("\n\n");
+
+    statistiche(voti, n);
+
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Rimozione Duplicati}
+
+\begin{lstlisting}
+#include <stdio.h>
+
+// Funzione che rimuove gli elementi duplicati da un array di interi
+// Restituisce la nuova dimensione dell'array senza duplicati
+int rimuovi_duplicati(int* arr, int n) {
+    int nuova_dimensione = 0;
+
+    for (int i = 0; i < n; i++) {
+        int duplicato = 0;
+        // Controlla se l'elemento arr[i] e' gia' presente nell'array risultante
+        for (int j = 0; j < nuova_dimensione; j++) {
+            if (arr[i] == arr[j]) {
+                duplicato = 1;
+                break;
+            }
+        }
+        // Se l'elemento non e' duplicato, aggiungilo all'array risultante
+        if (!duplicato) {
+            arr[nuova_dimensione] = arr[i];
+            nuova_dimensione++;
+        }
+    }
+
+    return nuova_dimensione;  // Restituisce la dimensione dell'array senza duplicati
+}
+
+int main(int argc, char** argv) {
+    int numeri[] = {1, 2, 3, 2, 4, 1, 5, 3, 6};
+    int n = sizeof(numeri) / sizeof(numeri[0]);
+
+    printf("Array originale: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", numeri[i]);
+    }
+    printf("\n");
+
+    n = rimuovi_duplicati(numeri, n);
+
+    printf("Array senza duplicati: ");
+    for (int i = 0; i < n; i++) {
+        printf("%d ", numeri[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+
+\begin{enumerate}
+    \item Scrivi un programma che legge 10 numeri e stampa quanti sono pari e quanti dispari.
+    \item Crea un programma che trova la seconda cifra più grande in un array.
+    \item Implementa un programma che conta le occorrenze di un numero in un array.
+    \item Scrivi un programma che verifica se un array è palindromo.
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+
+\begin{enumerate}
+    \item Implementa la ricerca binaria su un array ordinato.
+    \item Crea un programma che ruota gli elementi di un array di K posizioni.
+    \item Scrivi un programma che fonde (merge) due array ordinati in un unico array ordinato.
+    \item Implementa un programma che trova tutti i sottoinsiemi di somma uguale a un valore dato.
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+
+\begin{enumerate}
+    \item Implementa l'algoritmo Quick Sort ricorsivo.
+    \item Crea un programma per la moltiplicazione di due matrici.
+    \item Scrivi un programma che trova la sotto-sequenza contigua con somma massima (algoritmo di Kadane).
+    \item Implementa un programma che risolve il problema dello zaino (knapsack) 0/1 con programmazione dinamica.
+\end{enumerate}

@@ -1,0 +1,62 @@
+\chapter{Upload di File}
+
+\section{Validazione e salvataggio}
+Esempio completo con controlli su MIME e dimensione.
+
+\lstinputlisting[language=PHP, caption={Upload PHP}, label={lst:uploadphp}]{esempi/upload.php}
+
+\subsection{Analisi tecnica dell'upload sicuro}
+\begin{itemize}
+\item \textbf{Funzione e scopo}: Implementazione completa di sistema di upload file con protezioni contro file injection, MIME spoofing e limitazioni di dimensione, seguendo le best practices OWASP.
+
+\item \textbf{Componenti principali}:
+\begin{itemize}
+\item \texttt{declare(strict\_types=1)}: Strict typing per type safety
+% Rimosso: riferimenti a CSRF e token
+\item \texttt{\$_FILES} superglobal: Accesso ai metadati file upload
+\item \texttt{UPLOAD\_ERR\_OK}: Controllo stato upload successivo
+\item \texttt{finfo\_open(FILEINFO\_MIME\_TYPE)}: Rilevamento MIME type reale
+\item \texttt{move\_uploaded\_file()}: Funzione sicura per spostamento file
+\item \texttt{bin2hex(random\_bytes(8))}: Generazione nome file sicuro
+\item HTTP status codes appropriati per errori
+\end{itemize}
+
+\item \textbf{Esempi pratici}: Questo pattern si applica in:
+\begin{itemize}
+\item Upload documenti in piattaforme enterprise
+\item Sistemi di gestione contenuti (CMS)
+\item Portali per submission academiche/lavorative
+\item Applicazioni di file sharing sicuro
+\item Backup e restore di configurazioni
+\end{itemize}
+
+\item \textbf{Varianti e alternative}:
+\begin{itemize}
+\item \texttt{is\_uploaded\_file()} per validazione aggiuntiva
+\item Cloud storage (AWS S3, Google Cloud Storage) per scalabilità
+\item Chunked upload per file di grandi dimensioni
+\item Client-side validation con JavaScript prima dell'invio
+\item API RESTful per integrazione con applicazioni moderne
+\item Framework-specific solutions (Laravel, Symfony file upload)
+\end{itemize}
+
+\item \textbf{Best practices e insidie}:
+\begin{itemize}
+\item \textbf{Best practice}: Sempre validare MIME type con \verb|finfo_*|
+\item \textbf{Insidia}: Trustare solo \texttt{\$_FILES['error']} per stato upload
+\item \textbf{Sicurezza}: Mai trustare \texttt{\$_FILES['type']} (client-provided)
+\item \textbf{Performance}: Limitare dimensione file sia client che server side
+\item \textbf{Storage}: Usare directory fuori document root per file uploadati
+\item \textbf{Backup}: Implementare quarantena per file sospetti
+\end{itemize}
+
+\item \textbf{Riferimenti teorici}:
+\begin{itemize}
+\item \textbf{OWASP File Upload}: Security guidelines per upload sicuri
+% Rimosso: sezione CSRF Protection
+\item \textbf{MIME Type Detection}: Magic number analysis vs extension trust
+\item \textbf{File Inclusion Vulnerabilities}: Prevenzione directory traversal attacks
+\item \textbf{Randomization Security}: Cryptographically secure random generation
+\item \textbf{HTTP Response Codes}: Semantic status codes per error handling
+\end{itemize}
+\end{itemize}

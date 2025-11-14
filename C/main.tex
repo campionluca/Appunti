@@ -1,0 +1,131 @@
+\documentclass[a4paper,11pt,oneside]{book}
+
+% Pacchetti essenziali
+\usepackage[italian]{babel}
+\usepackage{fontspec}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{tcolorbox}
+\usepackage{tikz}
+
+% Configurazione pagina
+\geometry{margin=2.5cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+% Configurazione listings per C
+\lstset{
+    language=C,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!60!black}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{gray!5},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black!30},
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={(*@}{@*)},
+    xleftmargin=15pt,
+    xrightmargin=15pt
+}
+
+% Box colorati
+\newtcolorbox{attenzione}{
+    colback=yellow!10,
+    colframe=orange!80,
+    title=Attenzione,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{nota}{
+    colback=blue!5,
+    colframe=blue!60,
+    title=Nota,
+    fonttitle=\bfseries
+}
+
+\newtcolorbox{errore}{
+    colback=red!5,
+    colframe=red!60,
+    title=Errore Comune,
+    fonttitle=\bfseries
+}
+
+% Header e footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Hyperref configuration
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={Appunti di Programmazione C},
+    pdfauthor={Istituto Tecnico},
+    pdfsubject={Programmazione C - 3° Anno},
+    bookmarks=true,
+}
+
+% Informazioni documento
+\title{\Huge\textbf{Appunti di Programmazione C}\\
+       \Large Materiale Didattico per il Terzo Anno}
+\author{Istituto Tecnico\\Anno Scolastico 2025-2026}
+\date{\today}
+
+\begin{document}
+
+% Frontespizio
+\maketitle
+\thispagestyle{empty}
+
+% Indice
+\tableofcontents
+\clearpage
+
+% Lista delle figure
+\listoffigures
+\clearpage
+
+% Lista dei codici
+\lstlistoflistings
+\clearpage
+
+% Capitoli
+\include{capitoli/00_prefazione}
+\include{capitoli/01_introduzione_c}
+\include{capitoli/02_variabili_tipi}
+\include{capitoli/03_operatori_espressioni}
+\include{capitoli/04_controllo_flusso}
+\include{capitoli/05_funzioni}
+\include{capitoli/06_array}
+\include{capitoli/07_puntatori}
+\include{capitoli/08_stringhe}
+\include{capitoli/09_struct}
+\include{capitoli/10_file}
+\include{capitoli/11_esercizi}
+\include{capitoli/12_makefile}
+\include{capitoli/13_gdb_debugging}
+\include{capitoli/14_librerie_standard}
+\include{capitoli/99_bibliografia}
+\include{capitoli/appendice_soluzioni}
+
+\end{document}

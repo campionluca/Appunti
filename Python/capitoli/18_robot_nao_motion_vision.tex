@@ -1,0 +1,66 @@
+% Modulo 18 - Movimento e Visione con NAO (V6)
+\chapter{Movimento e Visione}
+
+\section{Contesto e Applicazioni}
+\begin{tcolorbox}[title=Contesto e Applicazioni]
+- Gesture e posture per interazioni HRI.
+- Acquisizione immagini per analisi e riconoscimento.
+- Demo di navigazione e percezione di base.
+\end{tcolorbox}
+
+\section{Approfondimenti}
+Il servizio \texttt{ALMotion} controlla giunti e camminata, mentre \texttt{ALRobotPosture} gestisce posture predefinite. \texttt{ALVideoDevice} fornisce flussi dalle camere.
+
+\begin{tcolorbox}[title=Esempi di movimento]
+\begin{lstlisting}
+import qi, time
+
+session = qi.Session(); session.connect("tcp://nao.local:9559")
+motion = session.service("ALMotion")
+posture = session.service("ALRobotPosture")
+
+posture.goToPosture("StandInit", 0.5)
+# Muove il braccio destro (pitch/roll)
+names = ["RShoulderPitch", "RShoulderRoll"]
+angles = [0.5, -0.2]   # radianti
+speed = 0.2
+motion.setAngles(names, angles, speed)
+time.sleep(1)
+posture.goToPosture("Stand", 0.5)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Acquisizione immagini]
+\begin{lstlisting}
+import qi
+session = qi.Session(); session.connect("tcp://nao.local:9559")
+vid = session.service("ALVideoDevice")
+
+# Iscrizione con API esplicita per camera e spazio colore
+# cameraIndex: 0 = frontale, 1 = bottom, 2 = 3D (se disponibile)
+# resolution: 8=QVGA(320x240), 11=VGA(640x480), ecc.
+# colorSpace: 13=BGR, 11=YUV, ecc. (vedi documentazione NAOqi)
+name = vid.subscribeCamera("python_client", 0, 11, 13, 10)
+frame = vid.getImageRemote(name)
+vid.unsubscribe(name)
+
+# frame è una lista: [width, height, layers, colorSpace, timestamp, data]
+width, height = frame[0], frame[1]
+data = frame[6]  # buffer raw (bytes)
+
+# Scrittura grezza su file (per ispezione)
+with open("frame.raw", "wb") as f:
+    f.write(bytearray(data))
+
+# Per salvare come PNG/JPEG, usare PIL (Pillow) e convertire BGR->RGB
+# from PIL import Image; Image.frombytes(...)
+\end{lstlisting}
+\end{tcolorbox}
+
+\paragraph{Sicurezza} Impostare posture stabili prima di muovere; evitare collisioni e mantenere velocità moderate. Analizzare eccezioni e latenza di rete.
+
+\begin{tcolorbox}[title=Spiegazioni per non-Python]
+\textbf{Liste vs tuple}: il risultato di \texttt{getImageRemote} è una lista; si accede per indice. In Python le tuple sono immutabili, le liste no.  
+\textbf{Bytes}: la variabile \texttt{data} è una sequenza di byte; si può convertire con \texttt{bytearray} o \texttt{bytes} per scrittura su file.  
+\textbf{Context manager}: l'istruzione \texttt{with open(...)} gestisce automaticamente apertura/chiusura file (equivalente a \texttt{try/finally}).
+\end{tcolorbox}

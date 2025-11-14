@@ -1,0 +1,142 @@
+\chapter{SASS e SCSS}
+\label{cap:sass_scss}
+
+\section{Cos'è SASS/SCSS?}
+
+SASS (Syntactically Awesome StyleSheets) è un preprocessore CSS. SCSS è la sintassi moderna di SASS che è un superset di CSS (tutto il CSS valido è valido SCSS).
+
+\section{Variabili}
+
+Le variabili SCSS permettono di riutilizzare valori:
+
+\begin{lstlisting}[language=CSS]
+$primary-color: #3498db;
+$secondary-color: #2ecc71;
+$base-font-size: 16px;
+$spacing: 20px;
+
+body {
+  font-size: $base-font-size;
+  color: $primary-color;
+}
+
+.button {
+  background-color: $primary-color;
+  padding: $spacing;
+  margin: $spacing / 2;
+}
+\end{lstlisting}
+
+\section{Nesting}
+
+Nesting riduce ripetizione di selettori:
+
+\begin{lstlisting}[language=CSS]
+.navbar {
+  background-color: $primary-color;
+  padding: $spacing;
+
+  .logo {
+    font-size: 24px;
+    color: white;
+  }
+
+  .menu {
+    display: flex;
+    gap: $spacing;
+
+    a {
+      color: white;
+      text-decoration: none;
+
+      &:hover {
+        color: $secondary-color;
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{nota}
+L'ampersand (\&) rappresenta il selettore genitore. \texttt{\&:hover} diventa \texttt{.navbar .menu a:hover}.
+\end{nota}
+
+\section{Mixin}
+
+Mixin sono funzioni riutilizzabili:
+
+\begin{lstlisting}[language=CSS]
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin responsive($breakpoint) {
+  @if $breakpoint == "tablet" {
+    @media (min-width: 768px) { @content; }
+  }
+  @if $breakpoint == "desktop" {
+    @media (min-width: 1024px) { @content; }
+  }
+}
+
+.button {
+  @include flex-center;
+  padding: $spacing;
+}
+
+@include responsive("tablet") {
+  .container { width: 90%; }
+}
+\end{lstlisting}
+
+\section{Import e modularità}
+
+Organizza SCSS in file modulari:
+
+\begin{lstlisting}[language=CSS]
+// main.scss
+@import "variables";    // _variables.scss
+@import "mixins";       // _mixins.scss
+@import "navbar";       // _navbar.scss
+@import "buttons";      // _buttons.scss
+@import "responsive";   // _responsive.scss
+\end{lstlisting}
+
+\section{Compilazione SCSS}
+
+Compilare SCSS a CSS con Node.js:
+
+\begin{lstlisting}[language=bash]
+# Installare sass
+npm install -g sass
+
+# Compilare una volta
+sass scss/main.scss css/style.css
+
+# Watch mode (recompila su cambiamento)
+sass --watch scss:css
+
+# Minificato
+sass --style=compressed scss/main.scss css/style.min.css
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea file \texttt{\_variables.scss} con colori, font-size, spacing. Importa in \texttt{main.scss} e usali in almeno 5 selettori.
+
+\subsection{Esercizio 2 (Intermedio)}
+Crea un mixin \texttt{@mixin card} che stilizza le card con padding, border, shadow, e font. Usalo per multiple card diverse.
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item SCSS è superset di CSS
+  \item Variabili: \$variableName
+  \item Nesting: selettori annidati, ampersand per genitore
+  \item Mixin: funzioni riutilizzabili con @mixin e @include
+  \item Import: modularità con @import
+  \item Compilazione: sass scss:css
+\end{itemize}

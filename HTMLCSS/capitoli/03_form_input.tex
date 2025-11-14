@@ -1,0 +1,121 @@
+\chapter{Form e Input}
+\label{cap:form_input}
+
+\section{Introduzione ai Form}
+
+I form (moduli) sono elementi fondamentali del web che permettono l'interazione tra utente e sito web. Sono utilizzati per:
+
+\begin{itemize}
+  \item Raccogliere dati dagli utenti (registrazione, login, contatti)
+  \item Effettuare ricerche
+  \item Caricare file
+  \item Inviare feedback o commenti
+  \item Completare transazioni (acquisti, prenotazioni)
+  \item Configurare preferenze
+\end{itemize}
+
+Il processo di gestione di un form prevede tre fasi:
+\begin{enumerate}
+  \item \textbf{Raccolta dati}: L'utente compila i campi del form
+  \item \textbf{Invio}: I dati vengono inviati al server tramite una richiesta HTTP
+  \item \textbf{Elaborazione}: Il server processa i dati e restituisce una risposta
+\end{enumerate}
+
+\begin{nota}
+I form sono il ponte tra il frontend (interfaccia utente) e il backend (logica del server). La sicurezza e la validazione dei dati sono cruciali in questo processo.
+\end{nota}
+
+\section{Elemento form}
+
+Il tag \texttt{<form>} crea un modulo per raccogliere dati dall'utente. È simile ai metodi di una classe Java (vedi il corso di Quarta sulla programmazione orientata agli oggetti) che accettano parametri:
+
+\begin{lstlisting}[language=HTML]
+<form action="paginaDiArrivo.html" method="POST" name="contactForm">
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" required>
+
+  <button type="submit">Invia</button>
+  <button type="reset">Cancella</button>
+</form>
+\end{lstlisting}
+
+\subsection{Attributi form}
+
+\begin{description}
+  \item[\texttt{action}] URL dove inviare i dati del form
+  \item[\texttt{method}] GET o POST (modalità invio dati)
+  \item[\texttt{name}] Nome identificativo del form
+  \item[\texttt{enctype}] Tipo di codifica (application/x-www-form-urlencoded, multipart/form-data)
+\end{description}
+
+\section{Input types}
+
+HTML5 offre molti tipi di input per diversi dati:
+\begin{lstlisting}[language=HTML]
+<input type="text" placeholder="Testo generico" />
+<input type="password" placeholder="Password" />
+<input type="email" placeholder="Email" />
+<input type="number" min="0" max="100" step="5" />
+<input type="date" />
+<input type="checkbox" id="terms" /> <label for="terms">Accetto i termini</label>
+<input type="radio" name="option" value="1" id="opt1" /> <label for="opt1">Opzione 1</label>
+<select>
+  <option>Scegli un'opzione</option>
+</select>
+<textarea rows="5" cols="40"></textarea>
+\end{lstlisting}
+
+%TODO: Inserire immagine del codice sopra
+
+
+\section{Label e accessibilità}
+
+Il tag \texttt{<label>} associa il testo all'input:
+
+\begin{lstlisting}[language=HTML]
+<label for="username">Username:</label>
+<input type="text" id="username" name="username">
+
+<label for="subscribe">Iscrivimi alla newsletter</label>
+  <input type="checkbox" id="subscribe" name="subscribe">
+\end{lstlisting}
+
+\begin{nota}
+L'attributo \texttt{for} del label deve corrispondere all'attributo \texttt{id} dell'input per accessibilità screen reader.
+\end{nota}
+
+\section{Validazione HTML5}
+
+HTML5 supporta validazione lato client:
+
+\begin{lstlisting}[language=HTML]
+<input type="email" required />
+<input type="number" min="0" max="10" />
+<input type="text" pattern="[A-Za-z]+" title="Solo lettere" />
+<input type="password" minlength="8" />
+\end{lstlisting}
+
+\begin{attenzione}
+La validazione HTML5 non sostituisce la validazione server-side. Sempre convalidare i dati sul server poiché l'utente potrebbe modificare il codice client.
+\end{attenzione}
+
+\section{Riepilogo}
+
+\begin{itemize}
+  \item I form sono lo strumento principale per l'interazione utente-server
+  \item L'elemento \texttt{<form>} ha attributi essenziali:
+    \begin{itemize}
+      \item \texttt{action}: dove inviare i dati
+      \item \texttt{method}: come inviarli (GET/POST)
+      \item \texttt{enctype}: tipo di codifica
+    \end{itemize}
+  \item HTML5 offre diversi tipi di input specializzati:
+    \begin{itemize}
+      \item \texttt{text}, \texttt{email}, \texttt{password}, \texttt{number}
+      \item \texttt{date}, \texttt{checkbox}, \texttt{radio}
+      \item \texttt{file}, \texttt{textarea}, \texttt{select}
+    \end{itemize}
+  \item Ogni \texttt{input} dovrebbe avere un \texttt{label} associato
+  \item La validazione client-side (HTML5) va sempre accompagnata da validazione server-side
+  \item L'accessibilità è fondamentale (label, attributi \texttt{for} e \texttt{id})
+\end{itemize}
