@@ -1,0 +1,136 @@
+\chapter{Procedure e Gestione dello Stack}
+
+\section{Lo Stack dell'8086}
+
+Lo stack è un'area di memoria LIFO (Last In, First Out) gestita dai registri SS:SP.
+
+\subsection{Operazioni fondamentali}
+
+\begin{lstlisting}
+PUSH AX            ; SP = SP - 2, [SS:SP] = AX
+POP BX             ; BX = [SS:SP], SP = SP + 2
+\end{lstlisting}
+
+\section{Chiamate a Procedura}
+
+\subsection{Convenzioni di chiamata}
+
+\textbf{Caller} (chiamante):
+\begin{enumerate}
+    \item Salva registri da preservare
+    \item Passa parametri (stack o registri)
+    \item Esegue CALL
+    \item Recupera risultato
+    \item Ripristina registri
+\end{enumerate}
+
+\textbf{Callee} (procedura chiamata):
+\begin{enumerate}
+    \item Salva registri usati
+    \item Esegue operazioni
+    \item Ripristina registri
+    \item Esegue RET
+\end{enumerate}
+
+\subsection{Passaggio parametri via stack}
+
+\begin{lstlisting}
+; Procedura: somma(a, b) -> risultato in AX
+somma PROC
+    PUSH BP
+    MOV BP, SP         ; Stack frame
+
+    MOV AX, [BP+4]     ; Parametro a
+    ADD AX, [BP+6]     ; Parametro b
+
+    POP BP
+    RET 4              ; Rimuove 2 parametri (4 byte)
+somma ENDP
+
+; Chiamata:
+PUSH 20                ; Parametro b
+PUSH 10                ; Parametro a
+CALL somma             ; AX = 30
+\end{lstlisting}
+
+\subsection{Stack frame layout}
+
+\begin{verbatim}
+[BP+6]  Parametro b
+[BP+4]  Parametro a
+[BP+2]  Return address (IP)
+[BP+0]  Old BP  <-- BP
+[BP-2]  Variabile locale 1
+[BP-4]  Variabile locale 2  <-- SP
+\end{verbatim}
+
+\section{Variabili Locali}
+
+\begin{lstlisting}
+myproc PROC
+    PUSH BP
+    MOV BP, SP
+    SUB SP, 4          ; Alloca 4 byte per variabili locali
+
+    MOV word ptr [BP-2], 100   ; Variabile locale 1
+    MOV word ptr [BP-4], 200   ; Variabile locale 2
+
+    MOV SP, BP         ; Dealloca variabili
+    POP BP
+    RET
+myproc ENDP
+\end{lstlisting}
+
+\section{Ricorsione}
+
+\begin{esempio}
+Fattoriale ricorsivo:
+\begin{lstlisting}
+; Fattoriale(n) -> AX
+factorial PROC
+    PUSH BP
+    MOV BP, SP
+
+    MOV AX, [BP+4]     ; n
+    CMP AX, 1
+    JLE base_case
+
+    DEC AX
+    PUSH AX
+    CALL factorial     ; Chiamata ricorsiva
+    ADD SP, 2
+
+    MUL word ptr [BP+4]  ; AX = risultato * n
+    JMP done
+
+base_case:
+    MOV AX, 1
+
+done:
+    POP BP
+    RET 2
+factorial ENDP
+\end{lstlisting}
+\end{esempio}
+
+\section{Esercizi}
+
+\begin{esercizio}[8.1]
+Scrivere una procedura che calcola $x^n$ (potenza).
+\end{esercizio}
+
+\begin{esercizio}[8.2]
+Implementare Fibonacci ricorsivo.
+\end{esercizio}
+
+\begin{esercizio}[8.3]
+Spiegare perché BP è preferibile a SP per accedere a parametri e variabili locali.
+\end{esercizio}
+
+\begin{esercizio}[8.4]
+Disegnare lo stack frame per una procedura con 3 parametri e 2 variabili locali.
+\end{esercizio}
+
+\begin{esercizio}[8.5]
+Cosa succede se si dimentica POP BP prima di RET?
+\end{esercizio}

@@ -125,6 +125,51 @@ python tools\check_build.py
 | Esempi ed esercizi | 🟡 In arricchimento (00–15 aggiornati) |
 | Soluzioni | 🟡 Bozza (Appendice creata) |
 | PDF principale | ✅ Compilato |
+| **Descrittori Python** | **✅ COMPLETATO** |
+
+---
+
+## ✅ Descrittori Python - Completato
+
+**Status**: ✅ **COMPLETATO** (14 Novembre 2025)
+
+Progetto per generare descrittori strutturati di concetti Python con coverage analysis.
+
+### Dati Reali Generati
+- **Descrittori generati**: 41 descriptors (vs 20-25 stimati)
+- **Categorie**: 17 aree tematiche
+- **Idiomi Pythonic documentati**: 14
+- **Livelli di difficoltà**:
+  - Beginner: 16 descriptors
+  - Intermediate: 21 descriptors
+  - Advanced: 4 descriptors
+
+### File Generati
+- **PYTHON_DESCRIPTORS_REPORT.json** — Report completo con 41 descrittori strutturati
+- **PYTHON_COVERAGE_ANALYSIS.md** — Analisi coverage per categoria
+- **create_python_descriptors.py** — Script di generazione automatica
+- **Data generazione**: 14 Novembre 2025
+
+### Categorie di Descrittori (17 Aree)
+1. Basics (variabili, tipi, operatori)
+2. Control Flow (if, for, while)
+3. Functions (def, argomenti, scope)
+4. Data Structures (list, tuple, dict, set)
+5. String Operations
+6. File I/O
+7. Error Handling
+8. Modules & Packages
+9. OOP Fundamentals
+10. OOP Advanced
+11. Decorators
+12. Iterators & Generators
+13. List Comprehensions
+14. Lambda & Higher-Order Functions
+15. GUI Tkinter
+16. Web Flask
+17. Database SQLite
+
+Per dettagli consultare [TODO.md](TODO.md#-descrittori-python---completato).
 
 ---
 

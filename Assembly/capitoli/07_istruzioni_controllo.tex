@@ -1,0 +1,184 @@
+\chapter{Istruzioni di Controllo di Flusso}
+
+\section{Jump Incondizionati}
+
+\subsection{JMP --- Unconditional Jump}
+\begin{lstlisting}
+JMP label          ; Salta a label
+JMP SHORT label    ; Salto corto (-128/+127 byte)
+JMP NEAR label     ; Salto near (stesso segmento)
+JMP FAR label      ; Salto far (cambia CS:IP)
+\end{lstlisting}
+
+\section{Jump Condizionati}
+
+Basati su flag del registro FLAGS.
+
+\subsection{Jump basati su Zero Flag}
+\begin{lstlisting}
+JE/JZ label        ; Jump if Equal/Zero (ZF=1)
+JNE/JNZ label      ; Jump if Not Equal/Not Zero (ZF=0)
+\end{lstlisting}
+
+\subsection{Jump Unsigned}
+\begin{lstlisting}
+JA/JNBE label      ; Jump if Above (CF=0 AND ZF=0)
+JAE/JNB label      ; Jump if Above or Equal (CF=0)
+JB/JNAE label      ; Jump if Below (CF=1)
+JBE/JNA label      ; Jump if Below or Equal (CF=1 OR ZF=1)
+\end{lstlisting}
+
+\subsection{Jump Signed}
+\begin{lstlisting}
+JG/JNLE label      ; Jump if Greater (ZF=0 AND SF=OF)
+JGE/JNL label      ; Jump if Greater or Equal (SF=OF)
+JL/JNGE label      ; Jump if Less (SF≠OF)
+JLE/JNG label      ; Jump if Less or Equal (ZF=1 OR SF≠OF)
+\end{lstlisting}
+
+\subsection{Jump su singoli flag}
+\begin{lstlisting}
+JC label           ; Jump if Carry (CF=1)
+JNC label          ; Jump if No Carry (CF=0)
+JS label           ; Jump if Sign (SF=1, negativo)
+JNS label          ; Jump if No Sign (SF=0, positivo)
+JO label           ; Jump if Overflow (OF=1)
+JNO label          ; Jump if No Overflow (OF=0)
+JP/JPE label       ; Jump if Parity Even (PF=1)
+JNP/JPO label      ; Jump if Parity Odd (PF=0)
+\end{lstlisting}
+
+\section{Loop Instructions}
+
+\subsection{LOOP}
+\begin{lstlisting}
+LOOP label         ; Decrementa CX, salta se CX≠0
+\end{lstlisting}
+
+\begin{esempio}
+Loop per 10 iterazioni:
+\begin{lstlisting}
+MOV CX, 10
+loop_start:
+    ; Corpo del loop
+    DEC BX
+    ; ...
+LOOP loop_start    ; Ripete finché CX≠0
+\end{lstlisting}
+\end{esempio}
+
+\subsection{LOOPE/LOOPZ}
+\begin{lstlisting}
+LOOPE label        ; Loop while Equal (decrementa CX, salta se ZF=1 AND CX≠0)
+\end{lstlisting}
+
+\subsection{LOOPNE/LOOPNZ}
+\begin{lstlisting}
+LOOPNE label       ; Loop while Not Equal (decrementa CX, salta se ZF=0 AND CX≠0)
+\end{lstlisting}
+
+\subsection{JCXZ}
+\begin{lstlisting}
+JCXZ label         ; Jump if CX=0 (senza modificare CX)
+\end{lstlisting}
+
+\section{Procedure}
+
+\subsection{CALL}
+\begin{lstlisting}
+CALL procedura     ; Chiama procedura (PUSH IP, JMP)
+CALL NEAR proc     ; Chiamata near
+CALL FAR proc      ; Chiamata far (PUSH CS, PUSH IP)
+\end{lstlisting}
+
+\subsection{RET}
+\begin{lstlisting}
+RET                ; Ritorna (POP IP)
+RET n              ; Ritorna e rimuove n byte dallo stack
+RETF               ; Return far (POP IP, POP CS)
+\end{lstlisting}
+
+\begin{esempio}
+Procedura semplice:
+\begin{lstlisting}
+somma PROC
+    ADD AX, BX     ; AX = AX + BX
+    RET
+somma ENDP
+
+; Chiamata:
+MOV AX, 10
+MOV BX, 20
+CALL somma         ; AX = 30
+\end{lstlisting}
+\end{esempio}
+
+\section{Interrupt}
+
+\subsection{INT}
+\begin{lstlisting}
+INT numero         ; Invoca interrupt software
+\end{lstlisting}
+
+\begin{esempio}
+DOS interrupt 21h (servizi DOS):
+\begin{lstlisting}
+MOV AH, 9          ; Funzione 9: stampa stringa
+MOV DX, OFFSET msg
+INT 21h
+
+MOV AH, 4Ch        ; Funzione 4Ch: termina programma
+INT 21h
+\end{lstlisting}
+\end{esempio}
+
+\subsection{IRET}
+\begin{lstlisting}
+IRET               ; Return from interrupt (POP IP, POP CS, POP FLAGS)
+\end{lstlisting}
+
+\section{Tabella Jump Condizionati}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llp{5cm}}
+\toprule
+\textbf{Istruzione} & \textbf{Condizione} & \textbf{Uso} \\
+\midrule
+JE/JZ & ZF=1 & Uguale/Zero \\
+JNE/JNZ & ZF=0 & Diverso/Non zero \\
+JG/JNLE & ZF=0 AND SF=OF & Greater (signed) \\
+JGE/JNL & SF=OF & Greater or Equal (signed) \\
+JL/JNGE & SF≠OF & Less (signed) \\
+JLE/JNG & ZF=1 OR SF≠OF & Less or Equal (signed) \\
+JA/JNBE & CF=0 AND ZF=0 & Above (unsigned) \\
+JAE/JNB & CF=0 & Above or Equal (unsigned) \\
+JB/JNAE & CF=1 & Below (unsigned) \\
+JBE/JNA & CF=1 OR ZF=1 & Below or Equal (unsigned) \\
+\bottomrule
+\end{tabular}
+\caption{Jump condizionati principali}
+\end{table}
+
+\section{Esercizi}
+
+\begin{esercizio}[7.1]
+Scrivere un loop per sommare i numeri da 1 a 100.
+\end{esercizio}
+
+\begin{esercizio}[7.2]
+Implementare una procedura che calcola il massimo tra AX e BX (risultato in AX).
+\end{esercizio}
+
+\begin{esercizio}[7.3]
+Spiegare la differenza tra JG e JA. Quando si usa ciascuno?
+\end{esercizio}
+
+\begin{esercizio}[7.4]
+Scrivere codice per cercare un byte in un array di 10 elementi.
+\end{esercizio}
+
+\begin{esercizio}[7.5]
+Cosa succede se si chiama una procedura senza RET?
+\end{esercizio}

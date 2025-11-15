@@ -236,6 +236,56 @@ Istituto Tecnico - Anno Scolastico 2025-2026
 
 ---
 
+---
+
+## 🤖 Descrittori AI
+
+Questo corso è stato arricchito con **15 concept descriptors** generati automaticamente per supportare agenti didattici e sistemi di e-learning.
+
+### Descrittori Disponibili
+
+- **15 concept descriptors** creati e validati
+- **Categorie**: Language Basics (5), Control Structures (4), Pointers & Memory (3), Functions (2)
+- **Livelli**: Beginner (9), Intermediate (6)
+- **7 esempi commentati** integrati
+- **1 spiegazione teorica** sul paradigma procedurale
+
+### File Descrittori
+
+| File | Descrizione | Link |
+|------|-------------|------|
+| `C_DESCRIPTORS_REPORT.json` | Report completo con metadati e metriche | `/home/user/Appunti/C_DESCRIPTORS_REPORT.json` |
+| `C_COVERAGE_ANALYSIS.md` | Analisi dettagliata della copertura | `/home/user/Appunti/C_COVERAGE_ANALYSIS.md` |
+| `C_CONCEPT_IDS.md` | Elenco concept IDs per categoria | `/home/user/Appunti/C_CONCEPT_IDS.md` |
+
+### Concetti Documentati
+
+#### Language Basics (5)
+- C-VARS-001: Dichiarazione e inizializzazione di variabili
+- C-TYPES-001: Tipi di dati in C
+- C-OPS-001: Operatori aritmetici
+- C-IO-001: Input/Output con scanf e printf
+- C-CONST-001: Costanti con #define e const
+
+#### Control Structures (4)
+- C-IF-001: Istruzioni condizionali if/else
+- C-SWITCH-001: Istruzione switch-case
+- C-LOOP-001: Cicli for, while, do-while
+- C-BREAK-001: Controllo cicli con break e continue
+
+#### Pointers & Memory (3)
+- C-PTR-001: Puntatori - concetti base e dereferenziazione
+- C-PTR-002: Puntatori e funzioni - passaggio per riferimento
+- C-MEM-001: Allocazione dinamica (malloc, calloc, realloc, free)
+
+#### Functions & Scope (2)
+- C-FUNC-001: Definizione e chiamata di funzioni
+- C-SCOPE-001: Scope delle variabili - locali, globali, static
+
+**Stato**: ✅ COMPLETATO (14 Nov 2025)
+
+---
+
 ## Collegamento con Quarta (Java)
 
 Il materiale Terza prepara efficacemente per il corso Java:

@@ -18,8 +18,10 @@ Repository educativo completo contenente materiali didattici per **5 corsi di pr
 | **[Java](Java/)** | 4° | 10 + App | ✅ | Completo | ~280 | OOP, GUI, MVC, design patterns |
 | **[PHP](PHP/)** | 4° | 7+ | ✅ | In sviluppo | ~160 | Web backend, sicurezza, database |
 | **[Python](Python/)** | 5° | 18+ | ✅ | In progresso | ~200 | Python avanzato, GUI, web, robotics |
+| **[Database](Database/)** | 4°/5° | 13 + App | ⏳ | Nuovo corso | ~400 | DBMS, ER, SQL, normalizzazione, transazioni |
+| **[Assembly 8086](Assembly/)** | 5° | 13 + App | ⏳ | Nuovo corso | ~450 | Architettura 8086, set istruzioni, hardware I/O |
 
-**Totale**: ~1,040 pagine di contenuti didattici | 200+ esercizi | 300+ esempi di codice
+**Totale**: ~2,290 pagine di contenuti didattici | 360+ esercizi | 600+ esempi di codice
 
 ---
 

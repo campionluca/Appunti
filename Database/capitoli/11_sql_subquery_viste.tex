@@ -1,0 +1,435 @@
+\chapter{SQL Subquery e Viste}
+
+\section*{Introduzione}
+Le subquery (query annidate) permettono di usare il risultato di una query come fonte per un'altra query. Le viste sono query salvate che si comportano come tabelle virtuali. Questi strumenti avanzati consentono di scrivere query complesse e riutilizzabili, organizzando la logica in modo strutturato.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere la differenza tra subquery scalare, riga e tabella
+    \item Usare subquery nella clausola SELECT, WHERE e FROM
+    \item Usare gli operatori EXISTS, IN, ANY, ALL con subquery
+    \item Scrivere query correlate
+    \item Creare e gestire viste con CREATE VIEW
+    \item Modificare e eliminare viste
+    \item Usare viste per semplificare query complesse
+    \item Comprendere limitazioni e prestazioni delle viste
+\end{itemize}
+
+\section{Subquery - Query Annidate}
+
+Una subquery (o inner query) è una query che si trova dentro un'altra query (outer query). La subquery fornisce dati che la query esterna utilizza.
+
+\subsection{Tipi di Subquery}
+
+\subsubsection{Subquery Scalare}
+
+Una subquery scalare restituisce una singola riga e una singola colonna. Può essere usata dove è previsto un valore singolo (SELECT, WHERE, etc.).
+
+\begin{lstlisting}[language=SQL, caption=Subquery Scalare]
+-- Trovare il cliente con l'ordine più recente
+SELECT nome, cognome
+FROM cliente
+WHERE idCliente = (
+    -- Subquery scalare: restituisce un singolo idCliente
+    SELECT idCliente FROM ordine
+    ORDER BY dataOrdine DESC
+    LIMIT 1
+);
+
+-- Aggiungere il prezzo medio a ogni prodotto
+SELECT nome, prezzo,
+    (SELECT AVG(prezzo) FROM prodotto) AS prezzoMedio
+FROM prodotto;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Nota: Subquery Scalara]
+Una subquery scalare deve restituire esattamente una riga e una colonna. Se restituisce 0 righe, il risultato è NULL. Se restituisce più di una riga, causa errore.
+\end{tcolorbox}
+
+\subsubsection{Subquery Riga}
+
+Una subquery riga restituisce una singola riga ma più colonne. Utile per confrontare più valori contemporaneamente.
+
+\begin{lstlisting}[language=SQL, caption=Subquery Riga]
+-- Trovare ordini con lo stesso cliente e data del primo ordine
+SELECT idOrdine, dataOrdine, totale
+FROM ordine
+WHERE (idCliente, dataOrdine) = (
+    -- Subquery riga: restituisce una riga con due colonne
+    SELECT idCliente, dataOrdine FROM ordine
+    LIMIT 1
+);
+
+-- Trovare clienti con stessa città e provincia di Milano
+SELECT nome, città, provincia
+FROM cliente
+WHERE (città, provincia) = (
+    SELECT città, provincia FROM cliente
+    WHERE città = 'Milano' LIMIT 1
+);
+\end{lstlisting}
+
+\subsubsection{Subquery Tabella}
+
+Una subquery tabella restituisce più righe e/o più colonne. Spesso usata nella clausola FROM per creare una tabella temporanea (derived table).
+
+\begin{lstlisting}[language=SQL, caption=Subquery Tabella]
+-- Trovare prodotti con prezzo sopra la media
+SELECT nome, prezzo
+FROM prodotto
+WHERE prezzo > (
+    -- Subquery tabella nella clausola WHERE
+    SELECT AVG(prezzo) FROM prodotto
+);
+
+-- Usare subquery nella clausola FROM (derived table)
+SELECT categoria, numProdotti, prezzoMedio
+FROM (
+    SELECT categoria, COUNT(*) AS numProdotti, AVG(prezzo) AS prezzoMedio
+    FROM prodotto
+    GROUP BY categoria
+) AS statProdotto
+WHERE numProdotti > 5
+ORDER BY prezzoMedio DESC;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Tip: Alias per Derived Table]
+Quando usi una subquery nella clausola FROM, devi dare un alias con AS. Questo alias può essere usato nel resto della query per fare riferimento alle colonne della subquery.
+\end{tcolorbox}
+
+\section{Operatori di Subquery}
+
+\subsection{Operatore IN}
+
+IN controlla se un valore è contenuto in un insieme di valori restituito dalla subquery.
+
+\begin{lstlisting}[language=SQL, caption=Operatore IN]
+-- Trovare clienti che hanno fatto almeno un ordine
+SELECT nome, cognome, email
+FROM cliente
+WHERE idCliente IN (
+    -- Subquery: restituisce set di idCliente
+    SELECT DISTINCT idCliente FROM ordine
+);
+
+-- Trovare ordini di clienti di Roma o Milano
+SELECT idOrdine, dataOrdine, totale
+FROM ordine
+WHERE idCliente IN (
+    SELECT idCliente FROM cliente
+    WHERE città IN ('Roma', 'Milano')
+);
+
+-- NOT IN: clienti senza ordini
+SELECT nome, cognome
+FROM cliente
+WHERE idCliente NOT IN (
+    SELECT DISTINCT idCliente FROM ordine
+);
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: IN e NULL]
+Se la subquery contiene NULL e usi NOT IN, il risultato sarà sempre vuoto (perché NULL non è comparabile). Usa NOT IN solo se sei sicuro che la subquery non contiene NULL.
+\end{tcolorbox}
+
+\subsection{Operatore EXISTS}
+
+EXISTS verifica se la subquery restituisce almeno una riga. È più efficiente di IN per grandi dataset.
+
+\begin{lstlisting}[language=SQL, caption=Operatore EXISTS]
+-- Trovare clienti con almeno un ordine (usando EXISTS)
+SELECT nome, cognome
+FROM cliente c
+WHERE EXISTS (
+    -- Subquery correlata: fa riferimento a c
+    SELECT 1 FROM ordine o
+    WHERE o.idCliente = c.idCliente
+);
+
+-- Trovare categorie con almeno 3 prodotti
+SELECT DISTINCT categoria
+FROM prodotto p1
+WHERE EXISTS (
+    SELECT COUNT(*) FROM prodotto p2
+    WHERE p2.categoria = p1.categoria
+    GROUP BY p2.categoria
+    HAVING COUNT(*) >= 3
+);
+
+-- NOT EXISTS: clienti senza ordini
+SELECT nome, cognome
+FROM cliente c
+WHERE NOT EXISTS (
+    SELECT 1 FROM ordine o
+    WHERE o.idCliente = c.idCliente
+);
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Subquery Correlata]
+Una subquery correlata fa riferimento a colonne della query esterna. Viene eseguita una volta per ogni riga della tabella esterna. È meno efficiente della versione non correlata, ma talvolta necessaria.
+\end{tcolorbox}
+
+\subsection{Operatori ANY e ALL}
+
+ANY (o SOME) verifica se il confronto è vero per almeno un valore. ALL verifica se è vero per tutti i valori.
+
+\begin{lstlisting}[language=SQL, caption=Operatori ANY e ALL]
+-- Trovare ordini con totale maggiore di QUALSIASI ordine di Roma
+SELECT idOrdine, totale
+FROM ordine o
+WHERE totale > ANY (
+    SELECT totale FROM ordine
+    WHERE idCliente IN (SELECT idCliente FROM cliente WHERE città = 'Roma')
+);
+
+-- Trovare ordini con totale MINORE della media per categoria
+SELECT idOrdine, totale
+FROM ordine o
+WHERE totale < ALL (
+    -- ALL: minore di TUTTI i totali medi per categoria
+    SELECT AVG(totale) FROM ordine
+    GROUP BY idCliente
+);
+
+-- ANY equivalente a IN
+SELECT * FROM ordine WHERE idCliente = ANY (
+    SELECT idCliente FROM cliente WHERE città = 'Milano'
+);
+-- Equivalente a:
+SELECT * FROM ordine WHERE idCliente IN (
+    SELECT idCliente FROM cliente WHERE città = 'Milano'
+);
+\end{lstlisting}
+
+\section{Viste (Views)}
+
+Una vista è una query salvata che può essere usata come una tabella virtuale. Le viste consentono di:
+\begin{itemize}
+    \item Semplificare query complesse
+    \item Riutilizzare logica comune
+    \item Fornire livelli di astrazione (nascondere dettagli di implementazione)
+    \item Gestire la sicurezza (utenti accedono solo a colonne autorizzate)
+\end{itemize}
+
+\subsection{CREATE VIEW}
+
+Il comando CREATE VIEW crea una nuova vista salvata nel database.
+
+\begin{lstlisting}[language=SQL, caption=Sintassi CREATE VIEW]
+CREATE VIEW nome_vista AS
+SELECT colonne
+FROM tabelle
+WHERE condizioni;
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption=Esempi CREATE VIEW]
+-- Vista semplice: clienti attivi
+CREATE VIEW clientiAttivi AS
+SELECT idCliente, nome, cognome, email, città
+FROM cliente
+WHERE stato = 'Attivo';
+
+-- Vista con aggregazione: totale ordini per cliente
+CREATE VIEW totaleOrdiniPerCliente AS
+SELECT
+    c.idCliente,
+    c.nome,
+    c.cognome,
+    COUNT(o.idOrdine) AS numOrdini,
+    SUM(o.totale) AS totalSpeso,
+    AVG(o.totale) AS ordineMediano
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+GROUP BY c.idCliente, c.nome, c.cognome;
+
+-- Vista con JOIN: informazioni ordine complete
+CREATE VIEW ordineCompleto AS
+SELECT
+    o.idOrdine,
+    o.dataOrdine,
+    o.totale,
+    c.nome AS nomeCliente,
+    c.cognome AS cognomeCliente,
+    c.email,
+    p.nome AS nomeProdotto,
+    d.quantità,
+    d.prezzoUnitario,
+    d.subtotale
+FROM ordine o
+INNER JOIN cliente c ON o.idCliente = c.idCliente
+INNER JOIN dettaglioOrdine d ON o.idOrdine = d.idOrdine
+INNER JOIN prodotto p ON d.idProdotto = p.idProdotto;
+\end{lstlisting}
+
+\subsection{Usare le Viste}
+
+Le viste si usano come tabelle normali nella clausola FROM.
+
+\begin{lstlisting}[language=SQL, caption=Usare le Viste]
+-- Usare una vista come una tabella
+SELECT nome, cognome, email
+FROM clientiAttivi
+WHERE città = 'Milano';
+
+-- Aggregare dati da una vista
+SELECT SUM(totalSpeso) AS totalVendite
+FROM totaleOrdiniPerCliente
+WHERE numOrdini > 5;
+
+-- JOIN con una vista
+SELECT oc.nome, oc.numOrdini, oc.totalSpeso
+FROM ordineCompleto oc
+WHERE oc.totale > 100
+ORDER BY oc.totale DESC;
+\end{lstlisting}
+
+\subsection{Modificare le Viste}
+
+\subsubsection{ALTER VIEW}
+
+ALTER VIEW modifica la definizione di una vista esistente.
+
+\begin{lstlisting}[language=SQL, caption=ALTER VIEW]
+-- Modificare la definizione di una vista
+ALTER VIEW clientiAttivi AS
+SELECT idCliente, nome, cognome, email, città, dataRegistrazione
+FROM cliente
+WHERE stato = 'Attivo'
+AND dataRegistrazione > DATE_SUB(NOW(), INTERVAL 1 YEAR);
+\end{lstlisting}
+
+\subsubsection{DROP VIEW}
+
+DROP VIEW elimina una vista dal database.
+
+\begin{lstlisting}[language=SQL, caption=DROP VIEW]
+-- Eliminare una vista
+DROP VIEW clientiAttivi;
+
+-- Eliminare solo se esiste (evita errori)
+DROP VIEW IF EXISTS clientiAttivi;
+
+-- Eliminare multiple viste
+DROP VIEW IF EXISTS clientiAttivi, totaleOrdiniPerCliente, ordineCompleto;
+\end{lstlisting}
+
+\subsection{SHOW VIEWS}
+
+Per visualizzare tutte le viste nel database.
+
+\begin{lstlisting}[language=SQL, caption=Visualizzare le Viste]
+-- Elencare tutte le viste nel database attuale
+SHOW FULL TABLES WHERE table_type = 'VIEW';
+
+-- Visualizzare la definizione di una vista
+SHOW CREATE VIEW clientiAttivi;
+
+-- Interrogare il catalogo di sistema
+SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'database_name'
+AND TABLE_TYPE = 'VIEW';
+\end{lstlisting}
+
+\section{Viste Aggiornabili (Updatable Views)}
+
+Una vista è aggiornabile se contiene UPDATE o DELETE, purché soddisfi certe condizioni:
+\begin{itemize}
+    \item Nessun UNION, GROUP BY, HAVING, LIMIT
+    \item Nessuna subquery
+    \item Nessuna aggregazione
+    \item Può contenere solo una tabella (con JOIN non è aggiornabile)
+\end{itemize}
+
+\begin{lstlisting}[language=SQL, caption=Viste Aggiornabili]
+-- Vista aggiornabile: tutti i campi di cliente
+CREATE VIEW clientiViewAggiornabile AS
+SELECT idCliente, nome, cognome, email, città
+FROM cliente;
+
+-- Aggiornare tramite vista
+UPDATE clientiViewAggiornabile
+SET città = 'Roma'
+WHERE idCliente = 1;
+
+-- Equivalente all'aggiornamento della tabella sottostante
+UPDATE cliente SET città = 'Roma' WHERE idCliente = 1;
+
+-- Inserire tramite vista
+INSERT INTO clientiViewAggiornabile (nome, cognome, email, città)
+VALUES ('Rossi', 'Mario', 'mario@example.com', 'Milano');
+
+-- Vista NON aggiornabile (con GROUP BY)
+CREATE VIEW totaleOrdiniPerCliente AS
+SELECT
+    idCliente,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalSpeso
+FROM ordine
+GROUP BY idCliente;
+
+-- ERRORE: non è possibile aggiornare perché contiene GROUP BY
+-- UPDATE totaleOrdiniPerCliente SET numOrdini = 5 WHERE idCliente = 1;
+\end{lstlisting}
+
+\section{Viste Materialized (Snapshot)}
+
+Una vista materializzata è una copia dei dati della query salvata fisicamente nel database. È più veloce per query complesse, ma non è sempre aggiornata.
+
+\begin{lstlisting}[language=SQL, caption=Simulare Viste Materializzate]
+-- Creare una tabella per immagazzinare i dati della vista
+CREATE TABLE totaleOrdiniPerClienteMaterializzato AS
+SELECT
+    idCliente,
+    nome,
+    cognome,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalSpeso
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+GROUP BY idCliente, nome, cognome;
+
+-- Aggiornare periodicamente i dati (es. ogni notte)
+-- Cancellare i dati vecchi
+TRUNCATE TABLE totaleOrdiniPerClienteMaterializzato;
+
+-- Ricaricare i dati aggiornati
+INSERT INTO totaleOrdiniPerClienteMaterializzato
+SELECT
+    idCliente,
+    nome,
+    cognome,
+    COUNT(*) AS numOrdini,
+    SUM(totale) AS totalSpeso
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+GROUP BY idCliente, nome, cognome;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Vantaggi e Svantaggi Viste]
+\textbf{Vantaggi:}
+\begin{itemize}
+    \item Semplificano query complesse
+    \item Migliorano leggibilità
+    \item Facilitano manutenzione
+    \item Nascondono complessità
+\end{itemize}
+
+\textbf{Svantaggi:}
+\begin{itemize}
+    \item Prestazioni peggiori per query complicate (non materializate)
+    \item Difficili da debuggare
+    \item Dipendenze sulle tabelle sottostanti
+\end{itemize}
+\end{tcolorbox}
+
+\section{Riepilogo Concetti Chiave}
+
+\begin{description}
+    \item[\textbf{Subquery}] Query annidata che fornisce dati a un'altra query. Può essere scalare (1 valore), riga (1 riga) o tabella (più righe/colonne).
+    \item[\textbf{IN}] Operatore che verifica se un valore è in un insieme. Efficiente per piccoli set.
+    \item[\textbf{EXISTS}] Operatore che verifica se una subquery restituisce righe. Efficiente per grandi dataset.
+    \item[\textbf{ANY/ALL}] Operatori che confrontano un valore con qualsiasi/tutti i valori di un insieme.
+    \item[\textbf{Vista}] Query salvata che si comporta come una tabella virtuale.
+    \item[\textbf{Subquery Correlata}] Subquery che fa riferimento a colonne della query esterna.
+    \item[\textbf{Derived Table}] Subquery nella clausola FROM con alias.
+\end{description}

@@ -132,6 +132,48 @@ Best practice
 
 ---
 
+## Roadmap con Descrittori AI
+
+**Status**: 15 descrittori generati (14 Nov 2025) - **Coverage**: ~95% materiale
+
+### Fase 1 - Fondamenti (5 Descrittori)
+| Capitolo | Descrittori | Concetti |
+|----------|------------|----------|
+| 01_intro_html.tex | HTML-SEM-001, HTML-ACCESSO-001 | Semantica, Accessibilità |
+| 02_tag_blocco_riga.tex | - (coperto da HTML-SEM-001) | Block/inline |
+| 03_form_input.tex | HTML-FORM-001, HTML-INPUT-001 | Form, Input Types |
+| 04_css_base.tex | CSS-SEL-001, CSS-BOX-001 | Selettori, Box Model |
+
+### Fase 2 - Layout Avanzato (5 Descrittori)
+| Capitolo | Descrittori | Concetti |
+|----------|------------|----------|
+| 05_flexbox_grid.tex | CSS-FLEX-001, CSS-GRID-001 | Flexbox, Grid |
+| 06_responsive.tex | CSS-RESP-001 | Mobile-first, @media |
+| 07_sass_scss.tex | SCSS-VAR-001, SCSS-MIX-001 | Variabili, Mixins |
+
+### Fase 3 - JavaScript (5 Descrittori)
+| Capitolo | Descrittori | Concetti |
+|----------|------------|----------|
+| 09_javascript_dom.tex | JS-DOM-001, JS-EVENT-001 | DOM, Events |
+| 10_javascript_async.tex | JS-FETCH-001 | Fetch, Async/await |
+
+### Descrittori per Livello di Difficoltà
+- **Beginner** (6): HTML-SEM-001, HTML-FORM-001, HTML-INPUT-001, CSS-SEL-001, CSS-BOX-001, CSS-PSEUDO-001
+- **Intermediate** (9): HTML-ACCESSO-001, CSS-FLEX-001, CSS-GRID-001, CSS-RESP-001, SCSS-VAR-001, SCSS-MIX-001, JS-DOM-001, JS-EVENT-001, JS-FETCH-001
+
+### Utilizzo per Generazione Esercizi
+Ogni descrittore contiene:
+- Spiegazione teorica dettagliata
+- 1 code example funzionante
+- 2-3 errori comuni da evitare
+- 2-3 best practices
+- 3-5 learning objectives
+- Concetti correlati per approfondimento
+
+**Possibilità**: Generare automaticamente quiz, esercizi e verifiche basate sui descrittori.
+
+---
+
 ## Mapping HTML/CSS ↔ Java/C
 
 | Concetto Java | Equivalente HTML/CSS | Equivalente C |

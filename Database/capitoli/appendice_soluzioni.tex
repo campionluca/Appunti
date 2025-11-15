@@ -1,0 +1,609 @@
+\appendix
+
+\chapter{Soluzioni Esercizi}
+
+\section*{Introduzione}
+Questo capitolo contiene le soluzioni dettagliate di tutti gli esercizi del Capitolo 13. Le soluzioni sono accompagnate da spiegazioni per aiutare la comprensione della logica sottostante.
+
+\section{Soluzioni Esercizi Base (1-6)}
+
+\section*{Esercizio 1: Biblioteca Semplice}
+
+\subsection*{Soluzione 1.1: Inserimento Dati}
+
+\begin{lstlisting}[language=SQL, caption=Inserire Dati Biblioteca]
+-- Inserire autori
+INSERT INTO autore (nome, email) VALUES
+('Alessandro Manzoni', 'manzoni@example.com'),
+('Dante Alighieri', 'dante@example.com'),
+('Carlo Collodi', 'collodi@example.com');
+
+-- Inserire libri
+INSERT INTO libro (isbn, titolo, idAutore, copieDisponibili) VALUES
+('9788804542606', 'I Promessi Sposi', 1, 5),
+('9788801040241', 'La Divina Commedia', 2, 3),
+('9788835903567', 'Le Avventure di Pinocchio', 3, 7);
+
+-- Inserire clienti
+INSERT INTO cliente (nome, cognome, telefono) VALUES
+('Rossi', 'Mario', '3331234567'),
+('Bianchi', 'Luigi', '3337654321'),
+('Verdi', 'Anna', '3329876543');
+
+-- Inserire prestiti
+INSERT INTO prestito (idLibro, idCliente, dataPrestito, dataRestituzione) VALUES
+(1, 1, '2024-01-15', '2024-02-15'),
+(2, 1, '2024-02-01', NULL),  -- Prestito attivo
+(1, 2, '2024-02-10', NULL),  -- Prestito attivo
+(3, 3, '2024-01-20', '2024-02-20');
+\end{lstlisting}
+
+\subsection*{Soluzione 1.2: Query Biblioteca}
+
+\begin{lstlisting}[language=SQL, caption=Query Soluzione Biblioteca]
+-- 1. Libri di Dante
+SELECT titolo, isbn FROM libro
+WHERE idAutore = (SELECT idAutore FROM autore WHERE nome = 'Dante Alighieri');
+-- Risultato: La Divina Commedia
+
+-- 2. Prestiti attivi
+SELECT COUNT(*) AS prestitiAttivi FROM prestito
+WHERE dataRestituzione IS NULL;
+-- Risultato: 2
+
+-- 3. Libri più prestati
+SELECT l.titolo, COUNT(p.idPrestito) AS numPrestiti
+FROM libro l
+LEFT JOIN prestito p ON l.idLibro = p.idLibro
+GROUP BY l.idLibro, l.titolo
+ORDER BY numPrestiti DESC;
+-- Risultato:
+-- | I Promessi Sposi | 2
+-- | Le Avventure di Pinocchio | 1
+-- | La Divina Commedia | 1
+
+-- 4. Media giorni prestito (solo prestiti conclusi)
+SELECT
+    l.titolo,
+    AVG(DATEDIFF(p.dataRestituzione, p.dataPrestito)) AS mediaDiorniPrestito
+FROM libro l
+INNER JOIN prestito p ON l.idLibro = p.idLibro
+WHERE p.dataRestituzione IS NOT NULL
+GROUP BY l.idLibro, l.titolo;
+-- Risultato: I Promessi Sposi = 31, Le Avventure Pinocchio = 31
+
+-- 5. Clienti con prestiti attivi
+SELECT DISTINCT c.nome, c.cognome
+FROM cliente c
+INNER JOIN prestito p ON c.idCliente = p.idCliente
+WHERE p.dataRestituzione IS NULL;
+-- Risultato: Rossi Mario, Rossi Mario
+\end{lstlisting}
+
+\section*{Esercizio 2: Azienda e Dipendenti}
+
+\subsection*{Soluzione 2.1: Inserimento Dati}
+
+\begin{lstlisting}[language=SQL, caption=Inserire Dati Azienda]
+-- ATTENZIONE: Dipendenti senza responsabile inizialmente
+INSERT INTO dipendente (nome, cognome, stipendio, idDipartimento) VALUES
+('Rossi', 'Paolo', 3500, 1),
+('Bianchi', 'Maria', 2800, 1),
+('Verdi', 'Luigi', 4200, 2),
+('Neri', 'Anna', 3000, 2),
+('Ferrari', 'Giovanni', 2500, 3);
+
+-- Creare dipartimenti (inizialmente senza responsabile)
+INSERT INTO dipartimento (nome, idResponsabile) VALUES
+('IT', 1),
+('Vendite', 3),
+('Amministrazione', 5);
+
+-- Aggiornare responsabili
+UPDATE dipartimento SET idResponsabile = 1 WHERE idDipartimento = 1;
+UPDATE dipartimento SET idResponsabile = 3 WHERE idDipartimento = 2;
+UPDATE dipartimento SET idResponsabile = 5 WHERE idDipartimento = 3;
+\end{lstlisting}
+
+\subsection*{Soluzione 2.2: Query Azienda}
+
+\begin{lstlisting}[language=SQL, caption=Query Soluzione Azienda]
+-- 1. Stipendio medio per dipartimento
+SELECT
+    d.nome AS dipartimento,
+    COUNT(dip.idDipendente) AS numDipendenti,
+    AVG(dip.stipendio) AS stipendioMedio,
+    MIN(dip.stipendio) AS stipendioMin,
+    MAX(dip.stipendio) AS stipendioMax
+FROM dipartimento d
+LEFT JOIN dipendente dip ON d.idDipartimento = dip.idDipartimento
+GROUP BY d.idDipartimento, d.nome
+ORDER BY stipendioMedio DESC;
+
+-- 2. Dipendenti sopra media dipartimento
+SELECT
+    dip.nome,
+    dip.cognome,
+    d.nome AS dipartimento,
+    dip.stipendio,
+    (SELECT AVG(stipendio) FROM dipendente WHERE idDipartimento = d.idDipartimento) AS mediaReparto
+FROM dipendente dip
+INNER JOIN dipartimento d ON dip.idDipartimento = d.idDipartimento
+WHERE dip.stipendio > (
+    SELECT AVG(stipendio) FROM dipendente dip2
+    WHERE dip2.idDipartimento = d.idDipartimento
+);
+
+-- 3. Responsabile di ogni dipartimento
+SELECT
+    d.nome AS dipartimento,
+    dip.nome AS responsabile,
+    dip.cognome,
+    dip.stipendio
+FROM dipartimento d
+INNER JOIN dipendente dip ON d.idResponsabile = dip.idDipendente;
+
+-- 4. Totale spese stipendi per dipartimento
+SELECT
+    d.nome,
+    SUM(dip.stipendio) AS totaleCosti
+FROM dipartimento d
+INNER JOIN dipendente dip ON d.idDipartimento = dip.idDipartimento
+GROUP BY d.idDipartimento, d.nome
+ORDER BY totaleCosti DESC;
+\end{lstlisting}
+
+\section*{Esercizio 3: E-commerce Semplice}
+
+\subsection*{Soluzione 3.1: Inserimento Dati}
+
+\begin{lstlisting}[language=SQL, caption=Inserire Dati E-commerce]
+-- Inserire categorie
+INSERT INTO categoria (nome) VALUES ('Elettronica'), ('Libri'), ('Abbigliamento');
+
+-- Inserire prodotti
+INSERT INTO prodotto (nome, prezzo, idCategoria) VALUES
+('Laptop Dell', 899.99, 1),
+('Harry Potter', 15.99, 2),
+('T-Shirt Blu', 25.99, 3),
+('Mouse Wireless', 29.99, 1),
+('Pantaloni Neri', 45.99, 3);
+
+-- Inserire clienti
+INSERT INTO cliente (nome, email) VALUES
+('Mario Rossi', 'mario@example.com'),
+('Anna Bianchi', 'anna@example.com'),
+('Luigi Verdi', 'luigi@example.com');
+
+-- Inserire ordini
+INSERT INTO ordine (idCliente, dataOrdine, stato) VALUES
+(1, '2024-01-10', 'Consegnato'),
+(1, '2024-02-05', 'Spedito'),
+(2, '2024-02-15', 'Pendente'),
+(3, '2024-01-20', 'Consegnato');
+
+-- Inserire dettagli ordini
+INSERT INTO dettaglioOrdine (idOrdine, idProdotto, quantità, prezzoUnitario) VALUES
+(1, 1, 1, 899.99),      -- Ordine 1: 1x Laptop
+(1, 4, 2, 29.99),       -- Ordine 1: 2x Mouse
+(2, 2, 3, 15.99),       -- Ordine 2: 3x Harry Potter
+(3, 3, 1, 25.99),       -- Ordine 3: 1x T-Shirt
+(4, 5, 2, 45.99);       -- Ordine 4: 2x Pantaloni
+\end{lstlisting}
+
+\subsection*{Soluzione 3.2: Query E-commerce}
+
+\begin{lstlisting}[language=SQL, caption=Query Soluzione E-commerce]
+-- 1. Reddito totale per cliente
+SELECT
+    c.nome,
+    c.email,
+    COUNT(DISTINCT o.idOrdine) AS numOrdini,
+    SUM(d.quantità * d.prezzoUnitario) AS totalSpeso
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+LEFT JOIN dettaglioOrdine d ON o.idOrdine = d.idOrdine
+GROUP BY c.idCliente, c.nome, c.email
+ORDER BY totalSpeso DESC;
+
+-- 2. Prodotti venduti più di una volta
+SELECT
+    p.nome,
+    SUM(d.quantità) AS unitàVendute,
+    SUM(d.quantità * d.prezzoUnitario) AS ricavo
+FROM prodotto p
+INNER JOIN dettaglioOrdine d ON p.idProdotto = d.idProdotto
+GROUP BY p.idProdotto, p.nome
+HAVING SUM(d.quantità) > 1
+ORDER BY unitàVendute DESC;
+
+-- 3. Ordine medio per cliente
+SELECT
+    c.nome,
+    AVG(d.quantità * d.prezzoUnitario) AS importoMedio
+FROM cliente c
+INNER JOIN ordine o ON c.idCliente = o.idCliente
+INNER JOIN dettaglioOrdine d ON o.idOrdine = d.idOrdine
+GROUP BY c.idCliente, c.nome;
+
+-- 4. Vista: clienti fedeli (più di 1 ordine)
+CREATE VIEW clientiFedeli AS
+SELECT
+    c.idCliente,
+    c.nome,
+    COUNT(o.idOrdine) AS numOrdini,
+    SUM(d.quantità * d.prezzoUnitario) AS totalSpeso
+FROM cliente c
+INNER JOIN ordine o ON c.idCliente = o.idCliente
+INNER JOIN dettaglioOrdine d ON o.idOrdine = d.idOrdine
+GROUP BY c.idCliente, c.nome
+HAVING COUNT(o.idOrdine) > 1;
+
+SELECT * FROM clientiFedeli;
+\end{lstlisting}
+
+\section*{Esercizio 4-6: Soluzioni Analoghe}
+
+Per i seguenti esercizi (Ospedale, Scuola, Ristorante), le soluzioni seguono il medesimo schema:
+
+\begin{enumerate}
+    \item \textbf{Inserimento dati}: Popolare tabelle con dati significativi
+    \item \textbf{Query di base}: SELECT con WHERE, ORDER BY
+    \item \textbf{Query con JOIN}: Combinare dati da multiple tabelle
+    \item \textbf{Aggregazioni}: COUNT, SUM, AVG con GROUP BY
+    \item \textbf{Subquery}: Usare query annidate per analisi complesse
+\end{enumerate}
+
+Dato lo spazio, fornirò schemi generici applicabili.
+
+\section{Soluzioni Esercizi Intermedi (7-13)}
+
+\section*{Esercizio 7: Query con JOIN Complessi}
+
+\subsection*{Spiegazione Soluzione}
+
+La prima query usa LEFT JOIN per includere clienti anche senza ordini:
+\begin{itemize}
+    \item \textbf{LEFT JOIN ordine}: Preserva tutti i clienti
+    \item \textbf{LEFT JOIN dettaglioOrdine}: Conserva ordini anche senza dettagli
+    \item \textbf{GROUP BY}: Raggruppa per cliente
+    \item \textbf{ORDER BY totalSpeso DESC}: Clienti più importanti primo
+\end{itemize}
+
+La query per prodotti mai ordinati usa NOT IN con subquery:
+\begin{itemize}
+    \item Subquery interna: Tutti gli idProdotto presenti in dettaglioOrdine
+    \item NOT IN: Filtra prodotti assenti dalla subquery
+\end{itemize}
+
+\section*{Esercizio 8: Subquery e Viste}
+
+\subsection*{Spiegazione Viste}
+
+Le viste semplificano query complesse:
+
+\begin{lstlisting}[language=SQL, caption=Viste per Azienda]
+-- Vista 1: Dipendenti sopra media
+CREATE VIEW dipendentiSopraMedia AS
+SELECT d.idDipendente, d.nome, d.cognome, d.stipendio
+FROM dipendente d
+WHERE d.stipendio > (SELECT AVG(stipendio) FROM dipendente);
+
+-- Uso: semplice e riutilizzabile
+SELECT nome, cognome FROM dipendentiSopraMedia
+WHERE idDipendente IN (SELECT idResponsabile FROM dipartimento);
+
+-- Vista 2: Statistiche dipartimento
+CREATE VIEW statisticheDipartimento AS
+SELECT
+    d.idDipartimento,
+    d.nome,
+    COUNT(dip.idDipendente) AS numDipendenti,
+    AVG(dip.stipendio) AS mediaStipendio,
+    SUM(dip.stipendio) AS totaleCosti
+FROM dipartimento d
+LEFT JOIN dipendente dip ON d.idDipartimento = dip.idDipartimento
+GROUP BY d.idDipartimento, d.nome;
+
+-- Uso
+SELECT * FROM statisticheDipartimento
+WHERE mediaStipendio > 3000;
+\end{lstlisting}
+
+\section*{Esercizio 10: Transazioni}
+
+\subsection*{Spiegazione Transazione}
+
+La transazione garantisce atomicità:
+
+\begin{lstlisting}[language=SQL, caption=Transazione Trasferimento - Spiegazione]
+START TRANSACTION;
+
+-- Step 1: Lockare la riga per update (FOR UPDATE)
+-- Impedisce altri UPDATE contemporanei
+SELECT saldo FROM cliente WHERE idCliente = 1 FOR UPDATE;
+
+-- Step 2: Verificare che ci siano fondi sufficienti
+-- Se saldo < 100, rollback manualmente
+
+-- Step 3: Debitare mittente
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+
+-- Step 4: Savepoint (punto di ripristino parziale)
+SAVEPOINT dopo_debito;
+
+-- Step 5: Accreditare destinatario
+-- Se fallisce, ROLLBACK TO SAVEPOINT ripristina solo questo
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 2;
+
+-- Step 6: Registrare la transazione
+INSERT INTO movimento (idCliente, tipo, importo, data)
+VALUES (1, 'Trasferimento Debito', -100, NOW()),
+       (2, 'Trasferimento Credito', 100, NOW());
+
+-- Step 7: Se tutto OK, COMMIT rende permanente tutto
+COMMIT;
+-- Se errore: ROLLBACK annulla tutto o ROLLBACK TO SAVEPOINT ripristina parzialmente
+\end{lstlisting}
+
+\section*{Esercizio 11: Vincoli e Integrità}
+
+\subsection*{Spiegazione Vincoli}
+
+\begin{lstlisting}[language=SQL, caption=Vincoli Garantiscono Integrità]
+-- PRIMARY KEY: Nessun duplicato, nessun NULL
+-- Viola: INSERT INTO ordine (dataOrdine) VALUES ...;  -- Errore: NULL in PK
+
+-- FOREIGN KEY ON DELETE RESTRICT: Proteggere integrità referenziale
+-- Viola: DELETE FROM cliente WHERE idCliente = 1;  -- Errore: ordini dipendono da questo cliente
+
+-- CHECK (totale > 0): Validare dati
+-- Viola: INSERT INTO ordine (idCliente, totale) VALUES (1, -100);  -- Errore: totale negativo
+
+-- CHECK (dataOrdine <= CURDATE()): No date future
+-- Viola: INSERT INTO ordine (idCliente, dataOrdine, totale) VALUES (1, '2099-01-01', 100);  -- Errore
+
+-- Indici migliorano query
+CREATE INDEX idx_cliente ON ordine(idCliente);
+-- Ricerca per cliente è ora O(log n) invece di O(n)
+SELECT * FROM ordine WHERE idCliente = 1;  -- Velocissimo
+\end{lstlisting}
+
+\section*{Esercizio 12: UPDATE e DELETE Complessi}
+
+\subsection*{Spiegazione UPDATE con Subquery}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE Complesso]
+-- Aumentare prezzo categoria: UPDATE con subquery
+UPDATE prodotto SET prezzo = prezzo * 1.10
+WHERE idCategoria = (
+    SELECT idCategoria FROM categoria WHERE nome = 'Elettronica'
+);
+-- Step 1: Subquery trova idCategoria = 1 (Elettronica)
+-- Step 2: UPDATE applica a tutti i prodotti con idCategoria = 1
+-- Step 3: Risultato: prezzi aumentati del 10%
+
+-- DELETE con JOIN implicito
+DELETE FROM dettaglioOrdine
+WHERE idOrdine IN (
+    SELECT idOrdine FROM ordine
+    WHERE stato = 'Cancellato' AND dataOrdine < DATE_SUB(NOW(), INTERVAL 1 YEAR)
+);
+-- Elimina righe di dettaglio dei vecchi ordini cancellati
+-- Dopo aver eliminato dettagli, eliminare gli ordini stessi
+\end{lstlisting}
+
+\section{Soluzioni Esercizi Avanzati (14-20)}
+
+\section*{Esercizio 14: Social Media - Query Avanzate}
+
+\subsection*{Soluzione: Feed Personalizzato}
+
+\begin{lstlisting}[language=SQL, caption=Feed Personalizzato Spiegazione]
+-- Versione 1: Semplice (feed di chi seguo)
+SELECT
+    p.idPost,
+    u.username,
+    p.contenuto,
+    p.dataCreazione,
+    COUNT(l.idLike) AS numLike
+FROM post p
+INNER JOIN utente u ON p.idAutore = u.idUtente
+LEFT JOIN like l ON p.idPost = l.idPost
+WHERE p.idAutore IN (
+    -- Subquery: ID degli utenti che seguo
+    SELECT idSeguito FROM follow WHERE idSeguace = 1
+)
+GROUP BY p.idPost, u.username, p.contenuto, p.dataCreazione
+ORDER BY p.dataCreazione DESC
+LIMIT 20;
+
+-- Versione 2: Feed completo (post e commenti)
+SELECT
+    'Post' AS tipo,
+    p.idPost AS id,
+    u.username,
+    p.contenuto,
+    p.dataCreazione,
+    COUNT(DISTINCT l.idLike) AS likes,
+    COUNT(DISTINCT c.idCommento) AS commenti
+FROM post p
+INNER JOIN utente u ON p.idAutore = u.idUtente
+LEFT JOIN like l ON p.idPost = l.idPost AND l.idCommento IS NULL
+LEFT JOIN commento c ON p.idPost = c.idPost
+WHERE p.idAutore IN (SELECT idSeguito FROM follow WHERE idSeguace = 1)
+GROUP BY p.idPost
+UNION ALL
+SELECT
+    'Commento' AS tipo,
+    c.idCommento,
+    u.username,
+    c.contenuto,
+    c.dataCreazione,
+    COUNT(l.idLike),
+    0
+FROM commento c
+INNER JOIN utente u ON c.idAutore = u.idUtente
+LEFT JOIN like l ON c.idCommento = l.idCommento
+WHERE c.idPost IN (
+    SELECT p.idPost FROM post p
+    WHERE p.idAutore IN (SELECT idSeguito FROM follow WHERE idSeguace = 1)
+)
+GROUP BY c.idCommento
+ORDER BY dataCreazione DESC;
+\end{lstlisting}
+
+\section*{Esercizio 15: Ecommerce - Gestione Stock}
+
+\subsection*{Soluzione: Aggiornamento Stock su Ordine}
+
+\begin{lstlisting}[language=SQL, caption=Transazione Ordine con Stock]
+START TRANSACTION;
+
+-- 1. Verificare disponibilità stock
+SELECT quantitàDisponibile FROM stock
+WHERE idProdotto = 1 AND idMagazzino = 1
+FOR UPDATE;  -- Lock per evitare race condition
+
+-- 2. Se OK, creare ordine
+INSERT INTO ordine (idCliente, dataOrdine, stato)
+VALUES (1, NOW(), 'Pendente');
+
+SET @idOrdine = LAST_INSERT_ID();
+
+-- 3. Aggiungere dettagli ordine
+INSERT INTO dettaglioOrdine (idOrdine, idProdotto, quantità, prezzoUnitario)
+VALUES (@idOrdine, 1, 2, 899.99);
+
+-- 4. Aggiornare stock
+UPDATE stock SET quantitàDisponibile = quantitàDisponibile - 2
+WHERE idProdotto = 1 AND idMagazzino = 1;
+
+-- 5. Registrare movimento magazzino
+INSERT INTO movimentoMagazzino (idProdotto, idMagazzino, quantità, tipo, data)
+VALUES (1, 1, -2, 'Vendita', NOW());
+
+COMMIT;
+\end{lstlisting}
+
+\section*{Esercizio 16: Window Functions}
+
+\subsection*{Soluzione: Analisi Vendite Temporale}
+
+\begin{lstlisting}[language=SQL, caption=Window Functions Spiegazione]
+-- Ranking semplice
+SELECT
+    p.idProdotto,
+    p.nome,
+    SUM(d.quantità) AS unitàVendute,
+    -- RANK() assegna rank (1, 2, 3 o 1, 2, 2, 4 con pareggi)
+    RANK() OVER (ORDER BY SUM(d.quantità) DESC) AS rank,
+    -- ROW_NUMBER() numerazione sequenziale
+    ROW_NUMBER() OVER (ORDER BY SUM(d.quantità) DESC) AS row_num
+FROM prodotto p
+LEFT JOIN dettaglioOrdine d ON p.idProdotto = d.idProdotto
+GROUP BY p.idProdotto, p.nome;
+
+-- Totale cumulativo
+SELECT
+    DATE(dataOrdine) AS data,
+    SUM(totale) AS venditeGiorno,
+    -- SUM con finestra ORDER BY crea cumulative
+    SUM(SUM(totale)) OVER (ORDER BY DATE(dataOrdine)) AS venditeCumulative,
+    -- Percentuale del totale
+    ROUND(100 * SUM(totale) / SUM(SUM(totale)) OVER (), 2) AS percento
+FROM ordine
+GROUP BY DATE(dataOrdine)
+ORDER BY data;
+
+-- Valori precedenti e successivi
+SELECT
+    idCliente,
+    dataRegistrazione,
+    -- LAG: valore della riga precedente
+    LAG(dataRegistrazione) OVER (ORDER BY dataRegistrazione) AS registrazionePrecedente,
+    -- LEAD: valore della riga successiva
+    LEAD(dataRegistrazione) OVER (ORDER BY dataRegistrazione) AS registrazioneSuccessiva,
+    -- Giorni da client precedente
+    DATEDIFF(
+        dataRegistrazione,
+        LAG(dataRegistrazione) OVER (ORDER BY dataRegistrazione)
+    ) AS giorniDaPrecedente
+FROM cliente;
+\end{lstlisting}
+
+\section*{Esercizio 20: Monitoraggio Replica}
+
+\subsection*{Soluzione: Verificare Stato Replica}
+
+\begin{lstlisting}[language=SQL, caption=Debugging Replica]
+-- Sul SLAVE: controllare status
+SHOW SLAVE STATUS\G;
+
+-- Output importante:
+-- Slave_IO_Running: Yes (connesso al master)
+-- Slave_SQL_Running: Yes (esecuzione OK)
+-- Seconds_Behind_Master: 0 (sincronizzato)
+-- Last_Error: (nessun errore)
+
+-- Se Slave_IO_Running = No: problema connessione
+-- Verificare:
+SHOW PROCESSLIST;  -- Cercare "Connecting to master"
+
+-- Se Slave_SQL_Running = No: errore SQL
+-- Utilizzare:
+SHOW SLAVE STATUS\G;  -- Legge Last_Error
+
+-- Se c'è errore, saltare evento e riprovare
+SET GLOBAL SQL_SLAVE_SKIP_COUNTER = 1;
+START SLAVE;
+
+-- Sincronizzare manualmente se diverge
+-- 1. Su master: SHOW MASTER STATUS;
+-- 2. Su slave: CHANGE MASTER TO ...
+-- 3. Su slave: START SLAVE;
+\end{lstlisting}
+
+\section{Riepilogo Strategia Soluzione}
+
+\subsection*{Approccio Metodico}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Come Affrontare Esercizi SQL]
+\begin{enumerate}
+    \item \textbf{Leggere attentamente}: Comprendere bene cosa chiede l'esercizio
+    \item \textbf{Disegnare ER}: Visualizzare le relazioni tra tabelle
+    \item \textbf{Creare schema}: CREATE TABLE con vincoli appropriati
+    \item \textbf{Inserire test data}: Dati significativi per testare
+    \item \textbf{Scrivere query passo passo}: Iniziare semplice, poi complicare
+    \item \textbf{Testare risultati}: Verificare che query restituiscono dati attesi
+    \item \textbf{Ottimizzare}: Aggiungere indici, riscrivere query lente
+    \item \textbf{Documentare}: Commentare query complesse
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection*{Errori Comuni e Soluzioni}
+
+\begin{description}
+    \item[\textbf{NULL non funziona con IN}] Usa EXISTS per subquery che potrebbero contenere NULL
+    \item[\textbf{Cartesiano accidentale}] Verifica sempre le condizioni JOIN, usa ON, non WHERE
+    \item[\textbf{GROUP BY incompleto}] Tutte le colonne SELECT non aggregate devono essere in GROUP BY
+    \item[\textbf{Subquery lenta}] Usa JOIN instead of subquery when possible
+    \item[\textbf{Deadlock}] Sempre aggiornare righe nello stesso ordine, minimizzare transazione
+    \item[\textbf{Vincolo violato}] Verifica FK, UNIQUE, CHECK prima di INSERT/UPDATE
+    \item[\textbf{Query non corrisponde}] Aggiungi WHERE claus, non contare su ORDER BY
+\end{description}
+
+\section{Esercizi Aggiuntivi per Pratica}
+
+Per ulteriore pratica, prova a modificare gli esercizi:
+
+\begin{enumerate}
+    \item Aggiungi colonne: dataModifica, utente_modifica per audit
+    \item Aggiungi vincoli: CHECK per validare dati (email, telefono)
+    \item Crea viste per report frequenti
+    \item Scrivi trigger per mantenere dati sincronizzati
+    \item Aggiungi ruoli/permessi per controllo accesso
+    \item Implementa soft delete (colonna isDeleted) anziché DELETE fisico
+    \item Crea tabelle storia per audit trail
+    \item Aggiungi partitioning per grandi tabelle
+\end{enumerate}

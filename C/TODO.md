@@ -26,6 +26,40 @@
 
 ---
 
+## 📊 Stato Descrittori
+
+**Status**: ✅ COMPLETATO (14 Nov 2025)
+
+### Metriche Descrittori
+- **Total**: 15 concept descriptors creati
+- **Language Basics**: 5 (33.3%) - Variabili, Tipi, Operatori, I/O, Costanti
+- **Control Structures**: 4 (26.7%) - If/else, Switch, Cicli, Break/Continue
+- **Pointers & Memory**: 3 (20.0%) - Puntatori base, Funzioni, Allocazione dinamica
+- **Functions & Scope**: 2 (13.3%) - Definizione, Scope
+- **I/O**: 1 - Coperto in examples
+
+### Livelli di Difficoltà
+- **Beginner**: 9 concepts (60%)
+- **Intermediate**: 6 concepts (40%)
+- **Advanced**: 0 concepts (0%)
+
+### File Generati
+- `C_DESCRIPTORS_REPORT.json` - Report completo con metadati
+- `C_COVERAGE_ANALYSIS.md` - Analisi dettagliata della copertura
+- `C_CONCEPT_IDS.md` - Lista concept IDs per ogni categoria
+
+### Esempi Commentati Creati
+- 7 esempi completi e commentati
+- 238 righe di codice totali
+- Tutti testati e funzionanti
+
+### Cobertura Capitoli
+- 11/11 capitoli principali analizzati (100%)
+- 7/11 capitoli con descriptors dedicati
+- Argomenti avanzati (Makefile, GDB) integrati nei tips
+
+---
+
 ## Task Completati (Archivio)
 
 ### Struttura Progetto

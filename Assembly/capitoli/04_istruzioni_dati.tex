@@ -1,0 +1,253 @@
+\chapter{Istruzioni di Trasferimento Dati}
+
+\section{Introduzione}
+
+Le istruzioni di trasferimento dati spostano informazioni tra registri, memoria e porte I/O senza modificarne il contenuto. Sono le istruzioni più utilizzate in Assembly e costituiscono la base di ogni programma.
+
+\section{MOV --- Move Data}
+
+\begin{definizione}
+\texttt{MOV dest, src} copia il valore di \texttt{src} in \texttt{dest}. L'operando sorgente rimane invariato.
+\end{definizione}
+
+\textbf{Sintassi}:
+\begin{lstlisting}
+MOV registro, registro
+MOV registro, memoria
+MOV memoria, registro
+MOV registro, immediato
+MOV memoria, immediato
+\end{lstlisting}
+
+\textbf{Restrizioni}:
+\begin{itemize}
+    \item Non è consentito MOV memoria, memoria
+    \item Non è consentito MOV segmento, immediato
+    \item Gli operandi devono avere la stessa dimensione
+\end{itemize}
+
+\begin{esempio}
+\begin{lstlisting}
+MOV AX, 1234h      ; AX = 1234h
+MOV BX, AX         ; BX = AX = 1234h
+MOV CL, 5          ; CL = 5
+MOV [1000h], AL    ; Memoria DS:1000h = AL
+
+; ERRORI:
+; MOV AX, BL       ; Dimensioni diverse!
+; MOV DS, 1000h    ; No immediato in segmento!
+; MOV [SI], [DI]   ; No mem-to-mem!
+\end{lstlisting}
+\end{esempio}
+
+\section{XCHG --- Exchange}
+
+Scambia il contenuto di due operandi.
+
+\begin{lstlisting}
+XCHG AX, BX        ; Scambia AX con BX
+XCHG AL, [SI]      ; Scambia AL con byte in DS:SI
+XCHG CX, DX        ; Scambia CX con DX
+\end{lstlisting}
+
+\begin{nota}
+\texttt{XCHG} è più veloce di tre MOV separate per lo scambio. Non può essere usato con valori immediati.
+\end{nota}
+
+\section{LEA --- Load Effective Address}
+
+Carica l'indirizzo effettivo (offset) di un operando in un registro.
+
+\begin{lstlisting}
+.DATA
+buffer DB 100 DUP(0)
+
+.CODE
+LEA BX, buffer     ; BX = offset di buffer (equivalente a OFFSET)
+LEA SI, [BX+10]    ; SI = BX + 10 (calcolo offset)
+\end{lstlisting}
+
+\textbf{Differenza tra LEA e OFFSET}:
+\begin{lstlisting}
+MOV BX, OFFSET var    ; BX = indirizzo di var (compile-time)
+LEA BX, var           ; BX = indirizzo di var (run-time)
+LEA SI, [BX+DI+4]     ; OFFSET non può fare calcoli run-time!
+\end{lstlisting}
+
+\section{PUSH e POP --- Stack Operations}
+
+\subsection{PUSH}
+
+Inserisce un valore nello stack.
+
+\begin{lstlisting}
+PUSH AX            ; Decrementa SP di 2, salva AX
+PUSH BX
+PUSH DS
+PUSH 1234h         ; (solo 80186+)
+\end{lstlisting}
+
+\textbf{Operazione}:
+\begin{enumerate}
+    \item SP = SP - 2
+    \item Memoria[SS:SP] = operando
+\end{enumerate}
+
+\subsection{POP}
+
+Estrae un valore dallo stack.
+
+\begin{lstlisting}
+POP AX             ; Carica AX da stack, incrementa SP di 2
+POP DS
+POP word ptr [BX]
+\end{lstlisting}
+
+\textbf{Operazione}:
+\begin{enumerate}
+    \item Operando = Memoria[SS:SP]
+    \item SP = SP + 2
+\end{enumerate}
+
+\begin{attenzione}
+Lo stack cresce verso indirizzi decrescenti! \texttt{PUSH} decrementa SP, \texttt{POP} incrementa SP.
+\end{attenzione}
+
+\begin{esempio}
+Salvare e ripristinare registri:
+\begin{lstlisting}
+; Salva contesto
+PUSH AX
+PUSH BX
+PUSH CX
+
+; Usa registri per operazioni
+MOV AX, 100
+ADD BX, AX
+
+; Ripristina contesto (ordine inverso!)
+POP CX
+POP BX
+POP AX
+\end{lstlisting}
+\end{esempio}
+
+\section{PUSHF e POPF --- Flag Operations}
+
+\begin{lstlisting}
+PUSHF              ; Salva registro FLAGS nello stack
+POPF               ; Ripristina FLAGS dallo stack
+\end{lstlisting}
+
+Utile per salvare lo stato dei flag prima di operazioni che li modificano.
+
+\section{Istruzioni di I/O}
+
+\subsection{IN --- Input from Port}
+
+\begin{lstlisting}
+IN AL, porta       ; Legge byte da porta (0-255)
+IN AX, porta       ; Legge word da porta
+IN AL, DX          ; Legge da porta in DX (0-65535)
+IN AX, DX
+\end{lstlisting}
+
+\subsection{OUT --- Output to Port}
+
+\begin{lstlisting}
+OUT porta, AL      ; Scrive byte su porta
+OUT porta, AX      ; Scrive word su porta
+OUT DX, AL         ; Scrive su porta in DX
+OUT DX, AX
+\end{lstlisting}
+
+\begin{esempio}
+Lettura e scrittura porta I/O:
+\begin{lstlisting}
+; Legge da porta 60h (tastiera)
+IN AL, 60h         ; AL = scan code
+
+; Scrive su porta 3F8h (COM1)
+MOV DX, 3F8h
+MOV AL, 'A'
+OUT DX, AL         ; Invia 'A' alla seriale
+\end{lstlisting}
+\end{esempio}
+
+\section{XLAT --- Translate}
+
+Traduce un byte usando una tabella di lookup.
+
+\begin{lstlisting}
+XLAT               ; AL = DS:[BX+AL]
+\end{lstlisting}
+
+\begin{esempio}
+Conversione da esadecimale a ASCII:
+\begin{lstlisting}
+.DATA
+hex_table DB '0123456789ABCDEF'
+
+.CODE
+MOV BX, OFFSET hex_table
+MOV AL, 0Ah        ; Valore 10
+XLAT               ; AL = 'A' (hex_table[10])
+\end{lstlisting}
+\end{esempio}
+
+\section{Riepilogo istruzioni}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llp{6cm}}
+\toprule
+\textbf{Istruzione} & \textbf{Sintassi} & \textbf{Descrizione} \\
+\midrule
+MOV & \texttt{MOV dest, src} & Copia dati \\
+XCHG & \texttt{XCHG op1, op2} & Scambia operandi \\
+LEA & \texttt{LEA reg, mem} & Carica indirizzo effettivo \\
+PUSH & \texttt{PUSH operando} & Inserisce nello stack \\
+POP & \texttt{POP operando} & Estrae dallo stack \\
+PUSHF & \texttt{PUSHF} & Salva FLAGS \\
+POPF & \texttt{POPF} & Ripristina FLAGS \\
+IN & \texttt{IN AL/AX, porta} & Input da porta \\
+OUT & \texttt{OUT porta, AL/AX} & Output su porta \\
+XLAT & \texttt{XLAT} & Traduce byte con tabella \\
+\bottomrule
+\end{tabular}
+\caption{Istruzioni di trasferimento dati}
+\end{table}
+
+\section{Esercizi}
+
+\begin{esercizio}[4.1]
+Scrivere codice per scambiare i valori di AX e BX senza usare XCHG.
+\end{esercizio}
+
+\begin{esercizio}[4.2]
+Dato lo stack inizialmente vuoto e SP = FFFEh, tracciare il valore di SP dopo:
+\begin{lstlisting}
+PUSH AX
+PUSH BX
+POP CX
+PUSH DX
+\end{lstlisting}
+\end{esercizio}
+
+\begin{esercizio}[4.3]
+Spiegare la differenza tra:
+\begin{lstlisting}
+MOV BX, OFFSET array
+LEA BX, array
+LEA SI, [BX+DI+4]
+\end{lstlisting}
+\end{esercizio}
+
+\begin{esercizio}[4.4]
+Scrivere codice per convertire le cifre 0-15 in caratteri esadecimali '0'-'F' usando XLAT.
+\end{esercizio}
+
+\begin{esercizio}[4.5]
+Perché non è consentito \texttt{MOV DS, 1000h}? Come si risolve?
+\end{esercizio}

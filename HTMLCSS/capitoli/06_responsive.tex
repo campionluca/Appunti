@@ -1,84 +1,1060 @@
 \chapter{Design Responsivo}
 \label{cap:responsive}
 
-\section{Mobile-first approach}
+\section{Introduzione al Responsive Web Design}
 
-Il design responsivo inizia dai dispositivi mobili (320px) e scala verso schermi più grandi:
+Il \textbf{Responsive Web Design} (RWD) è un approccio al web design che garantisce un'esperienza ottimale su tutti i dispositivi: desktop, tablet, smartphone. Coniato da Ethan Marcotte nel 2010, è diventato lo standard per lo sviluppo web moderno.
+
+\subsection{Principi Fondamentali}
+
+Il responsive design si basa su tre pilastri:
+
+\begin{enumerate}
+  \item \textbf{Griglia fluida}: Layout basato su percentuali invece di pixel fissi
+  \item \textbf{Immagini flessibili}: Immagini che si adattano al contenitore (\texttt{max-width: 100\%})
+  \item \textbf{Media queries}: Regole CSS che si applicano solo a determinate dimensioni schermo
+\end{enumerate}
+
+\subsection{Perché è Importante}
+
+\begin{itemize}
+  \item \textbf{Traffico mobile}: Oltre il 60\% del traffico web proviene da dispositivi mobili
+  \item \textbf{SEO}: Google penalizza siti non mobile-friendly
+  \item \textbf{User Experience}: Utenti abbandonano siti non ottimizzati per mobile
+  \item \textbf{Costi}: Una soluzione invece di due siti separati (desktop + mobile)
+  \item \textbf{Manutenzione}: Un solo codebase da aggiornare
+\end{itemize}
+
+\section{Meta Tag Viewport}
+
+Il meta tag viewport è \textbf{obbligatorio} per il responsive design. Controlla come la pagina viene visualizzata su dispositivi mobili.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[language=HTML]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagina Responsive</title>
+</head>
+<body>
+  <!-- Contenuto -->
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Parametri Viewport}
+
+\begin{description}
+  \item[width=device-width] Larghezza = larghezza dispositivo (invece di 980px default)
+  \item[initial-scale=1.0] Zoom iniziale 100\% (1:1)
+  \item[maximum-scale=5.0] Zoom massimo permesso (default 5.0)
+  \item[minimum-scale=0.25] Zoom minimo permesso (default 0.25)
+  \item[user-scalable=yes] Permetti zoom (default yes, NON disabilitare!)
+\end{description}
+
+\begin{attenzione}
+\textbf{NON usare mai \texttt{user-scalable=no} o \texttt{maximum-scale=1.0}}. Impedire lo zoom viola le linee guida di accessibilità WCAG e peggiora drasticamente l'esperienza utente per persone ipovedenti.
+\end{attenzione}
+
+\begin{lstlisting}[language=HTML]
+<!-- ❌ MAL: Disabilita zoom -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<!-- ✅ BENE: Permetti zoom -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+\end{lstlisting}
+
+\section{Approcci al Responsive Design}
+
+\subsection{Mobile-First Approach}
+
+Design che parte da mobile (320px) e scala verso desktop. \textbf{Questo è l'approccio consigliato}.
+
+\textbf{Vantaggi}:
+\begin{itemize}
+  \item Priorità ai contenuti essenziali
+  \item Performance migliori su mobile (meno CSS da sovrascrivere)
+  \item Progressive enhancement: aggiungi funzionalità per schermi grandi
+  \item SEO-friendly (Google usa mobile-first indexing)
+\end{itemize}
 
 \begin{lstlisting}[language=CSS]
-/* Mobile first: base per tutti */
-body { font-size: 14px; }
-.container { width: 100%; }
+/* Mobile first: base per tutti i dispositivi */
+body {
+  font-size: 14px;
+  padding: 1rem;
+}
 
-/* Tablet: 768px e oltre */
+.container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr; /* 1 colonna su mobile */
+  gap: 1rem;
+}
+
+/* Tablet: 768px e oltre (aggiungi complessità) */
 @media (min-width: 768px) {
-  body { font-size: 16px; }
-  .container { width: 90%; }
+  body {
+    font-size: 16px;
+    padding: 2rem;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 1200px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 colonne */
+  }
 }
 
 /* Desktop: 1024px e oltre */
 @media (min-width: 1024px) {
-  body { font-size: 18px; }
-  .container { width: 80%; }
-  max-width: 1200px;
+  body {
+    font-size: 18px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr); /* 3 colonne */
+  }
+}
+
+/* Large desktop: 1440px e oltre */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(4, 1fr); /* 4 colonne */
+  }
 }
 \end{lstlisting}
 
-\section{Meta tag viewport}
+\subsection{Desktop-First Approach}
 
-Essenziale per responsività:
+Design che parte da desktop e si riduce verso mobile (deprecato ma ancora in uso legacy).
 
-\begin{lstlisting}[language=HTML]
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+\begin{lstlisting}[language=CSS]
+/* Desktop first: base per desktop */
+body {
+  font-size: 18px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Tablet: 1024px e sotto (rimuovi complessità) */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile: 768px e sotto */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
 \end{lstlisting}
 
-\begin{attenzione}
-Senza il meta tag viewport, i dispositivi mobili mostreranno la pagina desktop rimpicciolita, non responsive.
-\end{attenzione}
+\begin{nota}
+Mobile-first usa \texttt{min-width} (scala verso l'alto), desktop-first usa \texttt{max-width} (scala verso il basso).
+\end{nota}
 
-\section{Breakpoints standard}
+\section{Media Queries}
+
+Le media queries permettono di applicare CSS condizionalmente basandosi su caratteristiche dispositivo.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[language=CSS]
+@media media-type and (media-feature) {
+  /* Regole CSS */
+}
+\end{lstlisting}
+
+\subsection{Media Types}
 
 \begin{itemize}
-  \item \textbf{Mobile}: 320px - 480px
-  \item \textbf{Tablet}: 768px - 1024px
-  \item \textbf{Desktop}: 1024px+
-  \item \textbf{Large}: 1920px+
+  \item \texttt{all}: Tutti i dispositivi (default)
+  \item \texttt{screen}: Schermi (desktop, tablet, mobile)
+  \item \texttt{print}: Stampa
+  \item \texttt{speech}: Screen reader (accessibilità)
 \end{itemize}
 
-\section{Immagini responsive}
+\begin{lstlisting}[language=CSS]
+/* CSS per stampa */
+@media print {
+  body {
+    font-size: 12pt;
+    color: black;
+    background: white;
+  }
+
+  .no-print {
+    display: none; /* Nascondi navbar, footer in stampa */
+  }
+}
+\end{lstlisting}
+
+\subsection{Media Features}
+
+\subsubsection{Width-based}
+
+\begin{lstlisting}[language=CSS]
+/* Larghezza esatta */
+@media (width: 768px) { }
+
+/* Larghezza minima (mobile-first) */
+@media (min-width: 768px) { }
+
+/* Larghezza massima (desktop-first) */
+@media (max-width: 768px) { }
+
+/* Range */
+@media (min-width: 768px) and (max-width: 1024px) { }
+\end{lstlisting}
+
+\subsubsection{Height-based}
+
+\begin{lstlisting}[language=CSS]
+/* Altezza minima (utile per header fissi) */
+@media (min-height: 600px) {
+  .sticky-header {
+    position: fixed;
+    top: 0;
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Orientation}
+
+\begin{lstlisting}[language=CSS]
+/* Landscape (orizzontale): width > height */
+@media (orientation: landscape) {
+  .image {
+    max-width: 50%;
+  }
+}
+
+/* Portrait (verticale): height > width */
+@media (orientation: portrait) {
+  .image {
+    max-width: 100%;
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Aspect Ratio}
+
+\begin{lstlisting}[language=CSS]
+/* Ratio 16:9 */
+@media (aspect-ratio: 16/9) {
+  .video-container {
+    /* Ottimizzato per 16:9 */
+  }
+}
+
+/* Minimo aspect ratio */
+@media (min-aspect-ratio: 16/9) { }
+\end{lstlisting}
+
+\subsubsection{Resolution (Retina Display)}
+
+\begin{lstlisting}[language=CSS]
+/* Schermi Retina (2x pixel density) */
+@media (min-resolution: 2dppx) {
+  .logo {
+    background-image: url('logo@2x.png');
+  }
+}
+
+/* Oppure con -webkit- prefix */
+@media (-webkit-min-device-pixel-ratio: 2) {
+  .logo {
+    background-image: url('logo@2x.png');
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Hover Capability}
+
+\begin{lstlisting}[language=CSS]
+/* Dispositivi con hover (mouse) */
+@media (hover: hover) {
+  .button:hover {
+    background-color: #333;
+  }
+}
+
+/* Dispositivi senza hover (touch) */
+@media (hover: none) {
+  .button:active {
+    background-color: #333;
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Pointer Precision}
+
+\begin{lstlisting}[language=CSS]
+/* Pointer fine (mouse) */
+@media (pointer: fine) {
+  .button {
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+  }
+}
+
+/* Pointer coarse (touch) */
+@media (pointer: coarse) {
+  .button {
+    padding: 1rem 2rem; /* Bottoni più grandi per touch */
+    font-size: 16px;
+  }
+}
+\end{lstlisting}
+
+\subsection{Combinare Media Queries}
+
+\begin{lstlisting}[language=CSS]
+/* AND: Entrambe le condizioni devono essere vere */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Solo tablet */
+}
+
+/* OR: Almeno una condizione deve essere vera (usa virgola) */
+@media (max-width: 768px), (orientation: portrait) {
+  /* Mobile O qualsiasi dispositivo verticale */
+}
+
+/* NOT: Nega la condizione */
+@media not print {
+  /* Tutti tranne stampa */
+}
+\end{lstlisting}
+
+\section{Breakpoints Standard}
+
+Non esistono breakpoints "universali", ma queste sono dimensioni comuni:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Dispositivo} & \textbf{Range} & \textbf{Media Query} \\
+\hline
+Mobile Small & 320px - 480px & Base (no media query) \\
+\hline
+Mobile Large & 481px - 767px & \texttt{@media (min-width: 481px)} \\
+\hline
+Tablet Portrait & 768px - 1023px & \texttt{@media (min-width: 768px)} \\
+\hline
+Tablet Landscape / Desktop Small & 1024px - 1279px & \texttt{@media (min-width: 1024px)} \\
+\hline
+Desktop & 1280px - 1439px & \texttt{@media (min-width: 1280px)} \\
+\hline
+Large Desktop & 1440px+ & \texttt{@media (min-width: 1440px)} \\
+\hline
+4K / UHD & 1920px+ & \texttt{@media (min-width: 1920px)} \\
+\hline
+\end{tabular}
+\caption{Breakpoints Standard}
+\end{table}
+
+\subsection{Framework Breakpoints}
+
+\textbf{Bootstrap 5}:
+\begin{itemize}
+  \item xs: < 576px (extra small)
+  \item sm: ≥ 576px (small)
+  \item md: ≥ 768px (medium)
+  \item lg: ≥ 992px (large)
+  \item xl: ≥ 1200px (extra large)
+  \item xxl: ≥ 1400px (extra extra large)
+\end{itemize}
+
+\textbf{Tailwind CSS}:
+\begin{itemize}
+  \item sm: 640px
+  \item md: 768px
+  \item lg: 1024px
+  \item xl: 1280px
+  \item 2xl: 1536px
+\end{itemize}
+
+\section{Immagini Responsive}
+
+\subsection{CSS max-width}
+
+Tecnica base per immagini responsive:
 
 \begin{lstlisting}[language=CSS]
 img {
-  max-width: 100%;
-  height: auto;
+  max-width: 100%;  /* Mai più grande del container */
+  height: auto;     /* Mantieni aspect ratio */
+  display: block;   /* Rimuovi spazio sotto immagine */
 }
 \end{lstlisting}
 
+\subsection{srcset e sizes}
+
+HTML5 permette di specificare immagini diverse per risoluzioni diverse:
+
+\begin{lstlisting}[language=HTML]
+<!-- srcset: Immagini diverse per densità pixel -->
+<img
+  src="image-800.jpg"
+  srcset="
+    image-400.jpg 400w,
+    image-800.jpg 800w,
+    image-1200.jpg 1200w
+  "
+  sizes="(max-width: 768px) 100vw, 50vw"
+  alt="Descrizione immagine"
+/>
+\end{lstlisting}
+
+\textbf{Spiegazione}:
+\begin{itemize}
+  \item \texttt{srcset}: Lista di immagini con larghezze (400w, 800w, 1200w)
+  \item \texttt{sizes}: Istruzioni su quando usare quale immagine
+  \item \texttt{(max-width: 768px) 100vw}: Su mobile, immagine = 100\% viewport width
+  \item \texttt{50vw}: Su desktop, immagine = 50\% viewport width
+  \item Browser sceglie automaticamente l'immagine ottimale
+\end{itemize}
+
+\subsection{Picture Element}
+
+Per controllo completo su art direction:
+
 \begin{lstlisting}[language=HTML]
 <picture>
-  <source media="(min-width: 1024px)" srcset="large.jpg" />
-  <source media="(min-width: 768px)" srcset="medium.jpg" />
-  <img src="small.jpg" alt="Descrizione" />
+  <!-- Desktop: immagine orizzontale -->
+  <source
+    media="(min-width: 1024px)"
+    srcset="desktop-landscape.jpg"
+  />
+
+  <!-- Tablet: immagine quadrata -->
+  <source
+    media="(min-width: 768px)"
+    srcset="tablet-square.jpg"
+  />
+
+  <!-- Mobile: immagine verticale -->
+  <img
+    src="mobile-portrait.jpg"
+    alt="Descrizione"
+  />
 </picture>
+\end{lstlisting}
+
+\subsection{Formati Moderni (WebP, AVIF)}
+
+\begin{lstlisting}[language=HTML]
+<picture>
+  <!-- AVIF: formato più efficiente (2020+) -->
+  <source
+    type="image/avif"
+    srcset="image.avif"
+  />
+
+  <!-- WebP: fallback (supporto ampio) -->
+  <source
+    type="image/webp"
+    srcset="image.webp"
+  />
+
+  <!-- JPEG: fallback finale -->
+  <img src="image.jpg" alt="Descrizione" />
+</picture>
+\end{lstlisting}
+
+\section{Tipografia Responsive}
+
+\subsection{Fluid Typography con clamp()}
+
+La funzione \texttt{clamp()} permette dimensioni fluide tra min e max:
+
+\begin{lstlisting}[language=CSS]
+/* clamp(min, preferred, max) */
+h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  /* Min 2rem, preferito 5% viewport, max 4rem */
+}
+
+body {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+}
+
+.container {
+  padding: clamp(1rem, 5vw, 3rem);
+}
+\end{lstlisting}
+
+\subsection{Viewport Units}
+
+\begin{itemize}
+  \item \texttt{vw}: 1\% della larghezza viewport
+  \item \texttt{vh}: 1\% dell'altezza viewport
+  \item \texttt{vmin}: 1\% della dimensione minore (min(vw, vh))
+  \item \texttt{vmax}: 1\% della dimensione maggiore (max(vw, vh))
+\end{itemize}
+
+\begin{lstlisting}[language=CSS]
+h1 {
+  font-size: 5vw; /* 5% della larghezza schermo */
+}
+
+/* Hero full-screen */
+.hero {
+  height: 100vh; /* 100% altezza viewport */
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Usa \texttt{clamp()} invece di solo \texttt{vw} per evitare testo troppo piccolo su mobile o troppo grande su desktop.
+\end{attenzione}
+
+\subsection{Media Queries per Font Size}
+
+\begin{lstlisting}[language=CSS]
+/* Mobile first */
+body {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 { font-size: 2rem; }   /* 32px */
+h2 { font-size: 1.5rem; } /* 24px */
+
+@media (min-width: 768px) {
+  body {
+    font-size: 18px;
+  }
+
+  h1 { font-size: 2.5rem; } /* 45px */
+  h2 { font-size: 2rem; }   /* 36px */
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 20px;
+  }
+
+  h1 { font-size: 3rem; }   /* 60px */
+  h2 { font-size: 2.25rem; } /* 45px */
+}
+\end{lstlisting}
+
+\section{Touch-Friendly Design}
+
+\subsection{Dimensioni Minime Touch Target}
+
+Le linee guida WCAG raccomandano:
+\begin{itemize}
+  \item \textbf{Minimo}: 44×44 pixel (Apple), 48×48 pixel (Google)
+  \item \textbf{Consigliato}: 48×48 pixel con 8px di spazio tra elementi
+\end{itemize}
+
+\begin{lstlisting}[language=CSS]
+/* ❌ Troppo piccolo per touch */
+.button {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ✅ Touch-friendly */
+.button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 12px 24px;
+  font-size: 16px;
+  margin: 8px; /* Spazio tra bottoni */
+}
+\end{lstlisting}
+
+\subsection{Hover vs Touch}
+
+\begin{lstlisting}[language=CSS]
+/* Desktop: hover */
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+}
+
+/* Mobile: touch (usa :active invece di :hover) */
+@media (hover: none) {
+  .card:active {
+    transform: scale(0.98);
+  }
+}
+\end{lstlisting}
+
+\subsection{Evitare Hover-only UI}
+
+\begin{lstlisting}[language=CSS]
+/* ❌ MAL: Menu visibile solo su hover (inaccessibile su touch) */
+.menu {
+  display: none;
+}
+
+.dropdown:hover .menu {
+  display: block;
+}
+
+/* ✅ BENE: Menu toggle con JavaScript */
+.menu.active {
+  display: block;
+}
+\end{lstlisting}
+
+\section{Layout Responsive Patterns}
+
+\subsection{Column Drop}
+
+Colonne che "cadono" una sotto l'altra su mobile:
+
+\begin{lstlisting}[language=CSS]
+.container {
+  display: grid;
+  gap: 20px;
+}
+
+/* Mobile: 1 colonna */
+@media (min-width: 480px) {
+  .container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet: 3 colonne */
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Desktop: 4 colonne */
+@media (min-width: 1024px) {
+  .container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+\end{lstlisting}
+
+\subsection{Layout Shifter}
+
+Layout completamente diversi per dispositivi diversi:
+
+\begin{lstlisting}[language=CSS]
+/* Mobile: verticale */
+.layout {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Desktop: header full-width, 2 colonne sotto */
+@media (min-width: 1024px) {
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-areas:
+      "header header"
+      "sidebar main";
+  }
+
+  .header { grid-area: header; }
+  .sidebar { grid-area: sidebar; }
+  .main { grid-area: main; }
+}
+\end{lstlisting}
+
+\subsection{Off Canvas}
+
+Menu nascosto fuori schermo su mobile:
+
+\begin{lstlisting}[language=CSS]
+.sidebar {
+  position: fixed;
+  left: -300px; /* Nascosto */
+  width: 300px;
+  height: 100vh;
+  transition: left 0.3s;
+}
+
+.sidebar.open {
+  left: 0; /* Visibile quando attivato */
+}
+
+/* Desktop: sempre visibile */
+@media (min-width: 1024px) {
+  .sidebar {
+    position: static;
+    left: 0;
+  }
+}
+\end{lstlisting}
+
+\section{Testing Responsive}
+
+\subsection{Browser DevTools}
+
+Tutti i browser moderni hanno strumenti per testare responsive:
+
+\textbf{Chrome DevTools}:
+\begin{enumerate}
+  \item F12 o Ctrl+Shift+I
+  \item Toggle Device Toolbar (Ctrl+Shift+M)
+  \item Seleziona dispositivo: iPhone, iPad, Pixel, Galaxy, ecc.
+  \item Testa orientamento portrait/landscape
+  \item Testa touch events
+\end{enumerate}
+
+\textbf{Firefox Responsive Design Mode}:
+\begin{enumerate}
+  \item Ctrl+Shift+M
+  \item Seleziona preset o custom size
+  \item Testa DPR (Device Pixel Ratio) per Retina
+\end{enumerate}
+
+\subsection{Device Testing}
+
+\textbf{Test su dispositivi reali}:
+\begin{itemize}
+  \item Emulatori non sempre riproducono perfettamente
+  \item Testa su almeno: 1 iPhone, 1 Android, 1 tablet
+  \item Usa servizi come BrowserStack, LambdaTest (cloud testing)
+\end{itemize}
+
+\textbf{Online Tools}:
+\begin{itemize}
+  \item \textbf{Responsinator}: \url{http://www.responsinator.com/}
+  \item \textbf{Am I Responsive}: \url{http://ami.responsivedesign.is/}
+  \item \textbf{BrowserStack}: \url{https://www.browserstack.com/}
+  \item \textbf{LambdaTest}: \url{https://www.lambdatest.com/}
+\end{itemize}
+
+\section{Performance Responsive}
+
+\subsection{Lazy Loading Immagini}
+
+\begin{lstlisting}[language=HTML]
+<!-- Native lazy loading (Chrome 76+) -->
+<img src="image.jpg" alt="Descrizione" loading="lazy" />
+\end{lstlisting}
+
+\subsection{Preload Critical Resources}
+
+\begin{lstlisting}[language=HTML]
+<head>
+  <!-- Preload font critico -->
+  <link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin />
+
+  <!-- Preload immagine hero -->
+  <link rel="preload" href="hero.jpg" as="image" />
+</head>
+\end{lstlisting}
+
+\subsection{Evitare Layout Shift (CLS)}
+
+\begin{lstlisting}[language=HTML]
+<!-- ❌ MAL: Immagine senza dimensioni causa layout shift -->
+<img src="image.jpg" alt="Descrizione" />
+
+<!-- ✅ BENE: Specifica aspect ratio -->
+<img
+  src="image.jpg"
+  alt="Descrizione"
+  width="800"
+  height="600"
+  style="aspect-ratio: 4/3;"
+/>
+\end{lstlisting}
+
+\begin{lstlisting}[language=CSS]
+/* CSS aspect ratio */
+.image-container {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+\end{lstlisting}
+
+\section{Accessibility nel Responsive}
+
+\subsection{Zoom e Scaling}
+
+\begin{lstlisting}[language=HTML]
+<!-- ✅ BENE: Permetti zoom -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ❌ MAL: Disabilita zoom (viola WCAG) -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+\end{lstlisting}
+
+\subsection{Focus Visibile}
+
+\begin{lstlisting}[language=CSS]
+/* Assicurati che focus sia visibile su tutti i dispositivi */
+a:focus,
+button:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Non rimuovere MAI outline senza alternativa */
+/* ❌ button:focus { outline: none; } */
+\end{lstlisting}
+
+\subsection{Skip Links}
+
+\begin{lstlisting}[language=HTML]
+<body>
+  <a href="#main-content" class="skip-link">Salta al contenuto</a>
+  <header><!-- Navbar --></header>
+  <main id="main-content"><!-- Contenuto --></main>
+</body>
+\end{lstlisting}
+
+\begin{lstlisting}[language=CSS]
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  top: 0; /* Visibile quando riceve focus */
+}
 \end{lstlisting}
 
 \section{Esercizi}
 
-\subsection{Esercizio 1 (Base)}
-Crea una pagina con 2 colonne che diventa 1 colonna su mobile (max 768px).
+\subsection{Esercizio 1 (Base): Layout 2 Colonne Responsive}
 
-\subsection{Esercizio 2 (Intermedio)}
-Implementa 3 breakpoint diversi (320, 768, 1024) con layout e font-size che cambiano.
+Crea una pagina con 2 colonne che diventa 1 colonna su mobile:
+\begin{itemize}
+  \item Desktop (≥768px): 2 colonne (30\% sidebar, 70\% main)
+  \item Mobile (<768px): 1 colonna verticale (sidebar sopra, main sotto)
+  \item Aggiungi meta viewport
+  \item Font size: 16px mobile, 18px desktop
+\end{itemize}
 
-\subsection{Esercizio 3 (Avanzato)}
-Crea un sito completo responsivo con navbar mobile-first, menu hamburger (CSS), e layout che adatta a tutti i dispositivi.
+\subsection{Esercizio 2 (Base): Immagini Responsive}
+
+Crea una gallery di 6 immagini responsive:
+\begin{itemize}
+  \item Immagini con \texttt{max-width: 100\%}
+  \item 3 colonne desktop, 2 tablet, 1 mobile
+  \item Usa \texttt{srcset} con 3 dimensioni diverse
+  \item Aspect ratio 16:9
+\end{itemize}
+
+\subsection{Esercizio 3 (Intermedio): Navbar Responsive}
+
+Crea una navbar con menu hamburger:
+\begin{itemize}
+  \item Desktop: menu orizzontale sempre visibile
+  \item Mobile: hamburger icon, menu verticale nascosto
+  \item Transizione smooth per apertura menu
+  \item Touch-friendly: bottoni min 48×48px
+  \item Usa solo CSS (no JavaScript)
+\end{itemize}
+
+\subsection{Esercizio 4 (Intermedio): Tipografia Fluida}
+
+Implementa tipografia fluida con \texttt{clamp()}:
+\begin{itemize}
+  \item H1: min 2rem, max 4rem
+  \item H2: min 1.5rem, max 3rem
+  \item Body: min 1rem, max 1.25rem
+  \item Padding container: min 1rem, max 3rem
+  \item Testa su 320px e 1920px
+\end{itemize}
+
+\subsection{Esercizio 5 (Avanzato): Dashboard Responsive}
+
+Crea un dashboard responsive completo:
+\begin{itemize}
+  \item Desktop: header + sidebar (250px) + main + widget area
+  \item Tablet: header + main + sidebar sotto
+  \item Mobile: tutto verticale con sidebar off-canvas
+  \item 4 breakpoint: 320px, 768px, 1024px, 1440px
+  \item Grid CSS per layout
+\end{itemize}
+
+\subsection{Esercizio 6 (Avanzato): Art Direction con Picture}
+
+Crea un hero section con art direction:
+\begin{itemize}
+  \item Desktop: immagine orizzontale 16:9
+  \item Tablet: immagine quadrata 1:1
+  \item Mobile: immagine verticale 9:16
+  \item Usa \texttt{<picture>} con 3 immagini diverse
+  \item Testo overlay responsive
+  \item Formati: AVIF, WebP, JPEG (fallback)
+\end{itemize}
+
+\subsection{Esercizio 7 (Avanzato): Performance Optimization}
+
+Ottimizza una pagina per performance:
+\begin{itemize}
+  \item Lazy loading per tutte le immagini non above-the-fold
+  \item Preload font e immagine hero
+  \item Aspect ratio per evitare layout shift
+  \item Responsive images con srcset
+  \item Media query per stampa
+  \item Test Lighthouse: punteggio Performance >90
+\end{itemize}
+
+\section{Best Practices}
+
+\subsection{Design}
+
+\begin{itemize}
+  \item \textbf{Mobile-first}: Parti da mobile, scala verso desktop
+  \item \textbf{Content-first}: Priorità ai contenuti essenziali
+  \item \textbf{Touch-friendly}: Bottoni min 48×48px, spazio 8px
+  \item \textbf{Leggibilità}: Font size min 16px, line-height 1.5+
+  \item \textbf{Contrast}: Ratio min 4.5:1 per testo normale
+\end{itemize}
+
+\subsection{Codice}
+
+\begin{itemize}
+  \item Usa \texttt{clamp()} per dimensioni fluide
+  \item Preferisci \texttt{min-width} (mobile-first) a \texttt{max-width}
+  \item Usa \texttt{em/rem} invece di \texttt{px} per scalabilità
+  \item Raggruppa media queries per breakpoint
+  \item Testa su dispositivi reali
+\end{itemize}
+
+\subsection{Performance}
+
+\begin{itemize}
+  \item Lazy loading immagini
+  \item \texttt{srcset} e \texttt{<picture>} per immagini responsive
+  \item Formati moderni: WebP, AVIF
+  \item Aspect ratio per evitare layout shift
+  \item Riduci dimensioni immagini (max 200KB per immagine)
+\end{itemize}
+
+\subsection{Accessibilità}
+
+\begin{itemize}
+  \item NON disabilitare zoom
+  \item Focus visibile su tutti gli elementi interattivi
+  \item Skip links per navigazione da tastiera
+  \item ARIA labels per elementi interattivi
+  \item Test con screen reader (NVDA, JAWS, VoiceOver)
+\end{itemize}
+
+\section{Checklist Responsive}
+
+\subsection{HTML}
+
+\begin{itemize}
+  \item[$\square$] Meta viewport presente e corretto
+  \item[$\square$] Immagini con \texttt{alt} descrittivo
+  \item[$\square$] \texttt{srcset} per immagini critiche
+  \item[$\square$] \texttt{loading="lazy"} per immagini sotto fold
+  \item[$\square$] Semantic HTML (header, nav, main, article, footer)
+\end{itemize}
+
+\subsection{CSS}
+
+\begin{itemize}
+  \item[$\square$] Mobile-first approach
+  \item[$\square$] Almeno 3 breakpoint (mobile, tablet, desktop)
+  \item[$\square$] Tipografia fluida o responsive
+  \item[$\square$] Immagini max-width 100\%
+  \item[$\square$] Touch target min 48×48px
+  \item[$\square$] Focus visibile
+  \item[$\square$] Media query per stampa
+\end{itemize}
+
+\subsection{Testing}
+
+\begin{itemize}
+  \item[$\square$] Testato su Chrome DevTools (3+ dispositivi)
+  \item[$\square$] Testato su almeno 1 dispositivo reale
+  \item[$\square$] Testato landscape e portrait
+  \item[$\square$] Testato zoom 200\%
+  \item[$\square$] Lighthouse Performance >90
+  \item[$\square$] Lighthouse Accessibility >90
+\end{itemize}
+
+\section{Risorse Utili}
+
+\begin{itemize}
+  \item \textbf{Responsive Design Checker}: \url{https://responsivedesignchecker.com/}
+  \item \textbf{Google Mobile-Friendly Test}: \url{https://search.google.com/test/mobile-friendly}
+  \item \textbf{Can I Use}: \url{https://caniuse.com/} (supporto feature browser)
+  \item \textbf{MDN Media Queries}: \url{https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries}
+  \item \textbf{A Book Apart - Responsive Web Design}: Ethan Marcotte
+  \item \textbf{This Is Responsive}: \url{https://bradfrost.github.io/this-is-responsive/}
+\end{itemize}
 
 \section{Riepilogo}
 
+\subsection{Concetti Chiave}
+
 \begin{itemize}
-  \item Mobile-first: inizia da mobile e scala
-  \item Meta viewport è obbligatorio
-  \item Media queries: @media (min-width: ...)
-  \item Breakpoint standard: 320, 768, 1024, 1920
-  \item Immagini: max-width 100%, height auto
+  \item \textbf{Responsive Web Design}: Un sito che si adatta a tutti i dispositivi
+  \item \textbf{Mobile-first}: Approccio consigliato (parti da mobile, scala verso desktop)
+  \item \textbf{Meta viewport}: Obbligatorio per responsive (\texttt{width=device-width, initial-scale=1.0})
+  \item \textbf{Media queries}: CSS condizionale per breakpoint
+  \item \textbf{Breakpoints}: 320px, 768px, 1024px, 1440px (standard)
+\end{itemize}
+
+\subsection{Tecniche Essenziali}
+
+\begin{itemize}
+  \item Immagini: \texttt{max-width: 100\%}, \texttt{srcset}, \texttt{<picture>}
+  \item Tipografia: \texttt{clamp()}, viewport units, media queries
+  \item Layout: Flexbox, Grid, mobile-first patterns
+  \item Touch: Min 48×48px, \texttt{@media (hover: none)}
+  \item Performance: Lazy loading, preload, aspect ratio
+\end{itemize}
+
+\subsection{Best Practices}
+
+\begin{itemize}
+  \item Mobile-first approach
+  \item Content-first (priorità contenuti essenziali)
+  \item Touch-friendly (48×48px min)
+  \item Accessibilità (zoom, focus, skip links)
+  \item Performance (lazy loading, srcset, WebP)
+  \item Test su dispositivi reali
+  \item NON disabilitare zoom (WCAG)
 \end{itemize}

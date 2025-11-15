@@ -1,0 +1,289 @@
+{
+  "course": "HTMLCSS",
+  "total_descriptors": 15,
+  "generated": "2025-11-14T11:19:48.017769",
+  "descriptors": [
+    {
+      "concept_id": "HTML-SEM-001",
+      "topic": "HTML Semantico",
+      "category": "HTML-SEMANTIC",
+      "difficulty_level": "beginner",
+      "explanation": "I tag semantici HTML5 descrivono il significato del contenuto, non solo la presentazione. Includono header, nav, main, section, article, footer che migliorano accessibilità e SEO.",
+      "code_example": "<header>\n  <nav>\n    <a href=\"#home\">Home</a>\n    <a href=\"#about\">About</a>\n  </nav>\n</header>\n<main>\n  <section>\n    <article>\n      <h1>Titolo articolo</h1>\n      <p>Contenuto...</p>\n    </article>\n  </section>\n</main>\n<footer>Copyright 2024</footer>",
+      "common_mistakes": "Usare div generico per tutto invece di tag semantici; non strutturare logicamente il contenuto",
+      "best_practices": "Usare header, nav, main, section, article per struttura; sempre usare footer per info copyright; garantire gerarchia logica H1-H6",
+      "learning_objectives": [
+        "Riconoscere tag semantici",
+        "Strutturare documenti semanticamente",
+        "Migliorare accessibilità"
+      ],
+      "related_concepts": [
+        "HTML-BLK-001",
+        "CSS-SEL-001"
+      ]
+    },
+    {
+      "concept_id": "HTML-FORM-001",
+      "topic": "Form HTML5",
+      "category": "HTML-FORMS",
+      "difficulty_level": "beginner",
+      "explanation": "I form HTML raccolgono dati utente attraverso input, textarea, select. Il form invia dati a server con method GET/POST.",
+      "code_example": "<form action=\"/submit\" method=\"POST\">\n  <label for=\"email\">Email:</label>\n  <input type=\"email\" id=\"email\" name=\"email\" required />\n  \n  <label for=\"msg\">Messaggio:</label>\n  <textarea id=\"msg\" name=\"message\" rows=\"5\"></textarea>\n  \n  <button type=\"submit\">Invia</button>\n  <button type=\"reset\">Cancella</button>\n</form>",
+      "common_mistakes": "Omettere label; non usare name attribute; validazione solo lato client",
+      "best_practices": "Sempre usare label con for attribute; validazione HTML5 + server-side; semantica e accessibilità",
+      "learning_objectives": [
+        "Creare form funzionali",
+        "Validare input",
+        "Accessibilità form"
+      ],
+      "related_concepts": [
+        "HTML-INPUT-001",
+        "JS-DOM-001"
+      ]
+    },
+    {
+      "concept_id": "HTML-INPUT-001",
+      "topic": "Input Types HTML5",
+      "category": "HTML-FORMS",
+      "difficulty_level": "beginner",
+      "explanation": "HTML5 offre vari input type: text, password, email, number, date, checkbox, radio, select per diversi tipi di dati.",
+      "code_example": "<input type=\"text\" placeholder=\"Nome\" />\n<input type=\"password\" placeholder=\"Password\" />\n<input type=\"email\" required />\n<input type=\"number\" min=\"0\" max=\"100\" step=\"5\" />\n<input type=\"date\" />\n<input type=\"checkbox\" id=\"terms\" />\n<label for=\"terms\">Accetto termini</label>\n<input type=\"radio\" name=\"option\" value=\"1\" /> Opzione 1",
+      "common_mistakes": "Usare text per email/number; omettere validazione; non impostare min/max/step",
+      "best_practices": "Usare type specifico per validazione automatica; sempre required se obbligatorio; label associate",
+      "learning_objectives": [
+        "Conoscere tutti input type",
+        "Validazione HTML5",
+        "UX form"
+      ],
+      "related_concepts": [
+        "HTML-FORM-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-SEL-001",
+      "topic": "Selettori CSS",
+      "category": "CSS-SELECTORS",
+      "difficulty_level": "beginner",
+      "explanation": "I selettori CSS identificano elementi da stilizzare: elemento, classe, ID, attributo, combinatori. La specificity determina quale regola vince.",
+      "code_example": "/* Elemento */\np { color: blue; }\n\n/* Classe */\n.highlight { background: yellow; }\n\n/* ID */\n#header { margin: 0; }\n\n/* Attributo */\ninput[type=\"email\"] { border: 1px solid blue; }\n\n/* Combinatori */\ndiv p { color: red; }        /* Discendente */\ndiv > p { color: green; }   /* Figlio diretto */\nh1 + p { color: gray; }     /* Adiacente */",
+      "common_mistakes": "Abusare di ID; non capire specificity; usare !important",
+      "best_practices": "Preferire classe a ID; capire cascata e specificity (ID > classe > elemento); evitare !important",
+      "learning_objectives": [
+        "Selettori CSS",
+        "Specificity",
+        "Cascata CSS"
+      ],
+      "related_concepts": [
+        "CSS-BOX-001",
+        "CSS-PSEUDO-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-PSEUDO-001",
+      "topic": "Pseudo-classi CSS",
+      "category": "CSS-SELECTORS",
+      "difficulty_level": "intermediate",
+      "explanation": "Pseudo-classi (:hover, :focus, :first-child, :nth-child) permettono stilizzare elementi in stati particolari senza aggiungere classi HTML.",
+      "code_example": "a:hover { color: red; }\na:focus { outline: 2px solid blue; }\n\nli:first-child { font-weight: bold; }\nli:nth-child(2n) { background: #f0f0f0; }\n\ninput:required { border: 2px solid orange; }\ninput:invalid { border: 2px solid red; }",
+      "common_mistakes": "Confondere :first-child con :first-of-type; non testare accessibility (focus)",
+      "best_practices": "Sempre stilizzare :focus per accessibilità; usare nth-child per pattern ripetitivi",
+      "learning_objectives": [
+        "Pseudo-classi",
+        "Focus e accessibilità",
+        "Pattern CSS"
+      ],
+      "related_concepts": [
+        "CSS-SEL-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-BOX-001",
+      "topic": "Box Model CSS",
+      "category": "CSS-BOX",
+      "difficulty_level": "beginner",
+      "explanation": "Box model: content -> padding -> border -> margin. Ogni elemento è rettangolo con questi livelli. box-sizing controlla se width include border.",
+      "code_example": "div {\n  width: 300px;\n  height: 200px;\n  padding: 20px;      /* Spazio interno */\n  border: 2px solid;  /* Bordo */\n  margin: 10px;       /* Spazio esterno */\n  box-sizing: border-box; /* Width include border */\n}",
+      "common_mistakes": "Confondere margin e padding; non usare box-sizing border-box; margin collapsing",
+      "best_practices": "Sempre usare box-sizing: border-box; capire margin collapsing in elementi verticali",
+      "learning_objectives": [
+        "Box model",
+        "Margin/Padding",
+        "box-sizing"
+      ],
+      "related_concepts": [
+        "CSS-SEL-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-FLEX-001",
+      "topic": "Flexbox Layout",
+      "category": "CSS-FLEXBOX",
+      "difficulty_level": "intermediate",
+      "explanation": "Flexbox: display: flex su container crea layout 1D. Proprietà: flex-direction, justify-content (asse principale), align-items (asse trasversale), gap.",
+      "code_example": ".container {\n  display: flex;\n  flex-direction: row;       /* row, column */\n  justify-content: center;   /* Allineamento asse principale */\n  align-items: center;       /* Allineamento asse trasversale */\n  gap: 20px;                 /* Spazio tra elementi */\n}\n\n.item {\n  flex: 1;          /* Crescita uguale */\n  flex-basis: 200px; /* Larghezza base */\n  flex-shrink: 1;   /* Restringimento */\n}",
+      "common_mistakes": "Non capire asse principale vs trasversale; usare flex-wrap: nowrap sempre",
+      "best_practices": "Mobile-first con column, poi row; usare gap invece di margin; flex shorthand",
+      "learning_objectives": [
+        "Flexbox",
+        "Allineamento",
+        "Responsive layout"
+      ],
+      "related_concepts": [
+        "CSS-GRID-001",
+        "CSS-RESP-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-GRID-001",
+      "topic": "CSS Grid Layout",
+      "category": "CSS-GRID",
+      "difficulty_level": "intermediate",
+      "explanation": "Grid: display: grid crea layout 2D. grid-template-columns/rows definisce tracce. 1fr = frazione spazio. grid-column/row posiziona elementi.",
+      "code_example": ".grid-container {\n  display: grid;\n  grid-template-columns: 1fr 2fr 1fr;  /* 3 colonne, centrale doppia */\n  grid-template-rows: auto 1fr auto;    /* Righe */\n  gap: 20px;                             /* Spazio tra celle */\n}\n\n.grid-item {\n  grid-column: 1 / 3;  /* Colonne 1-2 */\n  grid-row: 1 / 2;     /* Riga 1 */\n}",
+      "common_mistakes": "Usare grid per navbar (usa flexbox); non capire fr unit; grid-gap deprecated",
+      "best_practices": "Grid per layout pagina; flexbox per componenti; usare gap non grid-gap",
+      "learning_objectives": [
+        "Grid 2D",
+        "fr unit",
+        "Template columns/rows"
+      ],
+      "related_concepts": [
+        "CSS-FLEX-001"
+      ]
+    },
+    {
+      "concept_id": "CSS-RESP-001",
+      "topic": "Design Responsivo",
+      "category": "CSS-RESPONSIVE",
+      "difficulty_level": "intermediate",
+      "explanation": "Mobile-first: scrivi CSS mobile base, poi @media queries per tablet (768px), desktop (1024px). Meta viewport obbligatorio.",
+      "code_example": "/* Mobile first */\nbody { font-size: 14px; }\n.container { width: 100%; }\n\n/* Tablet: 768px+ */\n@media (min-width: 768px) {\n  body { font-size: 16px; }\n  .container { width: 90%; }\n}\n\n/* Desktop: 1024px+ */\n@media (min-width: 1024px) {\n  body { font-size: 18px; }\n  .container { width: 80%; max-width: 1200px; }\n}",
+      "common_mistakes": "Usare max-width al contrario (mobile-last); omettere viewport meta tag; breakpoints arbitrari",
+      "best_practices": "Mobile-first; viewport meta tag essenziale; breakpoint standard: 768, 1024; img responsive max-width: 100%",
+      "learning_objectives": [
+        "Mobile-first",
+        "@media queries",
+        "Viewport"
+      ],
+      "related_concepts": [
+        "CSS-FLEX-001",
+        "CSS-GRID-001"
+      ]
+    },
+    {
+      "concept_id": "SCSS-VAR-001",
+      "topic": "SCSS Variabili e Nesting",
+      "category": "SCSS-VARIABLES",
+      "difficulty_level": "intermediate",
+      "explanation": "SCSS aggiunge variabili ($var), nesting (selettori annidati), @mixin (funzioni riutilizzabili) a CSS. Si compila a CSS puro.",
+      "code_example": "$primary-color: #3498db;\n$spacing: 20px;\n$breakpoint-tablet: 768px;\n\n.navbar {\n  background: $primary-color;\n  padding: $spacing;\n  \n  .logo {\n    font-size: 24px;\n    color: white;\n  }\n  \n  a:hover {\n    color: lighten($primary-color, 20%);\n  }\n}\n\n@media (min-width: $breakpoint-tablet) {\n  .navbar { padding: $spacing * 2; }\n}",
+      "common_mistakes": "Nesting troppo profondo (>4 livelli); non usare nesting di media queries",
+      "best_practices": "Variabili centrali; nesting max 3-4 livelli; @mixin per pattern; SCSS non CSS nei source",
+      "learning_objectives": [
+        "Variabili SCSS",
+        "Nesting",
+        "Organizzazione CSS"
+      ],
+      "related_concepts": [
+        "SCSS-MIX-001",
+        "CSS-RESP-001"
+      ]
+    },
+    {
+      "concept_id": "SCSS-MIX-001",
+      "topic": "SCSS Mixins",
+      "category": "SCSS-VARIABLES",
+      "difficulty_level": "intermediate",
+      "explanation": "@mixin crea blocchi CSS riutilizzabili. @include applica mixin. Parametri permettono variabilità.",
+      "code_example": "@mixin flex-center {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\n\n@mixin button-base($color) {\n  padding: 10px 20px;\n  background: $color;\n  border: none;\n  border-radius: 4px;\n  cursor: pointer;\n  \n  &:hover {\n    opacity: 0.9;\n  }\n}\n\n.center-box { @include flex-center; }\n.btn-primary { @include button-base(#3498db); }\n.btn-danger { @include button-base(#e74c3c); }",
+      "common_mistakes": "Mixin troppo specifici; non parametrizzare; uso eccessivo nesting",
+      "best_practices": "Mixin generici e riutilizzabili; parametri per variabilità; &:hover nei mixin",
+      "learning_objectives": [
+        "Mixin",
+        "Riutilizzabilità",
+        "Parametrizzazione"
+      ],
+      "related_concepts": [
+        "SCSS-VAR-001"
+      ]
+    },
+    {
+      "concept_id": "JS-DOM-001",
+      "topic": "DOM Manipulation",
+      "category": "JS-DOM",
+      "difficulty_level": "intermediate",
+      "explanation": "DOM è rappresentazione HTML in JS. querySelector/querySelectorAll selezionano elementi. addEventListener aggiunge event listener. manipolare DOM con innerText, innerHTML, appendChild.",
+      "code_example": "// Selezione\nconst element = document.querySelector(\".card\");\nconst items = document.querySelectorAll(\".item\");\n\n// Modifica contenuto\nelement.innerText = \"Nuovo testo\";\nelement.innerHTML = \"<p>Nuovo HTML</p>\";\nelement.classList.add(\"active\");\n\n// Event listener\nbutton.addEventListener(\"click\", (event) => {\n  event.preventDefault();\n  console.log(\"Cliccato!\");\n});\n\n// Traversing\nconst parent = element.parentElement;\nconst children = element.children;\nconst next = element.nextElementSibling;",
+      "common_mistakes": "innerHTML per testo (usa innerText); non preventDefault in form; memory leak listener",
+      "best_practices": "querySelector su DOM, non array; classList per classi; sempre removeEventListener; usar delegazione",
+      "learning_objectives": [
+        "querySelector",
+        "classList",
+        "Event listener",
+        "Traversing DOM"
+      ],
+      "related_concepts": [
+        "JS-FETCH-001"
+      ]
+    },
+    {
+      "concept_id": "JS-FETCH-001",
+      "topic": "Fetch API e Async/Await",
+      "category": "JS-FETCH",
+      "difficulty_level": "intermediate",
+      "explanation": "Fetch API recupera dati da server. Async/await semplifica Promise. fetch() ritorna Promise con response. .json() converte JSON.",
+      "code_example": "// Fetch con async/await\nasync function loadUser(id) {\n  try {\n    const response = await fetch(`/api/users/${id}`);\n    if (!response.ok) throw new Error('Errore caricamento');\n    const user = await response.json();\n    console.log(user);\n  } catch (error) {\n    console.error('Errore:', error);\n  }\n}\n\n// Promise.all per richieste parallele\nconst [users, posts] = await Promise.all([\n  fetch('/api/users').then(r => r.json()),\n  fetch('/api/posts').then(r => r.json())\n]);\n\nloadUser(1);",
+      "common_mistakes": "Non gestire errori; dimenticare await; .json() non auto-converte",
+      "best_practices": "Sempre try/catch; await fetch poi await .json(); validare response.ok; timeout handling",
+      "learning_objectives": [
+        "Fetch API",
+        "Async/await",
+        "Error handling",
+        "JSON parsing"
+      ],
+      "related_concepts": [
+        "JS-DOM-001"
+      ]
+    },
+    {
+      "concept_id": "JS-EVENT-001",
+      "topic": "Event Handling",
+      "category": "JS-DOM",
+      "difficulty_level": "intermediate",
+      "explanation": "Event (click, submit, input, change) attivano callback. Event delegation: listener su parent cattura eventi figli. preventDefault blocca default behavior.",
+      "code_example": "// Singolo elemento\nbutton.addEventListener(\"click\", (event) => {\n  event.preventDefault();\n  console.log(\"Cliccato button\");\n});\n\n// Event delegation\ndocument.addEventListener(\"click\", (event) => {\n  if (event.target.classList.contains(\"item\")) {\n    console.log(\"Item cliccato:\", event.target);\n  }\n});\n\n// Form submission\nform.addEventListener(\"submit\", (event) => {\n  event.preventDefault();\n  const formData = new FormData(event.target);\n  // Invia dati\n});\n\n// Input change\ninput.addEventListener(\"input\", (event) => {\n  console.log(\"Valore:\", event.target.value);\n});",
+      "common_mistakes": "Non preventDefault in form; memory leak listener; performance con molti listener",
+      "best_practices": "Delegazione per lista elemento; removeEventListener cleanup; throttle/debounce per scroll/resize",
+      "learning_objectives": [
+        "Event listener",
+        "Event delegation",
+        "preventDefault"
+      ],
+      "related_concepts": [
+        "JS-DOM-001",
+        "JS-FETCH-001"
+      ]
+    },
+    {
+      "concept_id": "HTML-ACCESSO-001",
+      "topic": "Accessibilità HTML",
+      "category": "HTML-SEMANTIC",
+      "difficulty_level": "intermediate",
+      "explanation": "Accessibilità: alt attribute su img, label su input, semantic tag, proper heading hierarchy, ARIA attributes. Screen reader friendly.",
+      "code_example": "<!-- Buono: semantic + alt + label -->\n<img src=\"logo.png\" alt=\"Logo azienda\" />\n<label for=\"email\">Email:</label>\n<input type=\"email\" id=\"email\" name=\"email\" />\n\n<!-- ARIA -->\n<button aria-label=\"Menu principale\">\n  <span aria-hidden=\"true\">☰</span>\n</button>\n\n<!-- Skip link per accessibilità -->\n<a href=\"#content\" class=\"skip-link\">Vai al contenuto</a>\n<main id=\"content\">Contenuto principale</main>",
+      "common_mistakes": "Omettere alt tag; id/name mismatch label; heading non sequenziali; colore-only info",
+      "best_practices": "Alt descrittivo; semantic tag; contrasto colore; focus visibile; aria-label se necessario",
+      "learning_objectives": [
+        "Alt tag",
+        "Label",
+        "ARIA",
+        "Semantic HTML",
+        "Contrasto"
+      ],
+      "related_concepts": [
+        "HTML-SEM-001",
+        "HTML-FORM-001"
+      ]
+    }
+  ]
+}

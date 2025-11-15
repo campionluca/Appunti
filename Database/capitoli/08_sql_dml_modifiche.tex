@@ -1,0 +1,350 @@
+\chapter{SQL DML - Modifiche Dati}
+
+\section*{Introduzione}
+Oltre a leggere dati con SELECT, DML (Data Manipulation Language) permette di inserire nuovi dati (INSERT), aggiornare dati esistenti (UPDATE) e eliminare dati (DELETE). Questo capitolo presenta questi tre comandi essenziali con attenzione particolare alla preservazione dell'integrità dei dati.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Inserire nuove righe con INSERT
+    \item Inserire dati da altre tabelle
+    \item Aggiornare dati esistenti con UPDATE
+    \item Eliminare dati con DELETE
+    \item Gestire transazioni per operazioni sicure
+    \item Comprendere i vincoli e le loro violazioni
+    \item Usare controlli e prevenire errori
+\end{itemize}
+
+\section{INSERT - Inserimento Dati}
+
+Il comando INSERT aggiunge nuove righe a una tabella.
+
+\subsection{Sintassi base}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi INSERT]
+INSERT INTO tabella (colonna1, colonna2, ...)
+VALUES (valore1, valore2, ...);
+\end{lstlisting}
+
+\subsection{Inserire una riga}
+
+\begin{lstlisting}[language=SQL, caption=Inserimento semplice]
+INSERT INTO cliente (idCliente, nome, cognome, email)
+VALUES (1, 'Mario', 'Rossi', 'mario@email.com');
+\end{lstlisting}
+
+\subsection{Inserire senza specificare colonne}
+
+Se ometti le colonne, devi fornire valori per TUTTE le colonne nell'ordine definito.
+
+\begin{lstlisting}[language=SQL, caption=Inserimento senza specificare colonne]
+-- Se la tabella ha: idCliente, nome, cognome, email, città
+INSERT INTO cliente
+VALUES (2, 'Luigi', 'Bianchi', 'luigi@email.com', 'Roma');
+\end{lstlisting}
+
+\subsection{Inserire più righe}
+
+\begin{lstlisting}[language=SQL, caption=Inserimento multiplo]
+INSERT INTO cliente (idCliente, nome, cognome, email)
+VALUES
+    (3, 'Anna', 'Verdi', 'anna@email.com'),
+    (4, 'Giovanni', 'Gialli', 'giovanni@email.com'),
+    (5, 'Maria', 'Neri', 'maria@email.com');
+\end{lstlisting}
+
+\subsection{Inserire da SELECT}
+
+\begin{lstlisting}[language=SQL, caption=INSERT ... SELECT]
+-- Copiare dati da un'altra tabella
+INSERT INTO cliente_backup
+SELECT * FROM cliente WHERE città = 'Milano';
+
+-- Inserire dati trasformati
+INSERT INTO cliente_attivi (nome, cognome, città)
+SELECT nome, cognome, città FROM cliente WHERE stato = 'Attivo';
+\end{lstlisting}
+
+\subsection{Gestione di valori NULL}
+
+\begin{lstlisting}[language=SQL, caption=Inserire NULL]
+-- Valori NULL per colonne opzionali
+INSERT INTO cliente (idCliente, nome, cognome, email, telefono)
+VALUES (6, 'Paolo', 'Rossi', 'paolo@email.com', NULL);
+
+-- Omettere colonna opzionale (diventa NULL)
+INSERT INTO cliente (idCliente, nome, cognome, email)
+VALUES (7, 'Laura', 'Bianchi', 'laura@email.com');
+-- Il campo telefono sarà NULL
+\end{lstlisting}
+
+\subsection{Auto-increment}
+
+\begin{lstlisting}[language=SQL, caption=AUTO_INCREMENT]
+-- Se la colonna è AUTO_INCREMENT, omettere il valore
+INSERT INTO cliente (nome, cognome, email)
+VALUES ('Marco', 'Verdi', 'marco@email.com');
+-- idCliente verrà assegnato automaticamente
+
+-- Recuperare l'ID appena inserito
+INSERT INTO cliente (nome, cognome, email)
+VALUES ('Silvia', 'Gialli', 'silvia@email.com');
+SELECT LAST_INSERT_ID();  -- Restituisce l'ID appena assegnato
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=orange!10, colframe=orange!60, title=Nota: Gestire AUTO_INCREMENT]
+Per auto-increment, non inserire esplicitamente il valore. Lascia che il DBMS lo generi. Questo garantisce unicità.
+\end{tcolorbox}
+
+\subsection{Errori comuni di INSERT}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errore: Violazione vincolo PRIMARY KEY]
+\begin{lstlisting}[language=SQL]
+-- Errore: tentare di inserire un id già esistente
+INSERT INTO cliente (idCliente, nome, cognome, email)
+VALUES (1, 'Antonio', 'Neri', 'antonio@email.com');
+-- Errore: Duplicate entry for primary key
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errore: Violazione FOREIGN KEY]
+\begin{lstlisting}[language=SQL]
+-- Errore: tentare di inserire un ordine per un cliente inesistente
+INSERT INTO ordine (idOrdine, idCliente, dataOrdine)
+VALUES (1, 999, CURDATE());
+-- Errore: Foreign key constraint fails (se cliente 999 non esiste)
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{UPDATE - Aggiornamento Dati}
+
+Il comando UPDATE modifica dati esistenti.
+
+\subsection{Sintassi base}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi UPDATE]
+UPDATE tabella
+SET colonna1 = valore1, colonna2 = valore2, ...
+WHERE condizione;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: WHERE è obbligatorio!]
+Senza WHERE, TUTTI i record verranno aggiornati! Usa sempre WHERE per evitare danni.
+\end{tcolorbox}
+
+\subsection{Aggiornare una colonna}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE semplice]
+-- Aggiornare l'email di un cliente
+UPDATE cliente
+SET email = 'mario.rossi@newemail.com'
+WHERE idCliente = 1;
+\end{lstlisting}
+
+\subsection{Aggiornare più colonne}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE multiplo]
+-- Aggiornare nome e cognome
+UPDATE cliente
+SET nome = 'Marco', cognome = 'Verdi'
+WHERE idCliente = 1;
+\end{lstlisting}
+
+\subsection{Aggiornare con condizioni complesse}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE con WHERE complesso]
+-- Aumentare lo sconto del 10% per i clienti di Milano attivi
+UPDATE cliente
+SET sconto = sconto * 1.10
+WHERE città = 'Milano' AND stato = 'Attivo';
+
+-- Spostare ordini cancellati agli archivi
+UPDATE ordine
+SET stato = 'Archiviato'
+WHERE stato = 'Cancellato'
+    AND dataOrdine < DATE_SUB(CURDATE(), INTERVAL 1 YEAR);
+\end{lstlisting}
+
+\subsection{Aggiornare da SELECT}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE da subquery]
+-- Aumentare prezzo di prodotti basato su categoria
+UPDATE prodotto
+SET prezzo = prezzo * 1.05
+WHERE categoria IN (
+    SELECT categoria FROM categoria_promozionale
+);
+
+-- Aggiornare il numero di ordini di ogni cliente
+UPDATE cliente c
+SET numOrdini = (SELECT COUNT(*) FROM ordine o WHERE o.idCliente = c.idCliente);
+\end{lstlisting}
+
+\subsection{Aggiornare con espressioni}
+
+\begin{lstlisting}[language=SQL, caption=UPDATE con espressioni]
+-- Aumentare il prezzo del 10% arrotondato a 2 decimali
+UPDATE prodotto
+SET prezzo = ROUND(prezzo * 1.10, 2)
+WHERE categoria = 'Elettronica';
+
+-- Aggiornare data ultima modifica a data odierna
+UPDATE cliente
+SET dataUltimaModifica = NOW()
+WHERE idCliente = 1;
+
+-- Concatenare stringhe
+UPDATE cliente
+SET nomePieno = CONCAT(nome, ' ', cognome)
+WHERE nomePieno IS NULL;
+\end{lstlisting}
+
+\section{DELETE - Eliminazione Dati}
+
+Il comando DELETE rimuove righe da una tabella.
+
+\subsection{Sintassi base}
+
+\begin{lstlisting}[language=SQL, caption=Sintassi DELETE]
+DELETE FROM tabella
+WHERE condizione;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: WHERE è obbligatorio!]
+Senza WHERE, TUTTI i record verranno eliminati! Usa sempre WHERE.
+\end{tcolorbox}
+
+\subsection{Eliminare una riga}
+
+\begin{lstlisting}[language=SQL, caption=DELETE singola riga]
+-- Eliminare un cliente specifico
+DELETE FROM cliente
+WHERE idCliente = 1;
+\end{lstlisting}
+
+\subsection{Eliminare con condizioni}
+
+\begin{lstlisting}[language=SQL, caption=DELETE con WHERE]
+-- Eliminare ordini cancellati più di un anno fa
+DELETE FROM ordine
+WHERE stato = 'Cancellato'
+    AND dataOrdine < DATE_SUB(CURDATE(), INTERVAL 1 YEAR);
+
+-- Eliminare clienti inattivi senza ordini
+DELETE FROM cliente
+WHERE stato = 'Inattivo'
+    AND NOT EXISTS (SELECT 1 FROM ordine WHERE ordine.idCliente = cliente.idCliente);
+\end{lstlisting}
+
+\subsection{Errori di integrità referenziale}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errore: Violazione FOREIGN KEY su DELETE]
+\begin{lstlisting}[language=SQL]
+-- Se ordine ha FOREIGN KEY verso cliente
+-- e non è definito ON DELETE CASCADE,
+-- non puoi eliminare un cliente che ha ordini
+DELETE FROM cliente WHERE idCliente = 5;
+-- Errore: Cannot delete: foreign key constraint fails
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Soluzioni per vincoli di integrità}
+
+\begin{lstlisting}[language=SQL, caption=Soluzione: Gestire dipendenze]
+-- Opzione 1: Eliminare prima gli ordini dipendenti
+DELETE FROM ordine WHERE idCliente = 5;
+DELETE FROM cliente WHERE idCliente = 5;
+
+-- Opzione 2: Se FK ha ON DELETE CASCADE
+-- Eliminare il cliente elimina automaticamente gli ordini
+DELETE FROM cliente WHERE idCliente = 5;
+
+-- Opzione 3: Soft delete (marcazione come inattivo)
+UPDATE cliente SET stato = 'Inattivo' WHERE idCliente = 5;
+-- Permette recupero successivo se necessario
+\end{lstlisting}
+
+\section{Transazioni ACID}
+
+Una transazione raggruppa più operazioni SQL in un'unità atomica.
+
+\begin{lstlisting}[language=SQL, caption=Transazioni]
+-- Iniziare transazione
+START TRANSACTION;
+
+-- Operazioni
+INSERT INTO cliente (nome, cognome, email) VALUES ('Mario', 'Rossi', 'mario@email.com');
+INSERT INTO ordine (idCliente, dataOrdine, totale) VALUES (LAST_INSERT_ID(), CURDATE(), 150.00);
+
+-- Se tutto ok, confermare
+COMMIT;
+
+-- Se c'è un errore, annullare
+-- ROLLBACK;
+\end{lstlisting}
+
+\subsection{Scenari transazionali}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Trasferimento bancario}
+\begin{lstlisting}[language=SQL]
+START TRANSACTION;
+
+-- Prelievo dal conto A
+UPDATE conto SET saldo = saldo - 100 WHERE idConto = 1;
+
+-- Deposito al conto B
+UPDATE conto SET saldo = saldo + 100 WHERE idConto = 2;
+
+-- Se entrambi ok, commit. Se uno fallisce, tutto viene rollback
+COMMIT;
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Disabilitare Vincoli (Avanzato)}
+
+Talvolta è necessario disabilitare temporaneamente i vincoli per operazioni bulk.
+
+\begin{lstlisting}[language=SQL, caption=Disabilitare/Abilitare vincoli]
+-- Disabilitare i vincoli di chiave esterna (MySQL)
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Eseguire operazioni bulk
+DELETE FROM ordine;
+DELETE FROM cliente;
+
+-- Riabilitare vincoli
+SET FOREIGN_KEY_CHECKS = 1;
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attenzione: Disabilitare vincoli è rischioso]
+Disabilitando i vincoli, il DBMS non controlla l'integrità referenziale. Usa solo se sai cosa fai e riabilita subito dopo.
+\end{tcolorbox}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item \textbf{INSERT} aggiunge nuove righe. Usa AUTO_INCREMENT per ID.
+    \item \textbf{INSERT ... SELECT} copia dati da altre tabelle
+    \item \textbf{UPDATE} modifica dati. WHERE specifica quali righe.
+    \item \textbf{DELETE} elimina righe. WHERE è essenziale!
+    \item I \textbf{vincoli} (PRIMARY KEY, FOREIGN KEY) proteggono l'integrità
+    \item Le \textbf{transazioni} (BEGIN, COMMIT, ROLLBACK) garantiscono atomicità
+    \item Sempre testare con SELECT prima di UPDATE/DELETE in massa
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Inserisci 5 clienti nella tabella cliente con nomi, cognomi e email distinti.
+
+    \item Usa INSERT ... SELECT per copiare tutti gli ordini del 2023 in una tabella ordini\_2023.
+
+    \item Aggiorna il prezzo di tutti i prodotti della categoria 'Elettronica' con un aumento del 15\%.
+
+    \item Scrivi una transazione che: a) inserisce un nuovo cliente, b) inserisce un ordine per quel cliente, c) aggiorna il totale speso del cliente.
+
+    \item Elimina tutti gli ordini di un cliente che hanno stato 'Cancellato' e non sono stati modificati da più di 6 mesi.
+
+    \item Crea uno script che archiva ordini vecchi: copia ordini più vecchi di 2 anni in una tabella archivio\_ordini, poi elimina gli originali. Usa una transazione!
+\end{enumerate}

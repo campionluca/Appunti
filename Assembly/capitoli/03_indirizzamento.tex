@@ -1,0 +1,401 @@
+\chapter{Modalità di Indirizzamento}
+
+\section{Introduzione}
+
+Le modalità di indirizzamento determinano come il processore calcola l'indirizzo effettivo degli operandi. L'8086 supporta 7 modalità di indirizzamento, ciascuna adatta a scenari specifici. La comprensione delle modalità di indirizzamento è cruciale per accedere efficientemente a variabili, array e strutture dati.
+
+\begin{definizione}
+Una \textbf{modalità di indirizzamento} specifica il metodo con cui il processore determina l'indirizzo di memoria (effective address) o il valore di un operando.
+\end{definizione}
+
+\section{Modalità di indirizzamento}
+
+\subsection{1. Immediate Addressing (Indirizzamento Immediato)}
+
+L'operando è una costante inclusa nell'istruzione stessa.
+
+\textbf{Sintassi}: \texttt{MOV dest, costante}
+
+\begin{lstlisting}
+MOV AX, 1234h     ; AX = 1234h (costante immediata)
+MOV BL, 'A'       ; BL = 41h (codice ASCII di 'A')
+ADD CX, 10        ; CX = CX + 10
+\end{lstlisting}
+
+\begin{nota}
+I valori immediati sono codificati direttamente nell'istruzione, occupando 1 o 2 byte aggiuntivi. Sono i più veloci da accedere (nessun accesso a memoria).
+\end{nota}
+
+\subsection{2. Register Addressing (Indirizzamento a Registro)}
+
+L'operando risiede in un registro.
+
+\textbf{Sintassi}: \texttt{MOV dest\_reg, src\_reg}
+
+\begin{lstlisting}
+MOV AX, BX        ; AX = BX
+ADD SI, DI        ; SI = SI + DI
+MOV DL, CH        ; DL = CH (byte alto di CX)
+\end{lstlisting}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Velocissime (nessun accesso a memoria)
+    \item Istruzioni compatte (1-2 byte)
+\end{itemize}
+
+\subsection{3. Direct Addressing (Indirizzamento Diretto)}
+
+L'indirizzo effettivo è specificato direttamente nell'istruzione.
+
+\textbf{Sintassi}: \texttt{MOV dest, [indirizzo]}
+
+\begin{lstlisting}
+.DATA
+var1 DW 1234h
+
+.CODE
+MOV AX, [0200h]   ; AX = contenuto di DS:0200h
+MOV BX, var1      ; BX = contenuto di var1
+MOV [1000h], CX   ; Memoria DS:1000h = CX
+\end{lstlisting}
+
+\textbf{Indirizzo effettivo}:
+\[
+\text{EA} = \text{offset specificato nell'istruzione}
+\]
+
+\textbf{Indirizzo fisico}:
+\[
+\text{Fisico} = \text{DS} \times 16 + \text{EA}
+\]
+
+\begin{esempio}
+Se \texttt{DS = 1000h} e si esegue \texttt{MOV AX, [0200h]}:
+
+\begin{align*}
+\text{EA} &= 0200h \\
+\text{Fisico} &= 1000h \times 10h + 0200h \\
+&= 10000h + 0200h \\
+&= 10200h
+\end{align*}
+
+Il contenuto della locazione fisica 10200h viene caricato in AX.
+\end{esempio}
+
+\subsection{4. Register Indirect Addressing (Indirizzamento Indiretto a Registro)}
+
+L'indirizzo è contenuto in un registro (BX, SI, DI, BP).
+
+\textbf{Sintassi}: \texttt{MOV dest, [registro]}
+
+\textbf{Registri utilizzabili}:
+\begin{itemize}
+    \item \texttt{[BX]} — segmento DS (default)
+    \item \texttt{[SI]} — segmento DS
+    \item \texttt{[DI]} — segmento DS
+    \item \texttt{[BP]} — segmento SS (eccezione!)
+\end{itemize}
+
+\begin{lstlisting}
+MOV BX, 1000h
+MOV AL, [BX]      ; AL = byte da DS:1000h
+
+MOV SI, 2000h
+MOV AX, [SI]      ; AX = word da DS:2000h
+
+MOV BP, 0FFFEh
+MOV CX, [BP]      ; CX = word da SS:FFFEh (stack)
+\end{lstlisting}
+
+\begin{attenzione}
+\texttt{[BP]} usa il segmento \textbf{SS} (stack), non DS! Per usare DS con BP:
+\begin{lstlisting}
+MOV AX, DS:[BP]   ; Forza segmento DS
+\end{lstlisting}
+\end{attenzione}
+
+\textbf{Uso tipico}: Accesso ad array e puntatori
+
+\begin{lstlisting}
+.DATA
+array DB 10, 20, 30, 40, 50
+
+.CODE
+MOV BX, OFFSET array  ; BX punta all'array
+MOV AL, [BX]          ; AL = 10 (primo elemento)
+INC BX
+MOV AL, [BX]          ; AL = 20 (secondo elemento)
+\end{lstlisting}
+
+\subsection{5. Based Addressing (Indirizzamento Base + Offset)}
+
+Combina un registro base (BX o BP) con un offset costante.
+
+\textbf{Sintassi}: \texttt{[BX+offset]} o \texttt{[BP+offset]}
+
+\begin{lstlisting}
+MOV AX, [BX+4]    ; AX = contenuto di DS:(BX+4)
+MOV CX, [BP+6]    ; CX = contenuto di SS:(BP+6)
+MOV [BX+10], DX   ; Memoria DS:(BX+10) = DX
+\end{lstlisting}
+
+\textbf{Indirizzo effettivo}:
+\[
+\text{EA} = \text{BX} + \text{offset} \quad \text{(segmento DS)}
+\]
+\[
+\text{EA} = \text{BP} + \text{offset} \quad \text{(segmento SS)}
+\end{lstlisting}
+
+\textbf{Uso tipico}: Accesso a campi di struct
+
+\begin{lstlisting}
+; Struttura: [nome 20 byte][età 1 byte][salario 2 byte]
+MOV BX, OFFSET persona1
+MOV AL, [BX+20]      ; AL = età (offset 20)
+MOV AX, [BX+21]      ; AX = salario (offset 21)
+\end{lstlisting}
+
+\subsection{6. Indexed Addressing (Indirizzamento Indicizzato)}
+
+Combina un registro indice (SI o DI) con un offset costante.
+
+\textbf{Sintassi}: \texttt{[SI+offset]} o \texttt{[DI+offset]}
+
+\begin{lstlisting}
+MOV AX, [SI+2]    ; AX = contenuto di DS:(SI+2)
+MOV BL, [DI+5]    ; BL = byte da DS:(DI+5)
+\end{lstlisting}
+
+\textbf{Uso tipico}: Iterazione su array multi-dimensionali
+
+\begin{lstlisting}
+.DATA
+matrix DW 1, 2, 3, 4, 5, 6   ; Array 2×3
+
+.CODE
+MOV SI, 0
+MOV AX, matrix[SI+0]   ; Elemento (0,0)
+MOV BX, matrix[SI+2]   ; Elemento (0,1)
+MOV CX, matrix[SI+4]   ; Elemento (0,2)
+ADD SI, 6              ; Passa alla seconda riga
+MOV AX, matrix[SI+0]   ; Elemento (1,0)
+\end{lstlisting}
+
+\subsection{7. Based Indexed Addressing (Indirizzamento Base + Indice)}
+
+Combina un registro base (BX o BP) con un registro indice (SI o DI) e opzionalmente un offset.
+
+\textbf{Sintassi}:
+\begin{itemize}
+    \item \texttt{[BX+SI]}
+    \item \texttt{[BX+DI]}
+    \item \texttt{[BP+SI]}
+    \item \texttt{[BP+DI]}
+    \item \texttt{[BX+SI+offset]}
+\end{itemize}
+
+\begin{lstlisting}
+MOV AX, [BX+SI]       ; AX = DS:(BX+SI)
+MOV CL, [BP+DI]       ; CL = SS:(BP+DI)
+MOV DX, [BX+SI+10]    ; DX = DS:(BX+SI+10)
+\end{lstlisting}
+
+\textbf{Indirizzo effettivo}:
+\[
+\text{EA} = \text{BX/BP} + \text{SI/DI} + \text{offset}
+\]
+
+\textbf{Uso tipico}: Array bidimensionali, array di struct
+
+\begin{lstlisting}
+; Matrice 4×3 (word): accesso a elemento [riga][colonna]
+; BX = riga * 6 (3 word × 2 byte)
+; SI = colonna * 2
+
+.DATA
+matrix DW 1,2,3, 4,5,6, 7,8,9, 10,11,12  ; 4 righe × 3 colonne
+
+.CODE
+MOV BX, 6        ; Riga 1 (offset 6 byte)
+MOV SI, 4        ; Colonna 2 (offset 4 byte)
+MOV AX, matrix[BX+SI]   ; AX = 6 (elemento [1][2])
+\end{lstlisting}
+
+\section{Tabella riassuntiva}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lllp{4cm}}
+\toprule
+\textbf{Modalità} & \textbf{Sintassi} & \textbf{EA} & \textbf{Esempio} \\
+\midrule
+Immediate & \texttt{MOV AX, 10} & — & Costante \\
+Register & \texttt{MOV AX, BX} & — & Registro \\
+Direct & \texttt{[1234h]} & 1234h & Variabili globali \\
+Reg. Indirect & \texttt{[BX]} & BX & Array, puntatori \\
+Based & \texttt{[BX+4]} & BX+4 & Struct \\
+Indexed & \texttt{[SI+4]} & SI+4 & Array offset \\
+Based Indexed & \texttt{[BX+SI+4]} & BX+SI+4 & Matrici, array struct \\
+\bottomrule
+\end{tabular}
+\caption{Modalità di indirizzamento 8086}
+\end{table}
+
+\section{Segmenti di default e override}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Registro} & \textbf{Segmento Default} & \textbf{Override} \\
+\midrule
+BX & DS & \texttt{ES:[BX]} \\
+SI & DS & \texttt{SS:[SI]} \\
+DI & DS (tranne stringhe) & \texttt{CS:[DI]} \\
+BP & SS & \texttt{DS:[BP]} \\
+\bottomrule
+\end{tabular}
+\caption{Segmenti di default}
+\end{table}
+
+\begin{esempio}
+Override di segmento:
+
+\begin{lstlisting}
+MOV AX, DS:[BP+4]    ; Forza DS invece di SS
+MOV BX, ES:[BX+SI]   ; Usa ES invece di DS
+MOV CL, CS:[DI]      ; Legge dal segmento codice
+\end{lstlisting}
+\end{esempio}
+
+\section{Esempi pratici completi}
+
+\begin{esempio}
+Array di interi a 16 bit:
+
+\begin{lstlisting}
+.DATA
+numbers DW 100, 200, 300, 400, 500
+
+.CODE
+MOV SI, 0                ; Indice iniziale
+MOV CX, 5                ; Numero elementi
+
+loop_start:
+    MOV AX, numbers[SI]  ; Carica elemento corrente
+    ADD AX, 10           ; Incrementa di 10
+    MOV numbers[SI], AX  ; Salva risultato
+    ADD SI, 2            ; Prossimo elemento (word = 2 byte)
+    LOOP loop_start
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Struct con campi multipli:
+
+\begin{lstlisting}
+; Struct Studente: [matricola 2 byte][voto 1 byte][età 1 byte]
+.DATA
+studente1 DW 12345
+          DB 28, 20
+
+.CODE
+MOV BX, OFFSET studente1
+MOV AX, [BX+0]      ; AX = matricola (12345)
+MOV AL, [BX+2]      ; AL = voto (28)
+MOV AH, [BX+3]      ; AH = età (20)
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Matrice bidimensionale 3×4 (byte):
+
+\begin{lstlisting}
+.DATA
+; Matrice 3 righe × 4 colonne
+matrix DB 1,2,3,4, 5,6,7,8, 9,10,11,12
+
+.CODE
+; Accesso a elemento [riga][colonna]
+; BX = riga * 4 (numero colonne)
+; SI = colonna
+
+MOV BX, 4           ; Riga 1 (offset 4)
+MOV SI, 2           ; Colonna 2
+MOV AL, matrix[BX+SI]  ; AL = 7 (elemento [1][2])
+\end{lstlisting}
+\end{esempio}
+
+\section{Performance e ottimizzazione}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Modalità} & \textbf{Clock Cycles} & \textbf{Byte Istruzione} \\
+\midrule
+Register & 2 & 2 \\
+Immediate & 4 & 3-4 \\
+Direct & 8-10 & 4 \\
+Reg. Indirect & 8-10 & 2-3 \\
+Based/Indexed & 11-12 & 3-4 \\
+Based Indexed & 12-13 & 3-5 \\
+\bottomrule
+\end{tabular}
+\caption{Performance delle modalità di indirizzamento (approssimativa)}
+\end{table}
+
+\begin{nota}
+Le operazioni tra registri sono le più veloci. Minimizzare gli accessi a memoria migliora significativamente le performance.
+\end{nota}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item L'8086 supporta 7 modalità di indirizzamento
+    \item Immediate e Register sono le più veloci (nessun accesso a memoria)
+    \item BX, SI, DI usano segmento DS; BP usa SS
+    \item Based Indexed permette array multidimensionali e struct complesse
+    \item Override di segmento con prefissi ES:, DS:, CS:, SS:
+\end{itemize}
+
+\section{Esercizi}
+
+\begin{esercizio}[3.1]
+Classificare le seguenti istruzioni secondo la modalità di indirizzamento:
+\begin{enumerate}[label=\alph*)]
+    \item \texttt{MOV AX, 1234h}
+    \item \texttt{MOV BX, [SI]}
+    \item \texttt{MOV CL, [BP+4]}
+    \item \texttt{MOV DX, [BX+SI+2]}
+\end{enumerate}
+\end{esercizio}
+
+\begin{esercizio}[3.2]
+Dato \texttt{DS = 2000h}, \texttt{BX = 0100h}, \texttt{SI = 0050h}, calcolare l'indirizzo fisico acceduto da:
+\begin{lstlisting}
+MOV AX, [BX+SI+10]
+\end{lstlisting}
+\end{esercizio}
+
+\begin{esercizio}[3.3]
+Scrivere codice per accedere al terzo elemento (indice 2) di un array di word:
+\begin{lstlisting}
+array DW 10, 20, 30, 40, 50
+\end{lstlisting}
+\end{esercizio}
+
+\begin{esercizio}[3.4]
+Spiegare perché \texttt{MOV AX, [BP]} usa il segmento SS e non DS. Come forzare l'uso di DS?
+\end{esercizio}
+
+\begin{esercizio}[3.5]
+Scrivere codice per sommare tutti gli elementi di un array di 5 byte:
+\begin{lstlisting}
+data DB 10, 20, 30, 40, 50
+\end{lstlisting}
+Usare indirizzamento indiretto e registro contatore.
+\end{esercizio}

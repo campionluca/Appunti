@@ -1,0 +1,905 @@
+\chapter{Esercizi Completi}
+
+\section*{Introduzione}
+Questo capitolo contiene 20 esercizi progressivi che coprono tutti gli argomenti del corso, dalla progettazione ER alla scrittura di query SQL complesse. Gli esercizi sono divisi per livello di difficoltà: base (esercizi 1-6), intermedio (7-13) e avanzato (14-20). Ogni esercizio include la descrizione, il diagramma ER (dove appropriato), schema SQL e query di esempio.
+
+\section*{Esercizi Base (1-6)}
+
+\section{Esercizio 1: Biblioteca Semplice}
+
+\subsection{Descrizione}
+Progettare un database per una biblioteca che gestisce libri, autori e prestiti. Ogni libro ha un titolo, codice ISBN, autore e numero di copie disponibili. Gli autori hanno nome e email. I prestiti registrano quando un cliente prende e restituisce un libro.
+
+\subsection{Diagramma ER}
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=4cm]
+        \node[rectangle, draw, minimum width=2cm, minimum height=1cm] (autore) {Autore};
+        \node[rectangle, draw, minimum width=2cm, minimum height=1cm] (libro) [right of=autore] {Libro};
+        \node[rectangle, draw, minimum width=2cm, minimum height=1cm] (prestito) [right of=libro] {Prestito};
+        \node[rectangle, draw, minimum width=2cm, minimum height=1cm] (cliente) [below of=prestito] {Cliente};
+
+        \draw (autore) -- (libro) node[above, midway] {Scrive};
+        \draw (libro) -- (prestito) node[above, midway] {Ha};
+        \draw (cliente) -- (prestito) node[right, midway] {Effettua};
+    \end{tikzpicture}
+    \caption{Diagramma ER Biblioteca}
+\end{figure}
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Biblioteca]
+CREATE TABLE autore (
+    idAutore INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+CREATE TABLE libro (
+    idLibro INT PRIMARY KEY AUTO_INCREMENT,
+    isbn VARCHAR(13) UNIQUE NOT NULL,
+    titolo VARCHAR(200) NOT NULL,
+    idAutore INT NOT NULL,
+    copieDisponibili INT DEFAULT 1,
+    FOREIGN KEY (idAutore) REFERENCES autore(idAutore)
+);
+
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20)
+);
+
+CREATE TABLE prestito (
+    idPrestito INT PRIMARY KEY AUTO_INCREMENT,
+    idLibro INT NOT NULL,
+    idCliente INT NOT NULL,
+    dataPrestito DATE NOT NULL,
+    dataRestituzione DATE,
+    FOREIGN KEY (idLibro) REFERENCES libro(idLibro),
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+\end{lstlisting}
+
+\subsection{Query di Esempio}
+
+\begin{lstlisting}[language=SQL, caption=Query Biblioteca]
+-- 1. Trovare tutti i libri di un autore specifico
+SELECT titolo, isbn FROM libro WHERE idAutore = 1;
+
+-- 2. Contare i prestiti attivi (non restituiti)
+SELECT COUNT(*) AS prestitiAttivi FROM prestito WHERE dataRestituzione IS NULL;
+
+-- 3. Trovare i libri più prestati
+SELECT l.titolo, COUNT(p.idPrestito) AS numPrestiti
+FROM libro l
+LEFT JOIN prestito p ON l.idLibro = p.idLibro
+GROUP BY l.idLibro, l.titolo
+ORDER BY numPrestiti DESC;
+\end{lstlisting}
+
+\section{Esercizio 2: Azienda e Dipendenti}
+
+\subsection{Descrizione}
+Modellare un'azienda con più dipartimenti. Ogni dipartimento ha un nome e un responsabile (che è un dipendente). Ogni dipendente ha nome, cognome, stipendio e appartiene a un dipartimento.
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Azienda]
+CREATE TABLE dipartimento (
+    idDipartimento INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    idResponsabile INT
+);
+
+CREATE TABLE dipendente (
+    idDipendente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    stipendio DECIMAL(10, 2),
+    idDipartimento INT NOT NULL,
+    FOREIGN KEY (idDipartimento) REFERENCES dipartimento(idDipartimento)
+);
+
+-- Aggiungere la FK al responsabile (gestire circolarità)
+ALTER TABLE dipartimento
+ADD CONSTRAINT fk_responsabile FOREIGN KEY (idResponsabile) REFERENCES dipendente(idDipendente);
+\end{lstlisting}
+
+\subsection{Query di Esempio}
+
+\begin{lstlisting}[language=SQL, caption=Query Azienda]
+-- Stipendio medio per dipartimento
+SELECT d.nome, AVG(dip.stipendio) AS stipendioMedio
+FROM dipartimento d
+LEFT JOIN dipendente dip ON d.idDipartimento = dip.idDipartimento
+GROUP BY d.idDipartimento, d.nome;
+
+-- Dipendenti che guadagnano più della media del loro dipartimento
+SELECT dip.nome, dip.cognome, dip.stipendio
+FROM dipendente dip
+WHERE dip.stipendio > (
+    SELECT AVG(stipendio) FROM dipendente dip2
+    WHERE dip2.idDipartimento = dip.idDipartimento
+);
+\end{lstlisting}
+
+\section{Esercizio 3: E-commerce Semplice}
+
+\subsection{Descrizione}
+Modellare un semplice e-commerce: clienti che effettuano ordini, ordini contengono prodotti, ogni prodotto ha un prezzo e categoria.
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle E-commerce]
+CREATE TABLE cliente (
+    idCliente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    dataRegistrazione DATE DEFAULT CURDATE()
+);
+
+CREATE TABLE categoria (
+    idCategoria INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE prodotto (
+    idProdotto INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    prezzo DECIMAL(10, 2) NOT NULL,
+    idCategoria INT NOT NULL,
+    FOREIGN KEY (idCategoria) REFERENCES categoria(idCategoria)
+);
+
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY AUTO_INCREMENT,
+    idCliente INT NOT NULL,
+    dataOrdine DATE DEFAULT CURDATE(),
+    stato ENUM('Pendente', 'Spedito', 'Consegnato', 'Cancellato'),
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+
+CREATE TABLE dettaglioOrdine (
+    idDettaglio INT PRIMARY KEY AUTO_INCREMENT,
+    idOrdine INT NOT NULL,
+    idProdotto INT NOT NULL,
+    quantità INT NOT NULL,
+    prezzoUnitario DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (idOrdine) REFERENCES ordine(idOrdine),
+    FOREIGN KEY (idProdotto) REFERENCES prodotto(idProdotto)
+);
+\end{lstlisting}
+
+\section{Esercizio 4: Ospedale}
+
+\subsection{Descrizione}
+Modellare un ospedale: pazienti, medici, reparti, ricoveri e visite. Ogni paziente può essere ricoverato in un reparto per un periodo. Ogni visita è effettuata da un medico a un paziente in una data specifica.
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Ospedale]
+CREATE TABLE reparto (
+    idReparto INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) UNIQUE NOT NULL,
+    numLetti INT
+);
+
+CREATE TABLE medico (
+    idMedico INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    specializzazione VARCHAR(50),
+    idReparto INT,
+    FOREIGN KEY (idReparto) REFERENCES reparto(idReparto)
+);
+
+CREATE TABLE paziente (
+    idPaziente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    dataRegistrazione DATE DEFAULT CURDATE()
+);
+
+CREATE TABLE ricovero (
+    idRicovero INT PRIMARY KEY AUTO_INCREMENT,
+    idPaziente INT NOT NULL,
+    idReparto INT NOT NULL,
+    dataInizio DATE NOT NULL,
+    dataFine DATE,
+    FOREIGN KEY (idPaziente) REFERENCES paziente(idPaziente),
+    FOREIGN KEY (idReparto) REFERENCES reparto(idReparto)
+);
+
+CREATE TABLE visita (
+    idVisita INT PRIMARY KEY AUTO_INCREMENT,
+    idPaziente INT NOT NULL,
+    idMedico INT NOT NULL,
+    dataVisita DATE NOT NULL,
+    diagnosi TEXT,
+    FOREIGN KEY (idPaziente) REFERENCES paziente(idPaziente),
+    FOREIGN KEY (idMedico) REFERENCES medico(idMedico)
+);
+\end{lstlisting}
+
+\section{Esercizio 5: Scuola}
+
+\subsection{Descrizione}
+Modellare una scuola: studenti, insegnanti, classi, corsi e voti. Ogni studente appartiene a una classe e riceve voti per i corsi.
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Scuola]
+CREATE TABLE classe (
+    idClasse INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(10) UNIQUE NOT NULL,
+    numStudenti INT
+);
+
+CREATE TABLE studente (
+    idStudente INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    dataIscrizione DATE DEFAULT CURDATE(),
+    idClasse INT NOT NULL,
+    FOREIGN KEY (idClasse) REFERENCES classe(idClasse)
+);
+
+CREATE TABLE insegnante (
+    idInsegnante INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL
+);
+
+CREATE TABLE corso (
+    idCorso INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    idInsegnante INT NOT NULL,
+    idClasse INT NOT NULL,
+    FOREIGN KEY (idInsegnante) REFERENCES insegnante(idInsegnante),
+    FOREIGN KEY (idClasse) REFERENCES classe(idClasse)
+);
+
+CREATE TABLE voto (
+    idVoto INT PRIMARY KEY AUTO_INCREMENT,
+    idStudente INT NOT NULL,
+    idCorso INT NOT NULL,
+    valore INT CHECK (valore >= 0 AND valore <= 10),
+    dataVoto DATE DEFAULT CURDATE(),
+    FOREIGN KEY (idStudente) REFERENCES studente(idStudente),
+    FOREIGN KEY (idCorso) REFERENCES corso(idCorso)
+);
+\end{lstlisting}
+
+\section{Esercizio 6: Ristorante}
+
+\subsection{Descrizione}
+Modellare un ristorante: tavoli, piatti nel menu, ordini dei clienti e prenotazioni. Ogni prenotazione è per un tavolo in una data/ora specifica.
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Ristorante]
+CREATE TABLE piatto (
+    idPiatto INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    prezzo DECIMAL(8, 2) NOT NULL,
+    categoria ENUM('Antipasto', 'Primo', 'Secondo', 'Dolce', 'Bevanda')
+);
+
+CREATE TABLE tavolo (
+    idTavolo INT PRIMARY KEY AUTO_INCREMENT,
+    numero INT UNIQUE NOT NULL,
+    numPosti INT
+);
+
+CREATE TABLE prenotazione (
+    idPrenotazione INT PRIMARY KEY AUTO_INCREMENT,
+    idTavolo INT NOT NULL,
+    nomeCliente VARCHAR(100) NOT NULL,
+    dataPrenotazione DATE NOT NULL,
+    oraPrenotazione TIME NOT NULL,
+    numPersone INT,
+    FOREIGN KEY (idTavolo) REFERENCES tavolo(idTavolo)
+);
+
+CREATE TABLE ordinazione (
+    idOrdinazione INT PRIMARY KEY AUTO_INCREMENT,
+    idPrenotazione INT,
+    idTavolo INT,
+    dataOrdinazione DATETIME DEFAULT NOW(),
+    FOREIGN KEY (idPrenotazione) REFERENCES prenotazione(idPrenotazione),
+    FOREIGN KEY (idTavolo) REFERENCES tavolo(idTavolo)
+);
+
+CREATE TABLE dettaglioOrdinazione (
+    idDettaglio INT PRIMARY KEY AUTO_INCREMENT,
+    idOrdinazione INT NOT NULL,
+    idPiatto INT NOT NULL,
+    quantità INT DEFAULT 1,
+    FOREIGN KEY (idOrdinazione) REFERENCES ordinazione(idOrdinazione),
+    FOREIGN KEY (idPiatto) REFERENCES piatto(idPiatto)
+);
+\end{lstlisting}
+
+\section*{Esercizi Intermedi (7-13)}
+
+\section{Esercizio 7: Query con JOIN Complessi}
+
+\subsection{Descrizione}
+Usando il database E-commerce (Esercizio 3), scrivi le seguenti query:
+
+\begin{lstlisting}[language=SQL, caption=Query E-commerce Intermedie]
+-- 1. Elenco clienti con numero totale di ordini e importo speso
+SELECT
+    c.idCliente,
+    c.nome,
+    COUNT(DISTINCT o.idOrdine) AS numOrdini,
+    SUM(d.quantità * d.prezzoUnitario) AS totalSpeso
+FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+LEFT JOIN dettaglioOrdine d ON o.idOrdine = d.idOrdine
+GROUP BY c.idCliente, c.nome
+ORDER BY totalSpeso DESC;
+
+-- 2. Prodotti mai ordinati
+SELECT DISTINCT p.idProdotto, p.nome
+FROM prodotto p
+WHERE p.idProdotto NOT IN (
+    SELECT DISTINCT idProdotto FROM dettaglioOrdine
+);
+
+-- 3. Categoria con fatturato più alto
+SELECT
+    cat.nome,
+    SUM(d.quantità * d.prezzoUnitario) AS fatturato
+FROM categoria cat
+INNER JOIN prodotto p ON cat.idCategoria = p.idCategoria
+INNER JOIN dettaglioOrdine d ON p.idProdotto = d.idProdotto
+GROUP BY cat.idCategoria, cat.nome
+ORDER BY fatturato DESC
+LIMIT 1;
+\end{lstlisting}
+
+\section{Esercizio 8: Subquery e Viste}
+
+\subsection{Descrizione}
+Usando il database Azienda (Esercizio 2), crea viste e subquery per analizzare i dati.
+
+\begin{lstlisting}[language=SQL, caption=Viste e Subquery Azienda]
+-- Creare una vista per stipendi sopra la media
+CREATE VIEW dipendentiSopraMedia AS
+SELECT d.nome, d.cognome, d.stipendio
+FROM dipendente d
+WHERE d.stipendio > (SELECT AVG(stipendio) FROM dipendente);
+
+-- Usare la vista
+SELECT * FROM dipendentiSopraMedia;
+
+-- Subquery: dipendenti nel dipartimento con stipendio medio più alto
+SELECT d.nome, d.cognome, d.stipendio
+FROM dipendente d
+WHERE d.idDipartimento = (
+    SELECT idDipartimento FROM (
+        SELECT idDipartimento, AVG(stipendio) AS mediaStipendio
+        FROM dipendente
+        GROUP BY idDipartimento
+        ORDER BY mediaStipendio DESC
+        LIMIT 1
+    ) AS maxDip
+);
+\end{lstlisting}
+
+\section{Esercizio 9: Aggregazioni Complesse}
+
+\subsection{Descrizione}
+Usando il database Ospedale (Esercizio 4), analizza dati aggregati.
+
+\begin{lstlisting}[language=SQL, caption=Aggregazioni Ospedale]
+-- Numero di pazienti per reparto
+SELECT
+    r.nome,
+    COUNT(DISTINCT p.idPaziente) AS numPazienti,
+    COUNT(DISTINCT ri.idRicovero) AS numRicoveri,
+    AVG(DATEDIFF(ri.dataFine, ri.dataInizio)) AS durataMediaRicovero
+FROM reparto r
+LEFT JOIN ricovero ri ON r.idReparto = ri.idReparto
+LEFT JOIN paziente p ON ri.idPaziente = p.idPaziente
+GROUP BY r.idReparto, r.nome
+ORDER BY numPazienti DESC;
+
+-- Medici con più visite
+SELECT
+    m.nome,
+    m.cognome,
+    m.specializzazione,
+    COUNT(v.idVisita) AS numVisite
+FROM medico m
+LEFT JOIN visita v ON m.idMedico = v.idMedico
+GROUP BY m.idMedico, m.nome, m.cognome, m.specializzazione
+ORDER BY numVisite DESC;
+\end{lstlisting}
+
+\section{Esercizio 10: Transazioni}
+
+\subsection{Descrizione}
+Simula un trasferimento di fondi tra due conti (usando la tabella cliente). Scrivi una transazione che aggiorna i saldi correttamente.
+
+\begin{lstlisting}[language=SQL, caption=Transazione Trasferimento Fondi]
+START TRANSACTION;
+
+-- 1. Verificare che il cliente mittente abbia abbastanza fondi
+SELECT saldo FROM cliente WHERE idCliente = 1 FOR UPDATE;
+
+-- 2. Se OK, debito dal mittente
+UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
+
+-- Savepoint: in caso di errore successivo, rollback fino qui
+SAVEPOINT dopo_debito;
+
+-- 3. Credito al destinatario
+UPDATE cliente SET saldo = saldo + 100 WHERE idCliente = 2;
+
+-- 4. Registrare la transazione
+INSERT INTO movimento (idCliente, tipo, importo, data)
+VALUES (1, 'Trasferimento', -100, NOW()),
+       (2, 'Trasferimento', 100, NOW());
+
+-- Se tutto OK, salvare
+COMMIT;
+\end{lstlisting}
+
+\section{Esercizio 11: Vincoli e Integrità}
+
+\subsection{Descrizione}
+Aggiungi vincoli a una tabella ordine per garantire integrità.
+
+\begin{lstlisting}[language=SQL, caption=Vincoli Integrità Ordine]
+CREATE TABLE ordine (
+    idOrdine INT PRIMARY KEY AUTO_INCREMENT,
+    idCliente INT NOT NULL,
+    dataOrdine DATE DEFAULT CURDATE(),
+    totale DECIMAL(10, 2) NOT NULL,
+    stato ENUM('Pendente', 'Spedito', 'Consegnato') DEFAULT 'Pendente',
+    -- Vincoli
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente) ON DELETE RESTRICT,
+    CHECK (totale > 0),
+    CHECK (dataOrdine <= CURDATE())  -- Non può essere futuro
+);
+
+-- Aggiungere indice per query frequenti
+CREATE INDEX idx_cliente ON ordine(idCliente);
+CREATE INDEX idx_data ON ordine(dataOrdine);
+CREATE INDEX idx_stato ON ordine(stato);
+\end{lstlisting}
+
+\section{Esercizio 12: UPDATE e DELETE Complessi}
+
+\subsection{Descrizione}
+Aggiorna dati basati su condizioni complesse.
+
+\begin{lstlisting}[language=SQL, caption=UPDATE e DELETE Complessi]
+-- Aumentare il prezzo dei prodotti in categoria "Elettronica" del 10%
+UPDATE prodotto SET prezzo = prezzo * 1.10
+WHERE idCategoria = (SELECT idCategoria FROM categoria WHERE nome = 'Elettronica');
+
+-- Cancellare ordini annullati più di un anno fa
+DELETE FROM dettaglioOrdine
+WHERE idOrdine IN (
+    SELECT idOrdine FROM ordine
+    WHERE stato = 'Cancellato' AND dataOrdine < DATE_SUB(NOW(), INTERVAL 1 YEAR)
+);
+
+DELETE FROM ordine
+WHERE stato = 'Cancellato' AND dataOrdine < DATE_SUB(NOW(), INTERVAL 1 YEAR);
+
+-- Impostare stato inattivo per clienti che non hanno ordinato negli ultimi 2 anni
+UPDATE cliente SET stato = 'Inattivo'
+WHERE idCliente NOT IN (
+    SELECT DISTINCT idCliente FROM ordine
+    WHERE dataOrdine > DATE_SUB(NOW(), INTERVAL 2 YEAR)
+);
+\end{lstlisting}
+
+\section{Esercizio 13: Ottimizzazione Query}
+
+\subsection{Descrizione}
+Riscrivi query non ottimizzate in modo più efficiente.
+
+\begin{lstlisting}[language=SQL, caption=Ottimizzazione Query]
+-- LENTO: Subquery correlata
+SELECT c.nome FROM cliente c
+WHERE EXISTS (
+    SELECT 1 FROM ordine o WHERE o.idCliente = c.idCliente
+    AND YEAR(o.dataOrdine) = 2023
+);
+
+-- VELOCE: INNER JOIN
+SELECT DISTINCT c.nome FROM cliente c
+INNER JOIN ordine o ON c.idCliente = o.idCliente
+WHERE YEAR(o.dataOrdine) = 2023;
+
+-- LENTO: NOT IN con subquery (NULL issues)
+SELECT nome FROM cliente
+WHERE idCliente NOT IN (SELECT idCliente FROM ordine);
+
+-- VELOCE: LEFT JOIN con NULL check
+SELECT c.nome FROM cliente c
+LEFT JOIN ordine o ON c.idCliente = o.idCliente
+WHERE o.idOrdine IS NULL;
+\end{lstlisting}
+
+\section*{Esercizi Avanzati (14-20)}
+
+\section{Esercizio 14: Progettazione Completa ER}
+
+\subsection{Descrizione}
+Progettare un database per una piattaforma di social media (utenti, post, commenti, like, follow).
+
+\subsection{Schema SQL}
+
+\begin{lstlisting}[language=SQL, caption=Creazione Tabelle Social Media]
+CREATE TABLE utente (
+    idUtente INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    dataIscrizione DATETIME DEFAULT NOW()
+);
+
+CREATE TABLE post (
+    idPost INT PRIMARY KEY AUTO_INCREMENT,
+    idAutore INT NOT NULL,
+    contenuto TEXT NOT NULL,
+    dataCreazione DATETIME DEFAULT NOW(),
+    FOREIGN KEY (idAutore) REFERENCES utente(idUtente)
+);
+
+CREATE TABLE commento (
+    idCommento INT PRIMARY KEY AUTO_INCREMENT,
+    idPost INT NOT NULL,
+    idAutore INT NOT NULL,
+    contenuto TEXT NOT NULL,
+    dataCreazione DATETIME DEFAULT NOW(),
+    FOREIGN KEY (idPost) REFERENCES post(idPost),
+    FOREIGN KEY (idAutore) REFERENCES utente(idUtente)
+);
+
+CREATE TABLE like (
+    idLike INT PRIMARY KEY AUTO_INCREMENT,
+    idUtente INT NOT NULL,
+    idPost INT,
+    idCommento INT,
+    dataLike DATETIME DEFAULT NOW(),
+    FOREIGN KEY (idUtente) REFERENCES utente(idUtente),
+    FOREIGN KEY (idPost) REFERENCES post(idPost),
+    FOREIGN KEY (idCommento) REFERENCES commento(idCommento),
+    CHECK ((idPost IS NOT NULL AND idCommento IS NULL) OR (idPost IS NULL AND idCommento IS NOT NULL))
+);
+
+CREATE TABLE follow (
+    idFollow INT PRIMARY KEY AUTO_INCREMENT,
+    idSeguace INT NOT NULL,
+    idSeguito INT NOT NULL,
+    dataFollow DATETIME DEFAULT NOW(),
+    UNIQUE KEY (idSeguace, idSeguito),
+    FOREIGN KEY (idSeguace) REFERENCES utente(idUtente),
+    FOREIGN KEY (idSeguito) REFERENCES utente(idUtente),
+    CHECK (idSeguace != idSeguito)
+);
+\end{lstlisting}
+
+\subsection{Query Avanzate}
+
+\begin{lstlisting}[language=SQL, caption=Query Avanzate Social Media]
+-- Post più popolari (ordini per like)
+SELECT
+    p.idPost,
+    u.username,
+    p.contenuto,
+    COUNT(l.idLike) AS numLike,
+    COUNT(DISTINCT c.idCommento) AS numCommenti
+FROM post p
+INNER JOIN utente u ON p.idAutore = u.idUtente
+LEFT JOIN like l ON p.idPost = l.idPost
+LEFT JOIN commento c ON p.idPost = c.idPost
+GROUP BY p.idPost, u.username, p.contenuto
+ORDER BY numLike DESC
+LIMIT 10;
+
+-- Utenti più seguiti
+SELECT
+    u.idUtente,
+    u.username,
+    COUNT(f.idFollow) AS numSeguaci
+FROM utente u
+LEFT JOIN follow f ON u.idUtente = f.idSeguito
+GROUP BY u.idUtente, u.username
+ORDER BY numSeguaci DESC
+LIMIT 10;
+
+-- Feed personalizzato (post di utenti seguiti)
+SELECT
+    p.idPost,
+    u.username,
+    p.contenuto,
+    p.dataCreazione
+FROM post p
+INNER JOIN utente u ON p.idAutore = u.idUtente
+WHERE p.idAutore IN (
+    SELECT idSeguito FROM follow WHERE idSeguace = 1  -- Utente 1
+)
+ORDER BY p.dataCreazione DESC
+LIMIT 20;
+\end{lstlisting}
+
+\section{Esercizio 15: Case Study: Ecommerce Completo}
+
+\subsection{Descrizione}
+Espandere il database e-commerce con le seguenti funzionalità:
+- Magazzino e tracciamento stock
+- Ordini con indirizzo di spedizione diverso da fatturazione
+- Sistema di rating e recensioni
+- Coupon e sconti
+
+\subsection{Schema SQL Esteso}
+
+\begin{lstlisting}[language=SQL, caption=Tabelle Ecommerce Esteso, firstline=1, lastline=40]
+-- Tabella magazzino
+CREATE TABLE magazzino (
+    idMagazzino INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    città VARCHAR(50)
+);
+
+CREATE TABLE stock (
+    idStock INT PRIMARY KEY AUTO_INCREMENT,
+    idProdotto INT NOT NULL,
+    idMagazzino INT NOT NULL,
+    quantitàDisponibile INT DEFAULT 0,
+    UNIQUE KEY (idProdotto, idMagazzino),
+    FOREIGN KEY (idProdotto) REFERENCES prodotto(idProdotto),
+    FOREIGN KEY (idMagazzino) REFERENCES magazzino(idMagazzino)
+);
+
+-- Tabella indirizzi (spedizione e fatturazione)
+CREATE TABLE indirizzo (
+    idIndirizzo INT PRIMARY KEY AUTO_INCREMENT,
+    idCliente INT NOT NULL,
+    via VARCHAR(100) NOT NULL,
+    civico VARCHAR(10),
+    città VARCHAR(50),
+    provincia VARCHAR(2),
+    cap VARCHAR(5),
+    tipo ENUM('Fatturazione', 'Spedizione'),
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+
+-- Tabella recensioni
+CREATE TABLE recensione (
+    idRecensione INT PRIMARY KEY AUTO_INCREMENT,
+    idProdotto INT NOT NULL,
+    idCliente INT NOT NULL,
+    valutazione INT CHECK (valutazione >= 1 AND valutazione <= 5),
+    testo TEXT,
+    dataRecensione DATE DEFAULT CURDATE(),
+    FOREIGN KEY (idProdotto) REFERENCES prodotto(idProdotto),
+    FOREIGN KEY (idCliente) REFERENCES cliente(idCliente)
+);
+
+-- Tabella coupon
+CREATE TABLE coupon (
+    idCoupon INT PRIMARY KEY AUTO_INCREMENT,
+    codice VARCHAR(20) UNIQUE NOT NULL,
+    sconto DECIMAL(5, 2),  -- Percentuale
+    dataInizio DATE,
+    dataFine DATE,
+    usoMassimo INT
+);
+\end{lstlisting}
+
+\begin{lstlisting}[language=SQL, caption=Query Ecommerce Complesse, firstline=41]
+-- Prodotti con stock critico
+SELECT
+    p.idProdotto,
+    p.nome,
+    SUM(s.quantitàDisponibile) AS totalStock
+FROM prodotto p
+LEFT JOIN stock s ON p.idProdotto = s.idProdotto
+GROUP BY p.idProdotto, p.nome
+HAVING totalStock < 10
+ORDER BY totalStock ASC;
+
+-- Prodotti più recensiti
+SELECT
+    p.idProdotto,
+    p.nome,
+    COUNT(r.idRecensione) AS numRecensioni,
+    AVG(r.valutazione) AS valutazioneMedia
+FROM prodotto p
+LEFT JOIN recensione r ON p.idProdotto = r.idProdotto
+GROUP BY p.idProdotto, p.nome
+HAVING numRecensioni > 5
+ORDER BY valutazioneMedia DESC;
+\end{lstlisting}
+
+\section{Esercizio 16: Query con Window Functions}
+
+\subsection{Descrizione}
+Usa funzioni finestra per analizzare dati temporali.
+
+\begin{lstlisting}[language=SQL, caption=Window Functions]
+-- Ranking dei prodotti per vendite
+SELECT
+    p.idProdotto,
+    p.nome,
+    SUM(d.quantità) AS unitàVendute,
+    RANK() OVER (ORDER BY SUM(d.quantità) DESC) AS rank
+FROM prodotto p
+LEFT JOIN dettaglioOrdine d ON p.idProdotto = d.idProdotto
+GROUP BY p.idProdotto, p.nome;
+
+-- Totale cumulativo di vendite per data
+SELECT
+    DATE(dataOrdine) AS data,
+    SUM(totale) AS venditeGiorno,
+    SUM(SUM(totale)) OVER (ORDER BY DATE(dataOrdine)) AS venditeCumulative
+FROM ordine
+GROUP BY DATE(dataOrdine);
+
+-- Differenza da cliente precedente
+SELECT
+    idCliente,
+    dataRegistrazione,
+    LAG(idCliente) OVER (ORDER BY dataRegistrazione) AS clientePrecedente,
+    LEAD(idCliente) OVER (ORDER BY dataRegistrazione) AS clienteSuccessivo
+FROM cliente;
+\end{lstlisting}
+
+\section{Esercizio 17: Procedure Stored (Pseudocodice)}
+
+\subsection{Descrizione}
+Creare una procedura che processa ordini automaticamente.
+
+\begin{lstlisting}[language=SQL, caption=Procedura Stored - Processare Ordini]
+-- PSEUDOCODICE (sintassi MySQL)
+CREATE PROCEDURE ProcessaOrdine(IN pIdOrdine INT)
+BEGIN
+    DECLARE vTotale DECIMAL(10, 2);
+    DECLARE vIdCliente INT;
+    DECLARE vStato VARCHAR(20);
+
+    START TRANSACTION;
+
+    -- Verificare lo stato dell'ordine
+    SELECT idCliente, stato INTO vIdCliente, vStato
+    FROM ordine WHERE idOrdine = pIdOrdine;
+
+    IF vStato = 'Pendente' THEN
+        -- Aggiornare stock
+        UPDATE stock SET quantitàDisponibile = quantitàDisponibile - (
+            SELECT quantità FROM dettaglioOrdine WHERE idOrdine = pIdOrdine
+        );
+
+        -- Aggiornare stato ordine
+        UPDATE ordine SET stato = 'Elaborato' WHERE idOrdine = pIdOrdine;
+
+        -- Registrare nel log
+        INSERT INTO logProcessamento (idOrdine, azione, dataAzione)
+        VALUES (pIdOrdine, 'Elaborato', NOW());
+
+        COMMIT;
+    ELSE
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ordine non in stato Pendente';
+    END IF;
+END;
+\end{lstlisting}
+
+\section{Esercizio 18: Backup e Ripristino}
+
+\subsection{Descrizione}
+Script per backup e ripristino del database.
+
+\begin{lstlisting}[language=SQL, caption=Backup e Ripristino (da terminale)]
+-- BACKUP (eseguire da terminale)
+-- mysqldump -u utente -p nomeDatabases > backup_2025-01-01.sql
+
+-- RIPRISTINO
+-- mysql -u utente -p nomeDatabases < backup_2025-01-01.sql
+
+-- Creare backup incrementale
+FLUSH LOGS;
+
+-- Verificare file di log
+SHOW BINARY LOGS;
+
+-- In SQL, esportare dati specifici
+SELECT * INTO OUTFILE '/tmp/ordini_2023.csv'
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+FROM ordine WHERE YEAR(dataOrdine) = 2023;
+\end{lstlisting}
+
+\section{Esercizio 19: Monitoring Performance}
+
+\subsection{Descrizione}
+Analizza e ottimizza le prestazioni delle query.
+
+\begin{lstlisting}[language=SQL, caption=Monitoring Performance]
+-- Abilitare profilo di query (MySQL)
+SET profiling = 1;
+
+-- Eseguire query da analizzare
+SELECT * FROM cliente WHERE idCliente = 1;
+
+-- Visualizzare risultati del profiling
+SHOW PROFILES;
+SHOW PROFILE FOR QUERY 1;
+
+-- Analizzare query con EXPLAIN
+EXPLAIN SELECT * FROM ordine o
+INNER JOIN cliente c ON o.idCliente = c.idCliente
+WHERE c.città = 'Milano';
+
+-- EXPLAIN esteso
+EXPLAIN FORMAT=JSON SELECT * FROM ordine WHERE dataOrdine > '2023-01-01';
+
+-- Visualizzare indici di una tabella
+SHOW INDEX FROM ordine;
+
+-- Analizzare tabella per ottimizzarla
+ANALYZE TABLE ordine;
+\end{lstlisting}
+
+\section{Esercizio 20: Database Replicato}
+
+\subsection{Descrizione}
+Configurare replica master-slave per alta disponibilità (pseudocodice).
+
+\begin{lstlisting}[language=SQL, caption=Replica Master-Slave (Configurazione)]
+-- SUL MASTER
+-- 1. Verificare status
+SHOW MASTER STATUS;
+
+-- 2. Creare utente per replicazione
+CREATE USER 'repl'@'slave_ip' IDENTIFIED BY 'password';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'slave_ip';
+
+-- SUL SLAVE
+-- 1. Configurare connessione al master
+CHANGE MASTER TO
+    MASTER_HOST='master_ip',
+    MASTER_USER='repl',
+    MASTER_PASSWORD='password',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=154;
+
+-- 2. Avviare replicazione
+START SLAVE;
+
+-- 3. Verificare status replicazione
+SHOW SLAVE STATUS;
+
+-- Se ci sono errori
+SHOW SLAVE STATUS\G;
+-- Verificare Slave_IO_Running e Slave_SQL_Running siano "Yes"
+\end{lstlisting}
+
+\section{Riepilogo Esercizi}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Competenze Acquisite]
+Completando questi 20 esercizi, avrai acquisito competenze in:
+\begin{itemize}
+    \item Progettazione ER da zero
+    \item Normalizzazione e schema SQL
+    \item JOIN complessi su multiple tabelle
+    \item Aggregazioni e GROUP BY
+    \item Subquery e viste
+    \item Transazioni e ACID
+    \item Ottimizzazione query
+    \item Gestione di database reali
+    \item Sicurezza e integrità dati
+    \item Monitoraggio e performance
+\end{itemize}
+\end{tcolorbox}

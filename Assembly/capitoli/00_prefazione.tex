@@ -1,0 +1,139 @@
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{A chi è rivolto questo manuale}
+
+Questo manuale di programmazione Assembly 8086 è pensato per studenti di istituti tecnici superiori che desiderano comprendere a fondo il funzionamento del microprocessore e acquisire competenze di programmazione a basso livello. Il corso fornisce una solida base teorica e pratica sulla programmazione Assembly, fondamentale per chi intende specializzarsi in sistemi embedded, reverse engineering, ottimizzazione del codice o sicurezza informatica.
+
+\section*{Prerequisiti}
+
+Prima di affrontare questo corso è necessario avere:
+
+\begin{itemize}
+    \item Conoscenza di base della programmazione (C o linguaggi simili)
+    \item Comprensione dei sistemi di numerazione (binario, esadecimale)
+    \item Nozioni di base di architettura dei computer
+    \item Familiarità con i concetti di variabili, cicli e condizioni
+\end{itemize}
+
+\section*{Obiettivi del corso}
+
+Al termine del corso lo studente sarà in grado di:
+
+\begin{enumerate}
+    \item \textbf{Comprendere l'architettura 8086}: registri, segmenti, modalità di indirizzamento
+    \item \textbf{Scrivere programmi Assembly}: utilizzando il set completo di istruzioni
+    \item \textbf{Gestire procedure e stack}: chiamate a funzione, passaggio parametri
+    \item \textbf{Programmare interrupt}: gestione I/O e servizi DOS
+    \item \textbf{Ottimizzare il codice}: tecniche per efficienza e performance
+    \item \textbf{Debugging}: identificare e correggere errori in Assembly
+\end{enumerate}
+
+\section*{Strumenti utilizzati}
+
+Per seguire il corso è necessario disporre di:
+
+\begin{itemize}
+    \item \textbf{Emulatore 8086}: EMU8086, DOSBox, NASM, MASM
+    \item \textbf{Debugger}: Debug.exe, TD (Turbo Debugger), GDB
+    \item \textbf{Editor di testo}: Notepad++, VS Code, TASM IDE
+    \item \textbf{Sistema operativo}: Windows/Linux/macOS con emulatore DOS
+\end{itemize}
+
+\subsection*{EMU8086 (Consigliato)}
+
+EMU8086 è un ambiente integrato che combina assembler, disassembler ed emulatore. Permette di:
+\begin{itemize}
+    \item Scrivere e assemblare codice Assembly 8086
+    \item Eseguire programmi step-by-step
+    \item Visualizzare registri e memoria in tempo reale
+    \item Debuggare con breakpoint
+\end{itemize}
+
+\textbf{Download}: \url{https://emu8086-microprocessor-emulator.en.softonic.com/}
+
+\subsection*{NASM (Netwide Assembler)}
+
+NASM è un assembler open-source multi-piattaforma:
+
+\begin{lstlisting}[language=bash, style=assemblystyle]
+# Installazione su Linux
+sudo apt-get install nasm
+
+# Assemblaggio e linking
+nasm -f elf program.asm -o program.o
+ld -m elf_i386 program.o -o program
+
+# Esecuzione
+./program
+\end{lstlisting}
+
+\subsection*{DOSBox}
+
+Per eseguire programmi .COM e .EXE su sistemi moderni:
+
+\begin{lstlisting}[language=bash, style=assemblystyle]
+# Installazione
+sudo apt-get install dosbox  # Linux
+brew install dosbox           # macOS
+
+# Esecuzione
+dosbox
+mount c ~/assembly
+c:
+program.exe
+\end{lstlisting}
+
+\section*{Struttura del manuale}
+
+Il libro è organizzato in 4 parti:
+
+\begin{description}
+    \item[Parte I --- Fondamenti (Cap. 1-3)] Architettura 8086, registri, memoria, modalità di indirizzamento
+    \item[Parte II --- Set di Istruzioni (Cap. 4-7)] Istruzioni di trasferimento dati, aritmetiche, logiche, controllo di flusso
+    \item[Parte III --- Tecniche Avanzate (Cap. 8-11)] Procedure, stack, stringhe, interrupt, I/O hardware
+    \item[Parte IV --- Applicazioni (Cap. 12-13)] Progetti completi ed esercizi pratici
+\end{description}
+
+\section*{Convenzioni tipografiche}
+
+\begin{itemize}
+    \item \texttt{MOV AX, BX} --- Codice Assembly inline
+    \item \textbf{Registro AX} --- Termini tecnici importanti
+    \item \emph{little-endian} --- Concetti da memorizzare
+\end{itemize}
+
+\begin{nota}
+I codici di esempio sono testati con EMU8086 e NASM. Alcune istruzioni potrebbero richiedere adattamenti per altri assembler.
+\end{nota}
+
+\section*{Metodologia didattica}
+
+Ogni capitolo segue questa struttura:
+\begin{enumerate}
+    \item \textbf{Introduzione teorica}: Spiegazione del concetto
+    \item \textbf{Esempi commentati}: Codice Assembly con spiegazioni dettagliate
+    \item \textbf{Esercizi guidati}: Problemi con soluzione passo-passo
+    \item \textbf{Esercizi proposti}: Sfide per consolidare l'apprendimento
+    \item \textbf{Riepilogo}: Punti chiave del capitolo
+\end{enumerate}
+
+\section*{Supporto e risorse}
+
+\begin{itemize}
+    \item \textbf{Manuale Intel 8086}: \url{https://www.intel.com/}
+    \item \textbf{OSDev Wiki}: \url{https://wiki.osdev.org/}
+    \item \textbf{Assembly Language Tutorial}: \url{https://www.tutorialspoint.com/assembly_programming/}
+    \item \textbf{Stack Overflow}: Tag [assembly] e [x86]
+\end{itemize}
+
+\section*{Ringraziamenti}
+
+Si ringraziano tutti gli studenti che hanno contribuito con feedback e suggerimenti al miglioramento di questo materiale didattico.
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Buono studio!}\\
+Gli autori
+\end{flushright}

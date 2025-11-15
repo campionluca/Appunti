@@ -1,0 +1,169 @@
+\chapter{Operazioni su Stringhe}
+
+\section{Introduzione}
+
+Le istruzioni su stringhe dell'8086 operano su sequenze di byte o word in memoria, usando SI (source) e DI (destination).
+
+\section{Registri per Stringhe}
+
+\begin{itemize}
+    \item \textbf{SI}: Source Index (DS:SI per default)
+    \item \textbf{DI}: Destination Index (ES:DI sempre)
+    \item \textbf{CX}: Contatore per prefissi REP
+    \item \textbf{DF}: Direction Flag (0=incrementa, 1=decrementa)
+\end{itemize}
+
+\subsection{CLD e STD}
+
+\begin{lstlisting}
+CLD                ; Clear Direction Flag (incremento)
+STD                ; Set Direction Flag (decremento)
+\end{lstlisting}
+
+\section{Istruzioni Base}
+
+\subsection{MOVSB/MOVSW --- Move String}
+
+\begin{lstlisting}
+MOVSB              ; byte[ES:DI] = byte[DS:SI], aggiorna SI e DI
+MOVSW              ; word[ES:DI] = word[DS:SI], aggiorna SI e DI di 2
+\end{lstlisting}
+
+\subsection{LODSB/LODSW --- Load String}
+
+\begin{lstlisting}
+LODSB              ; AL = byte[DS:SI], aggiorna SI
+LODSW              ; AX = word[DS:SI], aggiorna SI di 2
+\end{lstlisting}
+
+\subsection{STOSB/STOSW --- Store String}
+
+\begin{lstlisting}
+STOSB              ; byte[ES:DI] = AL, aggiorna DI
+STOSW              ; word[ES:DI] = AX, aggiorna DI di 2
+\end{lstlisting}
+
+\subsection{CMPSB/CMPSW --- Compare String}
+
+\begin{lstlisting}
+CMPSB              ; Confronta byte[DS:SI] con byte[ES:DI], imposta flag
+CMPSW              ; Confronta word
+\end{lstlisting}
+
+\subsection{SCASB/SCASW --- Scan String}
+
+\begin{lstlisting}
+SCASB              ; Confronta AL con byte[ES:DI], aggiorna DI
+SCASW              ; Confronta AX con word[ES:DI]
+\end{lstlisting}
+
+\section{Prefissi REP}
+
+\subsection{REP}
+
+\begin{lstlisting}
+REP MOVSB          ; Ripete MOVSB per CX volte
+REP STOSB          ; Ripete STOSB per CX volte
+\end{lstlisting}
+
+\subsection{REPE/REPZ}
+
+\begin{lstlisting}
+REPE CMPSB         ; Ripete finché uguale e CX≠0
+\end{lstlisting}
+
+\subsection{REPNE/REPNZ}
+
+\begin{lstlisting}
+REPNE SCASB        ; Ripete finché diverso e CX≠0
+\end{lstlisting}
+
+\section{Esempi Pratici}
+
+\begin{esempio}
+Copiare 100 byte da src a dest:
+\begin{lstlisting}
+.DATA
+src DB 100 DUP(?)
+dest DB 100 DUP(?)
+
+.CODE
+CLD
+MOV SI, OFFSET src
+MOV DI, OFFSET dest
+MOV CX, 100
+REP MOVSB
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Riempire buffer con zero:
+\begin{lstlisting}
+CLD
+MOV DI, OFFSET buffer
+MOV CX, 256
+MOV AL, 0
+REP STOSB          ; Azzera 256 byte
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Lunghezza stringa (cerca byte 0):
+\begin{lstlisting}
+strlen PROC
+    PUSH DI
+    MOV DI, OFFSET stringa
+    MOV AL, 0
+    MOV CX, 0FFFFh     ; Max length
+    CLD
+    REPNE SCASB        ; Cerca byte 0
+    MOV AX, 0FFFFh
+    SUB AX, CX
+    DEC AX             ; AX = lunghezza
+    POP DI
+    RET
+strlen ENDP
+\end{lstlisting}
+\end{esempio}
+
+\begin{esempio}
+Confrontare due stringhe:
+\begin{lstlisting}
+strcmp PROC
+    CLD
+    MOV SI, OFFSET str1
+    MOV DI, OFFSET str2
+    MOV CX, 10         ; Max 10 caratteri
+    REPE CMPSB         ; Confronta finché uguali
+    JE equal
+    ; Diverse
+    RET
+
+equal:
+    ; Uguali
+    RET
+strcmp ENDP
+\end{lstlisting}
+\end{esempio}
+
+\section{Esercizi}
+
+\begin{esercizio}[9.1]
+Scrivere codice per invertire una stringa di 20 caratteri.
+\end{esercizio}
+
+\begin{esercizio}[9.2]
+Implementare una funzione che conta le occorrenze di un carattere in una stringa.
+\end{esercizio}
+
+\begin{esercizio}[9.3]
+Spiegare la differenza tra MOVSB e LODSB.
+\end{esercizio}
+
+\begin{esercizio}[9.4]
+Convertire una stringa in maiuscolo usando LODSB e STOSB.
+\end{esercizio}
+
+\begin{esercizio}[9.5]
+Implementare memcpy(dest, src, n) usando REP MOVSB.
+\end{esercizio}

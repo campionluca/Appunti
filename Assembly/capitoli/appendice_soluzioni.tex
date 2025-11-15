@@ -1,0 +1,327 @@
+\chapter{Soluzioni agli Esercizi}
+
+\section*{Prefazione}
+
+Questa appendice contiene le soluzioni dettagliate di una selezione degli esercizi proposti nel manuale. Si consiglia di tentare autonomamente la risoluzione prima di consultare le soluzioni.
+
+\section{Soluzioni Capitolo 1 --- Architettura}
+
+\subsection{Esercizio 1.1}
+
+Calcolare l'indirizzo fisico:
+
+\textbf{a)} \texttt{CS:IP = 2000h:1000h}
+
+\begin{align*}
+\text{Fisico} &= 2000h \times 10h + 1000h \\
+&= 20000h + 1000h \\
+&= 21000h
+\end{align*}
+
+\textbf{b)} \texttt{DS:SI = FFFFh:0010h}
+
+\begin{align*}
+\text{Fisico} &= FFFFh \times 10h + 0010h \\
+&= FFFF0h + 0010h \\
+&= 100000h
+\end{align*}
+
+Nota: supera 1 MB! Nell'8086 reale, diventa 00000h (wrap-around).
+
+\textbf{c)} \texttt{SS:SP = 3000h:FFFEh}
+
+\begin{align*}
+\text{Fisico} &= 3000h \times 10h + FFFEh \\
+&= 30000h + FFFEh \\
+&= 3FFFEh
+\end{align*}
+
+\subsection{Esercizio 1.2}
+
+Lo spazio indirizzabile è 1 MB = 1.048.576 byte = 100000h.
+
+Un segmento può partire ogni 16 byte (granularità del paragraph).
+
+Numero segmenti possibili: $100000h / 10h = 10000h = 65.536$ segmenti.
+
+\subsection{Esercizio 1.5}
+
+\texttt{ADD AX, BX} modifica i seguenti flag:
+
+\begin{itemize}
+    \item \textbf{CF}: 1 se riporto da bit 15
+    \item \textbf{ZF}: 1 se risultato è zero
+    \item \textbf{SF}: 1 se bit 15 del risultato è 1 (negativo)
+    \item \textbf{OF}: 1 se overflow con segno
+    \item \textbf{PF}: 1 se byte basso ha parità pari
+    \item \textbf{AF}: 1 se riporto da bit 3 (BCD)
+\end{itemize}
+
+\section{Soluzioni Capitolo 2 --- Registri}
+
+\subsection{Esercizio 2.1}
+
+Dato \texttt{AX = 1234h}:
+
+\textbf{a)} Azzerare solo AL:
+\begin{lstlisting}
+AND AL, 0         ; oppure: XOR AL, AL  oppure: MOV AL, 0
+\end{lstlisting}
+
+\textbf{b)} Azzerare solo AH:
+\begin{lstlisting}
+AND AH, 0
+\end{lstlisting}
+
+\textbf{c)} Scambiare AH e AL:
+\begin{lstlisting}
+XCHG AH, AL       ; AX diventa 3412h
+\end{lstlisting}
+
+\subsection{Esercizio 2.2}
+
+\texttt{MOV AX, BX}: Copia il \emph{valore} di BX in AX.
+
+\texttt{MOV AX, [BX]}: Copia il \emph{contenuto della memoria} puntata da DS:BX in AX.
+
+\subsection{Esercizio 2.3}
+
+Non è possibile \texttt{MOV DS, 1000h} perché i registri segmento non accettano valori immediati.
+
+Soluzione:
+\begin{lstlisting}
+MOV AX, 1000h
+MOV DS, AX
+\end{lstlisting}
+
+\subsection{Esercizio 2.4}
+
+Indirizzo iniziale:
+\begin{align*}
+\text{Fisico} &= 2000h \times 10h + FFFEh \\
+&= 20000h + FFFEh \\
+&= 2FFFEh
+\end{align*}
+
+Dopo \texttt{PUSH AX}:
+\begin{itemize}
+    \item SP = FFFEh - 2 = FFFCh
+    \item Nuovo indirizzo fisico: $2000h \times 10h + FFFCh = 2FFFCh$
+\end{itemize}
+
+\section{Soluzioni Capitolo 4 --- Trasferimento Dati}
+
+\subsection{Esercizio 4.1}
+
+Scambiare AX e BX senza XCHG:
+\begin{lstlisting}
+PUSH AX
+PUSH BX
+POP AX
+POP BX
+\end{lstlisting}
+
+Oppure con registro temporaneo:
+\begin{lstlisting}
+MOV CX, AX
+MOV AX, BX
+MOV BX, CX
+\end{lstlisting}
+
+\subsection{Esercizio 4.2}
+
+Stack iniziale: SP = FFFEh
+
+\begin{lstlisting}
+PUSH AX    ; SP = FFFCh
+PUSH BX    ; SP = FFFAh
+POP CX     ; SP = FFFCh
+PUSH DX    ; SP = FFFAh
+\end{lstlisting}
+
+SP finale: FFFAh
+
+\section{Soluzioni Capitolo 5 --- Aritmetiche}
+
+\subsection{Esercizio 5.1}
+
+Calcolare $123 \times 45$:
+\begin{lstlisting}
+MOV AX, 123
+MOV BX, 45
+MUL BX             ; AX = 5535 (159Fh)
+\end{lstlisting}
+
+\subsection{Esercizio 5.2}
+
+Dividere 1000 per 7:
+\begin{lstlisting}
+MOV AX, 1000
+MOV BL, 7
+XOR AH, AH         ; Azzera AH per divisione a 8 bit
+DIV BL             ; AL = 142 (quoziente), AH = 6 (resto)
+\end{lstlisting}
+
+Oppure a 16 bit:
+\begin{lstlisting}
+MOV AX, 1000
+XOR DX, DX
+MOV BX, 7
+DIV BX             ; AX = 142, DX = 6
+\end{lstlisting}
+
+\subsection{Esercizio 5.3}
+
+Somma a 32 bit: 12345678h + ABCDEF01h
+
+\begin{lstlisting}
+; Numero 1: DX:AX = 1234:5678h
+MOV DX, 1234h
+MOV AX, 5678h
+
+; Numero 2: CX:BX = ABCD:EF01h
+MOV CX, 0ABCDh
+MOV BX, 0EF01h
+
+; Somma
+ADD AX, BX         ; Somma parte bassa
+ADC DX, CX         ; Somma parte alta + carry
+
+; Risultato in DX:AX = BE02:4579h
+\end{lstlisting}
+
+\subsection{Esercizio 5.5}
+
+Valore assoluto di AX:
+\begin{lstlisting}
+CMP AX, 0
+JGE positive       ; Se già positivo, salta
+NEG AX             ; Altrimenti nega
+
+positive:
+; AX ora contiene |AX|
+\end{lstlisting}
+
+\section{Soluzioni Capitolo 7 --- Controllo Flusso}
+
+\subsection{Esercizio 7.1}
+
+Somma 1 + 2 + ... + 100:
+\begin{lstlisting}
+MOV AX, 0          ; Somma
+MOV CX, 100        ; Contatore
+
+sum_loop:
+    ADD AX, CX
+    LOOP sum_loop  ; CX = CX - 1, ripeti se CX ≠ 0
+
+; AX = 5050
+\end{lstlisting}
+
+\subsection{Esercizio 7.2}
+
+Massimo tra AX e BX:
+\begin{lstlisting}
+max PROC
+    CMP AX, BX
+    JGE ax_is_max  ; Se AX >= BX
+    MOV AX, BX     ; Altrimenti AX = BX
+
+ax_is_max:
+    RET
+max ENDP
+\end{lstlisting}
+
+\subsection{Esercizio 7.3}
+
+\textbf{JG} (Jump if Greater) è per confronti \emph{signed}.
+Usa SF e OF: salta se $\text{ZF}=0$ AND $\text{SF}=\text{OF}$.
+
+\textbf{JA} (Jump if Above) è per confronti \emph{unsigned}.
+Usa CF e ZF: salta se $\text{CF}=0$ AND $\text{ZF}=0$.
+
+Esempio:
+\begin{lstlisting}
+MOV AL, 0FFh       ; -1 signed, 255 unsigned
+CMP AL, 1
+
+JG greater_signed  ; Non salta (FF < 1 in signed)
+JA above_unsigned  ; Salta (FF > 1 in unsigned)
+\end{lstlisting}
+
+\section{Soluzioni Capitolo 9 --- Stringhe}
+
+\subsection{Esercizio 9.1}
+
+Invertire stringa di 20 caratteri:
+\begin{lstlisting}
+.DATA
+str DB 'ABCDEFGHIJKLMNOPQRST'
+
+.CODE
+reverse PROC
+    MOV SI, 0
+    MOV DI, 19
+
+reverse_loop:
+    CMP SI, DI
+    JGE done
+
+    MOV AL, str[SI]
+    MOV BL, str[DI]
+    MOV str[SI], BL
+    MOV str[DI], AL
+
+    INC SI
+    DEC DI
+    JMP reverse_loop
+
+done:
+    RET
+reverse ENDP
+\end{lstlisting}
+
+\subsection{Esercizio 9.4}
+
+Convertire in maiuscolo:
+\begin{lstlisting}
+.DATA
+str DB 'hello world', 0
+
+.CODE
+to_upper PROC
+    MOV SI, OFFSET str
+    MOV DI, OFFSET str
+    CLD
+
+loop_char:
+    LODSB                  ; AL = [SI++]
+    CMP AL, 0
+    JE done
+
+    CMP AL, 'a'
+    JB not_lowercase
+    CMP AL, 'z'
+    JA not_lowercase
+
+    SUB AL, 32             ; 'a' - 'A' = 32
+
+not_lowercase:
+    STOSB                  ; [DI++] = AL
+    JMP loop_char
+
+done:
+    RET
+to_upper ENDP
+\end{lstlisting}
+
+\section{Note Finali}
+
+Le soluzioni presentate sono una tra le molte possibili. L'Assembly permette approcci diversi allo stesso problema. Si incoraggia lo studente a:
+
+\begin{itemize}
+    \item Confrontare le proprie soluzioni con quelle proposte
+    \item Analizzare l'efficienza (numero istruzioni, clock cycles)
+    \item Testare il codice con diversi input edge-case
+    \item Documentare il codice con commenti chiari
+\end{itemize}

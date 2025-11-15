@@ -59,6 +59,52 @@ Materiale didattico organizzato come guida pratica interattiva per il web. Copre
 
 ---
 
+## 🤖 Descrittori AI
+
+Il corso è supportato da **15 descrittori AI** che sintetizzano i concetti chiave per ogni capitolo, facilitando la generazione automatica di esercizi e verifiche.
+
+### Distribuzione Descrittori
+
+**Totale**: 15 descrittori | **Coverage**: ~95% del materiale | **Data generazione**: 14 Nov 2025
+
+#### Per Argomento
+- **HTML Fondamentali** (3): Semantica, Form HTML5, Input Types + Accessibilità
+- **CSS Base** (2): Selettori CSS, Pseudo-classi
+- **CSS Avanzato** (4): Box Model, Flexbox, Grid, Responsive Design
+- **SCSS** (2): Variabili & Nesting, Mixins
+- **JavaScript** (3): DOM Manipulation, Event Handling, Fetch API & Async/Await
+
+#### Elenco Descrittori
+1. **HTML-SEM-001**: HTML Semantico (tag semantici, struttura logica)
+2. **HTML-FORM-001**: Form HTML5 (raccolta dati, method GET/POST)
+3. **HTML-INPUT-001**: Input Types HTML5 (email, number, date, checkbox, radio)
+4. **HTML-ACCESSO-001**: Accessibilità HTML (alt tag, ARIA, screen reader)
+5. **CSS-SEL-001**: Selettori CSS (elemento, classe, ID, attributo, specificity)
+6. **CSS-PSEUDO-001**: Pseudo-classi CSS (:hover, :focus, :nth-child)
+7. **CSS-BOX-001**: Box Model CSS (margin, padding, border, box-sizing)
+8. **CSS-FLEX-001**: Flexbox Layout (flex-direction, justify-content, align-items)
+9. **CSS-GRID-001**: CSS Grid Layout (grid-template-columns, fr unit)
+10. **CSS-RESP-001**: Design Responsivo (mobile-first, @media queries, viewport)
+11. **SCSS-VAR-001**: SCSS Variabili e Nesting (variabili, nesting, organizzazione)
+12. **SCSS-MIX-001**: SCSS Mixins (mixin parametrici, riutilizzabilità)
+13. **JS-DOM-001**: DOM Manipulation (querySelector, classList, appendChild)
+14. **JS-EVENT-001**: Event Handling (addEventListener, delegation, preventDefault)
+15. **JS-FETCH-001**: Fetch API e Async/Await (Promise, async/await, JSON parsing)
+
+### File Generati
+- `HTMLCSS_DESCRIPTORS_REPORT.json` - Report completo con spiegazioni e code examples
+- `HTMLCSS_COVERAGE_ANALYSIS.md` - Analisi dettagliata della copertura per capitolo
+
+### Utilizzo Descrittori
+I descrittori includono:
+- Spiegazione del concetto
+- Codice di esempio funzionante
+- Errori comuni da evitare
+- Best practices e learning objectives
+- Concetti correlati per approfondimento
+
+---
+
 ## Struttura del progetto
 
 ```

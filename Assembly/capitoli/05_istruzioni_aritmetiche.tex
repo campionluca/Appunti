@@ -1,0 +1,170 @@
+\chapter{Istruzioni Aritmetiche}
+
+\section{Introduzione}
+
+Le istruzioni aritmetiche eseguono operazioni matematiche su operandi interi. L'8086 supporta addizione, sottrazione, moltiplicazione, divisione e operazioni BCD.
+
+\section{ADD e ADC --- Addition}
+
+\subsection{ADD}
+
+\begin{lstlisting}
+ADD dest, src      ; dest = dest + src
+ADD AX, BX         ; AX = AX + BX
+ADD AL, 5          ; AL = AL + 5
+ADD word ptr [BX], 100
+\end{lstlisting}
+
+\textbf{Flag modificati}: CF, ZF, SF, OF, PF, AF
+
+\subsection{ADC --- Add with Carry}
+
+\begin{lstlisting}
+ADC dest, src      ; dest = dest + src + CF
+\end{lstlisting}
+
+Usato per addizioni multi-precisione (numeri > 16 bit).
+
+\begin{esempio}
+Somma a 32 bit (DX:AX + CX:BX):
+\begin{lstlisting}
+; DX:AX = 12345678h, CX:BX = 9ABCDEF0h
+ADD AX, BX         ; Somma parte bassa
+ADC DX, CX         ; Somma parte alta + carry
+; Risultato in DX:AX = ACF13568h
+\end{lstlisting}
+\end{esempio}
+
+\section{SUB e SBB --- Subtraction}
+
+\subsection{SUB}
+
+\begin{lstlisting}
+SUB dest, src      ; dest = dest - src
+SUB AX, 10
+SUB CX, BX
+\end{lstlisting}
+
+\subsection{SBB --- Subtract with Borrow}
+
+\begin{lstlisting}
+SBB dest, src      ; dest = dest - src - CF
+\end{lstlisting}
+
+\section{INC e DEC}
+
+\begin{lstlisting}
+INC operando       ; operando = operando + 1
+DEC operando       ; operando = operando - 1
+\end{lstlisting}
+
+\begin{nota}
+INC e DEC \textbf{non modificano} il Carry Flag! Più veloci di ADD/SUB con 1.
+\end{nota}
+
+\section{MUL e IMUL --- Multiplication}
+
+\subsection{MUL --- Unsigned Multiplication}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Operando} & \textbf{Operazione} & \textbf{Risultato} \\
+\midrule
+8 bit & AL × operando & AX \\
+16 bit & AX × operando & DX:AX \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{lstlisting}
+MOV AL, 10
+MOV BL, 20
+MUL BL             ; AX = AL × BL = 200 (C8h)
+
+MOV AX, 1000
+MOV BX, 50
+MUL BX             ; DX:AX = AX × BX = 50000
+\end{lstlisting}
+
+\subsection{IMUL --- Signed Multiplication}
+
+Stessa sintassi di MUL, ma interpreta gli operandi come numeri con segno.
+
+\section{DIV e IDIV --- Division}
+
+\subsection{DIV --- Unsigned Division}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Dividendo} & \textbf{Divisore} & \textbf{Quoziente} & \textbf{Resto} \\
+\midrule
+AX & 8 bit & AL & AH \\
+DX:AX & 16 bit & AX & DX \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{lstlisting}
+MOV AX, 100
+MOV BL, 7
+DIV BL             ; AL = 14 (quoziente), AH = 2 (resto)
+
+MOV DX, 0
+MOV AX, 50000
+MOV BX, 100
+DIV BX             ; AX = 500, DX = 0
+\end{lstlisting}
+
+\begin{attenzione}
+Prima di DIV a 16 bit, azzerare DX se il dividendo è solo in AX!
+\texttt{Divisione per zero} causa interrupt 0 (errore).
+\end{attenzione}
+
+\section{NEG e CMP}
+
+\subsection{NEG --- Negate (Complemento a due)}
+
+\begin{lstlisting}
+NEG operando       ; operando = -operando
+NEG AL             ; AL = -AL
+\end{lstlisting}
+
+\subsection{CMP --- Compare}
+
+\begin{lstlisting}
+CMP op1, op2       ; Esegue op1 - op2 e imposta flag (senza salvare)
+\end{lstlisting}
+
+Usato con salti condizionali:
+\begin{lstlisting}
+CMP AX, 10
+JE equal           ; Salta se AX == 10
+JG greater         ; Salta se AX > 10 (signed)
+JA above           ; Salta se AX > 10 (unsigned)
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{esercizio}[5.1]
+Calcolare $123 \times 45$ usando MUL.
+\end{esercizio}
+
+\begin{esercizio}[5.2]
+Dividere 1000 per 7 e trovare quoziente e resto.
+\end{esercizio}
+
+\begin{esercizio}[5.3]
+Sommare due numeri a 32 bit: 12345678h + ABCDEF01h.
+\end{esercizio}
+
+\begin{esercizio}[5.4]
+Spiegare perché INC AX è preferibile ad ADD AX, 1.
+\end{esercizio}
+
+\begin{esercizio}[5.5]
+Scrivere codice per calcolare il valore assoluto di un numero con segno in AX.
+\end{esercizio}
