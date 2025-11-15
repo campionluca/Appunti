@@ -30,6 +30,90 @@ echo htmlspecialchars($_COOKIE['preferenze'] ?? '');
 ?>
 \end{lstlisting}
 
+\subsection{Ciclo di vita dei Cookie}
+
+I cookie seguono un ciclo preciso tra client (browser) e server:
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw, thick, minimum width=3cm, minimum height=0.8cm, align=center, font=\small},
+    client/.style={box, fill=blue!20},
+    server/.style={box, fill=orange!20},
+    action/.style={box, fill=green!15},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Prima richiesta
+    \node[above, font=\small\bfseries] at (3,6.5) {1. Prima Richiesta (senza cookie)};
+
+    \node[client] (browser1) at (0,6) {Browser};
+    \node[action] (req1) at (3,6) {GET /index.php};
+    \node[server] (server1) at (6,6) {Server PHP};
+
+    \draw[arrow, blue] (browser1) -- (req1);
+    \draw[arrow, blue] (req1) -- (server1);
+
+    % Set-Cookie Response
+    \node[action] (setcookie) at (6,4.8) {setcookie(...)};
+    \node[action] (response1) at (3,4.8) {HTTP 200 OK\\Set-Cookie: ...};
+    \node[client] (browser2) at (0,4.8) {Browser\\(salva cookie)};
+
+    \draw[arrow, red] (server1) -- (setcookie);
+    \draw[arrow, red] (setcookie) -- (response1);
+    \draw[arrow, red] (response1) -- (browser2);
+
+    % Storage
+    \node[client, fill=yellow!20] (storage) at (0,3.3) {Cookie Storage\\preferenze=\{...\}\\expires: 30 giorni};
+
+    \draw[arrow, dashed] (browser2) -- (storage);
+
+    % Seconda richiesta
+    \node[above, font=\small\bfseries] at (3,2.5) {2. Richieste Successive};
+
+    \node[client] (browser3) at (0,2) {Browser};
+    \node[action] (req2) at (3,2) {GET /page.php\\Cookie: preferenze=...};
+    \node[server] (server2) at (6,2) {Server PHP};
+
+    \draw[arrow] (storage) -- (browser3);
+    \draw[arrow, blue] (browser3) -- (req2);
+    \draw[arrow, blue] (req2) -- (server2);
+
+    % Read Cookie
+    \node[action] (readcookie) at (6,0.8) {\$\_COOKIE['preferenze']};
+    \node[action] (response2) at (3,0.8) {HTTP 200 OK\\Contenuto personalizzato};
+    \node[client] (browser4) at (0,0.8) {Browser};
+
+    \draw[arrow, red] (server2) -- (readcookie);
+    \draw[arrow, red] (readcookie) -- (response2);
+    \draw[arrow, red] (response2) -- (browser4);
+
+    % Legenda
+    \node[below, font=\footnotesize, align=left] at (3,-0.5) {
+        \textcolor{blue}{$\rightarrow$ Request (Browser→Server)} \quad
+        \textcolor{red}{$\rightarrow$ Response (Server→Browser)}
+    };
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Punti chiave del ciclo di vita]
+\begin{enumerate}
+    \item \textbf{Prima richiesta}: Il browser richiede una pagina senza cookie
+    \item \textbf{Set-Cookie}: Il server usa \texttt{setcookie()} per inviare un cookie nella risposta HTTP
+    \item \textbf{Storage locale}: Il browser salva il cookie con le sue impostazioni (scadenza, path, domain, flags)
+    \item \textbf{Richieste successive}: Il browser invia automaticamente il cookie in ogni richiesta che corrisponde a path/domain
+    \item \textbf{Lettura server}: Il server legge il cookie da \texttt{\$\_COOKIE} e personalizza la risposta
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{attenzione}
+I cookie sono \textbf{sempre inviati automaticamente} dal browser per ogni richiesta al dominio corrispondente. Questo rende necessari i flag di sicurezza:
+\begin{itemize}
+    \item \textbf{HttpOnly}: Previene accesso JavaScript (protezione XSS)
+    \item \textbf{Secure}: Trasmissione solo su HTTPS (protezione man-in-the-middle)
+    \item \textbf{SameSite}: Limita invio cross-site (protezione CSRF)
+\end{itemize}
+\end{attenzione}
+
 \subsection{Analisi tecnica dei cookie sicuri}
 \begin{itemize}
 \item \textbf{Funzione e scopo}: Implementazione di cookie sicuri con protezioni complete contro attacchi XSS e session hijacking, utilizzando le opzioni di sicurezza disponibili in PHP.
