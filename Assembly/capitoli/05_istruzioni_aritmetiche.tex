@@ -72,8 +72,8 @@ INC e DEC \textbf{non modificano} il Carry Flag! Più veloci di ADD/SUB con 1.
 \toprule
 \textbf{Operando} & \textbf{Operazione} & \textbf{Risultato} \\
 \midrule
-8 bit & AL × operando & AX \\
-16 bit & AX × operando & DX:AX \\
+8 bit & AL 	imes operando & AX \\
+16 bit & AX 	imes operando & DX:AX \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -81,11 +81,11 @@ INC e DEC \textbf{non modificano} il Carry Flag! Più veloci di ADD/SUB con 1.
 \begin{lstlisting}
 MOV AL, 10
 MOV BL, 20
-MUL BL             ; AX = AL × BL = 200 (C8h)
+MUL BL             ; AX = AL 	imes BL = 200 (C8h)
 
 MOV AX, 1000
 MOV BX, 50
-MUL BX             ; DX:AX = AX × BX = 50000
+MUL BX             ; DX:AX = AX 	imes BX = 50000
 \end{lstlisting}
 
 \subsection{IMUL --- Signed Multiplication}

@@ -32,8 +32,8 @@ JBE/JNA label      ; Jump if Below or Equal (CF=1 OR ZF=1)
 \begin{lstlisting}
 JG/JNLE label      ; Jump if Greater (ZF=0 AND SF=OF)
 JGE/JNL label      ; Jump if Greater or Equal (SF=OF)
-JL/JNGE label      ; Jump if Less (SF≠OF)
-JLE/JNG label      ; Jump if Less or Equal (ZF=1 OR SF≠OF)
+JL/JNGE label      ; Jump if Less (SF!=OF)
+JLE/JNG label      ; Jump if Less or Equal (ZF=1 OR SF!=OF)
 \end{lstlisting}
 
 \subsection{Jump su singoli flag}
@@ -52,7 +52,7 @@ JNP/JPO label      ; Jump if Parity Odd (PF=0)
 
 \subsection{LOOP}
 \begin{lstlisting}
-LOOP label         ; Decrementa CX, salta se CX≠0
+LOOP label         ; Decrementa CX, salta se CX!=0
 \end{lstlisting}
 
 \begin{esempio}
@@ -63,18 +63,18 @@ loop_start:
     ; Corpo del loop
     DEC BX
     ; ...
-LOOP loop_start    ; Ripete finché CX≠0
+LOOP loop_start    ; Ripete finche' CX!=0
 \end{lstlisting}
 \end{esempio}
 
 \subsection{LOOPE/LOOPZ}
 \begin{lstlisting}
-LOOPE label        ; Loop while Equal (decrementa CX, salta se ZF=1 AND CX≠0)
+LOOPE label        ; Loop while Equal (decrementa CX, salta se ZF=1 AND CX!=0)
 \end{lstlisting}
 
 \subsection{LOOPNE/LOOPNZ}
 \begin{lstlisting}
-LOOPNE label       ; Loop while Not Equal (decrementa CX, salta se ZF=0 AND CX≠0)
+LOOPNE label       ; Loop while Not Equal (decrementa CX, salta se ZF=0 AND CX!=0)
 \end{lstlisting}
 
 \subsection{JCXZ}
@@ -150,8 +150,8 @@ JE/JZ & ZF=1 & Uguale/Zero \\
 JNE/JNZ & ZF=0 & Diverso/Non zero \\
 JG/JNLE & ZF=0 AND SF=OF & Greater (signed) \\
 JGE/JNL & SF=OF & Greater or Equal (signed) \\
-JL/JNGE & SF≠OF & Less (signed) \\
-JLE/JNG & ZF=1 OR SF≠OF & Less or Equal (signed) \\
+JL/JNGE & SF$\neq$OF & Less (signed) \\
+JLE/JNG & ZF=1 OR SF$\neq$OF & Less or Equal (signed) \\
 JA/JNBE & CF=0 AND ZF=0 & Above (unsigned) \\
 JAE/JNB & CF=0 & Above or Equal (unsigned) \\
 JB/JNAE & CF=1 & Below (unsigned) \\

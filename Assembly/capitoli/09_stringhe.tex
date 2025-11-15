@@ -69,13 +69,13 @@ REP STOSB          ; Ripete STOSB per CX volte
 \subsection{REPE/REPZ}
 
 \begin{lstlisting}
-REPE CMPSB         ; Ripete finché uguale e CX≠0
+REPE CMPSB         ; Ripete finche' uguale e CX!=0
 \end{lstlisting}
 
 \subsection{REPNE/REPNZ}
 
 \begin{lstlisting}
-REPNE SCASB        ; Ripete finché diverso e CX≠0
+REPNE SCASB        ; Ripete finche' diverso e CX!=0
 \end{lstlisting}
 
 \section{Esempi Pratici}
@@ -134,7 +134,7 @@ strcmp PROC
     MOV SI, OFFSET str1
     MOV DI, OFFSET str2
     MOV CX, 10         ; Max 10 caratteri
-    REPE CMPSB         ; Confronta finché uguali
+    REPE CMPSB         ; Confronta finche' uguali
     JE equal
     ; Diverse
     RET

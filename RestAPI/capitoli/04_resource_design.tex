@@ -98,10 +98,10 @@ GET /api/products/456   # Singolo product
 
 \textbf{NON mixare singular/plural}:
 \begin{lstlisting}[caption=BAD: Mixed singular/plural]
-GET /api/user          # ❌ Inconsistente
+GET /api/user          # NO Inconsistente
 GET /api/user/123
 
-GET /api/users         # ✓ Consistente
+GET /api/users         # OK Consistente
 GET /api/users/123
 \end{lstlisting}
 
@@ -139,8 +139,8 @@ GET /api/users?created_after=2025-01-01&sort_by=name
 
 \textbf{NO trailing slash}:
 \begin{lstlisting}
-GET /api/users/    # ❌ BAD
-GET /api/users     # ✓ GOOD
+GET /api/users/    # NO BAD
+GET /api/users     # OK GOOD
 \end{lstlisting}
 
 \subsection{Regola 5: File Extensions NOT Needed}

@@ -172,7 +172,7 @@ MOV BL, [DI+5]    ; BL = byte da DS:(DI+5)
 
 \begin{lstlisting}
 .DATA
-matrix DW 1, 2, 3, 4, 5, 6   ; Array 2×3
+matrix DW 1, 2, 3, 4, 5, 6   ; Array 2	imes3
 
 .CODE
 MOV SI, 0
@@ -210,12 +210,12 @@ MOV DX, [BX+SI+10]    ; DX = DS:(BX+SI+10)
 \textbf{Uso tipico}: Array bidimensionali, array di struct
 
 \begin{lstlisting}
-; Matrice 4×3 (word): accesso a elemento [riga][colonna]
-; BX = riga * 6 (3 word × 2 byte)
+; Matrice 4	imes3 (word): accesso a elemento [riga][colonna]
+; BX = riga * 6 (3 word 	imes 2 byte)
 ; SI = colonna * 2
 
 .DATA
-matrix DW 1,2,3, 4,5,6, 7,8,9, 10,11,12  ; 4 righe × 3 colonne
+matrix DW 1,2,3, 4,5,6, 7,8,9, 10,11,12  ; 4 righe 	imes 3 colonne
 
 .CODE
 MOV BX, 6        ; Riga 1 (offset 6 byte)
@@ -311,11 +311,11 @@ MOV AH, [BX+3]      ; AH = età (20)
 \end{esempio}
 
 \begin{esempio}
-Matrice bidimensionale 3×4 (byte):
+Matrice bidimensionale 3	imes4 (byte):
 
 \begin{lstlisting}
 .DATA
-; Matrice 3 righe × 4 colonne
+; Matrice 3 righe 	imes 4 colonne
 matrix DB 1,2,3,4, 5,6,7,8, 9,10,11,12
 
 .CODE

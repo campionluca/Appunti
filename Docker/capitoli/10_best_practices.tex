@@ -20,27 +20,27 @@ Security, optimization e best practices sono fondamentali per production-ready D
 \section{Dockerfile Optimization}
 
 \subsection{Esempio: Before vs After Optimization}
-\begin{lstlisting}[language=docker, caption={Dockerfile NON Ottimizzato}]
-# ❌ BAD: Inefficient, large image, security issues
+\begin{lstlisting}[, caption={Dockerfile NON Ottimizzato}]
+# BAD BAD: Inefficient, large image, security issues
 FROM node:20
 
 WORKDIR /app
 
-# ❌ Copia tutto (inclusi node_modules, .git, etc)
+# BAD Copia tutto (inclusi node_modules, .git, etc)
 COPY . .
 
-# ❌ Esegue come root
-# ❌ No cache layer optimization
+# BAD Esegue come root
+# BAD No cache layer optimization
 RUN npm install
 
-# ❌ Exposes source code
-# ❌ Development dependencies included
+# BAD Exposes source code
+# BAD Development dependencies included
 
 EXPOSE 3000
 CMD ["node", "server.js"]
 \end{lstlisting}
 
-\begin{lstlisting}[language=docker, caption={Dockerfile OTTIMIZZATO}]
+\begin{lstlisting}[, caption={Dockerfile OTTIMIZZATO}]
 # ✅ GOOD: Multi-stage, optimized, secure
 # syntax=docker/dockerfile:1.4
 
@@ -96,7 +96,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 \end{lstlisting}
 
 \subsection{Layer Caching Optimization}
-\begin{lstlisting}[language=docker, caption={Optimal Layer Order}]
+\begin{lstlisting}[, caption={Optimal Layer Order}]
 # Ordine corretto per massimizzare cache hits
 FROM python:3.11-slim
 
@@ -121,7 +121,7 @@ COPY . .
 \end{lstlisting}
 
 \subsection{BuildKit Advanced Features}
-\begin{lstlisting}[language=docker, caption={BuildKit Cache Mounts e Secrets}]
+\begin{lstlisting}[, caption={BuildKit Cache Mounts e Secrets}]
 # syntax=docker/dockerfile:1.4
 
 FROM golang:1.21-alpine AS builder
@@ -288,7 +288,7 @@ datasets/
 \section{Security Hardening}
 
 \subsection{Non-Root User}
-\begin{lstlisting}[language=docker, caption={Multiple User Strategies}]
+\begin{lstlisting}[, caption={Multiple User Strategies}]
 # Strategy 1: Alpine adduser
 FROM alpine:latest
 RUN addgroup -g 1001 -S appgroup && \
@@ -318,7 +318,7 @@ USER nodejs
 \end{lstlisting}
 
 \subsection{Read-Only Root Filesystem}
-\begin{lstlisting}[language=yaml, caption={Read-Only Filesystem in Docker Compose}]
+\begin{lstlisting}[, caption={Read-Only Filesystem in Docker Compose}]
 version: '3.8'
 
 services:
@@ -450,7 +450,7 @@ snyk container test myapp:latest --json | snyk-to-html -o results.html
 \section{Network Security}
 
 \subsection{Network Isolation}
-\begin{lstlisting}[language=yaml, caption={Network Segmentation}]
+\begin{lstlisting}[, caption={Network Segmentation}]
 # docker-compose-network-security.yml
 version: '3.8'
 
@@ -492,7 +492,7 @@ networks:
 \end{lstlisting}
 
 \subsection{Kubernetes Network Policies}
-\begin{lstlisting}[language=yaml, caption={NetworkPolicy - Deny All by Default}]
+\begin{lstlisting}[, caption={NetworkPolicy - Deny All by Default}]
 # deny-all.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -565,7 +565,7 @@ spec:
 \section{Resource Limits}
 
 \subsection{Docker Resource Constraints}
-\begin{lstlisting}[language=yaml, caption={Resource Limits in Docker Compose}]
+\begin{lstlisting}[, caption={Resource Limits in Docker Compose}]
 version: '3.8'
 
 services:
@@ -699,7 +699,7 @@ resources:
 \end{lstlisting}
 
 \subsection{External Secrets Operator}
-\begin{lstlisting}[language=yaml, caption={HashiCorp Vault Integration}]
+\begin{lstlisting}[, caption={HashiCorp Vault Integration}]
 # Install External Secrets Operator
 helm repo add external-secrets https://charts.external-secrets.io
 helm install external-secrets external-secrets/external-secrets

@@ -20,7 +20,7 @@ Il monitoring e logging di container Docker è essenziale per production environ
 \section{Docker Logs Fundamentals}
 
 \subsection{Docker Logging Drivers}
-\begin{lstlisting}[language=yaml, caption={Docker Compose - Logging Configuration}]
+\begin{lstlisting}[, caption={Docker Compose - Logging Configuration}]
 # docker-compose.yml
 version: '3.8'
 
@@ -81,7 +81,7 @@ docker logs container_name 2>&1 | grep ERROR
 \section{Centralized Logging con ELK Stack}
 
 \subsection{ELK Stack Setup Completo}
-\begin{lstlisting}[language=yaml, caption={ELK Stack - Docker Compose}]
+\begin{lstlisting}[, caption={ELK Stack - Docker Compose}]
 # docker-compose-elk.yml
 version: '3.8'
 
@@ -265,7 +265,7 @@ output {
 \end{lstlisting}
 
 \subsection{Filebeat Configuration}
-\begin{lstlisting}[language=yaml, caption={filebeat/filebeat.yml}]
+\begin{lstlisting}[, caption={filebeat/filebeat.yml}]
 filebeat.inputs:
 - type: container
   paths:
@@ -307,7 +307,7 @@ logging.files:
 \section{Grafana Loki - Lightweight Logging}
 
 \subsection{Loki Stack Setup}
-\begin{lstlisting}[language=yaml, caption={Grafana Loki Stack}]
+\begin{lstlisting}[, caption={Grafana Loki Stack}]
 # docker-compose-loki.yml
 version: '3.8'
 
@@ -360,7 +360,7 @@ volumes:
 \end{lstlisting}
 
 \subsection{Promtail Configuration}
-\begin{lstlisting}[language=yaml, caption={promtail/promtail-config.yaml}]
+\begin{lstlisting}[, caption={promtail/promtail-config.yaml}]
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
@@ -412,7 +412,7 @@ scrape_configs:
 \section{Prometheus Metrics Collection}
 
 \subsection{Prometheus Stack}
-\begin{lstlisting}[language=yaml, caption={Prometheus + Exporters}]
+\begin{lstlisting}[, caption={Prometheus + Exporters}]
 # docker-compose-prometheus.yml
 version: '3.8'
 
@@ -503,7 +503,7 @@ volumes:
 \end{lstlisting}
 
 \subsection{Prometheus Configuration}
-\begin{lstlisting}[language=yaml, caption={prometheus/prometheus.yml}]
+\begin{lstlisting}[, caption={prometheus/prometheus.yml}]
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -680,7 +680,7 @@ func main() {
 \section{Alert Rules}
 
 \subsection{Prometheus Alert Rules}
-\begin{lstlisting}[language=yaml, caption={prometheus/alerts.yml}]
+\begin{lstlisting}[, caption={prometheus/alerts.yml}]
 groups:
   - name: container_alerts
     interval: 30s
@@ -778,7 +778,7 @@ groups:
 \end{lstlisting}
 
 \subsection{Alertmanager Configuration}
-\begin{lstlisting}[language=yaml, caption={alertmanager/config.yml}]
+\begin{lstlisting}[, caption={alertmanager/config.yml}]
 global:
   resolve_timeout: 5m
   slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
@@ -861,7 +861,7 @@ inhibit_rules:
 \section{Distributed Tracing}
 
 \subsection{Jaeger Tracing Setup}
-\begin{lstlisting}[language=yaml, caption={Jaeger All-in-One}]
+\begin{lstlisting}[, caption={Jaeger All-in-One}]
 # docker-compose-tracing.yml
 version: '3.8'
 

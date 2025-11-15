@@ -33,7 +33,7 @@ L'integrazione continua e il deployment continuo (CI/CD) con Docker trasformano 
 \section{GitHub Actions Complete Workflow}
 
 \subsection{Multi-Stage CI/CD Pipeline}
-\begin{lstlisting}[language=yaml, caption={GitHub Actions - Complete Production Pipeline}]
+\begin{lstlisting}[, caption={GitHub Actions - Complete Production Pipeline}]
 # .github/workflows/docker-ci-cd.yml
 name: Docker CI/CD Pipeline
 
@@ -390,7 +390,7 @@ jobs:
 \section{GitLab CI Complete Pipeline}
 
 \subsection{GitLab CI/CD Configuration}
-\begin{lstlisting}[language=yaml, caption={.gitlab-ci.yml - Enterprise Pipeline}]
+\begin{lstlisting}[, caption={.gitlab-ci.yml - Enterprise Pipeline}]
 # .gitlab-ci.yml
 variables:
   DOCKER_DRIVER: overlay2
@@ -698,7 +698,7 @@ rollback:production:
 \section{Docker Build Optimization}
 
 \subsection{Multi-Stage Dockerfile Optimized}
-\begin{lstlisting}[language=docker, caption={Optimized Multi-Stage Build}]
+\begin{lstlisting}[, caption={Optimized Multi-Stage Build}]
 # Dockerfile - Production optimized
 # syntax=docker/dockerfile:1.4
 
@@ -765,7 +765,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 \section{Test Automation}
 
 \subsection{Docker Compose for Testing}
-\begin{lstlisting}[language=yaml, caption={docker-compose.test.yml}]
+\begin{lstlisting}[, caption={docker-compose.test.yml}]
 version: '3.8'
 
 services:
@@ -854,7 +854,7 @@ echo "Image pushed to all registries and signed successfully"
 \section{Advanced CI/CD Patterns}
 
 \subsection{Matrix Testing Strategy}
-\begin{lstlisting}[language=yaml, caption={GitHub Actions Matrix Testing}]
+\begin{lstlisting}[, caption={GitHub Actions Matrix Testing}]
 # .github/workflows/matrix-test.yml
 name: Matrix Testing
 
@@ -898,7 +898,7 @@ jobs:
 \section{Secrets Management in CI/CD}
 
 \subsection{Vault Integration}
-\begin{lstlisting}[language=yaml, caption={GitLab CI with HashiCorp Vault}]
+\begin{lstlisting}[, caption={GitLab CI with HashiCorp Vault}]
 # .gitlab-ci.yml with Vault
 variables:
   VAULT_ADDR: https://vault.example.com

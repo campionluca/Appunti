@@ -18,50 +18,50 @@ Questa appendice contiene progetti completi end-to-end per consolidare le compet
 
 \subsection{Architettura}
 \begin{verbatim}
-┌─────────────┐
-│   Nginx     │ :80 (Reverse Proxy + Static)
-└──────┬──────┘
-       │
-   ┌───┴────┬─────────────┐
-   │        │             │
-┌──▼──┐  ┌──▼──────┐  ┌──▼────┐
-│React│  │Node.js  │  │ Redis │
-│ SPA │  │  API    │  │ Cache │
-└─────┘  └────┬────┘  └───────┘
-              │
-         ┌────▼─────┐
-         │PostgreSQL│
-         │ Database │
-         └──────────┘
++-------------┐
+|   Nginx     | :80 (Reverse Proxy + Static)
++------┬------+
+       |
+   +---┴----┬-------------┐
+   |        |             |
++--▼--┐  +--▼------┐  +--▼----┐
+|React|  |Node.js  |  | Redis |
+| SPA |  |  API    |  | Cache |
++-----+  +----┬----+  +-------+
+              |
+         +----▼-----┐
+         |PostgreSQL|
+         | Database |
+         +----------+
 \end{verbatim}
 
 \subsection{Directory Structure}
 \begin{lstlisting}[caption={Project Structure}]
 fullstack-app/
-├── frontend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   └── public/
-├── backend/
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── src/
-│   └── tests/
-├── nginx/
-│   ├── Dockerfile
-│   └── nginx.conf
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── .env.example
-├── .dockerignore
-└── .github/
-    └── workflows/
-        └── ci-cd.yml
++-- frontend/
+|   +-- Dockerfile
+|   +-- package.json
+|   +-- src/
+|   +-- public/
++-- backend/
+|   +-- Dockerfile
+|   +-- package.json
+|   +-- src/
+|   +-- tests/
++-- nginx/
+|   +-- Dockerfile
+|   +-- nginx.conf
++-- docker-compose.yml
++-- docker-compose.prod.yml
++-- .env.example
++-- .dockerignore
++-- .github/
+    +-- workflows/
+        +-- ci-cd.yml
 \end{lstlisting}
 
 \subsection{Frontend Dockerfile}
-\begin{lstlisting}[language=docker, caption={frontend/Dockerfile}]
+\begin{lstlisting}[, caption={frontend/Dockerfile}]
 # syntax=docker/dockerfile:1.4
 
 # Stage 1: Build
@@ -95,7 +95,7 @@ EXPOSE 80
 \end{lstlisting}
 
 \subsection{Backend Dockerfile}
-\begin{lstlisting}[language=docker, caption={backend/Dockerfile}]
+\begin{lstlisting}[, caption={backend/Dockerfile}]
 # syntax=docker/dockerfile:1.4
 
 FROM node:20-alpine AS base
@@ -145,7 +145,7 @@ CMD ["node", "dist/server.js"]
 \end{lstlisting}
 
 \subsection{Docker Compose - Development}
-\begin{lstlisting}[language=yaml, caption={docker-compose.yml}]
+\begin{lstlisting}[, caption={docker-compose.yml}]
 version: '3.8'
 
 services:
@@ -268,7 +268,7 @@ volumes:
 \end{lstlisting}
 
 \subsection{Docker Compose - Production}
-\begin{lstlisting}[language=yaml, caption={docker-compose.prod.yml}]
+\begin{lstlisting}[, caption={docker-compose.prod.yml}]
 version: '3.8'
 
 services:
@@ -475,7 +475,7 @@ server {
 \end{lstlisting}
 
 \subsection{GitHub Actions CI/CD}
-\begin{lstlisting}[language=yaml, caption={.github/workflows/ci-cd.yml}]
+\begin{lstlisting}[, caption={.github/workflows/ci-cd.yml}]
 name: CI/CD Pipeline
 
 on:
@@ -618,31 +618,31 @@ jobs:
 
 \subsection{Architettura Microservices}
 \begin{verbatim}
-                    ┌─────────────┐
-                    │   Traefik   │ API Gateway
-                    │   :80/:443  │
-                    └──────┬──────┘
-                           │
-         ┌─────────────────┼─────────────────┐
-         │                 │                 │
-    ┌────▼────┐      ┌────▼────┐      ┌────▼────┐
-    │ User    │      │ Product │      │ Order   │
-    │ Service │      │ Service │      │ Service │
-    └────┬────┘      └────┬────┘      └────┬────┘
-         │                │                 │
-    ┌────▼────┐      ┌────▼────┐      ┌────▼────┐
-    │MongoDB  │      │Postgres │      │Postgres │
-    └─────────┘      └─────────┘      └─────────┘
-         │                │                 │
-         └────────────────┼─────────────────┘
-                          │
-                    ┌─────▼──────┐
-                    │  RabbitMQ  │ Message Broker
-                    └────────────┘
+                    +-------------┐
+                    |   Traefik   | API Gateway
+                    |   :80/:443  |
+                    +------┬------+
+                           |
+         +-----------------┼-----------------┐
+         |                 |                 |
+    +----▼----┐      +----▼----┐      +----▼----┐
+    | User    |      | Product |      | Order   |
+    | Service |      | Service |      | Service |
+    +----┬----+      +----┬----+      +----┬----+
+         |                |                 |
+    +----▼----┐      +----▼----┐      +----▼----┐
+    |MongoDB  |      |Postgres |      |Postgres |
+    +---------+      +---------+      +---------+
+         |                |                 |
+         +----------------┼-----------------+
+                          |
+                    +-----▼------┐
+                    |  RabbitMQ  | Message Broker
+                    +------------+
 \end{verbatim}
 
 \subsection{Microservices Docker Compose}
-\begin{lstlisting}[language=yaml, caption={microservices/docker-compose.yml}]
+\begin{lstlisting}[, caption={microservices/docker-compose.yml}]
 version: '3.8'
 
 services:
@@ -802,7 +802,7 @@ volumes:
 \section{Progetto 3: WordPress Production}
 
 \subsection{WordPress Stack}
-\begin{lstlisting}[language=yaml, caption={wordpress/docker-compose.yml}]
+\begin{lstlisting}[, caption={wordpress/docker-compose.yml}]
 version: '3.8'
 
 services:
@@ -916,7 +916,7 @@ volumes:
 \section{Progetto 4: Data Pipeline con Airflow}
 
 \subsection{Apache Airflow Stack}
-\begin{lstlisting}[language=yaml, caption={airflow/docker-compose.yml}]
+\begin{lstlisting}[, caption={airflow/docker-compose.yml}]
 version: '3.8'
 
 x-airflow-common: &airflow-common

@@ -242,7 +242,7 @@ Password:
 
 \subsection{Docker Compose per Registry}
 
-\begin{lstlisting}[language=yaml, caption=docker-compose.yml per registry]
+\begin{lstlisting}[, caption=docker-compose.yml per registry]
 version: '3.8'
 
 services:
@@ -430,7 +430,7 @@ Integrazione & ECS, EKS, Fargate & GKE, Cloud Run & AKS, Container Instances \\
 
 \subsection{GitHub Actions}
 
-\begin{lstlisting}[language=yaml, caption=.github/workflows/docker.yml]
+\begin{lstlisting}[, caption=.github/workflows/docker.yml]
 name: Docker Build and Push
 
 on:
@@ -478,7 +478,7 @@ jobs:
 
 \subsection{GitLab CI/CD}
 
-\begin{lstlisting}[language=yaml, caption=.gitlab-ci.yml]
+\begin{lstlisting}[, caption=.gitlab-ci.yml]
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_REF_SLUG
@@ -664,7 +664,7 @@ $ curl -X DELETE http://registry:5000/v2/myapp/manifests/sha256:abc123...
 \begin{lstlisting}[language=bash, caption=Harbor replication example]
 # Replica tra due Harbor registry
 # Via Harbor UI:
-# Administration → Replications → New Replication Rule
+# Administration -> Replications -> New Replication Rule
 # - Name: prod-to-backup
 # - Source: Local
 # - Destination: backup-harbor.com
@@ -673,7 +673,7 @@ $ curl -X DELETE http://registry:5000/v2/myapp/manifests/sha256:abc123...
 
 \subsection{Webhook Notifications}
 
-\begin{lstlisting}[language=yaml, caption=Registry webhook config]
+\begin{lstlisting}[, caption=Registry webhook config]
 # /etc/docker/registry/config.yml
 notifications:
   endpoints:
@@ -689,7 +689,7 @@ notifications:
 
 \section{Caso di Studio: Production Registry}
 
-\begin{lstlisting}[language=yaml, caption=Production-grade registry stack]
+\begin{lstlisting}[, caption=Production-grade registry stack]
 version: '3.8'
 
 services:

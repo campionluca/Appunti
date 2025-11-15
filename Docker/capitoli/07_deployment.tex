@@ -44,7 +44,7 @@ docker service update \
 \end{lstlisting}
 
 \subsection{Blue-Green Deployment}
-\begin{lstlisting}[language=yaml, caption={Blue-Green con Docker Compose}]
+\begin{lstlisting}[, caption={Blue-Green con Docker Compose}]
 # docker-compose-blue-green.yml
 version: '3.8'
 
@@ -127,7 +127,7 @@ echo "  ./blue-green-switch.sh --rollback"
 \end{tcolorbox}
 
 \subsection{Canary Deployment}
-\begin{lstlisting}[language=yaml, caption={Canary Release - Traffic Splitting}]
+\begin{lstlisting}[, caption={Canary Release - Traffic Splitting}]
 # kubernetes-canary.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -241,7 +241,7 @@ docker node ls
 \end{lstlisting}
 
 \subsection{Deploy Stack con Docker Swarm}
-\begin{lstlisting}[language=yaml, caption={Stack Multi-Service Production}]
+\begin{lstlisting}[, caption={Stack Multi-Service Production}]
 # stack-production.yml
 version: '3.8'
 
@@ -402,7 +402,7 @@ docker stack rm myapp
 \end{tcolorbox}
 
 \subsection{Deployment Completo Kubernetes}
-\begin{lstlisting}[language=yaml, caption={Production Deployment con Kubernetes}]
+\begin{lstlisting}[, caption={Production Deployment con Kubernetes}]
 # deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -654,7 +654,7 @@ EOF
 \section{Load Balancing e Service Discovery}
 
 \subsection{Kubernetes Services}
-\begin{lstlisting}[language=yaml, caption={Service Types}]
+\begin{lstlisting}[, caption={Service Types}]
 # ClusterIP (default) - Internal only
 apiVersion: v1
 kind: Service
@@ -782,7 +782,7 @@ func (h *HealthChecker) StartupHandler(w http.ResponseWriter, r *http.Request) {
 \section{Deployment Automation}
 
 \subsection{GitOps con ArgoCD}
-\begin{lstlisting}[language=yaml, caption={ArgoCD Application}]
+\begin{lstlisting}[, caption={ArgoCD Application}]
 # argocd-application.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application

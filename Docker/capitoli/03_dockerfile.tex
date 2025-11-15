@@ -225,8 +225,8 @@ COPY app.py .
 ENTRYPOINT ["python3", "app.py"]
 CMD ["--help"]
 
-# docker run myapp          → python3 app.py --help
-# docker run myapp --serve  → python3 app.py --serve
+# docker run myapp          -> python3 app.py --help
+# docker run myapp --serve  -> python3 app.py --serve
 \end{lstlisting}
 
 \subsection{ENV: Variabili d'Ambiente}
@@ -791,7 +791,7 @@ RUN npm install && npm run build
 CMD ["npm", "start"]
     \end{lstlisting}
 
-    \item Ottimizza questa catena RUN (3 layer → 1):
+    \item Ottimizza questa catena RUN (3 layer -> 1):
     \begin{lstlisting}
 RUN apt-get update
 RUN apt-get install -y curl vim

@@ -53,7 +53,7 @@ $ sudo apt-get install docker-compose-plugin
 
 \subsection{Struttura Base}
 
-\begin{lstlisting}[language=yaml, caption=docker-compose.yml minimale]
+\begin{lstlisting}[, caption=docker-compose.yml minimale]
 version: '3.8'
 
 services:
@@ -111,7 +111,7 @@ $ docker compose up -d --scale web=3
 
 \subsection{Build da Dockerfile}
 
-\begin{lstlisting}[language=yaml, caption=Service con build custom]
+\begin{lstlisting}[, caption=Service con build custom]
 services:
   app:
     build:
@@ -134,7 +134,7 @@ services:
 
 \subsection{Usare Immagini Esistenti}
 
-\begin{lstlisting}[language=yaml, caption=Service con immagine da registry]
+\begin{lstlisting}[, caption=Service con immagine da registry]
 services:
   redis:
     image: redis:7-alpine
@@ -181,7 +181,7 @@ volumes:
 
 \subsection{depends\_on}
 
-\begin{lstlisting}[language=yaml, caption=Definire dipendenze]
+\begin{lstlisting}[, caption=Definire dipendenze]
 services:
   web:
     image: myapp
@@ -205,7 +205,7 @@ services:
 
 \subsection{Health Checks e Readiness}
 
-\begin{lstlisting}[language=yaml, caption=Aspettare che DB sia pronto]
+\begin{lstlisting}[, caption=Aspettare che DB sia pronto]
 services:
   db:
     image: postgres:15
@@ -230,7 +230,7 @@ services:
 
 Compose crea automaticamente una rete bridge per i servizi.
 
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[]
 services:
   web:
     image: nginx
@@ -247,7 +247,7 @@ services:
 
 \subsection{Networks Custom}
 
-\begin{lstlisting}[language=yaml, caption=Definire reti multiple]
+\begin{lstlisting}[, caption=Definire reti multiple]
 services:
   frontend:
     image: react-app
@@ -283,7 +283,7 @@ networks:
 
 \subsection{Network Esistente}
 
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[]
 services:
   app:
     image: myapp
@@ -299,7 +299,7 @@ networks:
 
 \subsection{Named Volumes}
 
-\begin{lstlisting}[language=yaml, caption=Volumi gestiti da Docker]
+\begin{lstlisting}[, caption=Volumi gestiti da Docker]
 services:
   db:
     image: postgres:15
@@ -318,7 +318,7 @@ volumes:
 
 \subsection{Bind Mounts}
 
-\begin{lstlisting}[language=yaml, caption=Mount directory host]
+\begin{lstlisting}[, caption=Mount directory host]
 services:
   web:
     image: nginx
@@ -338,7 +338,7 @@ services:
 
 \subsection{Opzioni Volumi Avanzate}
 
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[]
 services:
   db:
     image: postgres
@@ -375,7 +375,7 @@ APP_PORT=3000
 NODE_ENV=production
 \end{lstlisting}
 
-\begin{lstlisting}[language=yaml, caption=Usare variabili da .env]
+\begin{lstlisting}[, caption=Usare variabili da .env]
 services:
   db:
     image: postgres:${POSTGRES_VERSION}
@@ -392,7 +392,7 @@ services:
 
 \subsection{env\_file per Container}
 
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[]
 services:
   app:
     image: myapp
@@ -415,7 +415,7 @@ POSTGRES_DB=myapp
 
 \subsection{Stack LAMP (Linux, Apache, MySQL, PHP)}
 
-\begin{lstlisting}[language=yaml, caption=docker-compose.yml per LAMP]
+\begin{lstlisting}[, caption=docker-compose.yml per LAMP]
 version: '3.8'
 
 services:
@@ -476,7 +476,7 @@ volumes:
 
 \subsection{Stack MERN (MongoDB, Express, React, Node)}
 
-\begin{lstlisting}[language=yaml, caption=docker-compose.yml per MERN]
+\begin{lstlisting}[, caption=docker-compose.yml per MERN]
 version: '3.8'
 
 services:
@@ -551,7 +551,7 @@ volumes:
 
 \subsection{Stack Microservizi con Nginx Reverse Proxy}
 
-\begin{lstlisting}[language=yaml, caption=Architettura microservizi]
+\begin{lstlisting}[, caption=Architettura microservizi]
 version: '3.8'
 
 services:
@@ -682,7 +682,7 @@ volumes:
 
 \subsection{Monitoring Stack (Prometheus + Grafana)}
 
-\begin{lstlisting}[language=yaml, caption=Stack monitoring]
+\begin{lstlisting}[, caption=Stack monitoring]
 version: '3.8'
 
 services:
@@ -765,7 +765,7 @@ $ docker compose up
 $ docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 \end{lstlisting}
 
-\begin{lstlisting}[language=yaml, caption=docker-compose.override.yml]
+\begin{lstlisting}[, caption=docker-compose.override.yml]
 # Override per sviluppo
 services:
   web:
@@ -823,7 +823,7 @@ $ docker stats $(docker compose ps -q)
     \item \textbf{Restart policies}: Usa \texttt{unless-stopped} in prod
 
     \item \textbf{Resource limits}:
-    \begin{lstlisting}[language=yaml]
+    \begin{lstlisting}[]
 services:
   web:
     deploy:
