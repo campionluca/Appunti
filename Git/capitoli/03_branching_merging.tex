@@ -59,14 +59,13 @@ Un \textbf{branch} (ramo) in Git è semplicemente un puntatore mobile a un commi
 \subsection{Perché usare i branch}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi del Branching]
-\begin{itemize}
-    \item \textbf{Isolamento}: Lavora su feature senza toccare codice stabile
-    \item \textbf{Sperimentazione}: Prova idee senza rischio
-    \item \textbf{Collaborazione}: Team lavora su feature diverse in parallelo
-    \item \textbf{Code review}: Feature branch + pull request
-    \item \textbf{Hotfix}: Fixa bug in produzione senza feature incomplete
-    \item \textbf{Release management}: Branch per versioni diverse
-\end{itemize}
+Il sistema di branching di Git offre numerosi benefici nel workflow di sviluppo. Innanzitutto consente l'isolamento: puoi lavorare su una nuova feature senza rischiare di toccare il codice stabile del branch principale. Questo livello di isolamento rende sicuro sperimentare con idee nuove senza correre il rischio di rompere il progetto.
+
+Il branching facilita la collaborazione in team: múltiple sviluppatori possono lavorare simultaneamente su feature diverse, ognuno nel proprio branch privato, senza interferire reciprocamente. Quando ogni feature è completata e testata, viene integrata nel branch principale.
+
+Il branching abilita i code review attraverso feature branch e pull request: un'altra persona nel team può revisionare il codice scritto prima che venga mergiato nel main.
+
+Sul piano del deployment, i branch permettono di fixare bug urgenti in produzione (hotfix) senza toccare le feature incomplete che sono in sviluppo. Permette anche una gestione efficace di release management mantenendo branch separati per diverse versioni del software.
 \end{tcolorbox}
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scenario Tipico]

@@ -19,28 +19,11 @@ Un workflow Git definisce come team collabora usando branch, merge e release. Wo
 
 \subsection{Il problema senza workflow}
 
-Senza workflow definito:
-\begin{itemize}
-    \item Sviluppatori committano direttamente su \texttt{main}
-    \item Produzione rompe frequentemente
-    \item Feature incomplete vanno in produzione
-    \item Impossibile rollback selettivo
-    \item Hotfix mescolati con feature
-    \item Code review inconsistente
-    \item Chaos totale in team \textgreater 2 persone
-\end{itemize}
+Senza un workflow definito che regoli come il team collabora, il processo di sviluppo diventa rapidamente caotico. Gli sviluppatori cominciano a committare direttamente sul branch main senza coordinamento, causando frequenti rotture in produzione. Feature incomplete finiscono per andare in deploy, rompendo sistemi per gli utenti finali. Quando un problema emerge, è impossibile fare rollback selettivo di una singola feature senza perdere altro lavoro. I bugfix urgenti e le nuove feature diventano mescolati nella storia, rendendo difficile distinguere cosa è stata introdotta quando. I code review, se avvengono, sono inconsistenti e informali. In team con più di due sviluppatori, il risultato è chaos totale: conflitti frequenti, bug introdotti facilmente, e impossibilità di capire chi ha fatto cosa.
 
 \subsection{Workflow risolve}
 
-Un workflow ben definito fornisce:
-\begin{itemize}
-    \item \textbf{Separazione}: Feature/hotfix/release isolati
-    \item \textbf{Stabilità}: \texttt{main} sempre deployabile
-    \item \textbf{Qualità}: Code review obbligatoria
-    \item \textbf{Tracciabilità}: Ogni feature ha branch dedicato
-    \item \textbf{Release control}: Gestione versioni chiara
-    \item \textbf{Rollback}: Facile tornare indietro
-\end{itemize}
+Un workflow ben definito che standardizza come il team collabora risolve elegantemente questi problemi. Implementa una separazione netta tra feature, hotfix e release, mantenendo isolati i diversi tipi di lavoro. Garantisce che il branch main sia sempre in uno stato deployabile, non contenendo feature incomplete o codice di bassa qualità. Implementa code review obbligatoria attraverso pull request, garantendo che tutto il codice sia revisionato prima di entrare in produzione. Ogni feature ha un branch dedicato, mantenendo tracciabilità chiara di quale lavoro è stato fatto quando. La gestione delle versioni diventa sistematica e ordinata. Infine, grazie alla struttura, è facile tornare indietro se qualcosa va storto, poiché ogni feature è isolata e può essere reverted indipendentemente.
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scegliere Workflow Giusto]
 \textbf{Non esiste workflow perfetto}. Dipende da:
@@ -237,23 +220,11 @@ $ git push origin main develop --tags
 \subsection{Vantaggi e svantaggi Git Flow}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi Git Flow]
-\begin{itemize}
-    \item Struttura chiara e ben documentata
-    \item Adatto a release pianificate (ogni mese, trimestre)
-    \item Separazione netta develop/produzione
-    \item Hotfix non bloccano sviluppo feature
-    \item Supporta release multiple in parallelo
-\end{itemize}
+Git Flow offre una struttura chiara e ben documentata che il team può facilmente seguire e insegnare. È particolarmente adatto per progetti con release pianificate a intervalli regolari (ogni mese, trimestre, ecc.). Il workflow implementa una separazione netta tra il branch di sviluppo (develop) e quello di produzione (main), evitando che feature incomplete compromettano il codice stabile. Gli hotfix per bug critici non bloccano lo sviluppo di nuove feature grazie alla loro separazione. Infine, Git Flow supporta naturalmente il mantenimento di release multiple in parallelo, utile quando è necessario continuare il supporto di versioni precedenti.
 \end{tcolorbox}
 
 \begin{tcolorbox}[colback=red!10, colframe=red!60, title=Svantaggi Git Flow]
-\begin{itemize}
-    \item Complesso per team piccoli o progetti semplici
-    \item Overhead di gestione branch
-    \item Non adatto a continuous deployment
-    \item Curva apprendimento per junior
-    \item Merge conflicts frequenti con branch longevi
-\end{itemize}
+D'altra parte, Git Flow è eccessivamente complesso per team piccoli o progetti semplici dove questa struttura aggiunge più overhead che valore. La gestione di múltiple branch richiede coordinamento e disciplina costanti. Git Flow non è adatto a continuous deployment o frequent releasing poiché la struttura è pensata per release pianificate. La curva di apprendimento è ripida per sviluppatori junior che devono imparare a navigare tra i diversi branch. Infine, branch longevi (specialmente feature branch) tendono a accumulare merge conflicts frequenti quando il branch di develop avanza mentre il feature branch è ancora in sviluppo.
 \end{tcolorbox}
 
 \section{GitHub Flow}
@@ -384,24 +355,11 @@ $ git branch -d feature/add-search
 \subsection{Vantaggi e svantaggi GitHub Flow}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi GitHub Flow]
-\begin{itemize}
-    \item Semplicissimo: un branch principale + feature
-    \item Ideale per continuous deployment
-    \item Code review integrata (Pull Request)
-    \item Deploy frequenti (anche più volte al giorno)
-    \item Branch short-lived (meno conflitti)
-    \item Curva apprendimento bassa
-\end{itemize}
+GitHub Flow è notevolmente semplice: usa solo un branch principale con feature branch temporanei, eliminando la complessità di múltiple branch di integrazione. È ideale per continuous deployment e release frequenti poiché la struttura è pensata per deploy veloci e ripetuti. Il code review è integrato naturalmente attraverso pull request, rendendo facile la revisione del codice prima del merge. I deploy frequenti (anche diverse volte al giorno) mantengono le feature in produzione rapidamente. I branch sono short-lived (di breve durata), riducendo la probabilità di merge conflicts. La curva di apprendimento è bassa: gli sviluppatori hanno solo bisogno di imparare a creare feature branch e fare pull request.
 \end{tcolorbox}
 
 \begin{tcolorbox}[colback=red!10, colframe=red!60, title=Svantaggi GitHub Flow]
-\begin{itemize}
-    \item Non adatto a release pianificate
-    \item Richiede CI/CD robusto
-    \item Richiede testing automatico esteso
-    \item Difficile gestire multiple versioni in produzione
-    \item Hotfix = feature branch (nessun trattamento speciale)
-\end{itemize}
+GitHub Flow non è adatto a progetti con release pianificate perché manca la struttura per gestire versioni parallele. Richiede un CI/CD robusto e affidabile per funzionare correttamente, poiché ogni merge in main viene deployato. Richiede anche testing automatico esteso per compensare l'assenza di un branch di integrazione dedicato. È difficile gestire múltiple versioni in produzione contemporaneamente. Infine, gli hotfix per bug critici sono trattati come feature branch normali, senza prioritization speciale.
 \end{tcolorbox}
 
 \section{Trunk-Based Development}
@@ -458,22 +416,9 @@ def new_dashboard():
 
 \subsection{Quando usare Trunk-Based}
 
-\textbf{Adatto per}:
-\begin{itemize}
-    \item Team senior esperti
-    \item CI/CD molto maturo
-    \item Test coverage \textgreater 90\%
-    \item Deploy multipli al giorno
-    \item Culture DevOps forte
-\end{itemize}
+Trunk-Based Development è adatto per team senior esperti con una culture DevOps forte e un CI/CD maturo e affidabile. Richiede che il test coverage sia superiore al 90% per garantire che il codice deployato sia stabile. Questo workflow è ideale per ambienti che richiedono deploy multipli al giorno.
 
-\textbf{Non adatto per}:
-\begin{itemize}
-    \item Team junior
-    \item Progetti senza CI/CD
-    \item Code review richiesta
-    \item Release pianificate
-\end{itemize}
+Al contrario, non è adatto per team junior che potrebbero non avere la disciplina necessaria per fare commit piccoli e frequenti su main. Non funziona per progetti senza infrastruttura CI/CD solida. Se il team richiede code review formale e strutturata, questa non è la scelta giusta. Infine, non è adatto per progetti con release pianificate che seguono un ciclo di versioning tradizionale.
 
 \section{Pull Request e Code Review}
 
@@ -524,24 +469,9 @@ Fixes #123
 
 \subsection{Code Review Best Practices}
 
-\textbf{Per autore PR}:
-\begin{itemize}
-    \item PR piccola (max 400 righe, ideale \textless 200)
-    \item Descrizione chiara e completa
-    \item Self-review prima di request
-    \item Test inclusi e passano
-    \item Un PR = una feature/fix
-    \item Rispondi a feedback costruttivamente
-\end{itemize}
+Per chi scrive una pull request, è importante mantenerla piccola: idealmente meno di 200 righe, comunque non più di 400. Una descrizione chiara e completa del cambiamento è essenziale. Prima di richiedere revisione, dovresti fare una self-review per catturare errori evidenti. I test inclusi nella PR devono passare. Ogni PR dovrebbe rappresentare una singola feature o fix, non una miscellanea di cambiamenti. Quando ricevi feedback, rispondi costruttivamente e non prendere i commenti come critica personale.
 
-\textbf{Per reviewer}:
-\begin{itemize}
-    \item Review entro 24h (non bloccare altri)
-    \item Feedback costruttivo, non critica personale
-    \item Distingui: \textit{must fix} vs \textit{nice to have}
-    \item Approva quando "abbastanza buono", non "perfetto"
-    \item Se molti commenti, call invece di 50 commenti
-\end{itemize}
+Per chi reviziona, è importante fornire feedback entro 24 ore per non bloccare il lavoro di altri. Il feedback dovrebbe essere costruttivo e non una critica personale dello scrittore. Distingui chiaramente tra "must fix" (problemi bloccanti) e "nice to have" (miglioramenti suggeriti). Approva il PR quando è "abbastanza buono" - la perfezione è nemica del bene. Se trovi molti commenti da fare, considera di fare una call sincrona con l'autore invece di intavolare 50 commenti scritti.
 
 \begin{lstlisting}[caption=Commenti review esempi]
 # Bad review comment

@@ -178,12 +178,7 @@ git cherry-pick -x <commit>
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=orange!10, colframe=orange!60, title=Best Practice]
-Usa cherry-pick con cautela. Crea duplicazione nella cronologia e può causare confusione. Preferisci merge quando possibile. Cherry-pick è ottimo per:
-\begin{itemize}
-    \item Hotfix urgenti da applicare a multiple branch
-    \item Recuperare commit da branch che verranno cancellati
-    \item Applicare commit specifici senza tutto il branch
-\end{itemize}
+Usa cherry-pick con cautela poiché crea duplicazione nella cronologia e può causare confusione. Quando possibile, preferisci merge. Detto questo, cherry-pick è ottimo per scenari specifici: hotfix urgenti che devono essere applicati a múltiple branch, recupero di commit da branch che verranno cancellati, e applicazione di commit specifici senza dover mergeare l'intero branch.
 \end{tcolorbox}
 
 \section{Git Reset: Manipolare la Cronologia}
@@ -222,12 +217,7 @@ git commit -m "Add feature with tests and docs"
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Quando Usare Reset Soft]
-Perfetto per:
-\begin{itemize}
-    \item Combinare multipli commit in uno
-    \item Riscrivere messaggi di commit multipli
-    \item Riorganizzare modifiche già committate
-\end{itemize}
+Reset soft è perfetto per combinare múltiple commit in uno unico, per riscrivere i messaggi di múltiple commit insieme, o per riorganizzare modifiche che sono già state committate.
 \end{tcolorbox}
 
 \subsection{Reset Mixed (Default)}
@@ -346,12 +336,7 @@ git diff HEAD@{0} HEAD@{2}
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Reflog è il Tuo Salvavita]
-Reflog conserva la cronologia per 90 giorni (default). Se hai fatto un errore, reflog può salvare il tuo lavoro. Ma ricorda:
-\begin{itemize}
-    \item Reflog è locale (non viene pushato)
-    \item Dopo 90 giorni le entry vengono rimosse
-    \item \texttt{git gc} può pulire oggetti non referenziati
-\end{itemize}
+Reflog è incredibilmente utile per recuperare da errori: conserva la cronologia per 90 giorni per default e può salvare il tuo lavoro da reset disastrosi. Tuttavia, ci sono alcune limitazioni da ricordare. Reflog è locale e non viene pushato ad altri repository, quindi il recovery è possibile solo localmente. Dopo 90 giorni, le entry vengono rimosse automaticamente. Inoltre, \texttt{git gc} può pulire oggetti non referenziati anche prima di questo periodo.
 \end{tcolorbox}
 
 \section{Git Bisect: Trovare Bug con Ricerca Binaria}
@@ -554,21 +539,9 @@ git checkout -b bugfix-1.0 v1.0.0
 \subsection{Semantic Versioning}
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Semantic Versioning (SemVer)]
-Schema di versioning: \texttt{MAJOR.MINOR.PATCH}
+Lo Semantic Versioning segue uno schema di versioning \texttt{MAJOR.MINOR.PATCH}. La componente MAJOR aumenta quando vengono introdotti cambiamenti incompatibili (breaking changes) che richiedono agli utenti di adattare il loro codice. La componente MINOR aumenta quando vengono aggiunte nuove funzionalità in modo compatibile con versioni precedenti. La componente PATCH aumenta quando vengono rilasciati bugfix che non cambiano l'API.
 
-\begin{itemize}
-    \item \textbf{MAJOR}: Cambiamenti incompatibili (breaking changes)
-    \item \textbf{MINOR}: Nuove funzionalità compatibili
-    \item \textbf{PATCH}: Bugfix compatibili
-\end{itemize}
-
-Esempi:
-\begin{itemize}
-    \item \texttt{v1.0.0}: Prima versione stabile
-    \item \texttt{v1.1.0}: Aggiunte feature (compatibile con 1.0.0)
-    \item \texttt{v1.1.1}: Bugfix
-    \item \texttt{v2.0.0}: Breaking changes (non compatibile con 1.x.x)
-\end{itemize}
+Per esempio, la versione \texttt{v1.0.0} rappresenta la prima versione stabile. La versione \texttt{v1.1.0} contiene nuove feature aggiunte in modo compatibile con la 1.0.0. La versione \texttt{v1.1.1} contiene bugfix minori della 1.1.0. La versione \texttt{v2.0.0} contiene cambiamenti incompatibili e non è compatibile con la versione 1.x.x.
 \end{tcolorbox}
 
 \section{Esercizi}

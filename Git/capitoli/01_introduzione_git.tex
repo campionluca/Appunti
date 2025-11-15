@@ -32,14 +32,7 @@ mio-progetto/
   main_backup_20241110.py
 \end{lstlisting}
 
-\textbf{Problemi evidenti}:
-\begin{itemize}
-    \item Impossibile sapere cosa è cambiato tra versioni
-    \item Nessuna traccia di chi ha fatto modifiche
-    \item Difficile collaborare (chi ha la versione corretta?)
-    \item Nessun modo di tornare indietro facilmente
-    \item Naming chaos totale
-\end{itemize}
+Questa situazione rivela una serie di problemi evidenti. Innanzitutto, è praticamente impossibile sapere cosa sia effettivamente cambiato tra una versione e l'altra, poiché i file hanno nomi simili senza informazioni sui dettagli delle modifiche. Non esiste alcuna traccia sistematica di chi ha fatto le modifiche, quando e per quale motivo. Collaborare diventa estremamente difficile: con múltiple "versioni finali" in circolazione, rimane sempre il dubbio su quale sia effettivamente la versione corretta da usare. Se qualcosa va storto, non esiste un modo sistematico di tornare indietro facilmente a uno stato precedente noto come stabile. Infine, i nomi dei file diventano rapidamente un caos di suffissi e numeri (_v1, _v2, _final, _REALMENTE_FINALE) che non seguono alcun criterio logico.
 
 \begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errore Comune: Version Control Manuale]
 Creare copie manuali dei file con suffissi come \texttt{\_v1}, \texttt{\_final}, \texttt{\_backup} è inefficiente, error-prone e non scala. Il version control automatizza questo processo in modo robusto e professionale.
@@ -47,15 +40,17 @@ Creare copie manuali dei file con suffissi come \texttt{\_v1}, \texttt{\_final},
 
 \subsection{La soluzione: Version Control System}
 
-Con un VCS come Git:
-\begin{itemize}
-    \item \textbf{Tracking automatico}: Ogni modifica è tracciata con timestamp e autore
-    \item \textbf{Commit messages}: Descrizioni di cosa è stato modificato e perché
-    \item \textbf{Branching}: Lavorare su feature diverse in parallelo senza conflitti
-    \item \textbf{Rollback}: Tornare a versioni precedenti istantaneamente
-    \item \textbf{Collaborazione}: Più persone lavorano sugli stessi file senza sovrascriversi
-    \item \textbf{Storia completa}: Audit trail di tutto il progetto
-\end{itemize}
+Un Version Control System come Git risolve elegantemente tutti questi problemi. Innanzitutto, offre un tracking automatico di ogni modifica al codice, con informazioni dettagliate su timestamp e autore. Ogni cambio viene registrato permanentemente, creando una cronologia immodificabile.
+
+Accompagnando ogni insieme di modifiche, è possibile aggiungere commit messages descrittivi che spiegano non solo cosa è stato modificato, ma soprattutto il perché, fornendo contesto essenziale per la comprensione futura del codice.
+
+Git consente il branching, ovvero la capacità di creare linee di sviluppo parallele e isolate dove lavorare su feature diverse senza che i cambiamenti interferi scano gli uni con gli altri. Questa è una delle caratteristiche più potenti di Git.
+
+Quando necessario, il rollback consente di tornare a versioni precedenti in modo istantaneo, sia che si tratti di revertare un singolo file o ripristinare l'intero progetto a uno stato precedente.
+
+La collaborazione diventa naturale: múltiple persone possono lavorare sugli stessi file contemporaneamente in branch diversi, e Git facilita l'integrazione intelligente delle loro modifiche.
+
+Infine, Git fornisce un audit trail completo del progetto: è sempre possibile visualizzare l'intera storia delle modifiche, comprendere quando è stato introdotto un bug, chi l'ha introdotto e come è stato fixato.
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio Pratico]
 Stai sviluppando una funzionalità ma scopri un bug critico in produzione. Con Git:
@@ -141,29 +136,11 @@ Esempi: \textbf{SVN (Subversion)}, CVS, Perforce
     \caption{Architettura CVCS - Server Centrale}
 \end{figure}
 
-\textbf{Caratteristiche CVCS}:
-\begin{itemize}
-    \item Un server centrale contiene tutta la storia
-    \item I client hanno solo l'ultima versione (working copy)
-    \item Ogni operazione richiede connessione al server
-    \item Commit = push immediato al server
-\end{itemize}
+In un'architettura CVCS, un server centrale è l'unico detentore della storia completa del progetto, mentre i client hanno accesso solo alla versione più recente dei file (la cosiddetta working copy). Ogni operazione, dal commit al visualizzare la storia, richiede una connessione al server. Il flusso è semplice: quando effettui un commit locale, questo viene immediatamente pushato al server centrale.
 
-\textbf{Vantaggi CVCS}:
-\begin{itemize}
-    \item Amministrazione centralizzata (controllo accessi)
-    \item Modello mentale semplice
-    \item Backup centralizzato
-\end{itemize}
+Questo modello ha alcuni vantaggi. Consente un'amministrazione centralizzata che facilita il controllo degli accessi e la gestione delle autorizzazioni. Il modello mentale è relativamente semplice: esiste un punto di verità centrale. Inoltre, il backup è naturalmente centralizzato sul server.
 
-\textbf{Svantaggi CVCS}:
-\begin{itemize}
-    \item \textbf{Single Point of Failure}: Server down = nessuno lavora
-    \item \textbf{Richiede rete}: Impossibile commit offline
-    \item \textbf{Lento}: Ogni diff/log richiede query al server
-    \item \textbf{Branching costoso}: Creare branch è pesante
-    \item \textbf{Rischio perdita dati}: Se il server crasha, si perde tutto
-\end{itemize}
+Tuttavia, gli svantaggi sono significativi. Il server rappresenta un single point of failure: se il server non è disponibile, nessuno può fare commit, visualizzare la storia o lavorare con il version control. Poiché ogni operazione richiede connessione di rete, è impossibile fare commit offline o lavorare quando la connessione è instabile. Le operazioni come visualizzare le differenze tra versioni o consultare la storia richiedono query al server, rendendole lente rispetto a operazioni locali. Creare un branch è un'operazione pesante che comporta duplicazione di file sul server. Infine, esiste il rischio di perdita di dati catastrofica: se il server si arresta in modo imprevisto, la storia del progetto potrebbe andare persa.
 
 \subsection{Version Control System Distribuiti (DVCS)}
 
@@ -196,30 +173,11 @@ Esempi: \textbf{Git}, Mercurial, Bazaar
     \caption{Architettura DVCS - Distribuita}
 \end{figure}
 
-\textbf{Caratteristiche DVCS}:
-\begin{itemize}
-    \item Ogni clone è una copia completa del repository (storia inclusa)
-    \item Operazioni locali (commit, branch, merge) istantanee
-    \item Sincronizzazione esplicita (push/pull)
-    \item Possibilità di lavorare offline
-\end{itemize}
+Un DVCS ha un'architettura radicalmente diversa. Ogni clone di un repository è una copia completa del repository stesso, includendo l'intera cronologia. Questo significa che ogni sviluppatore ha localmente accesso a tutta la storia del progetto. Le operazioni locali come commit, creazione di branch e merge sono istantanee poiché operano su file locali senza accesso alla rete. La sincronizzazione con altri repository è esplicita: gli sviluppatori decidono consapevolmente quando fare push (inviare i loro commit) o pull (ricevere i commit degli altri). Grazie a questa architettura, è possibile lavorare completamente offline, fare commit e creare branch anche senza connessione internet.
 
-\textbf{Vantaggi DVCS}:
-\begin{itemize}
-    \item \textbf{Backup naturale}: Ogni clone è un backup completo
-    \item \textbf{Velocità}: Operazioni locali senza latenza di rete
-    \item \textbf{Offline-first}: Lavoro completo senza connessione
-    \item \textbf{Branching leggero}: Creare branch è istantaneo
-    \item \textbf{Flessibilità workflow}: Supporta workflow complessi
-    \item \textbf{Integrità}: Checksum garantisce nessuna corruzione
-\end{itemize}
+I vantaggi sono sostanziali. Innanzitutto, esiste un backup naturale: ogni clone è un backup completo dell'intero progetto, quindi la perdita di dati è pressoché impossibile. Le operazioni sono incredibilmente veloci perché tutte le operazioni locali avvengono senza latenza di rete. Lo stile di lavoro offline-first consente sviluppo completo anche senza accesso a internet. Creare branch è istantaneo perché implica semplicemente la creazione di un puntatore, senza duplicazione di file. I DVCS supportano workflow complessi e flessibili, adattabili a diverse necessità di sviluppo. Infine, un sistema di checksum garantisce che non possa avvenire corruzione di dati.
 
-\textbf{Svantaggi DVCS}:
-\begin{itemize}
-    \item Curva di apprendimento più ripida
-    \item Concetti più complessi (staging area, rebase, etc.)
-    \item Storage locale maggiore (tutta la storia)
-\end{itemize}
+Lo svantaggio principale dei DVCS è una curva di apprendimento più ripida. Richiedono una comprensione di concetti più sofisticati come la staging area, il rebase e la sincronizzazione esplicita. Inoltre, lo storage locale è maggiore poiché ogni sviluppatore mantiene una copia completa della storia.
 
 \begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Confronto CVCS vs DVCS]
 \begin{tabular}{lll}
