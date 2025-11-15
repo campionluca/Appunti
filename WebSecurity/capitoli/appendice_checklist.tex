@@ -1,0 +1,559 @@
+\chapter{Appendice: Security Checklist Pre-Deployment}
+
+\begin{tcolorbox}[title=Scopo dell'appendice]
+Checklist completa di controlli security da eseguire prima del deployment in produzione. Copre autenticazione, autorizzazione, crittografia, configurazione server, API, database, frontend, compliance e monitoring.
+\end{tcolorbox}
+
+\section*{Come usare questa checklist}
+
+\begin{enumerate}
+    \item Passa attraverso ogni sezione sistematicamente
+    \item Marca ogni item come ✓ completato o ✗ non applicabile
+    \item Documenta remediation per ogni item non completato
+    \item Prioritizza items critici prima del deployment
+    \item Rivedi checklist ad ogni major release
+\end{enumerate}
+
+\section{Authentication \& Session Management}
+
+\subsection{Password Management}
+
+\begin{itemize}
+    \item[$\square$] Password hashate con algoritmo sicuro (bcrypt, Argon2, scrypt)
+    \item[$\square$] Salt unico per ogni password
+    \item[$\square$] Password policy enforced:
+    \begin{itemize}
+        \item[$\square$] Lunghezza minima 12 caratteri
+        \item[$\square$] Richiede uppercase, lowercase, digit, special char
+        \item[$\square$] Verifica contro Have I Been Pwned API
+        \item[$\square$] Previene password comuni (top 10k list)
+    \end{itemize}
+    \item[$\square$] Password change richiede password corrente
+    \item[$\square$] Password reset usa token one-time con expiration
+    \item[$\square$] Password reset token invalidato dopo uso
+    \item[$\square$] Password history: previeni riuso ultime N password
+    \item[$\square$] Account lockout dopo N tentativi falliti
+    \item[$\square$] CAPTCHA dopo M tentativi falliti
+    \item[$\square$] Email notifica per password change
+    \item[$\square$] Forced password change per account compromessi
+\end{itemize}
+
+\subsection{Session Management}
+
+\begin{itemize}
+    \item[$\square$] Session ID generato da framework/libreria sicura
+    \item[$\square$] Session ID sufficientemente lungo (>128 bit)
+    \item[$\square$] Session ID non predicibile (cryptographically random)
+    \item[$\square$] Session ID rigenerato dopo login (prevent fixation)
+    \item[$\square$] Session ID rigenerato dopo privilege elevation
+    \item[$\square$] Session timeout configurato (15-30 min inattività)
+    \item[$\square$] Absolute session timeout (es. 24 ore)
+    \item[$\square$] Logout invalida session server-side
+    \item[$\square$] Cookie flags configurati correttamente:
+    \begin{itemize}
+        \item[$\square$] HttpOnly (prevent XSS)
+        \item[$\square$] Secure (HTTPS only)
+        \item[$\square$] SameSite=Strict o Lax (prevent CSRF)
+    \end{itemize}
+    \item[$\square$] Session storage sicuro (encrypted se contiene dati sensibili)
+    \item[$\square$] Concurrent session limit (max N sessioni per user)
+    \item[$\square$] Session data minimization (solo dati necessari)
+\end{itemize}
+
+\subsection{Multi-Factor Authentication}
+
+\begin{itemize}
+    \item[$\square$] MFA disponibile per tutti gli utenti
+    \item[$\square$] MFA obbligatorio per admin e ruoli privilegiati
+    \item[$\square$] MFA supporta TOTP (Google Authenticator, Authy)
+    \item[$\square$] Backup codes generati e salvabili
+    \item[$\square$] Recovery process se MFA device perso
+    \item[$\square$] Rate limiting su MFA verification
+    \item[$\square$] Audit log per MFA enable/disable
+\end{itemize}
+
+\section{Authorization \& Access Control}
+
+\begin{itemize}
+    \item[$\square$] Principle of least privilege applicato
+    \item[$\square$] Default deny (whitelist approach)
+    \item[$\square$] Authorization checks su OGNI richiesta (complete mediation)
+    \item[$\square$] Authorization enforced server-side (mai solo client-side)
+    \item[$\square$] Protezione IDOR (Insecure Direct Object Reference):
+    \begin{itemize}
+        \item[$\square$] Verifica ownership prima di accesso risorse
+        \item[$\square$] UUID invece di ID sequenziali dove appropriato
+    \end{itemize}
+    \item[$\square$] Protezione vertical privilege escalation
+    \item[$\square$] Protezione horizontal privilege escalation
+    \item[$\square$] Role-based o attribute-based access control implementato
+    \item[$\square$] Separation of duties per operazioni critiche
+    \item[$\square$] Protezione mass assignment vulnerabilities
+    \item[$\square$] File access controls (directory traversal prevention)
+    \item[$\square$] API endpoint protection (authentication + authorization)
+    \item[$\square$] Admin panel accesso ristretto (IP whitelist, VPN, MFA)
+\end{itemize}
+
+\section{Input Validation \& Output Encoding}
+
+\subsection{Input Validation}
+
+\begin{itemize}
+    \item[$\square$] Validazione server-side OBBLIGATORIA (mai solo client)
+    \item[$\square$] Whitelist approach (definisci cosa è permesso)
+    \item[$\square$] Validazione tipo dati (string, integer, email, URL, etc.)
+    \item[$\square$] Validazione lunghezza (min/max)
+    \item[$\square$] Validazione formato (regex pattern)
+    \item[$\square$] Validazione range (numeri, date)
+    \item[$\square$] Validazione enum (valori da lista predefinita)
+    \item[$\square$] Sanitizzazione filename (prevent path traversal)
+    \item[$\square$] File upload validation:
+    \begin{itemize}
+        \item[$\square$] File size limit
+        \item[$\square$] File extension whitelist
+        \item[$\square$] MIME type validation
+        \item[$\square$] Magic number validation
+        \item[$\square$] Malware scanning (se disponibile)
+    \end{itemize}
+    \item[$\square$] Reject null bytes (\textbackslash0)
+    \item[$\square$] Validation error messages non rivelano dettagli implementazione
+\end{itemize}
+
+\subsection{Output Encoding}
+
+\begin{itemize}
+    \item[$\square$] Context-aware output encoding
+    \item[$\square$] HTML encoding per HTML context
+    \item[$\square$] JavaScript encoding per JavaScript context
+    \item[$\square$] URL encoding per URL parameters
+    \item[$\square$] CSS encoding (evitare user input in CSS)
+    \item[$\square$] Template engine auto-escaping abilitato
+    \item[$\square$] Content-Type headers corretti
+    \item[$\square$] X-Content-Type-Options: nosniff header
+\end{itemize}
+
+\section{SQL Injection Prevention}
+
+\begin{itemize}
+    \item[$\square$] Prepared statements / parameterized queries SEMPRE
+    \item[$\square$] ORM usato correttamente (no raw queries con user input)
+    \item[$\square$] Stored procedures con parametrizzazione
+    \item[$\square$] Input validation (defense in depth)
+    \item[$\square$] Database user least privilege:
+    \begin{itemize}
+        \item[$\square$] No GRANT ALL
+        \item[$\square$] Solo permessi necessari (SELECT, INSERT, UPDATE, DELETE)
+        \item[$\square$] No permessi FILE, PROCESS, SUPER
+    \end{itemize}
+    \item[$\square$] Stored credentials separate (no hardcoded passwords)
+    \item[$\square$] Database error messages non esposti a utenti
+    \item[$\square$] WAF rules per SQLi (defense in depth)
+\end{itemize}
+
+\section{XSS Prevention}
+
+\begin{itemize}
+    \item[$\square$] Output encoding (vedi sezione precedente)
+    \item[$\square$] Content Security Policy (CSP) implementato:
+    \begin{itemize}
+        \item[$\square$] default-src 'self'
+        \item[$\square$] script-src limitato (no 'unsafe-inline' se possibile)
+        \item[$\square$] object-src 'none'
+        \item[$\square$] base-uri 'self'
+    \end{itemize}
+    \item[$\square$] X-XSS-Protection: 1; mode=block header
+    \item[$\square$] HttpOnly flag su cookies
+    \item[$\square$] Sanitizzazione rich text input (HTMLPurifier, DOMPurify)
+    \item[$\square$] Evitare innerHTML, eval(), Function() constructor
+    \item[$\square$] DOM-based XSS prevention (validate URL fragments)
+\end{itemize}
+
+\section{CSRF Prevention}
+
+\begin{itemize}
+    \item[$\square$] CSRF tokens per tutte le state-changing operations
+    \item[$\square$] Token cryptographically random e unico per sessione
+    \item[$\square$] Token validato server-side
+    \item[$\square$] Double-submit cookie pattern (alternativa)
+    \item[$\square$] SameSite cookie attribute (Strict o Lax)
+    \item[$\square$] Origin/Referer header validation (defense in depth)
+    \item[$\square$] Custom headers per AJAX requests
+    \item[$\square$] Re-authentication per operazioni critiche
+\end{itemize}
+
+\section{Cryptography}
+
+\subsection{Data at Rest}
+
+\begin{itemize}
+    \item[$\square$] Dati sensibili cifrati (AES-256)
+    \item[$\square$] Database encryption (Transparent Data Encryption)
+    \item[$\square$] File system encryption (LUKS, BitLocker)
+    \item[$\square$] Backup cifrati
+    \item[$\square$] Key management sicuro:
+    \begin{itemize}
+        \item[$\square$] Keys separate da dati cifrati
+        \item[$\square$] HSM per chiavi critiche (se applicabile)
+        \item[$\square$] Key rotation policy
+        \item[$\square$] Key backup e recovery procedure
+    \end{itemize}
+    \item[$\square$] No dati sensibili in logs
+    \item[$\square$] Secure deletion dati sensibili (overwrite)
+\end{itemize}
+
+\subsection{Data in Transit}
+
+\begin{itemize}
+    \item[$\square$] HTTPS obbligatorio (tutte le pagine)
+    \item[$\square$] TLS 1.2+ (TLS 1.0/1.1 disabilitati)
+    \item[$\square$] Strong cipher suites (forward secrecy)
+    \item[$\square$] Certificati validi da CA riconosciuta
+    \item[$\square$] Certificate chain completa
+    \item[$\square$] HSTS header:
+    \begin{itemize}
+        \item[$\square$] max-age >= 1 anno
+        \item[$\square$] includeSubDomains
+        \item[$\square$] preload (se appropriato)
+    \end{itemize}
+    \item[$\square$] OCSP Stapling abilitato
+    \item[$\square$] Redirect HTTP → HTTPS
+    \item[$\square$] Certificate monitoring e auto-renewal
+    \item[$\square$] Internal traffic cifrato (microservizi, DB connections)
+\end{itemize}
+
+\section{API Security}
+
+\begin{itemize}
+    \item[$\square$] Authentication richiesta (JWT, OAuth 2.0, API keys)
+    \item[$\square$] JWT:
+    \begin{itemize}
+        \item[$\square$] Strong secret (>256 bit)
+        \item[$\square$] Short expiration (15-60 min)
+        \item[$\square$] Refresh token pattern
+        \item[$\square$] Algorithm whitelist (no "none")
+        \item[$\square$] Signature validation
+    \end{itemize}
+    \item[$\square$] Rate limiting implementato
+    \item[$\square$] Request size limits
+    \item[$\square$] CORS configurato correttamente (no wildcard "*" con credentials)
+    \item[$\square$] API versioning
+    \item[$\square$] Input validation (schema validation)
+    \item[$\square$] Output filtering (no sensitive data leak)
+    \item[$\square$] GraphQL:
+    \begin{itemize}
+        \item[$\square$] Query depth limiting
+        \item[$\square$] Query complexity limiting
+        \item[$\square$] Introspection disabilitato in production
+    \end{itemize}
+    \item[$\square$] API documentation non espone endpoints interni
+    \item[$\square$] Proper HTTP status codes (401 vs 403)
+\end{itemize}
+
+\section{Server Configuration}
+
+\subsection{Web Server}
+
+\begin{itemize}
+    \item[$\square$] Server banner rimosso/oscurato
+    \item[$\square$] Directory listing disabilitato
+    \item[$\square$] Default pages rimosse
+    \item[$\square$] Unnecessary HTTP methods disabilitati (TRACE, OPTIONS)
+    \item[$\square$] Error pages custom (no stack traces)
+    \item[$\square$] Request timeout configurato
+    \item[$\square$] Client body size limit
+    \item[$\square$] Security headers:
+    \begin{itemize}
+        \item[$\square$] Strict-Transport-Security
+        \item[$\square$] X-Frame-Options: DENY o SAMEORIGIN
+        \item[$\square$] X-Content-Type-Options: nosniff
+        \item[$\square$] X-XSS-Protection: 1; mode=block
+        \item[$\square$] Content-Security-Policy
+        \item[$\square$] Referrer-Policy
+        \item[$\square$] Permissions-Policy
+    \end{itemize}
+    \item[$\square$] Access logs abilitati
+    \item[$\square$] Log rotation configurata
+\end{itemize}
+
+\subsection{Application Server}
+
+\begin{itemize}
+    \item[$\square$] Debug mode DISABILITATO in production
+    \item[$\square$] Development tools disabilitati
+    \item[$\square$] Error reporting configurato (log, no display)
+    \item[$\square$] Secure defaults
+    \item[$\square$] Unnecessary services disabilitati
+    \item[$\square$] File permissions corrette (least privilege)
+    \item[$\square$] Temporary files cleanup
+\end{itemize}
+
+\subsection{Database}
+
+\begin{itemize}
+    \item[$\square$] Database non esposto a internet (firewall)
+    \item[$\square$] Strong password per database users
+    \item[$\square$] Least privilege per application user
+    \item[$\square$] Default accounts rimossi/disabilitati
+    \item[$\square$] Remote root login disabilitato
+    \item[$\square$] Audit logging abilitato
+    \item[$\square$] Backup automatici
+    \item[$\square$] Backup cifrati
+    \item[$\square$] Backup testati (restore test)
+    \item[$\square$] Connection encryption (TLS)
+\end{itemize}
+
+\section{Infrastructure}
+
+\begin{itemize}
+    \item[$\square$] Firewall configurato (only necessary ports)
+    \item[$\square$] SSH:
+    \begin{itemize}
+        \item[$\square$] Key-based authentication (no passwords)
+        \item[$\square$] Root login disabilitato
+        \item[$\square$] Non-standard port (opzionale)
+        \item[$\square$] Fail2ban o simili
+    \end{itemize}
+    \item[$\square$] OS e software aggiornati (security patches)
+    \item[$\square$] Intrusion Detection System (IDS) configurato
+    \item[$\square$] Web Application Firewall (WAF) in produzione
+    \item[$\square$] DDoS protection (CloudFlare, AWS Shield, etc.)
+    \item[$\square$] Monitoring e alerting configurato
+    \item[$\square$] Secrets management (Vault, AWS Secrets Manager)
+    \item[$\square$] Container security (se applicabile):
+    \begin{itemize}
+        \item[$\square$] Base images da fonti affidabili
+        \item[$\square$] Regular image scanning
+        \item[$\square$] Non-root user in containers
+        \item[$\square$] Read-only file systems
+    \end{itemize}
+\end{itemize}
+
+\section{Frontend Security}
+
+\begin{itemize}
+    \item[$\square$] Dipendenze JavaScript aggiornate
+    \item[$\square$] No secrets in JavaScript (API keys, tokens)
+    \item[$\square$] Subresource Integrity (SRI) per CDN resources
+    \item[$\square$] NPM audit pulito (no critical/high vulnerabilities)
+    \item[$\square$] Minification e obfuscation (non per security, ma best practice)
+    \item[$\square$] Source maps NON pubblicati in production
+    \item[$\square$] localStorage/sessionStorage: no sensitive data
+    \item[$\square$] Proper CORS implementation
+    \item[$\square$] postMessage() validation (origin check)
+\end{itemize}
+
+\section{Third-Party Dependencies}
+
+\begin{itemize}
+    \item[$\square$] Inventory completo dipendenze
+    \item[$\square$] Vulnerability scanning automatico (Dependabot, Snyk)
+    \item[$\square$] Dipendenze aggiornate
+    \item[$\square$] No dipendenze deprecate
+    \item[$\square$] Licenze dipendenze verificate (compliance)
+    \item[$\square$] Minimal dependencies (rimuovi unused)
+    \item[$\square$] Dependency pinning (version lock)
+    \item[$\square$] Private package registry (se applicabile)
+    \item[$\square$] Third-party services audit:
+    \begin{itemize}
+        \item[$\square$] Privacy policy review
+        \item[$\square$] Data processing agreement
+        \item[$\square$] Security certifications (SOC 2, ISO 27001)
+    \end{itemize}
+\end{itemize}
+
+\section{Logging \& Monitoring}
+
+\begin{itemize}
+    \item[$\square$] Structured logging implementato (JSON)
+    \item[$\square$] Centralized logging (ELK, Splunk, CloudWatch)
+    \item[$\square$] Log retention policy
+    \item[$\square$] Eventi loggati:
+    \begin{itemize}
+        \item[$\square$] Authentication events (login, logout, failures)
+        \item[$\square$] Authorization failures
+        \item[$\square$] Input validation failures
+        \item[$\square$] Application errors
+        \item[$\square$] Admin actions
+        \item[$\square$] Data access (sensitive data)
+        \item[$\square$] Configuration changes
+    \end{itemize}
+    \item[$\square$] Log sanitization (no passwords, tokens, PII)
+    \item[$\square$] Security monitoring:
+    \begin{itemize}
+        \item[$\square$] Failed login attempts (brute force detection)
+        \item[$\square$] Unusual access patterns
+        \item[$\square$] Privilege escalation attempts
+        \item[$\square$] SQL injection attempts
+        \item[$\square$] XSS attempts
+    \end{itemize}
+    \item[$\square$] Alerting configurato (PagerDuty, Slack, email)
+    \item[$\square$] Incident response plan documentato
+    \item[$\square$] Regular log review
+    \item[$\square$] SIEM integration (se applicabile)
+\end{itemize}
+
+\section{Compliance}
+
+\subsection{GDPR (se applicabile)}
+
+\begin{itemize}
+    \item[$\square$] Privacy policy aggiornata
+    \item[$\square$] Cookie consent banner
+    \item[$\square$] Data minimization
+    \item[$\square$] Right to access (export user data)
+    \item[$\square$] Right to deletion (account deletion)
+    \item[$\square$] Right to portability
+    \item[$\square$] Consent management
+    \item[$\square$] Data breach notification procedure (72 ore)
+    \item[$\square$] DPA (Data Processing Agreement) con third parties
+    \item[$\square$] Data retention policy
+    \item[$\square$] Encryption dati personali
+    \item[$\square$] Access logging per dati personali
+\end{itemize}
+
+\subsection{PCI-DSS (se applicabile)}
+
+\begin{itemize}
+    \item[$\square$] No storage CVV/PIN
+    \item[$\square$] PAN encryption o tokenization
+    \item[$\square$] Strong access controls
+    \item[$\square$] Network segmentation (CDE isolation)
+    \item[$\square$] Regular vulnerability scans
+    \item[$\square$] Penetration testing annuale
+    \item[$\square$] File integrity monitoring
+    \item[$\square$] Comprehensive logging
+    \item[$\square$] TLS 1.2+ per cardholder data
+\end{itemize}
+
+\section{Development Process}
+
+\begin{itemize}
+    \item[$\square$] Secure SDLC implementato
+    \item[$\square$] Security requirements definiti
+    \item[$\square$] Threat modeling eseguito
+    \item[$\square$] Code review security-focused
+    \item[$\square$] Static analysis (SAST) in CI/CD
+    \item[$\square$] Dynamic analysis (DAST) pre-production
+    \item[$\square$] Dependency scanning automatico
+    \item[$\square$] Secrets scanning (no committed secrets)
+    \item[$\square$] Security testing in staging
+    \item[$\square$] Penetration testing (almeno annuale)
+    \item[$\square$] Security training per developers
+    \item[$\square$] Incident response drills
+\end{itemize}
+
+\section{Pre-Deployment Final Checks}
+
+\begin{itemize}
+    \item[$\square$] Vulnerability scan completo (OWASP ZAP, Burp)
+    \item[$\square$] SSL Labs test (grade A minimo)
+    \item[$\square$] Security headers check (securityheaders.com)
+    \item[$\square$] OWASP Top 10 verificato
+    \item[$\square$] Load testing (verifica stabilità sotto stress)
+    \item[$\square$] Backup/restore test
+    \item[$\square$] Rollback plan definito
+    \item[$\square$] Monitoring dashboard configurato
+    \item[$\square$] Runbook documentato
+    \item[$\square$] Incident response team identificato
+    \item[$\square$] Emergency contacts aggiornati
+    \item[$\square$] Change approval ottenuto
+\end{itemize}
+
+\section{Post-Deployment}
+
+\begin{itemize}
+    \item[$\square$] Smoke tests eseguiti
+    \item[$\square$] Monitoring attivo
+    \item[$\square$] Log review primissime ore
+    \item[$\square$] Performance baselines
+    \item[$\square$] Security scan post-deployment
+    \item[$\square$] User acceptance testing
+    \item[$\square$] Rollback plan pronto se necessario
+\end{itemize}
+
+\section{Prioritization Matrix}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Priority} & \textbf{Severity} & \textbf{Action} \\
+\hline
+P0 & Critical & Block deployment \\
+P1 & High & Fix before deployment \\
+P2 & Medium & Fix within 30 days \\
+P3 & Low & Fix within 90 days \\
+\hline
+\end{tabular}
+\caption{Prioritization delle vulnerabilità}
+\end{table}
+
+\textbf{P0 - Critical (Block Deployment)}:
+\begin{itemize}
+    \item SQL Injection
+    \item Authentication bypass
+    \item Remote code execution
+    \item Hardcoded credentials in production
+    \item No HTTPS
+    \item No password hashing
+\end{itemize}
+
+\textbf{P1 - High (Fix Before Deployment)}:
+\begin{itemize}
+    \item XSS vulnerabilities
+    \item CSRF vulnerabilities
+    \item Sensitive data exposure
+    \item Broken access control
+    \item Known vulnerable dependencies (critical severity)
+    \item Missing security headers
+\end{itemize}
+
+\section{Sign-Off}
+
+\begin{lstlisting}[language=text, caption={Template sign-off}]
+PROJECT: _______________________
+VERSION: _______________________
+DATE: _______________________
+
+SECURITY CHECKLIST REVIEW
+
+Total Items: ___
+Completed: ___
+Not Applicable: ___
+Pending: ___
+
+Critical Issues Found: ___
+High Issues Found: ___
+Medium Issues Found: ___
+Low Issues Found: ___
+
+All P0/P1 issues resolved: YES / NO
+
+REVIEWED BY:
+
+Developer: _________________ Date: _______
+Security Lead: _____________ Date: _______
+QA Lead: __________________ Date: _______
+DevOps Lead: ______________ Date: _______
+
+DEPLOYMENT AUTHORIZATION:
+
+Product Manager: ___________ Date: _______
+CTO/CISO: _________________ Date: _______
+
+NOTES:
+_________________________________________________
+_________________________________________________
+_________________________________________________
+\end{lstlisting}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item OWASP Application Security Verification Standard (ASVS)
+    \item NIST Cybersecurity Framework
+    \item CIS Controls
+    \item PCI-DSS Security Standards
+    \item GDPR Compliance Checklist
+    \item ISO/IEC 27001
+\end{itemize}

@@ -1,0 +1,857 @@
+\chapter{Dockerfile: Creare Immagini Custom}
+
+\section*{Introduzione}
+Il Dockerfile è un file di testo che contiene le istruzioni per costruire un'immagine Docker. Questo capitolo copre la sintassi, le istruzioni principali, best practices e tecniche avanzate come multi-stage builds.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Scrivere Dockerfile per diverse applicazioni
+    \item Comprendere FROM, RUN, COPY, CMD, ENTRYPOINT, ENV
+    \item Ottimizzare immagini con multi-stage builds
+    \item Applicare best practices per efficienza e sicurezza
+    \item Gestire cache dei layer per build veloci
+\end{itemize}
+
+\section{Cos'è un Dockerfile}
+
+\subsection{Definizione}
+Un \textbf{Dockerfile} è uno script testuale che automatizza la creazione di un'immagine Docker. Ogni istruzione crea un nuovo layer nell'immagine finale.
+
+\subsection{Struttura base}
+
+\begin{lstlisting}[caption=Dockerfile minimale]
+# Commento: immagine base
+FROM ubuntu:22.04
+
+# Installa software
+RUN apt-get update && apt-get install -y python3
+
+# Copia applicazione
+COPY app.py /app/app.py
+
+# Comando di avvio
+CMD ["python3", "/app/app.py"]
+\end{lstlisting}
+
+\subsection{Build dell'immagine}
+
+\begin{lstlisting}[language=bash]
+# Build con tag
+$ docker build -t myapp:v1.0 .
+
+# Build con nome e path specifico
+$ docker build -t myapp:latest -f Dockerfile.prod .
+
+# Build senza cache
+$ docker build --no-cache -t myapp .
+\end{lstlisting}
+
+\section{Istruzioni Fondamentali}
+
+\subsection{FROM: Immagine Base}
+
+La prima istruzione di ogni Dockerfile. Specifica l'immagine di partenza.
+
+\begin{lstlisting}[caption=Esempi di FROM]
+# Immagine ufficiale Ubuntu
+FROM ubuntu:22.04
+
+# Immagine Alpine (minimalista, 5MB)
+FROM alpine:3.18
+
+# Immagine specifica per linguaggio
+FROM python:3.11-slim
+FROM node:18-alpine
+FROM openjdk:17-jdk-slim
+
+# Multi-stage: usa alias
+FROM golang:1.21 AS builder
+FROM nginx:alpine AS production
+
+# Scratch: immagine vuota (per binari statici)
+FROM scratch
+\end{lstlisting}
+
+\begin{nota}
+\textbf{Alpine Linux} è popolare per container perché:
+\begin{itemize}
+    \item Dimensione minima: ~5MB vs ~70MB Ubuntu
+    \item Sicurezza: superficie d'attacco ridotta
+    \item Performance: avvio rapido
+    \item Attenzione: usa musl libc invece di glibc (possibili incompatibilità)
+\end{itemize}
+\end{nota}
+
+\subsection{RUN: Eseguire Comandi}
+
+Esegue comandi durante la build dell'immagine. Ogni RUN crea un nuovo layer.
+
+\begin{lstlisting}[caption=Sintassi RUN]
+# Shell form (eseguita in /bin/sh -c)
+RUN apt-get update && apt-get install -y curl
+
+# Exec form (preferita, no shell processing)
+RUN ["apt-get", "update"]
+RUN ["apt-get", "install", "-y", "nginx"]
+
+# Multi-line con backslash
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        vim \
+        git && \
+    rm -rf /var/lib/apt/lists/*
+\end{lstlisting}
+
+\textbf{Best practice: Minimizzare layer}
+
+\begin{lstlisting}[caption=Esempio SBAGLIATO (3 layer)]
+# Anti-pattern: ogni RUN crea un layer
+RUN apt-get update
+RUN apt-get install -y curl
+RUN rm -rf /var/lib/apt/lists/*
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Esempio CORRETTO (1 layer)]
+# Best practice: combina in un singolo RUN
+RUN apt-get update && \
+    apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+\end{lstlisting}
+
+\subsection{COPY e ADD: Copiare File}
+
+\subsubsection{COPY: Copia Semplice}
+
+\begin{lstlisting}[caption=Esempi COPY]
+# Copia file singolo
+COPY app.py /app/app.py
+
+# Copia directory
+COPY src/ /app/src/
+
+# Copia multipli file
+COPY package.json package-lock.json /app/
+
+# Copia con pattern
+COPY *.py /app/
+
+# Cambia ownership
+COPY --chown=user:group app.py /app/
+\end{lstlisting}
+
+\subsubsection{ADD: Copia Avanzata}
+
+\begin{lstlisting}[caption=ADD con funzionalità extra]
+# Come COPY ma con auto-extract di tar
+ADD archive.tar.gz /app/
+
+# Download da URL (SCONSIGLIATO, preferire RUN curl)
+ADD https://example.com/file.txt /app/
+\end{lstlisting}
+
+\begin{attenzione}
+\textbf{Preferisci COPY a ADD} tranne quando serve auto-extraction di archivi tar. ADD ha comportamenti impliciti che possono confondere.
+\end{attenzione}
+
+\subsection{CMD: Comando Predefinito}
+
+Specifica il comando di default quando il container viene eseguito.
+
+\begin{lstlisting}[caption=Forme di CMD]
+# Exec form (preferita)
+CMD ["python3", "app.py"]
+CMD ["nginx", "-g", "daemon off;"]
+
+# Shell form
+CMD python3 app.py
+
+# Come parametri a ENTRYPOINT
+CMD ["--help"]
+\end{lstlisting}
+
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item Solo l'ultimo CMD nel Dockerfile è effettivo
+    \item Può essere sovrascritto da \texttt{docker run}
+    \item Non eseguito durante build, solo a runtime
+\end{itemize}
+
+\begin{lstlisting}[language=bash, caption=Override CMD]
+# Usa CMD del Dockerfile
+$ docker run myapp
+
+# Sovrascrive CMD
+$ docker run myapp python3 script2.py
+\end{lstlisting}
+
+\subsection{ENTRYPOINT: Punto di Ingresso}
+
+Configura il container come eseguibile.
+
+\begin{lstlisting}[caption=ENTRYPOINT vs CMD]
+# Solo ENTRYPOINT
+FROM alpine
+ENTRYPOINT ["ping"]
+CMD ["localhost"]
+
+# Build e run
+$ docker build -t pinger .
+$ docker run pinger              # ping localhost
+$ docker run pinger google.com   # ping google.com
+\end{lstlisting}
+
+\textbf{Differenze CMD vs ENTRYPOINT}:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{CMD} & \textbf{ENTRYPOINT} \\
+\hline
+Override & Facile (\texttt{docker run img cmd}) & Richiede \texttt{--entrypoint} \\
+Scopo & Comando di default & Eseguibile fisso \\
+Combinazione & Parametri per ENTRYPOINT & Comando principale \\
+\hline
+\end{tabular}
+\caption{CMD vs ENTRYPOINT}
+\end{table}
+
+\begin{lstlisting}[caption=Pattern comune: ENTRYPOINT + CMD]
+FROM python:3.11-slim
+WORKDIR /app
+COPY app.py .
+
+ENTRYPOINT ["python3", "app.py"]
+CMD ["--help"]
+
+# docker run myapp          → python3 app.py --help
+# docker run myapp --serve  → python3 app.py --serve
+\end{lstlisting}
+
+\subsection{ENV: Variabili d'Ambiente}
+
+\begin{lstlisting}[caption=Definire variabili ambiente]
+# Sintassi key=value
+ENV NODE_ENV=production
+ENV APP_PORT=3000
+
+# Sintassi vecchia (deprecata)
+ENV NODE_ENV production
+
+# Multiple env vars
+ENV PORT=8080 \
+    DEBUG=false \
+    LOG_LEVEL=info
+
+# Usare in RUN
+ENV APP_DIR=/app
+RUN mkdir -p $APP_DIR
+WORKDIR $APP_DIR
+\end{lstlisting}
+
+\textbf{ENV vs ARG}:
+\begin{itemize}
+    \item \textbf{ENV}: Persiste nel container runtime
+    \item \textbf{ARG}: Solo durante build
+\end{itemize}
+
+\subsection{ARG: Argomenti di Build}
+
+\begin{lstlisting}[caption=Usare ARG per build parametrizzata]
+# Definisci ARG con default
+ARG PYTHON_VERSION=3.11
+FROM python:${PYTHON_VERSION}-slim
+
+ARG APP_ENV=development
+RUN if [ "$APP_ENV" = "production" ]; then \
+        pip install --no-cache-dir gunicorn; \
+    fi
+
+# Build con override
+# $ docker build --build-arg PYTHON_VERSION=3.9 .
+# $ docker build --build-arg APP_ENV=production .
+\end{lstlisting}
+
+\subsection{WORKDIR: Directory di Lavoro}
+
+\begin{lstlisting}[caption=Impostare working directory]
+# Crea directory se non esiste
+WORKDIR /app
+
+# Path relativo (relativi al WORKDIR precedente)
+WORKDIR /usr
+WORKDIR local
+WORKDIR bin
+RUN pwd  # Output: /usr/local/bin
+
+# Best practice: usa WORKDIR invece di RUN cd
+# SBAGLIATO
+RUN cd /app && python app.py
+
+# CORRETTO
+WORKDIR /app
+RUN python app.py
+\end{lstlisting}
+
+\subsection{EXPOSE: Documentare Porte}
+
+\begin{lstlisting}[caption=Dichiarare porte]
+# Documenta porte usate
+EXPOSE 80
+EXPOSE 443
+EXPOSE 3000/tcp
+EXPOSE 53/udp
+
+# EXPOSE è solo documentazione!
+# Devi comunque fare -p al run
+# $ docker run -p 8080:80 myapp
+\end{lstlisting}
+
+\subsection{VOLUME: Punti di Montaggio}
+
+\begin{lstlisting}[caption=Definire volumi]
+# Crea mount point
+VOLUME /data
+VOLUME ["/var/log", "/var/db"]
+
+# Esempio: database
+FROM mysql:8.0
+VOLUME /var/lib/mysql
+
+# Al run, Docker crea volume anonimo se non specificato
+# $ docker run -v mydata:/var/lib/mysql mysql
+\end{lstlisting}
+
+\subsection{USER: Cambiare Utente}
+
+\begin{lstlisting}[caption=Eseguire come utente non-root]
+# Crea utente
+RUN groupadd -r appuser && \
+    useradd -r -g appuser appuser
+
+# Crea directory con ownership corretta
+RUN mkdir -p /app && chown -R appuser:appuser /app
+
+# Cambia utente per istruzioni successive
+USER appuser
+
+WORKDIR /app
+COPY --chown=appuser:appuser . .
+
+CMD ["python3", "app.py"]
+\end{lstlisting}
+
+\begin{nota}
+\textbf{Sicurezza}: Eseguire container come root è un rischio. Usa sempre USER per applicazioni in produzione.
+\end{nota}
+
+\subsection{LABEL: Metadati}
+
+\begin{lstlisting}[caption=Aggiungere metadata]
+LABEL maintainer="luca.campion@example.com"
+LABEL version="1.0"
+LABEL description="My awesome app"
+
+# Multiple labels
+LABEL org.opencontainers.image.title="MyApp" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.vendor="MyCompany"
+\end{lstlisting}
+
+\section{Esempi Completi di Dockerfile}
+
+\subsection{Applicazione Python Flask}
+
+\begin{lstlisting}[caption=Dockerfile per Flask app]
+FROM python:3.11-slim
+
+# Metadata
+LABEL maintainer="dev@example.com"
+
+# Variabili ambiente
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_HOME=/app
+
+# Crea user non-root
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Working directory
+WORKDIR $APP_HOME
+
+# Installa dipendenze sistema
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        && rm -rf /var/lib/apt/lists/*
+
+# Copia requirements e installa dipendenze Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia applicazione
+COPY --chown=appuser:appuser . .
+
+# Cambia a utente non-root
+USER appuser
+
+# Esponi porta
+EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# Comando di avvio
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+\end{lstlisting}
+
+\subsection{Applicazione Node.js}
+
+\begin{lstlisting}[caption=Dockerfile per Node.js app]
+FROM node:18-alpine
+
+# Installa dumb-init per signal handling
+RUN apk add --no-cache dumb-init
+
+# Crea app directory
+WORKDIR /usr/src/app
+
+# Copia package files
+COPY package*.json ./
+
+# Installa dipendenze (production only)
+RUN npm ci --only=production && npm cache clean --force
+
+# Copia codice app
+COPY . .
+
+# Usa utente node built-in
+USER node
+
+# Esponi porta
+EXPOSE 3000
+
+# Usa dumb-init per gestire segnali
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "server.js"]
+\end{lstlisting}
+
+\subsection{Applicazione Go (Static Binary)}
+
+\begin{lstlisting}[caption=Dockerfile per Go app]
+FROM golang:1.21-alpine AS builder
+
+WORKDIR /build
+
+# Copia go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copia source code
+COPY . .
+
+# Build static binary
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+
+# Final stage: usa scratch (immagine vuota)
+FROM scratch
+
+# Copia solo binary
+COPY --from=builder /build/app /app
+
+# Copia CA certificates per HTTPS
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+EXPOSE 8080
+
+ENTRYPOINT ["/app"]
+\end{lstlisting}
+
+\section{Multi-Stage Builds}
+
+\subsection{Concetto}
+
+I \textbf{multi-stage builds} permettono di usare più FROM in un Dockerfile, copiando solo gli artifact necessari nell'immagine finale.
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Immagini finali molto più piccole
+    \item Separazione build tools da runtime
+    \item Sicurezza: no source code in produzione
+    \item Un solo Dockerfile per dev e prod
+\end{itemize}
+
+\subsection{Esempio: Java Application}
+
+\begin{lstlisting}[caption=Multi-stage: Maven build + JRE runtime]
+# Stage 1: Build con Maven
+FROM maven:3.9-eclipse-temurin-17 AS builder
+
+WORKDIR /build
+
+# Copia pom.xml e scarica dipendenze (layer cacheable)
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Copia source e compila
+COPY src ./src
+RUN mvn package -DskipTests
+
+# Stage 2: Runtime con JRE
+FROM eclipse-temurin:17-jre-alpine
+
+WORKDIR /app
+
+# Copia solo JAR compilato dallo stage builder
+COPY --from=builder /build/target/myapp.jar app.jar
+
+# Utente non-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+\end{lstlisting}
+
+\textbf{Confronto dimensioni}:
+\begin{itemize}
+    \item Single-stage (Maven+JDK): ~650 MB
+    \item Multi-stage (solo JRE): ~180 MB
+    \item Risparmio: ~72\%
+\end{itemize}
+
+\subsection{Esempio: React Frontend}
+
+\begin{lstlisting}[caption=Multi-stage: npm build + nginx serve]
+# Stage 1: Build con Node.js
+FROM node:18-alpine AS builder
+
+WORKDIR /build
+
+# Installa dipendenze
+COPY package*.json ./
+RUN npm ci
+
+# Build production
+COPY . .
+RUN npm run build
+
+# Stage 2: Serve con Nginx
+FROM nginx:alpine
+
+# Copia build output
+COPY --from=builder /build/dist /usr/share/nginx/html
+
+# Custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# Nginx in foreground
+CMD ["nginx", "-g", "daemon off;"]
+\end{lstlisting}
+
+\subsection{Esempio: Python con compilazione C}
+
+\begin{lstlisting}[caption=Multi-stage: build dependencies + runtime]
+# Stage 1: Build con compiler
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# Stage 2: Runtime senza compiler
+FROM python:3.11-slim
+
+COPY --from=builder /wheels /wheels
+
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+
+WORKDIR /app
+COPY . .
+
+CMD ["python", "app.py"]
+\end{lstlisting}
+
+\section{Ottimizzazione e Best Practices}
+
+\subsection{Layer Caching}
+
+Docker cachea i layer se le istruzioni non cambiano.
+
+\begin{lstlisting}[caption=SBAGLIATO: Invalida cache spesso]
+FROM python:3.11-slim
+
+# Ogni modifica a qualsiasi file invalida tutto dopo
+COPY . /app
+RUN pip install -r /app/requirements.txt
+
+CMD ["python", "/app/app.py"]
+\end{lstlisting}
+
+\begin{lstlisting}[caption=CORRETTO: Ottimizza cache]
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copia solo requirements (cambia raramente)
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copia codice app (cambia spesso)
+COPY . .
+
+CMD ["python", "app.py"]
+\end{lstlisting}
+
+\subsection{Minimizzare Dimensioni Immagine}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Strategie per Ridurre Dimensioni]
+\begin{enumerate}
+    \item \textbf{Usa immagini base minimali}
+    \begin{itemize}
+        \item Alpine invece di Ubuntu: -60MB+
+        \item Slim/slim-bullseye per Python/Node: -30MB
+        \item Distroless per linguaggi compilati
+    \end{itemize}
+
+    \item \textbf{Multi-stage builds}: Solo runtime artifacts
+
+    \item \textbf{Combina RUN}: Meno layer
+
+    \item \textbf{Pulisci in stesso layer}:
+    \begin{lstlisting}
+RUN apt-get update && apt-get install -y curl && \
+    rm -rf /var/lib/apt/lists/*
+    \end{lstlisting}
+
+    \item \textbf{Usa .dockerignore}:
+    \begin{lstlisting}
+# .dockerignore
+.git
+node_modules
+*.log
+.env
+    \end{lstlisting}
+
+    \item \textbf{No package manager cache}:
+    \begin{lstlisting}
+# Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Node
+RUN npm ci && npm cache clean --force
+
+# apt
+RUN apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Sicurezza}
+
+\begin{attenzione}
+\textbf{Security Best Practices}:
+\begin{enumerate}
+    \item \textbf{Non usare root}
+    \begin{lstlisting}
+USER appuser
+    \end{lstlisting}
+
+    \item \textbf{Scansiona immagini}
+    \begin{lstlisting}[language=bash]
+$ docker scan myapp:latest
+$ trivy image myapp:latest
+    \end{lstlisting}
+
+    \item \textbf{Usa immagini ufficiali verificate}
+
+    \item \textbf{Aggiorna base images regolarmente}
+
+    \item \textbf{Non embeddare segreti}
+    \begin{lstlisting}
+# SBAGLIATO
+ENV API_KEY=super_secret_123
+
+# CORRETTO: usa secrets o env vars a runtime
+$ docker run -e API_KEY=$(cat secret.txt) myapp
+    \end{lstlisting}
+
+    \item \textbf{Usa COPY invece di ADD}
+
+    \item \textbf{Specifica versioni esatte}
+    \begin{lstlisting}
+FROM python:3.11.5-slim  # Non :latest
+    \end{lstlisting}
+\end{enumerate}
+\end{attenzione}
+
+\subsection{File .dockerignore}
+
+\begin{lstlisting}[caption=.dockerignore example]
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules
+bower_components
+vendor
+
+# Build output
+dist
+build
+target
+*.pyc
+__pycache__
+
+# Logs
+*.log
+logs
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Environment
+.env
+.env.local
+*.pem
+
+# Documentation
+README.md
+docs
+
+# Tests
+tests
+*.test.js
+\end{lstlisting}
+
+\section*{Best Practices Riassunto}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Dockerfile Best Practices]
+\begin{enumerate}
+    \item Usa immagini base ufficiali e minimali
+    \item Un processo per container
+    \item Ordina istruzioni per cache (meno variabili prima)
+    \item Combina RUN per ridurre layer
+    \item Multi-stage builds per immagini compatte
+    \item Non eseguire come root (USER)
+    \item Usa .dockerignore per escludere file
+    \item COPY preferito ad ADD
+    \item Specifica versioni esatte (no :latest in prod)
+    \item Pulisci cache in stesso layer
+    \item Health checks per monitoring
+    \item Metadata con LABEL
+\end{enumerate}
+\end{tcolorbox}
+
+\section*{Errori Comuni}
+
+\begin{enumerate}
+    \item \textbf{Layer troppo grandi}: Non combinare comandi
+    \item \textbf{Cache invalidation}: COPY . . all'inizio
+    \item \textbf{Root user}: Rischio sicurezza
+    \item \textbf{Segreti nel Dockerfile}: Esposti in history
+    \item \textbf{:latest in produzione}: Non riproducibile
+    \item \textbf{Software inutile}: Aumenta superficie d'attacco
+    \item \textbf{File temporanei}: Non rimossi nello stesso RUN
+\end{enumerate}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Scrivi un Dockerfile per un'app Python Flask con:
+    \begin{itemize}
+        \item Immagine base python:3.11-slim
+        \item User non-root
+        \item Requirements.txt cacheable
+        \item Health check su /health
+    \end{itemize}
+
+    \item Converti questo Dockerfile a multi-stage:
+    \begin{lstlisting}
+FROM node:18
+COPY . /app
+WORKDIR /app
+RUN npm install && npm run build
+CMD ["npm", "start"]
+    \end{lstlisting}
+
+    \item Ottimizza questa catena RUN (3 layer → 1):
+    \begin{lstlisting}
+RUN apt-get update
+RUN apt-get install -y curl vim
+RUN rm -rf /var/lib/apt/lists/*
+    \end{lstlisting}
+
+    \item Crea un .dockerignore per un progetto Node.js
+
+    \item Build un'immagine Go che usa scratch e misura la dimensione finale
+\end{enumerate}
+
+\section*{Quiz di Verifica}
+
+\begin{enumerate}
+    \item Qual è la differenza tra CMD e ENTRYPOINT?
+
+    \item Perché multi-stage builds riducono le dimensioni?
+
+    \item \textbf{Vero/Falso}: ARG persiste nel container runtime.
+
+    \item Quale istruzione crea un nuovo layer?
+    \begin{itemize}
+        \item a) FROM
+        \item b) RUN
+        \item c) ENV
+        \item d) EXPOSE
+    \end{itemize}
+
+    \item Come evitare di invalidare la cache quando cambia il codice ma non le dipendenze?
+\end{enumerate}
+
+\section*{Riepilogo}
+
+\begin{itemize}
+    \item \textbf{Dockerfile}: Script per automatizzare build immagini
+    \item \textbf{FROM}: Immagine base
+    \item \textbf{RUN}: Esegue comandi (build-time)
+    \item \textbf{COPY}: Copia file nel container
+    \item \textbf{CMD}: Comando default (runtime)
+    \item \textbf{ENTRYPOINT}: Eseguibile principale
+    \item \textbf{Multi-stage}: Ottimizzazione dimensioni
+    \item \textbf{Cache}: Ordina istruzioni per massimizzare riuso
+    \item \textbf{Sicurezza}: USER, scan, no secrets
+\end{itemize}
+
+\section*{Prossimi Passi}
+
+Nel prossimo capitolo esploreremo:
+\begin{itemize}
+    \item Docker Compose per orchestrare multi-container
+    \item File docker-compose.yml
+    \item Services, networks, volumes
+    \item Deploy stack completi
+\end{itemize}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Dockerfile Reference: \url{https://docs.docker.com/engine/reference/builder/}
+    \item Best Practices: \url{https://docs.docker.com/develop/develop-images/dockerfile_best-practices/}
+    \item Multi-stage Builds: \url{https://docs.docker.com/build/building/multi-stage/}
+    \item Security: \url{https://snyk.io/blog/10-docker-image-security-best-practices/}
+\end{itemize}

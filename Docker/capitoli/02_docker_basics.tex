@@ -1,0 +1,759 @@
+\chapter{Docker Basics: Comandi Fondamentali}
+
+\section*{Introduzione}
+Questo capitolo copre i comandi essenziali di Docker per gestire container e immagini. Imparerai a installare Docker, eseguire container, gestire il loro ciclo di vita e risolvere i problemi più comuni.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Installare Docker su Linux, macOS e Windows
+    \item Eseguire container con \texttt{docker run}
+    \item Ispezionare container e immagini
+    \item Gestire il ciclo di vita dei container
+    \item Visualizzare log e debuggare problemi
+    \item Pulire risorse inutilizzate
+\end{itemize}
+
+\section{Installazione Docker}
+
+\subsection{Linux (Ubuntu/Debian)}
+
+\begin{lstlisting}[language=bash, caption=Installazione su Ubuntu 20.04+]
+# Aggiorna repository
+$ sudo apt-get update
+
+# Installa dipendenze
+$ sudo apt-get install ca-certificates curl gnupg lsb-release
+
+# Aggiungi GPG key ufficiale Docker
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# Configura repository
+$ echo \
+  "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Installa Docker Engine
+$ sudo apt-get update
+$ sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+# Verifica installazione
+$ sudo docker --version
+Docker version 20.10.17, build 100c701
+
+# Test con hello-world
+$ sudo docker run hello-world
+\end{lstlisting}
+
+\subsubsection{Esegui Docker senza sudo}
+
+\begin{lstlisting}[language=bash]
+# Crea gruppo docker
+$ sudo groupadd docker
+
+# Aggiungi utente al gruppo
+$ sudo usermod -aG docker $USER
+
+# Applica cambiamenti (logout/login oppure)
+$ newgrp docker
+
+# Test senza sudo
+$ docker run hello-world
+\end{lstlisting}
+
+\subsection{macOS}
+
+\begin{enumerate}
+    \item Scarica \textbf{Docker Desktop} da \url{https://www.docker.com/products/docker-desktop}
+    \item Apri il file \texttt{Docker.dmg} e trascina Docker in Applications
+    \item Avvia Docker Desktop dalla cartella Applicazioni
+    \item Attendi l'icona Docker nella menu bar (whale)
+    \item Apri terminale e verifica:
+\end{enumerate}
+
+\begin{lstlisting}[language=bash]
+$ docker --version
+Docker version 20.10.17, build 100c701
+\end{lstlisting}
+
+\subsection{Windows}
+
+\textbf{Requisiti}:
+\begin{itemize}
+    \item Windows 10/11 Pro, Enterprise o Education
+    \item WSL 2 (Windows Subsystem for Linux)
+    \item Virtualizzazione abilitata nel BIOS
+\end{itemize}
+
+\begin{enumerate}
+    \item Abilita WSL 2:
+\begin{lstlisting}[language=bash]
+# PowerShell come Amministratore
+> wsl --install
+> wsl --set-default-version 2
+\end{lstlisting}
+
+    \item Scarica Docker Desktop per Windows
+    \item Installa e riavvia
+    \item Configura: Settings → General → Use WSL 2 based engine
+    \item Verifica in PowerShell:
+\begin{lstlisting}
+> docker --version
+\end{lstlisting}
+\end{enumerate}
+
+\section{Docker Run: Eseguire Container}
+
+\subsection{Sintassi base}
+
+\begin{lstlisting}[language=bash]
+docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+\end{lstlisting}
+
+\subsection{Primo container}
+
+\begin{lstlisting}[language=bash, caption=Hello World]
+$ docker run hello-world
+
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+2db29710123e: Pull complete
+Digest: sha256:7d246653d0511db2a6b2e0436cfd0e52ac8c066000264b3ce63331ac66dca625
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+\end{lstlisting}
+
+\textbf{Cosa è successo?}
+\begin{enumerate}
+    \item Docker cerca l'immagine \texttt{hello-world} localmente
+    \item Non trovandola, la scarica da Docker Hub
+    \item Crea un container dall'immagine
+    \item Esegue il container (stampa il messaggio)
+    \item Il container termina (processo completato)
+\end{enumerate}
+
+\subsection{Container interattivo}
+
+\begin{lstlisting}[language=bash, caption=Ubuntu shell interattiva]
+$ docker run -it ubuntu bash
+
+# Ora sei dentro il container Ubuntu
+root@a1b2c3d4e5f6:/# cat /etc/os-release
+NAME="Ubuntu"
+VERSION="22.04 LTS (Jammy Jellyfish)"
+
+root@a1b2c3d4e5f6:/# ls /
+bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+
+root@a1b2c3d4e5f6:/# exit
+\end{lstlisting}
+
+\textbf{Opzioni}:
+\begin{itemize}
+    \item \texttt{-i}: Interactive (mantieni stdin aperto)
+    \item \texttt{-t}: TTY (alloca un pseudo-terminale)
+    \item \texttt{bash}: Comando da eseguire nel container
+\end{itemize}
+
+\subsection{Container in background (detached)}
+
+\begin{lstlisting}[language=bash, caption=Web server Nginx]
+$ docker run -d -p 8080:80 --name webserver nginx
+
+# -d: Detached mode (background)
+# -p 8080:80: Mappa porta host:container
+# --name: Assegna nome al container
+# nginx: Immagine da usare
+
+# Output: container ID
+a1b2c3d4e5f67890abcdef1234567890
+
+# Testa nel browser: http://localhost:8080
+# Oppure con curl
+$ curl http://localhost:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+...
+\end{lstlisting}
+
+\subsection{Opzioni comuni di docker run}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Opzione} & \textbf{Descrizione} \\
+\hline
+\texttt{-d} & Detached mode (background) \\
+\texttt{-it} & Interactive + TTY \\
+\texttt{-p 8080:80} & Pubblica porta host:container \\
+\texttt{--name myapp} & Nome personalizzato \\
+\texttt{-v /host:/container} & Monta volume \\
+\texttt{-e VAR=value} & Variabile ambiente \\
+\texttt{--rm} & Rimuovi container quando termina \\
+\texttt{--network net1} & Connetti a rete specifica \\
+\texttt{--restart always} & Policy di restart \\
+\texttt{--cpus="1.5"} & Limita CPU \\
+\texttt{--memory="512m"} & Limita RAM \\
+\hline
+\end{tabular}
+\caption{Opzioni principali di docker run}
+\end{table}
+
+\subsection{Esempi pratici}
+
+\begin{lstlisting}[language=bash, caption=Database MySQL]
+$ docker run -d \
+  --name mysql-db \
+  -e MYSQL_ROOT_PASSWORD=secret \
+  -e MYSQL_DATABASE=myapp \
+  -p 3306:3306 \
+  -v mysql-data:/var/lib/mysql \
+  mysql:8.0
+
+# Connetti al database
+$ docker exec -it mysql-db mysql -u root -p
+Enter password: secret
+mysql> SHOW DATABASES;
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Redis cache]
+$ docker run -d \
+  --name redis-cache \
+  -p 6379:6379 \
+  redis:alpine
+
+# Test connessione
+$ docker exec -it redis-cache redis-cli
+127.0.0.1:6379> PING
+PONG
+127.0.0.1:6379> SET mykey "Hello Docker"
+OK
+127.0.0.1:6379> GET mykey
+"Hello Docker"
+\end{lstlisting}
+
+\section{Docker PS: Ispezionare Container}
+
+\subsection{Listare container in esecuzione}
+
+\begin{lstlisting}[language=bash]
+$ docker ps
+
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS                    NAMES
+a1b2c3d4e5f6   nginx     "/docker-entrypoint.…"   5 minutes ago   Up 5 minutes   0.0.0.0:8080->80/tcp     webserver
+f6e5d4c3b2a1   redis     "docker-entrypoint.s…"   2 hours ago     Up 2 hours     0.0.0.0:6379->6379/tcp   redis-cache
+\end{lstlisting}
+
+\subsection{Listare tutti i container (anche fermati)}
+
+\begin{lstlisting}[language=bash]
+$ docker ps -a
+
+CONTAINER ID   IMAGE         COMMAND    CREATED          STATUS                      PORTS     NAMES
+a1b2c3d4e5f6   nginx         "..."      5 minutes ago    Up 5 minutes                8080:80   webserver
+9876543210ab   ubuntu        "bash"     10 minutes ago   Exited (0) 8 minutes ago              clever_einstein
+5432167890cd   hello-world   "/hello"   1 hour ago       Exited (0) 1 hour ago                 stoic_tesla
+\end{lstlisting}
+
+\subsection{Formattazione output}
+
+\begin{lstlisting}[language=bash]
+# Solo ID container
+$ docker ps -q
+a1b2c3d4e5f6
+f6e5d4c3b2a1
+
+# Custom format
+$ docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Status}}"
+CONTAINER ID   NAMES          STATUS
+a1b2c3d4e5f6   webserver      Up 10 minutes
+f6e5d4c3b2a1   redis-cache    Up 2 hours
+
+# JSON output
+$ docker ps --format json
+{"Command":"\"/docker-entrypoint.…\"","CreatedAt":"2025-11-15 10:00:00","ID":"a1b2c3d4e5f6",...}
+\end{lstlisting}
+
+\subsection{Filtri}
+
+\begin{lstlisting}[language=bash]
+# Container per nome
+$ docker ps --filter "name=web"
+
+# Container per status
+$ docker ps -a --filter "status=exited"
+
+# Container per label
+$ docker ps --filter "label=env=production"
+
+# Container per ancestor (immagine)
+$ docker ps --filter "ancestor=nginx"
+\end{lstlisting}
+
+\section{Docker Images: Gestire Immagini}
+
+\subsection{Listare immagini locali}
+
+\begin{lstlisting}[language=bash]
+$ docker images
+
+REPOSITORY    TAG       IMAGE ID       CREATED        SIZE
+nginx         latest    605c77e624dd   2 weeks ago    141MB
+redis         alpine    a49ff3e0d85f   3 weeks ago    32.3MB
+mysql         8.0       3218b38490ce   1 month ago    516MB
+ubuntu        22.04     216c552ea5ba   2 months ago   77.8MB
+hello-world   latest    feb5d9fea6a5   14 months ago  13.3kB
+\end{lstlisting}
+
+\subsection{Cercare immagini su Docker Hub}
+
+\begin{lstlisting}[language=bash]
+$ docker search python
+
+NAME                             DESCRIPTION                                     STARS     OFFICIAL
+python                           Python is an interpreted, interactive, objec…   9876      [OK]
+pypy                             PyPy is a fast, compliant alternative implem…   345       [OK]
+circleci/python                  Python is an interpreted, interactive, objec…   89
+\end{lstlisting}
+
+\subsection{Scaricare immagini (pull)}
+
+\begin{lstlisting}[language=bash]
+# Ultima versione (tag latest)
+$ docker pull python
+Using default tag: latest
+latest: Pulling from library/python
+...
+
+# Versione specifica
+$ docker pull python:3.9-slim
+3.9-slim: Pulling from library/python
+...
+
+# Da registry privato
+$ docker pull myregistry.com:5000/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Rimuovere immagini}
+
+\begin{lstlisting}[language=bash]
+# Per ID
+$ docker rmi 605c77e624dd
+
+# Per nome:tag
+$ docker rmi nginx:latest
+
+# Forza rimozione (anche se usata)
+$ docker rmi -f nginx
+
+# Rimuovi immagini dangling (senza tag)
+$ docker image prune
+
+# Rimuovi tutte le immagini non usate
+$ docker image prune -a
+\end{lstlisting}
+
+\subsection{Ispezionare immagini}
+
+\begin{lstlisting}[language=bash]
+# Informazioni dettagliate
+$ docker inspect nginx
+[
+    {
+        "Id": "sha256:605c77e624dd...",
+        "RepoTags": ["nginx:latest"],
+        "Created": "2025-10-28T10:15:30.123456789Z",
+        "Size": 141234567,
+        ...
+    }
+]
+
+# Estrai campo specifico con jq
+$ docker inspect nginx | jq '.[0].Config.ExposedPorts'
+{
+  "80/tcp": {}
+}
+
+# History dei layer
+$ docker history nginx
+IMAGE          CREATED        CREATED BY                                      SIZE
+605c77e624dd   2 weeks ago    CMD ["nginx" "-g" "daemon off;"]                0B
+<missing>      2 weeks ago    STOPSIGNAL SIGQUIT                              0B
+<missing>      2 weeks ago    EXPOSE 80                                       0B
+<missing>      2 weeks ago    COPY file:abc123... /etc/nginx/nginx.conf       4.5kB
+...
+\end{lstlisting}
+
+\section{Gestione Ciclo di Vita Container}
+
+\subsection{Stati del container}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[node distance=2.5cm, auto]
+        \node[draw, ellipse, fill=green!20] (created) {Created};
+        \node[draw, ellipse, fill=blue!20, right of=created] (running) {Running};
+        \node[draw, ellipse, fill=yellow!20, below of=running] (paused) {Paused};
+        \node[draw, ellipse, fill=orange!20, right of=running] (stopped) {Stopped};
+        \node[draw, ellipse, fill=red!20, below of=stopped] (deleted) {Deleted};
+
+        \draw[->, thick] (created) -- node {start} (running);
+        \draw[->, thick] (running) -- node {pause} (paused);
+        \draw[->, thick] (paused) -- node {unpause} (running);
+        \draw[->, thick] (running) -- node {stop} (stopped);
+        \draw[->, thick] (stopped) -- node {start} (running);
+        \draw[->, thick] (stopped) -- node {rm} (deleted);
+    \end{tikzpicture}
+    \caption{Stati del ciclo di vita di un container}
+\end{figure}
+
+\subsection{Stop e Start}
+
+\begin{lstlisting}[language=bash]
+# Ferma container (graceful shutdown, SIGTERM poi SIGKILL)
+$ docker stop webserver
+webserver
+
+# Ferma con timeout custom (default 10s)
+$ docker stop -t 30 webserver
+
+# Ferma forzatamente (SIGKILL immediato)
+$ docker kill webserver
+
+# Riavvia container fermo
+$ docker start webserver
+
+# Riavvia container in esecuzione
+$ docker restart webserver
+\end{lstlisting}
+
+\subsection{Pause e Unpause}
+
+\begin{lstlisting}[language=bash]
+# Congela processi del container (cgroup freezer)
+$ docker pause webserver
+
+# Riprendi esecuzione
+$ docker unpause webserver
+\end{lstlisting}
+
+\subsection{Rimuovere container}
+
+\begin{lstlisting}[language=bash]
+# Rimuovi container fermo
+$ docker rm webserver
+
+# Rimuovi container in esecuzione (forza)
+$ docker rm -f webserver
+
+# Rimuovi più container
+$ docker rm container1 container2 container3
+
+# Rimuovi tutti container fermati
+$ docker container prune
+
+# Rimuovi tutti container (anche in esecuzione)
+$ docker rm -f $(docker ps -aq)
+\end{lstlisting}
+
+\section{Logs e Debugging}
+
+\subsection{Visualizzare log}
+
+\begin{lstlisting}[language=bash]
+# Log completi
+$ docker logs webserver
+
+# Segui log in real-time (come tail -f)
+$ docker logs -f webserver
+
+# Ultime N righe
+$ docker logs --tail 100 webserver
+
+# Log con timestamp
+$ docker logs -t webserver
+2025-11-15T10:30:15.123456789Z 172.17.0.1 - - [15/Nov/2025:10:30:15 +0000] "GET / HTTP/1.1" 200
+
+# Log da un certo tempo
+$ docker logs --since 10m webserver
+$ docker logs --since 2025-11-15T10:00:00 webserver
+\end{lstlisting}
+
+\subsection{Eseguire comandi in container running}
+
+\begin{lstlisting}[language=bash]
+# Comando singolo
+$ docker exec webserver ls /etc/nginx
+conf.d
+fastcgi.conf
+mime.types
+nginx.conf
+
+# Shell interattiva
+$ docker exec -it webserver bash
+root@a1b2c3d4e5f6:/# ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0   8892  5432 ?        Ss   10:00   0:00 nginx: master
+nginx       29  0.0  0.0   9316  2876 ?        S    10:00   0:00 nginx: worker
+
+root@a1b2c3d4e5f6:/# exit
+\end{lstlisting}
+
+\subsection{Inspect: Informazioni dettagliate}
+
+\begin{lstlisting}[language=bash]
+# Tutte le informazioni
+$ docker inspect webserver
+
+# Estrai IP address
+$ docker inspect webserver | jq '.[0].NetworkSettings.IPAddress'
+"172.17.0.2"
+
+# Estrai variabili ambiente
+$ docker inspect webserver | jq '.[0].Config.Env'
+[
+  "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+  "NGINX_VERSION=1.23.1"
+]
+
+# Template Go (built-in)
+$ docker inspect --format='{{.State.Status}}' webserver
+running
+
+$ docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' webserver
+172.17.0.2
+\end{lstlisting}
+
+\subsection{Stats: Monitoraggio risorse}
+
+\begin{lstlisting}[language=bash]
+# Statistiche real-time (come top)
+$ docker stats
+
+CONTAINER ID   NAME          CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+a1b2c3d4e5f6   webserver     0.01%     5.234MiB / 7.775GiB   0.07%     1.23kB / 656B     12.3MB / 0B       3
+f6e5d4c3b2a1   redis-cache   0.15%     12.45MiB / 7.775GiB   0.16%     5.67kB / 2.34kB   45.6MB / 1.23MB   5
+
+# Stats di un singolo container
+$ docker stats webserver
+
+# Formato custom
+$ docker stats --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+\end{lstlisting}
+
+\subsection{Events: Monitorare eventi Docker}
+
+\begin{lstlisting}[language=bash]
+# Stream eventi real-time
+$ docker events
+
+2025-11-15T10:35:20.123456789+00:00 container create a1b2c3d4e5f6 (image=nginx, name=webserver)
+2025-11-15T10:35:20.456789123+00:00 container start a1b2c3d4e5f6 (image=nginx, name=webserver)
+2025-11-15T10:40:15.789123456+00:00 container stop a1b2c3d4e5f6 (image=nginx, name=webserver)
+
+# Filtro per tipo
+$ docker events --filter 'type=container'
+
+# Filtro per evento
+$ docker events --filter 'event=start'
+\end{lstlisting}
+
+\section{Pulizia Risorse}
+
+\subsection{Disk usage}
+
+\begin{lstlisting}[language=bash]
+$ docker system df
+
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          15        5         2.5GB     1.8GB (72%)
+Containers      20        3         150MB     145MB (96%)
+Local Volumes   10        2         500MB     450MB (90%)
+Build Cache     50        0         1.2GB     1.2GB (100%)
+\end{lstlisting}
+
+\subsection{Prune: Pulizia automatica}
+
+\begin{lstlisting}[language=bash]
+# Rimuovi container fermati
+$ docker container prune
+WARNING! This will remove all stopped containers.
+Are you sure? [y/N] y
+Deleted Containers:
+9876543210ab
+5432167890cd
+Total reclaimed space: 125MB
+
+# Rimuovi immagini non usate
+$ docker image prune -a
+
+# Rimuovi volumi non usati
+$ docker volume prune
+
+# Rimuovi reti non usate
+$ docker network prune
+
+# ATTENZIONE: Pulizia totale
+$ docker system prune -a --volumes
+WARNING! This will remove:
+  - all stopped containers
+  - all networks not used by at least one container
+  - all volumes not used by at least one container
+  - all images without at least one container associated to them
+  - all build cache
+Are you sure? [y/N]
+\end{lstlisting}
+
+\section*{Best Practices}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Best Practices]
+\begin{enumerate}
+    \item \textbf{Nomi significativi}: Usa \texttt{--name} per identificare facilmente i container
+    \item \textbf{Tag espliciti}: Evita \texttt{latest}, specifica versione (\texttt{nginx:1.23})
+    \item \textbf{Cleanup regolare}: Esegui \texttt{docker system prune} periodicamente
+    \item \textbf{Limita risorse}: Usa \texttt{--cpus} e \texttt{--memory} in produzione
+    \item \textbf{Health checks}: Configura controlli di salute per monitoring
+    \item \textbf{Logging centralizzato}: Usa driver di log (syslog, json-file, fluentd)
+    \item \textbf{Restart policy}: Configura \texttt{--restart} per alta disponibilità
+    \item \textbf{Non usare exec per deployment}: Usa docker-compose o orchestratori
+\end{enumerate}
+\end{tcolorbox}
+
+\section*{Errori Comuni}
+
+\begin{attenzione}
+\textbf{Problemi frequenti}:
+\begin{enumerate}
+    \item \textbf{Porta già in uso}
+    \begin{lstlisting}
+Error: Bind for 0.0.0.0:8080 failed: port is already allocated
+    \end{lstlisting}
+    Soluzione: Cambia porta host o ferma processo che la occupa
+
+    \item \textbf{Permessi negati}
+    \begin{lstlisting}
+Got permission denied while trying to connect to the Docker daemon socket
+    \end{lstlisting}
+    Soluzione: Aggiungi utente al gruppo docker o usa sudo
+
+    \item \textbf{Container esce immediatamente}
+    \begin{lstlisting}
+$ docker ps    # Container non appare
+    \end{lstlisting}
+    Soluzione: Controlla log con \texttt{docker logs}, il processo principale è terminato
+
+    \item \textbf{Immagine non trovata}
+    \begin{lstlisting}
+Unable to find image 'myapp:latest' locally
+Error: pull access denied, repository does not exist
+    \end{lstlisting}
+    Soluzione: Verifica nome immagine/tag o fai pull esplicito
+\end{enumerate}
+\end{attenzione}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Installa Docker sul tuo sistema e verifica con \texttt{docker --version}
+
+    \item Esegui un container Nginx:
+    \begin{itemize}
+        \item Mappa porta 8080 → 80
+        \item Assegna nome "mio-nginx"
+        \item Verifica accesso con browser
+    \end{itemize}
+
+    \item Crea un container MySQL:
+    \begin{itemize}
+        \item Password root: "mysecret"
+        \item Database: "testdb"
+        \item Connetti con \texttt{docker exec} e crea una tabella
+    \end{itemize}
+
+    \item Esegui container Ubuntu interattivo:
+    \begin{itemize}
+        \item Installa \texttt{curl} dentro il container
+        \item Testa connessione a un sito esterno
+        \item Esci senza fermarlo (Ctrl+P, Ctrl+Q)
+        \item Riconnettiti con \texttt{docker attach}
+    \end{itemize}
+
+    \item Monitoring:
+    \begin{itemize}
+        \item Lancia 5 container nginx
+        \item Monitora con \texttt{docker stats}
+        \item Identifica quello che usa più RAM
+        \item Ferma tutti e rimuovili
+    \end{itemize}
+
+    \item Cleanup:
+    \begin{itemize}
+        \item Controlla spazio con \texttt{docker system df}
+        \item Rimuovi container e immagini inutilizzate
+        \item Verifica spazio recuperato
+    \end{itemize}
+\end{enumerate}
+
+\section*{Quiz di Verifica}
+
+\begin{enumerate}
+    \item Quale flag di \texttt{docker run} esegue il container in background?
+    \begin{itemize}
+        \item a) -b
+        \item b) -d
+        \item c) --background
+        \item d) -detach
+    \end{itemize}
+
+    \item Come vedere i log di un container in real-time?
+
+    \item Qual è la differenza tra \texttt{docker stop} e \texttt{docker kill}?
+
+    \item Come rimuovere tutti i container fermati con un solo comando?
+
+    \item \textbf{Vero/Falso}: \texttt{docker ps} mostra anche i container fermati.
+\end{enumerate}
+
+\section*{Riepilogo Concetti Chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti Fondamentali]
+\begin{itemize}
+    \item \texttt{docker run}: Crea ed esegue container da immagine
+    \item \texttt{docker ps}: Lista container (aggiungere -a per tutti)
+    \item \texttt{docker images}: Mostra immagini locali
+    \item \texttt{docker stop/start/restart}: Gestione ciclo di vita
+    \item \texttt{docker logs}: Visualizza output container
+    \item \texttt{docker exec}: Esegui comandi in container running
+    \item \texttt{docker inspect}: Informazioni dettagliate JSON
+    \item \texttt{docker stats}: Monitoraggio risorse real-time
+    \item \texttt{docker system prune}: Pulizia risorse inutilizzate
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Prossimi Passi}
+
+Nel prossimo capitolo esploreremo:
+\begin{itemize}
+    \item Dockerfile: creare immagini custom
+    \item Istruzioni FROM, RUN, COPY, CMD, ENTRYPOINT
+    \item Multi-stage builds per ottimizzazione
+    \item Best practices per immagini efficienti e sicure
+\end{itemize}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Docker CLI Reference: \url{https://docs.docker.com/engine/reference/commandline/cli/}
+    \item Docker Run Reference: \url{https://docs.docker.com/engine/reference/run/}
+    \item Dockerfile Best Practices: \url{https://docs.docker.com/develop/dev-best-practices/}
+    \item Docker Hub: \url{https://hub.docker.com/}
+\end{itemize}

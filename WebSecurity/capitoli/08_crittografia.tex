@@ -1,0 +1,975 @@
+\chapter{Crittografia Applicata}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Crittografia simmetrica (AES), Crittografia asimmetrica (RSA), Hashing, Salting, Rainbow tables, Key management, Esempi pratici, Attacchi, Compliance.
+\end{tcolorbox}
+
+\section*{Introduzione}
+La crittografia è la pratica di proteggere informazioni mediante tecniche di codifica. È fondamentale per garantire confidenzialità, integrità e autenticità dei dati. Questo capitolo copre algoritmi crittografici moderni, best practices implementative e protezione contro attacchi comuni.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere differenze tra crittografia simmetrica e asimmetrica
+    \item Implementare AES per cifratura dati
+    \item Utilizzare RSA per scambio chiavi e firma digitale
+    \item Applicare funzioni di hashing sicure (SHA-256, SHA-3)
+    \item Implementare password hashing con bcrypt, Argon2
+    \item Proteggere contro rainbow table attacks con salt
+    \item Gestire chiavi crittografiche in modo sicuro
+    \item Implementare crittografia end-to-end
+\end{itemize}
+
+\section{Concetti fondamentali}
+
+\subsection{Principi di Kerckhoffs}
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Principio di Kerckhoffs]
+"Un sistema crittografico deve essere sicuro anche se tutto del sistema, eccetto la chiave, è di pubblico dominio."
+
+Implicazioni:
+\begin{itemize}
+    \item Non usare "security through obscurity"
+    \item Usa algoritmi pubblici e testati (AES, RSA, SHA-256)
+    \item NON inventare algoritmi proprietari
+    \item La sicurezza risiede nella chiave, non nell'algoritmo
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{CIA Triad nella crittografia}
+
+\begin{description}
+    \item[\textbf{Confidentiality}] Solo entità autorizzate possono leggere i dati (cifratura)
+    \item[\textbf{Integrity}] I dati non possono essere modificati senza detection (hashing, MAC)
+    \item[\textbf{Authenticity}] Verifica dell'identità del mittente (firma digitale)
+\end{description}
+
+\section{Crittografia Simmetrica}
+
+Nella crittografia simmetrica, la stessa chiave viene usata per cifrare e decifrare.
+
+\subsection{AES (Advanced Encryption Standard)}
+
+AES è lo standard de-facto per cifratura simmetrica, adottato dal NIST nel 2001.
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Caratteristiche AES]
+\begin{itemize}
+    \item \textbf{Lunghezze chiave}: 128, 192, 256 bit
+    \item \textbf{Dimensione blocco}: 128 bit (16 byte)
+    \item \textbf{Performance}: Molto veloce, spesso con supporto hardware (AES-NI)
+    \item \textbf{Sicurezza}: Nessun attacco pratico noto contro AES-256
+    \item \textbf{Uso}: Cifratura file, database, disco, comunicazioni
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Modi di operazione AES}
+
+\begin{description}
+    \item[\textbf{ECB (Electronic Codebook)}] ❌ NON SICURO - stesso blocco produce stesso ciphertext
+    \item[\textbf{CBC (Cipher Block Chaining)}] ✓ Sicuro con IV random, ma vulnerabile a padding oracle
+    \item[\textbf{CTR (Counter)}] ✓ Sicuro, parallelizzabile, non richiede padding
+    \item[\textbf{GCM (Galois/Counter Mode)}] ✓✓ RACCOMANDATO - cifratura + autenticazione (AEAD)
+\end{description}
+
+\subsection{Implementazione AES-GCM in PHP}
+
+\begin{lstlisting}[language=PHP, caption={Cifratura sicura con AES-256-GCM}]
+<?php
+class SecureEncryption {
+    private const CIPHER = 'aes-256-gcm';
+    private const KEY_LENGTH = 32; // 256 bit
+    private const TAG_LENGTH = 16; // 128 bit
+
+    /**
+     * Cifra dati usando AES-256-GCM
+     * @return array ['ciphertext' => string, 'iv' => string, 'tag' => string]
+     */
+    public static function encrypt($plaintext, $key) {
+        // Valida lunghezza chiave
+        if (strlen($key) !== self::KEY_LENGTH) {
+            throw new InvalidArgumentException(
+                "Key must be exactly " . self::KEY_LENGTH . " bytes"
+            );
+        }
+
+        // Genera IV casuale (DEVE essere unico per ogni cifratura)
+        $iv = random_bytes(openssl_cipher_iv_length(self::CIPHER));
+
+        // Cifra con GCM (fornisce autenticazione)
+        $tag = ''; // GCM authentication tag
+        $ciphertext = openssl_encrypt(
+            $plaintext,
+            self::CIPHER,
+            $key,
+            OPENSSL_RAW_DATA,
+            $iv,
+            $tag,
+            '', // additional authenticated data (AAD)
+            self::TAG_LENGTH
+        );
+
+        if ($ciphertext === false) {
+            throw new RuntimeException("Encryption failed");
+        }
+
+        return [
+            'ciphertext' => base64_encode($ciphertext),
+            'iv' => base64_encode($iv),
+            'tag' => base64_encode($tag)
+        ];
+    }
+
+    /**
+     * Decifra dati cifrati con AES-256-GCM
+     */
+    public static function decrypt($ciphertext, $iv, $tag, $key) {
+        if (strlen($key) !== self::KEY_LENGTH) {
+            throw new InvalidArgumentException("Invalid key length");
+        }
+
+        $plaintext = openssl_decrypt(
+            base64_decode($ciphertext),
+            self::CIPHER,
+            $key,
+            OPENSSL_RAW_DATA,
+            base64_decode($iv),
+            base64_decode($tag)
+        );
+
+        // Se il tag non corrisponde, openssl_decrypt ritorna false
+        if ($plaintext === false) {
+            throw new RuntimeException(
+                "Decryption failed - data may be corrupted or tampered"
+            );
+        }
+
+        return $plaintext;
+    }
+
+    /**
+     * Genera chiave crittografica sicura da password (KDF)
+     * Usa PBKDF2 per derivare chiave da password
+     */
+    public static function deriveKey($password, $salt = null) {
+        if ($salt === null) {
+            $salt = random_bytes(16);
+        }
+
+        $key = hash_pbkdf2(
+            'sha256',
+            $password,
+            $salt,
+            100000, // iterations (cost factor)
+            self::KEY_LENGTH,
+            true // raw output
+        );
+
+        return [
+            'key' => $key,
+            'salt' => $salt
+        ];
+    }
+}
+
+// Esempio utilizzo
+$key = random_bytes(32); // Chiave 256-bit
+
+// Cifratura
+$data = "Dati sensibili dell'utente";
+$encrypted = SecureEncryption::encrypt($data, $key);
+
+echo "Ciphertext: " . $encrypted['ciphertext'] . "\n";
+echo "IV: " . $encrypted['iv'] . "\n";
+echo "Tag: " . $encrypted['tag'] . "\n";
+
+// Decifratura
+$decrypted = SecureEncryption::decrypt(
+    $encrypted['ciphertext'],
+    $encrypted['iv'],
+    $encrypted['tag'],
+    $key
+);
+
+echo "Decrypted: " . $decrypted . "\n"; // "Dati sensibili dell'utente"
+
+// Derivazione chiave da password
+$password = "MySecurePassword123!";
+$derived = SecureEncryption::deriveKey($password);
+// Salva $derived['salt'] insieme ai dati cifrati
+?>
+\end{lstlisting}
+
+\subsection{Errori comuni con cifratura simmetrica}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Errori da evitare]
+\begin{enumerate}
+    \item ❌ Usare ECB mode
+    \item ❌ Riutilizzare IV (initialization vector)
+    \item ❌ Usare chiavi hardcoded nel codice
+    \item ❌ Non autenticare il ciphertext (usare GCM o HMAC)
+    \item ❌ Usare chiavi derivate da password senza KDF appropriato
+    \item ❌ Salvare chiavi in plaintext nel database
+    \item ❌ Usare algoritmi deprecati (DES, 3DES, RC4)
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Crittografia Asimmetrica}
+
+Nella crittografia asimmetrica si usano due chiavi: pubblica (per cifrare/verificare) e privata (per decifrare/firmare).
+
+\subsection{RSA (Rivest-Shamir-Adleman)}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Caratteristiche RSA]
+\begin{itemize}
+    \item \textbf{Lunghezze chiave}: 2048, 3072, 4096 bit (minimo 2048 per sicurezza moderna)
+    \item \textbf{Performance}: Lento rispetto a cifratura simmetrica
+    \item \textbf{Uso tipico}: Scambio chiavi simmetriche, firma digitale
+    \item \textbf{Limite dati}: Può cifrare solo dati piccoli (max 245 byte con RSA-2048)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Implementazione RSA in PHP}
+
+\begin{lstlisting}[language=PHP, caption={Generazione chiavi e cifratura RSA}]
+<?php
+class RSAEncryption {
+    /**
+     * Genera coppia di chiavi RSA
+     */
+    public static function generateKeyPair($bits = 2048) {
+        $config = [
+            'private_key_bits' => $bits,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        ];
+
+        $resource = openssl_pkey_new($config);
+
+        // Estrai chiave privata
+        openssl_pkey_export($resource, $privateKey);
+
+        // Estrai chiave pubblica
+        $publicKeyDetails = openssl_pkey_get_details($resource);
+        $publicKey = $publicKeyDetails['key'];
+
+        return [
+            'private' => $privateKey,
+            'public' => $publicKey
+        ];
+    }
+
+    /**
+     * Cifra dati con chiave pubblica RSA
+     */
+    public static function encrypt($plaintext, $publicKey) {
+        $encrypted = '';
+        $success = openssl_public_encrypt(
+            $plaintext,
+            $encrypted,
+            $publicKey,
+            OPENSSL_PKCS1_OAEP_PADDING // Padding sicuro
+        );
+
+        if (!$success) {
+            throw new RuntimeException("RSA encryption failed");
+        }
+
+        return base64_encode($encrypted);
+    }
+
+    /**
+     * Decifra dati con chiave privata RSA
+     */
+    public static function decrypt($ciphertext, $privateKey) {
+        $decrypted = '';
+        $success = openssl_private_decrypt(
+            base64_decode($ciphertext),
+            $decrypted,
+            $privateKey,
+            OPENSSL_PKCS1_OAEP_PADDING
+        );
+
+        if (!$success) {
+            throw new RuntimeException("RSA decryption failed");
+        }
+
+        return $decrypted;
+    }
+
+    /**
+     * Firma digitale
+     */
+    public static function sign($data, $privateKey) {
+        $signature = '';
+        openssl_sign(
+            $data,
+            $signature,
+            $privateKey,
+            OPENSSL_ALGO_SHA256
+        );
+
+        return base64_encode($signature);
+    }
+
+    /**
+     * Verifica firma digitale
+     */
+    public static function verify($data, $signature, $publicKey) {
+        $result = openssl_verify(
+            $data,
+            base64_decode($signature),
+            $publicKey,
+            OPENSSL_ALGO_SHA256
+        );
+
+        return $result === 1; // 1 = valid, 0 = invalid, -1 = error
+    }
+}
+
+// Esempio: Cifratura ibrida (RSA + AES)
+// RSA cifra solo la chiave AES, AES cifra i dati reali
+class HybridEncryption {
+    public static function encrypt($plaintext, $recipientPublicKey) {
+        // 1. Genera chiave AES casuale
+        $aesKey = random_bytes(32);
+
+        // 2. Cifra dati con AES
+        $encrypted = SecureEncryption::encrypt($plaintext, $aesKey);
+
+        // 3. Cifra chiave AES con RSA
+        $encryptedKey = RSAEncryption::encrypt($aesKey, $recipientPublicKey);
+
+        return [
+            'encrypted_data' => $encrypted,
+            'encrypted_key' => $encryptedKey
+        ];
+    }
+
+    public static function decrypt($encryptedPackage, $recipientPrivateKey) {
+        // 1. Decifra chiave AES con RSA
+        $aesKey = RSAEncryption::decrypt(
+            $encryptedPackage['encrypted_key'],
+            $recipientPrivateKey
+        );
+
+        // 2. Decifra dati con AES
+        $plaintext = SecureEncryption::decrypt(
+            $encryptedPackage['encrypted_data']['ciphertext'],
+            $encryptedPackage['encrypted_data']['iv'],
+            $encryptedPackage['encrypted_data']['tag'],
+            $aesKey
+        );
+
+        return $plaintext;
+    }
+}
+
+// Utilizzo
+$keys = RSAEncryption::generateKeyPair(2048);
+
+$message = "Messaggio segreto molto lungo che non può essere cifrato direttamente con RSA";
+
+$encrypted = HybridEncryption::encrypt($message, $keys['public']);
+$decrypted = HybridEncryption::decrypt($encrypted, $keys['private']);
+
+echo $decrypted; // "Messaggio segreto molto lungo..."
+?>
+\end{lstlisting}
+
+\subsection{Firma digitale e non-repudiation}
+
+\begin{lstlisting}[language=Python, caption={Firma digitale per documenti}]
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+import base64
+import json
+
+class DocumentSigner:
+    def __init__(self):
+        # Genera coppia di chiavi
+        self.private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=2048
+        )
+        self.public_key = self.private_key.public_key()
+
+    def sign_document(self, document_data):
+        """
+        Firma un documento per garantire:
+        - Autenticità: il documento proviene davvero dal firmatario
+        - Integrità: il documento non è stato modificato
+        - Non-repudiation: il firmatario non può negare di averlo firmato
+        """
+        # Serializza documento in formato canonico
+        canonical = json.dumps(document_data, sort_keys=True)
+
+        # Firma
+        signature = self.private_key.sign(
+            canonical.encode(),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+
+        return {
+            'document': document_data,
+            'signature': base64.b64encode(signature).decode(),
+            'signer_public_key': self.export_public_key()
+        }
+
+    def verify_signature(self, signed_doc):
+        """Verifica la firma di un documento"""
+        # Ricostruisci documento canonico
+        canonical = json.dumps(
+            signed_doc['document'],
+            sort_keys=True
+        )
+
+        # Carica chiave pubblica del firmatario
+        public_key = serialization.load_pem_public_key(
+            signed_doc['signer_public_key'].encode()
+        )
+
+        # Verifica firma
+        try:
+            public_key.verify(
+                base64.b64decode(signed_doc['signature']),
+                canonical.encode(),
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            return True
+        except Exception:
+            return False
+
+    def export_public_key(self):
+        """Esporta chiave pubblica in formato PEM"""
+        return self.public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode()
+
+# Esempio: Firma contratto digitale
+signer = DocumentSigner()
+
+contract = {
+    'contract_id': 'CNT-2024-001',
+    'parties': ['Alice Corp', 'Bob Inc'],
+    'amount': 50000,
+    'date': '2024-01-15',
+    'terms': 'Payment within 30 days'
+}
+
+signed_contract = signer.sign_document(contract)
+
+# Verifica
+is_valid = signer.verify_signature(signed_contract)
+print(f"Signature valid: {is_valid}")  # True
+
+# Tentativo di modifica
+signed_contract['document']['amount'] = 100000
+is_valid = signer.verify_signature(signed_contract)
+print(f"Signature valid after tampering: {is_valid}")  # False
+\end{lstlisting}
+
+\section{Funzioni di Hashing}
+
+Le funzioni di hash producono un output di lunghezza fissa (digest) da input di lunghezza arbitraria.
+
+\subsection{Proprietà delle funzioni hash crittografiche}
+
+\begin{enumerate}
+    \item \textbf{Deterministic}: Stesso input produce sempre stesso hash
+    \item \textbf{Fast computation}: Veloce calcolare hash
+    \item \textbf{Pre-image resistance}: Impossibile ricavare input dall'hash
+    \item \textbf{Small changes avalanche}: Piccola modifica all'input cambia drasticamente l'hash
+    \item \textbf{Collision resistance}: Difficile trovare due input con stesso hash
+\end{enumerate}
+
+\subsection{Algoritmi di hashing moderni}
+
+\begin{description}
+    \item[\textbf{SHA-256}] ✓ Sicuro, parte della famiglia SHA-2, output 256 bit
+    \item[\textbf{SHA-3}] ✓ Sicuro, nuovo standard NIST, design diverso da SHA-2
+    \item[\textbf{BLAKE2}] ✓ Molto veloce, sicuro, alternativa moderna
+    \item[\textbf{MD5}] ❌ BROKEN - non usare per sicurezza (solo checksum)
+    \item[\textbf{SHA-1}] ❌ DEPRECATED - collisioni pratiche dimostrate
+\end{description}
+
+\subsection{Hashing per integrità dati}
+
+\begin{lstlisting}[language=Python, caption={Verifica integrità file con SHA-256}]
+import hashlib
+import hmac
+
+def compute_file_hash(filepath):
+    """Calcola SHA-256 hash di un file"""
+    sha256 = hashlib.sha256()
+
+    with open(filepath, 'rb') as f:
+        # Leggi file in chunk per file grandi
+        for chunk in iter(lambda: f.read(4096), b''):
+            sha256.update(chunk)
+
+    return sha256.hexdigest()
+
+def verify_file_integrity(filepath, expected_hash):
+    """Verifica che un file non sia stato modificato"""
+    actual_hash = compute_file_hash(filepath)
+    return hmac.compare_digest(actual_hash, expected_hash)
+
+# Esempio: Download sicuro
+# Il sito fornisce file + hash SHA-256
+downloaded_file = 'software-v1.2.3.exe'
+provided_hash = 'a3f5b8c9d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8'
+
+if verify_file_integrity(downloaded_file, provided_hash):
+    print("File integrity verified - safe to install")
+else:
+    print("WARNING: File has been modified or corrupted!")
+
+# HMAC per message authentication
+def create_hmac(message, secret_key):
+    """Crea HMAC per autenticare messaggio"""
+    h = hmac.new(
+        secret_key.encode(),
+        message.encode(),
+        hashlib.sha256
+    )
+    return h.hexdigest()
+
+def verify_hmac(message, signature, secret_key):
+    """Verifica HMAC"""
+    expected = create_hmac(message, secret_key)
+    return hmac.compare_digest(signature, expected)
+
+# Esempio API request signing
+api_secret = "my_secret_api_key"
+request_body = '{"user_id": 123, "action": "transfer", "amount": 1000}'
+
+signature = create_hmac(request_body, api_secret)
+
+# Server verifica
+if verify_hmac(request_body, signature, api_secret):
+    print("Request authentic")
+else:
+    print("Request tampered - reject")
+\end{lstlisting}
+
+\section{Password Hashing e Salt}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=IMPORTANTE: Password Hashing vs Regular Hashing]
+\textbf{NON} usare SHA-256 per hashare password!
+
+❌ \texttt{hash('sha256', \$password)} - VULNERABILE
+
+✓ Usa algoritmi specifici per password: bcrypt, Argon2, scrypt
+
+Motivo: Gli algoritmi per password sono \textbf{lenti di proposito} per rendere brute-force impraticabile.
+\end{tcolorbox}
+
+\subsection{Attacco con Rainbow Tables}
+
+\begin{lstlisting}[language=text, caption={Come funzionano rainbow tables}]
+Scenario: Attaccante ottiene database di password hashate (senza salt)
+
+Database vulnerabile:
+user_id | password_hash (SHA-256)
+1       | 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+2       | 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+3       | 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+
+Rainbow table (pre-calcolate):
+password   | SHA-256 hash
+password   | 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+123456     | 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+qwerty     | 65e84be33532fb784c48129675f9eff3a682b27168c0ea744b2cf58ee02337c5
+...milioni di righe...
+
+Attaccante fa lookup:
+5e884898... → trovato! password = "password"
+User ID 1 e 3 usano entrambi "password"
+
+Attacco completo in SECONDI invece di anni.
+\end{lstlisting}
+
+\subsection{Difesa: Salt}
+
+Il salt è un valore casuale aggiunto alla password prima dell'hashing.
+
+\begin{lstlisting}[language=PHP, caption={Password hashing sicuro con bcrypt}]
+<?php
+class PasswordManager {
+    /**
+     * Hash password usando bcrypt con salt automatico
+     */
+    public static function hashPassword($password) {
+        // bcrypt genera automaticamente salt casuale
+        // Cost factor 12 = 2^12 iterazioni (circa 0.3 secondi)
+        $hash = password_hash($password, PASSWORD_BCRYPT, [
+            'cost' => 12
+        ]);
+
+        return $hash;
+    }
+
+    /**
+     * Verifica password
+     */
+    public static function verifyPassword($password, $hash) {
+        return password_verify($password, $hash);
+    }
+
+    /**
+     * Verifica se hash necessita rehash (es. cost factor aumentato)
+     */
+    public static function needsRehash($hash) {
+        return password_needs_rehash($hash, PASSWORD_BCRYPT, [
+            'cost' => 12
+        ]);
+    }
+}
+
+// Esempio: Registrazione utente
+$password = $_POST['password'];
+
+// Valida password (minimo 12 caratteri, complessità, ecc.)
+if (strlen($password) < 12) {
+    die("Password troppo corta");
+}
+
+// Hash e salva
+$passwordHash = PasswordManager::hashPassword($password);
+
+$stmt = $db->prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)");
+$stmt->bind_param('ss', $_POST['username'], $passwordHash);
+$stmt->execute();
+
+// Esempio: Login
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+$stmt = $db->prepare("SELECT id, password_hash FROM users WHERE username = ?");
+$stmt->bind_param('s', $username);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
+
+if ($user && PasswordManager::verifyPassword($password, $user['password_hash'])) {
+    // Password corretta
+    session_start();
+    $_SESSION['user_id'] = $user['id'];
+
+    // Rehash se necessario (cost factor aumentato)
+    if (PasswordManager::needsRehash($user['password_hash'])) {
+        $newHash = PasswordManager::hashPassword($password);
+        $stmt = $db->prepare("UPDATE users SET password_hash = ? WHERE id = ?");
+        $stmt->bind_param('si', $newHash, $user['id']);
+        $stmt->execute();
+    }
+
+    header('Location: /dashboard');
+} else {
+    // Password errata - non rivelare se username esiste
+    die("Credenziali non valide");
+}
+?>
+\end{lstlisting}
+
+\subsection{Argon2 - Algoritmo moderno}
+
+\begin{lstlisting}[language=Python, caption={Password hashing con Argon2 (OWASP raccomandato)}]
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+
+class SecurePasswordManager:
+    def __init__(self):
+        # Argon2id è il variant raccomandato (resistente a GPU e side-channel)
+        self.ph = PasswordHasher(
+            time_cost=3,        # Iterazioni
+            memory_cost=65536,  # 64 MB di RAM
+            parallelism=4,      # 4 thread
+            hash_len=32,        # Output length
+            salt_len=16         # Salt length
+        )
+
+    def hash_password(self, password):
+        """Hash password con Argon2id"""
+        # Genera automaticamente salt casuale
+        return self.ph.hash(password)
+
+    def verify_password(self, password, hash):
+        """Verifica password"""
+        try:
+            self.ph.verify(hash, password)
+            return True
+        except VerifyMismatchError:
+            return False
+
+    def needs_rehash(self, hash):
+        """Verifica se parametri hash sono obsoleti"""
+        return self.ph.check_needs_rehash(hash)
+
+# Esempio
+pm = SecurePasswordManager()
+
+# Registrazione
+password = "MySecurePassword123!"
+hashed = pm.hash_password(password)
+print(f"Hash: {hashed}")
+# $argon2id$v=19$m=65536,t=3,p=4$random_salt$hash_output
+
+# Login
+is_valid = pm.verify_password("MySecurePassword123!", hashed)
+print(f"Valid: {is_valid}")  # True
+
+is_valid = pm.verify_password("WrongPassword", hashed)
+print(f"Valid: {is_valid}")  # False
+
+# Perché Argon2 > bcrypt?
+# - Resistente a GPU/ASIC attacks (usa molta RAM)
+# - Configurabile (memoria, tempo, parallelismo)
+# - Vincitore Password Hashing Competition 2015
+# - Raccomandato da OWASP
+\end{lstlisting}
+
+\subsection{Attacco: Credential Stuffing}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attacco Reale: Credential Stuffing]
+\textbf{Scenario}: Attaccante ottiene milioni di credenziali da data breach di SiteA.com
+
+\textbf{Attacco}:
+\begin{enumerate}
+    \item Tenta le stesse credenziali su SiteB.com
+    \item Molti utenti riutilizzano password su più siti
+    \item Attaccante accede a molti account su SiteB.com
+\end{enumerate}
+
+\textbf{Difesa}:
+\begin{itemize}
+    \item Rate limiting sui tentativi di login
+    \item CAPTCHA dopo N tentativi falliti
+    \item Monitoring per login da IP/location anomale
+    \item Email notifica per login da nuovo dispositivo
+    \item Integrazione con Have I Been Pwned API
+\end{itemize}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption={Protezione contro credential stuffing}]
+import requests
+import hashlib
+
+class PasswordBreachChecker:
+    def check_password_breached(self, password):
+        """
+        Verifica se password è stata compromessa usando
+        Have I Been Pwned API (k-anonymity)
+        """
+        # 1. Hash password con SHA-1
+        sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
+
+        # 2. Prendi primi 5 caratteri (k-anonymity)
+        prefix = sha1_hash[:5]
+        suffix = sha1_hash[5:]
+
+        # 3. Query API con solo i primi 5 caratteri
+        url = f"https://api.pwnedpasswords.com/range/{prefix}"
+        response = requests.get(url)
+
+        # 4. Cerca suffix nella risposta
+        hashes = response.text.split('\r\n')
+        for line in hashes:
+            hash_suffix, count = line.split(':')
+            if hash_suffix == suffix:
+                return True, int(count)  # Password compromessa
+
+        return False, 0  # Password sicura
+
+# Esempio: Validazione password alla registrazione
+checker = PasswordBreachChecker()
+password = "password123"
+
+is_breached, count = checker.check_password_breached(password)
+
+if is_breached:
+    print(f"ATTENZIONE: Questa password è stata trovata in {count} data breach!")
+    print("Scegli una password diversa.")
+else:
+    print("Password non trovata in data breach noti")
+\end{lstlisting}
+
+\section{Key Management}
+
+La gestione sicura delle chiavi crittografiche è fondamentale.
+
+\subsection{Best practices per key management}
+
+\begin{enumerate}
+    \item \textbf{Mai hardcodare chiavi nel codice}
+    \item \textbf{Usa environment variables o secret managers}
+    \item \textbf{Ruota chiavi regolarmente}
+    \item \textbf{Usa Hardware Security Modules (HSM) per chiavi critiche}
+    \item \textbf{Implementa key derivation per generare chiavi da master key}
+    \item \textbf{Limita accesso alle chiavi (principle of least privilege)}
+    \item \textbf{Monitora accesso e uso delle chiavi}
+    \item \textbf{Backup sicuro delle chiavi}
+\end{enumerate}
+
+\begin{lstlisting}[language=Python, caption={Key management con AWS KMS}]
+import boto3
+import base64
+
+class KeyManagementService:
+    def __init__(self):
+        self.kms_client = boto3.client('kms')
+
+    def create_data_key(self, key_id):
+        """
+        Genera data key usando KMS master key
+        Returns: plaintext key + encrypted key
+        """
+        response = self.kms_client.generate_data_key(
+            KeyId=key_id,
+            KeySpec='AES_256'
+        )
+
+        return {
+            'plaintext_key': response['Plaintext'],
+            'encrypted_key': base64.b64encode(
+                response['CiphertextBlob']
+            ).decode()
+        }
+
+    def decrypt_data_key(self, encrypted_key):
+        """Decripta data key usando KMS"""
+        response = self.kms_client.decrypt(
+            CiphertextBlob=base64.b64decode(encrypted_key)
+        )
+
+        return response['Plaintext']
+
+    def encrypt_large_data(self, data, kms_key_id):
+        """
+        Envelope encryption:
+        1. KMS genera data key
+        2. Data key cifra i dati (AES)
+        3. KMS cifra data key
+        4. Salva: encrypted_data + encrypted_key
+        """
+        # 1. Genera data key
+        key_response = self.create_data_key(kms_key_id)
+
+        # 2. Cifra dati con data key
+        from cryptography.fernet import Fernet
+        fernet = Fernet(base64.urlsafe_b64encode(
+            key_response['plaintext_key']
+        ))
+        encrypted_data = fernet.encrypt(data.encode())
+
+        # 3. Restituisci dati cifrati + chiave cifrata
+        return {
+            'encrypted_data': base64.b64encode(encrypted_data).decode(),
+            'encrypted_key': key_response['encrypted_key']
+        }
+
+    def decrypt_large_data(self, encrypted_package):
+        """Decripta dati usando envelope encryption"""
+        # 1. Decripta data key con KMS
+        plaintext_key = self.decrypt_data_key(
+            encrypted_package['encrypted_key']
+        )
+
+        # 2. Decripta dati con data key
+        from cryptography.fernet import Fernet
+        fernet = Fernet(base64.urlsafe_b64encode(plaintext_key))
+
+        decrypted = fernet.decrypt(
+            base64.b64decode(encrypted_package['encrypted_data'])
+        )
+
+        return decrypted.decode()
+
+# Esempio
+kms = KeyManagementService()
+kms_master_key_id = 'arn:aws:kms:us-east-1:123456789:key/abc-def-ghi'
+
+# Cifra
+sensitive_data = "Informazioni sensibili dell'utente"
+encrypted = kms.encrypt_large_data(sensitive_data, kms_master_key_id)
+
+# Salva nel database
+# encrypted['encrypted_data'] - dati cifrati
+# encrypted['encrypted_key'] - chiave cifrata da KMS
+
+# Decripta
+decrypted = kms.decrypt_large_data(encrypted)
+print(decrypted)  # "Informazioni sensibili dell'utente"
+\end{lstlisting}
+
+\section{Compliance}
+
+\subsection{GDPR - Encryption Requirements}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=GDPR Article 32: Security of Processing]
+"Taking into account the state of the art... the controller and processor shall implement appropriate technical measures, including... \textbf{encryption of personal data}."
+
+Requisiti:
+\begin{itemize}
+    \item Cifratura dati personali at rest e in transit
+    \item Pseudonimizzazione dove appropriato
+    \item Chiavi gestite in modo sicuro
+    \item Ability to restore data availability (backup cifrati)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{PCI-DSS - Cryptography Requirements}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=PCI-DSS Requirement 3 e 4]
+\textbf{Requirement 3}: Protect stored cardholder data
+\begin{itemize}
+    \item 3.4: Render PAN unreadable (encryption, truncation, hashing)
+    \item 3.5: Document and implement key-management processes
+    \item 3.6: Fully document and implement all key-management procedures
+\end{itemize}
+
+\textbf{Requirement 4}: Encrypt transmission of cardholder data
+\begin{itemize}
+    \item 4.1: Use strong cryptography and security protocols (TLS 1.2+)
+    \item 4.2: Never send unencrypted PANs by end-user messaging
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementa cifratura AES-256-GCM per proteggere dati sensibili in un database
+    \item Crea sistema di firma digitale per contratti elettronici
+    \item Implementa password hashing con Argon2 e verifica contro Have I Been Pwned
+    \item Crea sistema di envelope encryption per file upload
+    \item Implementa key rotation automatica con zero-downtime
+    \item Crea proof-of-concept di rainbow table attack su password SHA-256 senza salt
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Qual è la differenza tra cifratura simmetrica e asimmetrica?
+    \item Perché non si deve usare ECB mode con AES?
+    \item Cos'è un IV e perché deve essere unico?
+    \item Perché bcrypt/Argon2 sono preferibili a SHA-256 per password?
+    \item Cos'è il salt e come protegge da rainbow tables?
+    \item Come funziona la firma digitale?
+    \item Cos'è envelope encryption?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item NIST - Recommendation for Block Cipher Modes: \url{https://csrc.nist.gov/publications/detail/sp/800-38a/final}
+    \item OWASP - Cryptographic Storage Cheat Sheet: \url{https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html}
+    \item OWASP - Password Storage Cheat Sheet
+    \item RFC 5869 - HKDF (HMAC-based Key Derivation Function)
+    \item Argon2 Paper: \url{https://github.com/P-H-C/phc-winner-argon2}
+    \item Have I Been Pwned API: \url{https://haveibeenpwned.com/API/v3}
+\end{itemize}

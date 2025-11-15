@@ -1,0 +1,951 @@
+% 04_gestione_processi.tex — Gestione Processi in Linux
+\chapter{Gestione dei Processi}
+
+\section{Introduzione ai Processi}
+
+Un \textbf{processo} è un'istanza di un programma in esecuzione. Linux è un sistema multitasking che esegue centinaia di processi simultaneamente.
+
+\subsection{Concetti Fondamentali}
+
+\begin{itemize}
+    \item \textbf{PID (Process ID)}: identificatore numerico univoco
+    \item \textbf{PPID (Parent PID)}: PID del processo genitore
+    \item \textbf{UID/GID}: utente e gruppo che eseguono il processo
+    \item \textbf{Stato}: running, sleeping, stopped, zombie
+    \item \textbf{Priorità}: nice value (-20 a 19, minore = maggior priorità)
+\end{itemize}
+
+\begin{lstlisting}[style=bash]
+# Visualizza PID della shell corrente
+echo $$
+# Output: 1234 (esempio)
+
+# Visualizza PID dell'ultimo processo in background
+echo $!
+
+# Il processo con PID 1 è sempre init/systemd
+ps -p 1
+# PID TTY      TIME CMD
+#   1 ?    00:00:02 systemd
+\end{lstlisting}
+
+\subsection{Gerarchia dei Processi}
+
+I processi in Linux formano un albero:
+
+\begin{lstlisting}[style=bash]
+# Visualizza albero processi
+pstree
+
+# Output esempio:
+# systemd─┬─NetworkManager───2*[{NetworkManager}]
+#         ├─accounts-daemon───2*[{accounts-daemon}]
+#         ├─cron
+#         ├─dbus-daemon
+#         ├─sshd───sshd───sshd───bash───pstree
+#         └─systemd─┬─(sd-pam)
+#                   └─pulseaudio
+
+# Con PID
+pstree -p
+
+# Solo per utente specifico
+pstree username
+
+# Compatto
+pstree -c
+\end{lstlisting}
+
+\section{Visualizzazione Processi: ps}
+
+Il comando \texttt{ps} (process status) visualizza informazioni sui processi.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[style=bash]
+# Processi nella shell corrente
+ps
+# PID TTY      TIME CMD
+# 1234 pts/0   00:00:00 bash
+# 5678 pts/0   00:00:00 ps
+
+# Tutti i processi dell'utente corrente
+ps x
+ps -x
+
+# Tutti i processi di tutti gli utenti
+ps aux
+ps -ef
+
+# Formato BSD (ps aux):
+# USER   PID %CPU %MEM    VSZ   RSS TTY   STAT START   TIME COMMAND
+# root     1  0.0  0.1 169868 11840 ?     Ss   10:00   0:02 /sbin/init
+
+# Formato Unix (ps -ef):
+# UID  PID  PPID  C STIME TTY      TIME CMD
+# root   1     0  0 10:00 ?    00:00:02 /sbin/init
+\end{lstlisting}
+
+\subsection{Opzioni Utili}
+
+\begin{lstlisting}[style=bash]
+# Tutti i processi, formato esteso
+ps aux
+
+# Tutti i processi, formato gerarchico
+ps auxf
+
+# Solo processi specifici
+ps -p 1234
+ps -p 1234,5678,9012
+
+# Processi di un utente
+ps -u username
+ps -U username
+
+# Processi associati a un terminale
+ps -t pts/0
+
+# Custom format
+ps -eo pid,ppid,user,cmd
+ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
+
+# Ordinamento
+ps aux --sort=-%cpu        # Per CPU usage (decrescente)
+ps aux --sort=-%mem        # Per memoria
+ps aux --sort=-rss         # Per RSS (resident set size)
+
+# Top 10 processi per CPU
+ps aux --sort=-%cpu | head -11
+
+# Top 10 per memoria
+ps aux --sort=-%mem | head -11
+
+# Cerca processo per nome
+ps aux | grep firefox
+ps -C firefox              # Metodo migliore
+\end{lstlisting}
+
+\subsection{Comprensione Output ps aux}
+
+\begin{lstlisting}[style=bash]
+# USER   PID %CPU %MEM    VSZ   RSS TTY   STAT START   TIME COMMAND
+# root     1  0.0  0.1 169868 11840 ?     Ss   10:00   0:02 /sbin/init
+
+# USER:    proprietario processo
+# PID:     process ID
+# %CPU:    percentuale CPU
+# %MEM:    percentuale memoria
+# VSZ:     virtual memory size (KB)
+# RSS:     resident set size - memoria fisica (KB)
+# TTY:     terminal associato (? = nessuno)
+# STAT:    stato processo
+# START:   quando è stato avviato
+# TIME:    tempo CPU consumato
+# COMMAND: comando completo
+
+# Codici STAT:
+# R: running
+# S: sleeping (interruptible)
+# D: sleeping (uninterruptible, usually I/O)
+# T: stopped
+# Z: zombie
+# <: high priority
+# N: low priority
+# L: has pages locked into memory
+# s: is a session leader
+# l: is multi-threaded
+# +: is in the foreground process group
+\end{lstlisting}
+
+\section{Monitoraggio Interattivo: top}
+
+\texttt{top} fornisce una vista dinamica dei processi in esecuzione.
+
+\subsection{Uso Base}
+
+\begin{lstlisting}[style=bash]
+# Avvia top
+top
+
+# Output:
+# top - 14:25:33 up  4:25,  2 users,  load average: 0.23, 0.45, 0.38
+# Tasks: 285 total,   1 running, 284 sleeping,   0 stopped,   0 zombie
+# %Cpu(s):  2.3 us,  0.8 sy,  0.0 ni, 96.5 id,  0.3 wa,  0.0 hi,  0.1 si
+# MiB Mem :  15891.2 total,   8234.5 free,   4123.8 used,   3532.9 buff/cache
+# MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.  11234.5 avail Mem
+#
+#   PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+#  1234 user      20   0 4567890 234567  89012 S   5.3   1.5   2:34.56 firefox
+#  5678 user      20   0 1234567  98765  45678 S   2.0   0.6   0:45.23 chrome
+\end{lstlisting}
+
+\subsection{Interpretazione Header}
+
+\begin{lstlisting}[style=bash]
+# Prima riga: uptime e load average
+# up 4:25          = sistema acceso da 4 ore e 25 minuti
+# 2 users          = 2 utenti loggati
+# load average     = carico medio ultimi 1, 5, 15 minuti
+#                    < 1.0 = OK su single-core
+#                    < numero_core = OK su multi-core
+
+# Tasks: numero processi per stato
+# total, running, sleeping, stopped, zombie
+
+# %Cpu(s): utilizzo CPU
+# us = user space
+# sy = system (kernel)
+# ni = nice (low priority)
+# id = idle
+# wa = wait I/O
+# hi = hardware interrupts
+# si = software interrupts
+# st = steal (virtualizzazione)
+
+# Memoria:
+# total = totale
+# free = libera
+# used = usata
+# buff/cache = buffer e cache
+# avail Mem = disponibile per nuove applicazioni
+\end{lstlisting}
+
+\subsection{Comandi Interattivi in top}
+
+\begin{lstlisting}[style=bash]
+# Mentre top è in esecuzione:
+
+# Ordinamento
+P       # Ordina per %CPU (default)
+M       # Ordina per %MEM
+T       # Ordina per TIME+
+N       # Ordina per PID
+
+# Filtri
+u       # Filtra per utente (chiede username)
+k       # Kill processo (chiede PID)
+r       # Renice processo (cambia priorità)
+
+# Visualizzazione
+1       # Toggle visualizzazione singoli core
+t       # Toggle visualizzazione task/CPU bar
+m       # Toggle visualizzazione memoria bar
+c       # Toggle comando completo/basename
+V       # Vista albero (forest)
+i       # Nascondi processi idle
+
+# Aggiornamento
+s       # Cambia delay aggiornamento (secondi)
+d       # Alias per s
+Space   # Aggiorna immediatamente
+
+# Altro
+h o ?   # Help
+q       # Quit
+W       # Salva configurazione corrente
+\end{lstlisting}
+
+\subsection{top con Opzioni}
+
+\begin{lstlisting}[style=bash]
+# Aggiorna ogni 2 secondi (default: 3)
+top -d 2
+
+# Mostra solo processi di utente specifico
+top -u username
+
+# Batch mode (utile per logging)
+top -b -n 1 > top_snapshot.txt
+
+# Top 10 processi per CPU
+top -b -n 1 | head -17
+
+# Evidenzia differenze (delay 1 secondo)
+top -d 1 -b -n 2 | tail -20
+\end{lstlisting}
+
+\subsection{Alternative a top}
+
+\begin{lstlisting}[style=bash]
+# htop - versione migliorata di top (installazione necessaria)
+sudo apt install htop
+htop
+# - Interfaccia colorata
+# - Mouse support
+# - Scroll verticale/orizzontale
+# - Kill/renice più facile
+# - Visualizzazione albero integrata
+
+# atop - advanced monitoring
+sudo apt install atop
+atop
+# - Statistiche disco dettagliate
+# - Network statistics
+# - Logging automatico
+
+# glances - monitoring multi-piattaforma
+sudo apt install glances
+glances
+# - Overview sistema completo
+# - Auto-adattivo (mostra info più rilevanti)
+# - Modalità client-server
+# - Export in vari formati
+\end{lstlisting}
+
+\section{Gestione Processi: kill}
+
+Il comando \texttt{kill} invia segnali ai processi.
+
+\subsection{Segnali Comuni}
+
+\begin{lstlisting}[style=bash]
+# Lista tutti i segnali
+kill -l
+
+# Segnali più comuni:
+#  1) SIGHUP   - Hangup (ricarica configurazione)
+#  2) SIGINT   - Interrupt (Ctrl+C)
+#  3) SIGQUIT  - Quit
+#  9) SIGKILL  - Kill forzato (non può essere ignorato)
+# 15) SIGTERM  - Terminate gracefully (default)
+# 18) SIGCONT  - Continue se stopped
+# 19) SIGSTOP  - Stop processo (non può essere ignorato)
+# 20) SIGTSTP  - Stop (Ctrl+Z)
+
+# Equivalenze
+kill -1 PID  = kill -HUP PID  = kill -SIGHUP PID
+kill -9 PID  = kill -KILL PID = kill -SIGKILL PID
+kill -15 PID = kill -TERM PID = kill -SIGTERM PID = kill PID
+\end{lstlisting}
+
+\subsection{Uso di kill}
+
+\begin{lstlisting}[style=bash]
+# Termina processo gracefully (default: SIGTERM)
+kill 1234
+
+# Kill forzato (se SIGTERM non funziona)
+kill -9 1234
+kill -KILL 1234
+kill -SIGKILL 1234
+
+# Ricarica configurazione (molti daemon supportano SIGHUP)
+sudo kill -HUP $(cat /var/run/nginx.pid)
+
+# Stop processo (pausa)
+kill -STOP 1234
+
+# Resume processo
+kill -CONT 1234
+
+# Kill multipli processi
+kill 1234 5678 9012
+
+# Kill tutti i processi di un comando
+killall firefox
+killall -9 firefox
+
+# Kill per nome con pattern matching
+pkill firefox
+pkill -9 firefox
+
+# Kill per utente
+pkill -u username
+
+# Kill con pattern più complesso
+pgrep -f "python.*server.py"     # Prima trova PID
+pkill -f "python.*server.py"     # Poi killa
+
+# Chiedi conferma prima di kill
+pkill -i firefox
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=SIGTERM vs SIGKILL]
+\textbf{Sempre provare SIGTERM prima di SIGKILL:}
+
+\begin{lstlisting}[style=bash]
+# BENE - processo può pulire e chiudere correttamente
+kill 1234          # SIGTERM
+sleep 5            # Aspetta
+kill -9 1234       # SIGKILL solo se necessario
+
+# MALE - kill forzato immediato
+kill -9 1234       # Può lasciare file corrotti, lock, etc.
+\end{lstlisting}
+
+SIGTERM permette al processo di:
+\begin{itemize}
+    \item Salvare dati
+    \item Chiudere file aperti
+    \item Rilasciare risorse
+    \item Terminare connessioni correttamente
+\end{itemize}
+
+SIGKILL termina immediatamente senza cleanup.
+\end{tcolorbox}
+
+\subsection{killall e pkill}
+
+\begin{lstlisting}[style=bash]
+# killall - kill per nome esatto
+killall firefox                    # Tutti i processi "firefox"
+killall -u username process        # Solo di utente specifico
+killall -i process                 # Chiedi conferma
+killall -w process                 # Aspetta fino a terminazione
+killall -v process                 # Verbose
+
+# pkill - kill per pattern
+pkill firefox                      # Match substring
+pkill -f "python script.py"        # Match full command line
+pkill -u username                  # Tutti i processi di username
+pkill -t pts/0                     # Tutti in terminal pts/0
+pkill -x firefox                   # Exact match
+
+# pgrep - trova PID (non killa)
+pgrep firefox                      # Lista PID
+pgrep -l firefox                   # Con nome
+pgrep -a firefox                   # Con full command
+pgrep -u username firefox          # Filtra per utente
+\end{lstlisting}
+
+\section{Job Control}
+
+La shell bash permette di gestire job in foreground e background.
+
+\subsection{Concetti Base}
+
+\begin{lstlisting}[style=bash]
+# Foreground: processo che controlla il terminal
+# - Riceve input da tastiera
+# - Blocca il prompt
+# - Ctrl+C per interrompere
+# - Ctrl+Z per sospendere
+
+# Background: processo che gira senza bloccare terminal
+# - Non riceve input da tastiera
+# - Prompt disponibile per altri comandi
+# - & alla fine del comando
+\end{lstlisting}
+
+\subsection{Esecuzione in Background}
+
+\begin{lstlisting}[style=bash]
+# Esegui in background
+sleep 100 &
+# [1] 12345
+# [job_number] PID
+
+# Multipli job in background
+sleep 100 &
+sleep 200 &
+sleep 300 &
+
+# Comando lungo in background
+find / -name "*.log" > results.txt 2>&1 &
+
+# Previeni terminazione alla chiusura shell
+nohup command &
+nohup ./long_script.sh &
+# Output rediretto a nohup.out
+
+# Background con priorità bassa
+nice -n 19 command &
+\end{lstlisting}
+
+\subsection{jobs - Lista Job Correnti}
+
+\begin{lstlisting}[style=bash]
+# Lista job della shell corrente
+jobs
+# [1]   Running     sleep 100 &
+# [2]-  Running     sleep 200 &
+# [3]+  Stopped     vim file.txt
+
+# Con PID
+jobs -l
+# [1]  12345 Running     sleep 100 &
+# [2]  12346 Running     sleep 200 &
+# [3]  12347 Stopped     vim file.txt
+
+# Solo running jobs
+jobs -r
+
+# Solo stopped jobs
+jobs -s
+
+# Simboli:
+# +  = job corrente (default per fg/bg senza argomenti)
+# -  = job precedente
+\end{lstlisting}
+
+\subsection{fg - Foreground}
+
+\begin{lstlisting}[style=bash]
+# Porta job in foreground
+fg                 # Porta job corrente (+)
+fg %1              # Porta job numero 1
+fg %2              # Porta job numero 2
+
+# Alternative notation
+fg %%              # Job corrente
+fg %-              # Job precedente
+fg %?string        # Job il cui comando contiene string
+fg %command        # Job il cui comando inizia con command
+
+# Esempio
+sleep 100 &
+# [1] 12345
+
+fg %1
+# sleep 100 (ora in foreground)
+# Ctrl+C per terminare
+\end{lstlisting}
+
+\subsection{bg - Background}
+
+\begin{lstlisting}[style=bash]
+# Scenario: processo in foreground che vogliamo mettere in background
+
+# 1. Avvia comando
+sleep 100
+
+# 2. Sospendi con Ctrl+Z
+^Z
+# [1]+  Stopped    sleep 100
+
+# 3. Riprendi in background
+bg
+# [1]+ sleep 100 &
+
+# Oppure job specifico
+bg %1
+bg %2
+
+# Esempio completo
+vim file.txt       # Editing file
+# Ctrl+Z           # Sospendi vim
+# [1]+  Stopped    vim file.txt
+bg %1              # Continua vim in background (NON ha senso per vim!)
+fg %1              # Torna a vim
+
+# Esempio sensato
+find / -name "*.log" 2>/dev/null
+# Operazione lenta...
+# Ctrl+Z
+# [1]+  Stopped    find / -name "*.log" 2>/dev/null
+bg
+# [1]+ find / -name "*.log" 2>/dev/null &
+# Ora continua in background
+\end{lstlisting}
+
+\subsection{disown - Scollega Job dalla Shell}
+
+\begin{lstlisting}[style=bash]
+# Job normalmente terminano quando chiudi la shell
+# disown li rende indipendenti
+
+# Avvia job
+sleep 1000 &
+# [1] 12345
+
+# Rimuovi da job list
+disown %1
+
+# Ora jobs non lo mostra più
+jobs
+
+# Il processo continua anche dopo logout
+# Ma non potrai più controllarlo con fg/bg
+
+# Disown tutti i job
+disown -a
+
+# Disown ma mantieni in jobs (non riceve SIGHUP)
+disown -h %1
+\end{lstlisting}
+
+\subsection{nohup - No Hangup}
+
+\begin{lstlisting}[style=bash]
+# nohup previene terminazione alla chiusura terminal
+
+# Sintassi base
+nohup command &
+
+# Output rediretto automaticamente a nohup.out
+nohup ./long_script.sh &
+# Output: nohup: ignoring input and appending output to 'nohup.out'
+
+# Specifica file output
+nohup ./script.sh > output.log 2>&1 &
+
+# Verifica output
+tail -f nohup.out
+
+# Differenza nohup vs disown:
+# nohup: deve essere usato all'avvio del comando
+# disown: può essere usato dopo che il comando è già avviato
+
+# Combinazione (massima protezione)
+nohup ./critical_script.sh &
+disown
+\end{lstlisting}
+
+\section{Priorità dei Processi}
+
+\subsection{nice - Avvia con Priorità}
+
+\begin{lstlisting}[style=bash]
+# Nice value: -20 (massima priorità) a 19 (minima priorità)
+# Default: 0
+# Utenti normali: possono solo diminuire priorità (0-19)
+# Root: può impostare qualsiasi valore
+
+# Visualizza nice value corrente
+nice
+# 0
+
+# Avvia con priorità bassa
+nice -n 10 command
+nice -10 command          # Sintassi alternativa
+
+# Massima priorità (richiede root)
+sudo nice -n -20 important_process
+
+# Esempi pratici
+
+# Backup notturno (bassa priorità, non rallenta sistema)
+nice -n 19 tar czf backup.tar.gz /home
+
+# Compilazione (priorità normale-bassa)
+nice -n 10 make -j4
+
+# Processo critico (alta priorità, root)
+sudo nice -n -10 critical_daemon
+\end{lstlisting}
+
+\subsection{renice - Cambia Priorità}
+
+\begin{lstlisting}[style=bash]
+# Cambia nice value di processo running
+
+# Per PID
+renice -n 10 -p 1234
+renice 10 1234              # Sintassi breve
+
+# Per tutti i processi di un utente
+renice -n 5 -u username
+
+# Per tutti i processi di un gruppo
+renice -n 5 -g groupname
+
+# Diminuisci priorità (aumenta nice)
+renice +5 -p 1234
+
+# Aumenta priorità (diminuisci nice) - richiede root
+sudo renice -5 -p 1234
+
+# Esempio: rallenta processo che consuma troppa CPU
+# 1. Identifica processo
+top
+# PID 1234 sta usando 99% CPU
+
+# 2. Riduci priorità
+renice 19 -p 1234
+
+# Verifica
+ps -o pid,ni,cmd -p 1234
+# PID  NI CMD
+# 1234 19 ./cpu_intensive_process
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 4.1: Esplorazione Processi}
+
+\begin{lstlisting}[style=bash]
+# 1. Visualizza tutti i tuoi processi
+ps x
+
+# 2. Trova processi più pesanti
+ps aux --sort=-%mem | head -10
+ps aux --sort=-%cpu | head -10
+
+# 3. Trova processi del tuo utente
+ps -u $USER
+
+# 4. Albero processi completo
+pstree -p $USER
+
+# 5. Informazioni su processo specifico (es. bash)
+ps -C bash
+ps -C bash -o pid,ppid,user,cmd,%cpu,%mem
+
+# 6. Processi zombie (spero nessuno!)
+ps aux | grep 'Z'
+\end{lstlisting}
+
+\subsection{Esercizio 4.2: Monitoring con top}
+
+\begin{lstlisting}[style=bash]
+# 1. Avvia top
+top
+
+# 2. Mentre in top, prova:
+# - Premi '1' per vedere singoli core
+# - Premi 'P' per ordinare per CPU
+# - Premi 'M' per ordinare per memoria
+# - Premi 'u' e inserisci il tuo username
+# - Premi 'c' per vedere comando completo
+# - Premi 'i' per nascondere idle processes
+
+# 3. Trova processo più pesante
+# - Ordina per CPU (P)
+# - Annota PID e nome
+
+# 4. Cattura snapshot
+top -b -n 1 > top_snapshot_$(date +%Y%m%d_%H%M%S).txt
+
+# 5. Monitor specifico utente
+top -u $USER
+\end{lstlisting}
+
+\subsection{Esercizio 4.3: Job Control}
+
+\begin{lstlisting}[style=bash]
+# 1. Avvia processo in background
+sleep 300 &
+# Annota job number e PID
+
+# 2. Avvia altro processo in background
+sleep 400 &
+
+# 3. Lista job
+jobs
+jobs -l
+
+# 4. Avvia processo in foreground
+sleep 500
+
+# 5. Sospendi con Ctrl+Z
+# Premi Ctrl+Z
+
+# 6. Lista job (dovresti vedere 3 job)
+jobs
+
+# 7. Riprendi ultimo in background
+bg
+
+# 8. Porta primo job in foreground
+fg %1
+
+# 9. Termina con Ctrl+C
+
+# 10. Verifica job rimanenti
+jobs
+
+# 11. Kill tutti i job rimanenti
+kill %1 %2
+# Oppure
+jobs -p | xargs kill
+\end{lstlisting}
+
+\subsection{Esercizio 4.4: nohup e Priorità}
+
+\begin{lstlisting}[style=bash]
+# 1. Create script di test
+cat > long_task.sh << 'EOF'
+#!/bin/bash
+for i in {1..100}; do
+    echo "Step $i of 100"
+    sleep 2
+done
+echo "Completed!"
+EOF
+
+chmod +x long_task.sh
+
+# 2. Esegui con nohup
+nohup ./long_task.sh &
+
+# 3. Verifica output
+tail -f nohup.out
+# Ctrl+C per uscire
+
+# 4. Verifica che processo esiste
+jobs -l
+ps aux | grep long_task
+
+# 5. Disown il job
+disown
+
+# 6. Avvia altro processo con bassa priorità
+nice -n 15 ./long_task.sh &
+NICE_PID=$!
+
+# 7. Verifica nice value
+ps -o pid,ni,cmd -p $NICE_PID
+
+# 8. Cambia priorità
+renice 5 -p $NICE_PID
+
+# 9. Verifica cambio
+ps -o pid,ni,cmd -p $NICE_PID
+
+# 10. Cleanup
+pkill -f long_task.sh
+\end{lstlisting}
+
+\subsection{Esercizio 4.5: Scenario Reale}
+
+Simulazione: processo impazzito che consuma troppa CPU
+
+\begin{lstlisting}[style=bash]
+# 1. Create processo CPU-intensive
+cat > cpu_hog.sh << 'EOF'
+#!/bin/bash
+# CPU intensive loop
+while true; do
+    x=$((x + 1))
+done
+EOF
+
+chmod +x cpu_hog.sh
+
+# 2. Avvia processo
+./cpu_hog.sh &
+HOG_PID=$!
+echo "Started CPU hog with PID: $HOG_PID"
+
+# 3. Monitor in top (altro terminal)
+top -p $HOG_PID
+
+# 4. Riduci priorità per limitare impatto
+renice 19 -p $HOG_PID
+
+# 5. Verifica riduzione impatto in top
+
+# 6. Se ancora problematico, sospendi
+kill -STOP $HOG_PID
+
+# 7. Verifica stato
+ps -o pid,stat,cmd -p $HOG_PID
+# STAT dovrebbe essere T (stopped)
+
+# 8. Riprendi
+kill -CONT $HOG_PID
+
+# 9. Termina gracefully
+kill $HOG_PID
+
+# 10. Se non termina, forza
+sleep 2
+kill -9 $HOG_PID 2>/dev/null
+
+# 11. Verifica terminazione
+ps -p $HOG_PID
+# Dovrebbe dare errore (processo non esiste)
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Gestione Processi}
+\begin{enumerate}
+    \item \textbf{Sempre SIGTERM prima di SIGKILL}
+    \begin{lstlisting}[style=bash]
+# Dai al processo tempo di chiudere correttamente
+kill $PID
+sleep 5
+kill -0 $PID 2>/dev/null && kill -9 $PID
+    \end{lstlisting}
+
+    \item \textbf{Usa nohup per processi lunghi}
+    \begin{lstlisting}[style=bash]
+# Previeni terminazione accidentale
+nohup ./long_running_task.sh > task.log 2>&1 &
+    \end{lstlisting}
+
+    \item \textbf{Monitora risorse regolarmente}
+    \begin{lstlisting}[style=bash]
+# Check giornaliero top consumers
+ps aux --sort=-%cpu | head -10
+ps aux --sort=-%mem | head -10
+    \end{lstlisting}
+
+    \item \textbf{Usa nice per task non critici}
+    \begin{lstlisting}[style=bash]
+# Backup, compilazione, compressione
+nice -n 15 tar czf backup.tar.gz /data
+    \end{lstlisting}
+
+    \item \textbf{Cleanup job periodicamente}
+    \begin{lstlisting}[style=bash]
+# Verifica job dimenticati
+jobs
+# Kill quelli non necessari
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Attenzione!]
+\begin{itemize}
+    \item \textbf{Mai kill -9 PID 1}: uccide init/systemd, crash del sistema
+    \item \textbf{Attenzione con killall}: può killare processi importanti con nomi comuni
+    \item \textbf{kill richiede PID esatto}: controlla sempre prima con ps/pgrep
+    \item \textbf{Background jobs ereditano umask e environment}: potrebbero non avere i permessi attesi
+    \item \textbf{nohup non impedisce kill manuale}: solo SIGHUP alla chiusura shell
+\end{itemize}
+\end{tcolorbox}
+
+\section{Comandi Utili Rapidi}
+
+\begin{lstlisting}[style=bash]
+# Trova e killa processo per nome
+pkill -f "process_name"
+
+# Trova processi che usano file specifico
+lsof /path/to/file
+fuser /path/to/file
+
+# Trova processi che usano porta
+sudo lsof -i :8080
+sudo netstat -tulpn | grep :8080
+
+# Monitor continuo top 5 CPU users
+watch -n 2 "ps aux --sort=-%cpu | head -6"
+
+# Conta processi per utente
+ps aux | awk '{print $1}' | sort | uniq -c | sort -rn
+
+# Kill tutti i processi di uno script
+pkill -f script_name.sh
+
+# Verifica se processo è ancora running
+kill -0 $PID && echo "Running" || echo "Not running"
+
+# CPU usage totale per comando
+ps aux | grep [p]rocess_name | awk '{sum+=$3} END {print sum "%"}'
+\end{lstlisting}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo imparato:
+
+\begin{itemize}
+    \item \textbf{Concetti}: PID, PPID, stati processi, gerarchia
+    \item \textbf{ps}: visualizzare processi con varie opzioni
+    \item \textbf{top/htop}: monitoring interattivo
+    \item \textbf{kill}: inviare segnali (SIGTERM, SIGKILL, etc.)
+    \item \textbf{killall/pkill}: terminare processi per nome
+    \item \textbf{jobs}: gestire job della shell
+    \item \textbf{fg/bg}: spostare processi tra foreground e background
+    \item \textbf{nohup/disown}: processi persistenti
+    \item \textbf{nice/renice}: gestire priorità
+\end{itemize}
+
+La gestione efficace dei processi è essenziale per amministrare sistemi Linux e ottimizzare le performance.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
+Nel Capitolo 5 entreremo nel mondo del Bash Scripting: variabili, strutture di controllo, loop, funzioni e parametri per automatizzare task complessi.
+\end{tcolorbox}

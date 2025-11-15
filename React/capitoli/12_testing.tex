@@ -1,0 +1,815 @@
+% 12_testing.tex - Jest, React Testing Library, Unit Tests, Integration Tests
+
+\chapter{Testing in React}
+\label{ch:testing}
+
+\section{Introduzione al Testing}
+
+Il testing è fondamentale per creare applicazioni affidabili e manutenibili. Questo capitolo copre Jest e React Testing Library per unit e integration tests.
+
+\subsection{Tipi di Test}
+
+\begin{itemize}
+\item \textbf{Unit Tests}: Testano singole funzioni o componenti isolati
+\item \textbf{Integration Tests}: Testano interazione tra componenti
+\item \textbf{End-to-End Tests}: Testano flussi utente completi (Cypress, Playwright)
+\end{itemize}
+
+\subsection{Setup}
+
+\begin{lstlisting}[caption={Installazione dipendenze test}]
+# Con Create React App, già configurato
+# Altrimenti installa:
+
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
+
+# o con yarn
+yarn add --dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
+\end{lstlisting}
+
+\section{React Testing Library}
+
+React Testing Library promuove best practices: test what users see, not implementation details.
+
+\subsection{Primo Test}
+
+\begin{lstlisting}[caption={Test base di un componente}]
+// Button.jsx
+function Button({ onClick, children }) {
+  return <button onClick={onClick}>{children}</button>;
+}
+
+export default Button;
+
+// Button.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Button from './Button';
+
+describe('Button Component', () => {
+  test('renders button with text', () => {
+    render(<Button>Click me</Button>);
+
+    const buttonElement = screen.getByText(/click me/i);
+    expect(buttonElement).toBeInTheDocument();
+  });
+
+  test('calls onClick when clicked', async () => {
+    const handleClick = jest.fn();
+    const user = userEvent.setup();
+
+    render(<Button onClick={handleClick}>Click</Button>);
+
+    const button = screen.getByText(/click/i);
+    await user.click(button);
+
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+\end{lstlisting}
+
+\subsection{Query Methods}
+
+\begin{lstlisting}[caption={Metodi per trovare elementi}]
+import { render, screen } from '@testing-library/react';
+
+function MyComponent() {
+  return (
+    <div>
+      <h1>Hello World</h1>
+      <button aria-label="submit">Submit</button>
+      <input type="text" placeholder="Enter name" />
+      <img src="/logo.png" alt="Logo" />
+    </div>
+  );
+}
+
+test('query methods', () => {
+  render(<MyComponent />);
+
+  // getBy* - Trova elemento, error se non trovato
+  const heading = screen.getByText(/hello world/i);
+  const button = screen.getByRole('button', { name: /submit/i });
+  const input = screen.getByPlaceholderText(/enter name/i);
+  const image = screen.getByAltText(/logo/i);
+
+  // queryBy* - Trova elemento, null se non trovato
+  const missing = screen.queryByText(/not here/i);
+  expect(missing).not.toBeInTheDocument();
+
+  // findBy* - Async, aspetta elemento (per caricamenti asincroni)
+  const asyncElement = await screen.findByText(/loaded/i);
+
+  // getAllBy*, queryAllBy*, findAllBy* - Multipli elementi
+  const buttons = screen.getAllByRole('button');
+  expect(buttons).toHaveLength(1);
+});
+\end{lstlisting}
+
+\subsection{Test di Componenti con State}
+
+\begin{lstlisting}[caption={Test componente con useState}]
+// Counter.jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <button onClick={() => setCount(count - 1)}>Decrement</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  );
+}
+
+export default Counter;
+
+// Counter.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Counter from './Counter';
+
+describe('Counter', () => {
+  test('renders initial count of 0', () => {
+    render(<Counter />);
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+  });
+
+  test('increments count when increment button is clicked', async () => {
+    const user = userEvent.setup();
+    render(<Counter />);
+
+    const incrementBtn = screen.getByRole('button', { name: /increment/i });
+    await user.click(incrementBtn);
+
+    expect(screen.getByText(/count: 1/i)).toBeInTheDocument();
+  });
+
+  test('decrements count when decrement button is clicked', async () => {
+    const user = userEvent.setup();
+    render(<Counter />);
+
+    const decrementBtn = screen.getByRole('button', { name: /decrement/i });
+    await user.click(decrementBtn);
+
+    expect(screen.getByText(/count: -1/i)).toBeInTheDocument();
+  });
+
+  test('resets count to 0', async () => {
+    const user = userEvent.setup();
+    render(<Counter />);
+
+    // Incrementa a 5
+    const incrementBtn = screen.getByRole('button', { name: /increment/i });
+    await user.click(incrementBtn);
+    await user.click(incrementBtn);
+    await user.click(incrementBtn);
+    await user.click(incrementBtn);
+    await user.click(incrementBtn);
+
+    // Reset
+    const resetBtn = screen.getByRole('button', { name: /reset/i });
+    await user.click(resetBtn);
+
+    expect(screen.getByText(/count: 0/i)).toBeInTheDocument();
+  });
+});
+\end{lstlisting}
+
+\subsection{Test di Form}
+
+\begin{lstlisting}[caption={Test interazioni form}]
+// LoginForm.jsx
+import { useState } from 'react';
+
+function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      setError('Email and password are required');
+      return;
+    }
+
+    onSubmit({ email, password });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        aria-label="Email"
+      />
+
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        placeholder="Password"
+        aria-label="Password"
+      />
+
+      <button type="submit">Login</button>
+
+      {error && <div role="alert">{error}</div>}
+    </form>
+  );
+}
+
+export default LoginForm;
+
+// LoginForm.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import LoginForm from './LoginForm';
+
+describe('LoginForm', () => {
+  test('renders login form', () => {
+    render(<LoginForm onSubmit={() => {}} />);
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
+  });
+
+  test('submits form with email and password', async () => {
+    const handleSubmit = jest.fn();
+    const user = userEvent.setup();
+
+    render(<LoginForm onSubmit={handleSubmit} />);
+
+    // Compila form
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+
+    // Submit
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    // Verifica chiamata
+    expect(handleSubmit).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123'
+    });
+  });
+
+  test('shows error when fields are empty', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm onSubmit={() => {}} />);
+
+    // Submit senza compilare
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    // Verifica errore
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /email and password are required/i
+    );
+  });
+});
+\end{lstlisting}
+
+\section{Test di Componenti Asincroni}
+
+\subsection{Mock di Fetch/API}
+
+\begin{lstlisting}[caption={Test con chiamate API mockate}]
+// UserList.jsx
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch('https://api.example.com/users')
+      .then(res => res.json())
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+export default UserList;
+
+// UserList.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
+import UserList from './UserList';
+
+// Mock fetch globalmente
+global.fetch = jest.fn();
+
+describe('UserList', () => {
+  beforeEach(() => {
+    fetch.mockClear();
+  });
+
+  test('displays loading state initially', () => {
+    fetch.mockImplementation(() => new Promise(() => {})); // Never resolves
+
+    render(<UserList />);
+
+    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  });
+
+  test('displays users after successful fetch', async () => {
+    const mockUsers = [
+      { id: 1, name: 'Alice' },
+      { id: 2, name: 'Bob' }
+    ];
+
+    fetch.mockResolvedValueOnce({
+      json: async () => mockUsers
+    });
+
+    render(<UserList />);
+
+    // Aspetta che loading scompaia
+    await waitFor(() => {
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    });
+
+    // Verifica utenti renderizzati
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+  });
+
+  test('displays error on fetch failure', async () => {
+    fetch.mockRejectedValueOnce(new Error('Network error'));
+
+    render(<UserList />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/error: network error/i)).toBeInTheDocument();
+    });
+  });
+});
+\end{lstlisting}
+
+\subsection{Mock Service Worker (MSW)}
+
+\begin{lstlisting}[caption={Setup MSW per mock API}]
+// mocks/handlers.js
+import { rest } from 'msw';
+
+export const handlers = [
+  rest.get('https://api.example.com/users', (req, res, ctx) => {
+    return res(
+      ctx.json([
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' }
+      ])
+    );
+  }),
+
+  rest.post('https://api.example.com/users', (req, res, ctx) => {
+    const { name } = req.body;
+
+    return res(
+      ctx.json({
+        id: 3,
+        name
+      })
+    );
+  })
+];
+
+// mocks/server.js
+import { setupServer } from 'msw/node';
+import { handlers } from './handlers';
+
+export const server = setupServer(...handlers);
+
+// setupTests.js
+import '@testing-library/jest-dom';
+import { server } from './mocks/server';
+
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+
+// Test con MSW
+import { render, screen, waitFor } from '@testing-library/react';
+import UserList from './UserList';
+
+test('fetches and displays users', async () => {
+  render(<UserList />);
+
+  await waitFor(() => {
+    expect(screen.getByText('Alice')).toBeInTheDocument();
+    expect(screen.getByText('Bob')).toBeInTheDocument();
+  });
+});
+\end{lstlisting}
+
+\section{Test di Context e State Management}
+
+\subsection{Test con Context}
+
+\begin{lstlisting}[caption={Test componenti con Context}]
+// ThemeContext.jsx
+import { createContext, useContext, useState } from 'react';
+
+const ThemeContext = createContext();
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+// ThemedButton.jsx
+import { useTheme } from './ThemeContext';
+
+function ThemedButton() {
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <button className={theme} onClick={toggleTheme}>
+      Current theme: {theme}
+    </button>
+  );
+}
+
+// ThemedButton.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from './ThemeContext';
+import ThemedButton from './ThemedButton';
+
+describe('ThemedButton', () => {
+  test('displays current theme', () => {
+    render(
+      <ThemeProvider>
+        <ThemedButton />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText(/current theme: light/i)).toBeInTheDocument();
+  });
+
+  test('toggles theme on click', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ThemeProvider>
+        <ThemedButton />
+      </ThemeProvider>
+    );
+
+    const button = screen.getByRole('button');
+
+    // Inizialmente light
+    expect(button).toHaveTextContent(/light/i);
+
+    // Click per toggle
+    await user.click(button);
+    expect(button).toHaveTextContent(/dark/i);
+
+    // Click di nuovo
+    await user.click(button);
+    expect(button).toHaveTextContent(/light/i);
+  });
+});
+\end{lstlisting}
+
+\subsection{Custom Render con Providers}
+
+\begin{lstlisting}[caption={Helper per render con providers}]
+// test-utils.jsx
+import { render } from '@testing-library/react';
+import { ThemeProvider } from './ThemeContext';
+import { AuthProvider } from './AuthContext';
+import { BrowserRouter } from 'react-router-dom';
+
+function AllProviders({ children }) {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+function customRender(ui, options) {
+  return render(ui, { wrapper: AllProviders, ...options });
+}
+
+// Re-export tutto
+export * from '@testing-library/react';
+export { customRender as render };
+
+// Utilizzo
+import { render, screen } from './test-utils';
+
+test('my test', () => {
+  render(<MyComponent />);
+  // Component automaticamente wrappato con providers
+});
+\end{lstlisting}
+
+\section{Test di Hooks Personalizzati}
+
+\begin{lstlisting}[caption={Test custom hooks}]
+// useCounter.js
+import { useState, useCallback } from 'react';
+
+function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+
+  const increment = useCallback(() => {
+    setCount(c => c + 1);
+  }, []);
+
+  const decrement = useCallback(() => {
+    setCount(c => c - 1);
+  }, []);
+
+  const reset = useCallback(() => {
+    setCount(initialValue);
+  }, [initialValue]);
+
+  return { count, increment, decrement, reset };
+}
+
+export default useCounter;
+
+// useCounter.test.js
+import { renderHook, act } from '@testing-library/react';
+import useCounter from './useCounter';
+
+describe('useCounter', () => {
+  test('initializes with default value', () => {
+    const { result } = renderHook(() => useCounter());
+    expect(result.current.count).toBe(0);
+  });
+
+  test('initializes with custom value', () => {
+    const { result } = renderHook(() => useCounter(10));
+    expect(result.current.count).toBe(10);
+  });
+
+  test('increments count', () => {
+    const { result } = renderHook(() => useCounter());
+
+    act(() => {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+
+  test('decrements count', () => {
+    const { result } = renderHook(() => useCounter(5));
+
+    act(() => {
+      result.current.decrement();
+    });
+
+    expect(result.current.count).toBe(4);
+  });
+
+  test('resets to initial value', () => {
+    const { result } = renderHook(() => useCounter(10));
+
+    act(() => {
+      result.current.increment();
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(12);
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(result.current.count).toBe(10);
+  });
+});
+\end{lstlisting}
+
+\section{Snapshot Testing}
+
+\begin{lstlisting}[caption={Snapshot tests}]
+import { render } from '@testing-library/react';
+import Button from './Button';
+
+test('matches snapshot', () => {
+  const { container } = render(<Button>Click me</Button>);
+  expect(container).toMatchSnapshot();
+});
+
+// Snapshot inline
+test('inline snapshot', () => {
+  const { container } = render(<Button primary>Submit</Button>);
+
+  expect(container.firstChild).toMatchInlineSnapshot(`
+    <button
+      class="primary"
+    >
+      Submit
+    </button>
+  `);
+});
+\end{lstlisting}
+
+\section{Integration Tests}
+
+\begin{lstlisting}[caption={Test integrazione completa}]
+// TodoApp.jsx
+import { useState } from 'react';
+
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, { id: Date.now(), text: input, completed: false }]);
+      setInput('');
+    }
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  return (
+    <div>
+      <h1>Todo App</h1>
+
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+        placeholder="Add todo"
+      />
+      <button onClick={addTodo}>Add</button>
+
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <span style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+              {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+
+      <p>Total: {todos.length}, Completed: {todos.filter(t => t.completed).length}</p>
+    </div>
+  );
+}
+
+export default TodoApp;
+
+// TodoApp.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import TodoApp from './TodoApp';
+
+describe('TodoApp Integration', () => {
+  test('complete todo workflow', async () => {
+    const user = userEvent.setup();
+    render(<TodoApp />);
+
+    // Verifica stato iniziale
+    expect(screen.getByText(/total: 0/i)).toBeInTheDocument();
+
+    // Aggiungi primo todo
+    const input = screen.getByPlaceholderText(/add todo/i);
+    await user.type(input, 'Buy milk');
+    await user.click(screen.getByRole('button', { name: /add/i }));
+
+    // Verifica todo aggiunto
+    expect(screen.getByText('Buy milk')).toBeInTheDocument();
+    expect(screen.getByText(/total: 1/i)).toBeInTheDocument();
+
+    // Aggiungi secondo todo
+    await user.type(input, 'Walk dog');
+    await user.click(screen.getByRole('button', { name: /add/i }));
+
+    expect(screen.getByText('Walk dog')).toBeInTheDocument();
+    expect(screen.getByText(/total: 2/i)).toBeInTheDocument();
+
+    // Completa primo todo
+    const checkboxes = screen.getAllByRole('checkbox');
+    await user.click(checkboxes[0]);
+
+    expect(screen.getByText(/completed: 1/i)).toBeInTheDocument();
+
+    // Elimina secondo todo
+    const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+    await user.click(deleteButtons[1]);
+
+    expect(screen.queryByText('Walk dog')).not.toBeInTheDocument();
+    expect(screen.getByText(/total: 1/i)).toBeInTheDocument();
+  });
+});
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Testing Best Practices]
+\begin{itemize}
+\item Test behavior, not implementation
+\item Query by accessibility (role, label, text)
+\item Usa userEvent invece di fireEvent
+\item Mock API calls con MSW
+\item Test casi di errore
+\item Mantieni tests semplici e leggibili
+\item Un test, un comportamento
+\item Usa describe per raggruppare test correlati
+\item Setup e cleanup con beforeEach/afterEach
+\item Evita snapshot testing eccessivo
+\item Test copertura critica, non 100 percent
+\item Integra CI/CD per eseguire tests automaticamente
+\end{itemize}
+\end{tcolorbox}
+
+\section{Coverage}
+
+\begin{lstlisting}[caption={Generare coverage report}]
+# Run tests con coverage
+npm test -- --coverage --watchAll=false
+
+# o aggiungi script in package.json
+{
+  "scripts": {
+    "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false"
+  }
+}
+
+# Coverage output mostra:
+# - Statements: linee di codice eseguite
+# - Branches: condizioni if/else testate
+# - Functions: funzioni chiamate
+# - Lines: righe coperte
+\end{lstlisting}
+
+\section{Conclusioni}
+
+Il testing in React con Jest e React Testing Library permette di creare applicazioni robuste e manutenibili. I punti chiave sono:
+
+\begin{itemize}
+\item Test comportamento utente, non implementazione
+\item Mock API con MSW per tests realistici
+\item Test hooks con renderHook
+\item Integration tests per flussi completi
+\item CI/CD per eseguire tests automaticamente
+\end{itemize}
+
+Un buon test suite aumenta confidenza nel codice e facilita refactoring sicuri.

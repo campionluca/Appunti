@@ -1,0 +1,93 @@
+% main.tex — Documento principale LaTeX per "Web Security"
+\documentclass[a4paper,11pt]{book}
+
+% Lingua e codifica
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Layout
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Hyperlink e colori
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Codice sorgente (multi-linguaggio)
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstdefinestyle{websec}{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  frame=single,
+  breaklines=true
+}
+\lstset{style=websec, inputencoding=utf8,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {À}{{\`A}}1 {È}{{\`E}}1 {É}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+           {–}{{-}}1 {—}{{-}}1 {‑}{{-}}1 {→}{{->}}2 {…}{{...}}3}
+
+% Box informativi
+\usepackage[skins, breakable]{tcolorbox}
+\tcbset{
+  colback=gray!5,
+  colframe=gray!60,
+  coltitle=black,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt,
+  breakable
+}
+
+% Grafica
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes}
+
+% Tipografia
+\usepackage[protrusion=true,expansion=true]{microtype}
+\setlength{\emergencystretch}{3em}
+
+% Metadati documento
+\title{Web Security\\[0.5cm]\large Sicurezza delle Applicazioni Web}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Inclusione dei capitoli
+\include{capitoli/00_prefazione}
+\include{capitoli/01_introduzione_security}
+\include{capitoli/02_owasp_top_10}
+\include{capitoli/03_sql_injection}
+\include{capitoli/04_xss}
+\include{capitoli/05_csrf}
+\include{capitoli/06_autenticazione}
+\include{capitoli/07_autorizzazione}
+\include{capitoli/08_crittografia}
+\include{capitoli/09_https_ssl}
+\include{capitoli/10_api_security}
+\include{capitoli/11_penetration_testing}
+\include{capitoli/12_secure_coding}
+
+\appendix
+\include{capitoli/appendice_checklist}
+\include{capitoli/appendice_tools}
+
+\end{document}

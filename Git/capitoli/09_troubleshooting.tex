@@ -1,0 +1,765 @@
+\chapter{Troubleshooting e Recovery}
+
+\section*{Introduzione}
+Errori capitano. Questo capitolo è una guida pratica per risolvere i problemi più comuni in Git: annullare modifiche, recuperare commit persi, risolvere merge conflicts, gestire repository corrotti, e molto altro. Ogni sezione presenta problema, diagnosi e soluzione.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Annullare modifiche a vari livelli (working directory, staging, commit)
+    \item Risolvere merge conflicts efficacemente
+    \item Recuperare da detached HEAD state
+    \item Recuperare commit e branch cancellati
+    \item Gestire errori di force push
+    \item Risolvere problemi di autenticazione
+    \item Diagnosticare e risolvere repository corrotti
+    \item Rimuovere file grandi dalla cronologia
+\end{itemize}
+
+\section{Undo Changes: Livelli di Annullamento}
+
+\subsection{Livello 1: Working Directory}
+
+\textbf{Problema}: Hai modificato file ma non hai ancora fatto \texttt{git add}.
+
+\begin{lstlisting}
+# Situazione
+git status
+# modified: file.js (not staged)
+
+# Soluzione: Scarta modifiche singolo file
+git checkout -- file.js
+# oppure (Git 2.23+)
+git restore file.js
+
+# Soluzione: Scarta tutte le modifiche
+git checkout -- .
+# oppure
+git restore .
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Attenzione]
+\texttt{git checkout --} e \texttt{git restore} distruggono modifiche non salvate. Non c'è modo di recuperarle!
+\end{tcolorbox}
+
+\subsection{Livello 2: Staging Area}
+
+\textbf{Problema}: Hai fatto \texttt{git add} ma non ancora \texttt{git commit}.
+
+\begin{lstlisting}
+# Situazione
+git status
+# Changes to be committed:
+#   modified: file.js
+
+# Soluzione: Rimuovi da staging (mantieni modifiche)
+git reset HEAD file.js
+# oppure (Git 2.23+)
+git restore --staged file.js
+
+# Soluzione: Rimuovi tutto da staging
+git reset HEAD
+\end{lstlisting}
+
+\subsection{Livello 3: Ultimo Commit (Non Pushato)}
+
+\textbf{Problema}: Hai fatto commit ma vuoi modificarlo.
+
+\begin{lstlisting}
+# Soluzione 1: Modifica ultimo commit
+# (aggiunge modifiche al commit precedente)
+git add file.js
+git commit --amend
+
+# Soluzione 2: Modifica solo messaggio commit
+git commit --amend -m "New commit message"
+
+# Soluzione 3: Annulla commit, mantieni modifiche in staging
+git reset --soft HEAD~1
+
+# Soluzione 4: Annulla commit, mantieni modifiche unstaged
+git reset HEAD~1
+# oppure
+git reset --mixed HEAD~1
+
+# Soluzione 5: Annulla commit, DISTRUGGI modifiche
+git reset --hard HEAD~1
+\end{lstlisting}
+
+\subsection{Livello 4: Commit Vecchi o Pushati}
+
+\textbf{Problema}: Hai pushato commit che vuoi annullare.
+
+\begin{lstlisting}
+# Soluzione: Crea commit che annulla modifiche (sicuro)
+git revert <commit-hash>
+
+# Esempio
+git log --oneline
+# abc123 Add buggy feature
+# def456 Previous commit
+
+# Annulla abc123
+git revert abc123
+# Crea nuovo commit che annulla modifiche di abc123
+
+git push origin main
+# Sicuro: non riscrive cronologia
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Reset vs Revert]
+\begin{itemize}
+    \item \textbf{Reset}: Cancella commit dalla cronologia (pericoloso se pushato)
+    \item \textbf{Revert}: Crea nuovo commit che annulla modifiche (sicuro sempre)
+\end{itemize}
+
+\textbf{Regola}: Se il commit è pushato, usa SEMPRE \texttt{git revert}.
+\end{tcolorbox}
+
+\subsection{Tabella Riepilogativa}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Scenario} & \textbf{Comando} & \textbf{Modif. Perse?} \\
+\hline
+File modificato, not staged & \texttt{git restore file.js} & SÌ \\
+File in staging & \texttt{git restore --staged file.js} & NO \\
+Modifica ultimo commit & \texttt{git commit --amend} & NO \\
+Annulla ultimo commit & \texttt{git reset --soft HEAD\textasciitilde1} & NO \\
+Distruggi ultimo commit & \texttt{git reset --hard HEAD\textasciitilde1} & SÌ \\
+Annulla commit pushato & \texttt{git revert <hash>} & NO \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Merge Conflicts}
+
+\subsection{Anatomia di un Merge Conflict}
+
+\begin{lstlisting}
+# Tentativo merge
+git merge feature-branch
+
+# Output
+Auto-merging file.js
+CONFLICT (content): Merge conflict in file.js
+Automatic merge failed; fix conflicts and then commit the result.
+\end{lstlisting}
+
+File con conflitto:
+\begin{lstlisting}
+function calculateTotal(items) {
+<<<<<<< HEAD
+    // Implementazione main branch
+    return items.reduce((sum, item) => sum + item.price, 0);
+=======
+    // Implementazione feature branch
+    let total = 0;
+    for (let item of items) {
+        total += item.price;
+    }
+    return total;
+>>>>>>> feature-branch
+}
+\end{lstlisting}
+
+\subsection{Risolvere Conflicts Manualmente}
+
+\begin{lstlisting}
+# 1. Identifica file con conflitti
+git status
+# Unmerged paths:
+#   both modified: file.js
+
+# 2. Apri file e risolvi
+# Rimuovi marker (<<<<, ====, >>>>)
+# Scegli versione da mantenere o combina
+
+# Dopo risoluzione:
+function calculateTotal(items) {
+    return items.reduce((sum, item) => sum + item.price, 0);
+}
+
+# 3. Marca come risolto
+git add file.js
+
+# 4. Completa merge
+git commit -m "Merge feature-branch, resolve conflicts"
+\end{lstlisting}
+
+\subsection{Strumenti Merge}
+
+\begin{lstlisting}
+# Usa merge tool grafico
+git mergetool
+
+# Configura merge tool preferito
+git config --global merge.tool vimdiff
+# oppure meld, kdiff3, p4merge, etc.
+
+# Accetta versione specifica per tutti i conflitti
+# Accetta versione "ours" (branch corrente)
+git checkout --ours file.js
+
+# Accetta versione "theirs" (branch in merge)
+git checkout --theirs file.js
+\end{lstlisting}
+
+\subsection{Abbandonare Merge}
+
+\begin{lstlisting}
+# Se merge è troppo complicato, abbandona
+git merge --abort
+
+# Torna allo stato prima del merge
+git status
+# On branch main
+# nothing to commit, working tree clean
+\end{lstlisting}
+
+\subsection{Strategie per Evitare Conflicts}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Prevenire è Meglio che Curare]
+\begin{enumerate}
+    \item \textbf{Pull frequente}: Aggiorna spesso da main
+    \item \textbf{Commit piccoli}: Più facili da mergeare
+    \item \textbf{Comunicazione}: Coordina modifiche a stessi file
+    \item \textbf{Feature branch brevi}: Merge veloce = meno conflitti
+    \item \textbf{Code review}: Identifica potenziali conflitti in PR
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Detached HEAD State}
+
+\subsection{Cos'è Detached HEAD}
+
+\begin{lstlisting}
+# Checkout di commit specifico
+git checkout abc123
+
+# Output
+You are in 'detached HEAD' state...
+\end{lstlisting}
+
+In detached HEAD, non sei su un branch. I commit fatti non appartengono a nessun branch e possono essere persi.
+
+\subsection{Come Uscire da Detached HEAD}
+
+\begin{lstlisting}
+# Situazione: sei in detached HEAD e hai fatto commit
+git log --oneline
+# xyz789 My commit in detached HEAD
+# abc123 Previous commit
+
+# Soluzione 1: Crea branch dai commit
+git branch recovery-branch
+git checkout recovery-branch
+# Ora i commit sono al sicuro
+
+# Soluzione 2: Torna a branch senza salvare
+git checkout main
+# Warning: commit xyz789 perso (recuperabile con reflog)
+
+# Soluzione 3: Merge commit in branch esistente
+git checkout main
+git merge xyz789
+\end{lstlisting}
+
+\subsection{Quando Accade Detached HEAD}
+
+\begin{lstlisting}
+# Checkout commit specifico
+git checkout abc123
+
+# Checkout tag
+git checkout v1.0.0
+
+# Checkout file da altro commit
+git checkout main~3 -- file.js
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Evitare Detached HEAD]
+Se vuoi lavorare su commit vecchio, crea sempre branch:
+\begin{lstlisting}
+git checkout -b fix-old-version abc123
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Recuperare Commit e Branch Cancellati}
+
+\subsection{Recupero con Reflog}
+
+\begin{lstlisting}
+# Scenario: hai cancellato branch per errore
+git branch -D feature-important
+# Deleted branch feature-important (was abc123)
+
+# OH NO! Era importante!
+
+# Soluzione: usa reflog
+git reflog
+# abc123 HEAD@{0}: branch: deleted feature-important
+# def456 HEAD@{1}: commit: Last commit on feature
+# ...
+
+# Recupera creando branch al commit
+git branch feature-important abc123
+# oppure
+git checkout -b feature-important abc123
+
+# Branch recuperato!
+\end{lstlisting}
+
+\subsection{Recupero Commit Dopo Reset Hard}
+
+\begin{lstlisting}
+# Disastro: reset hard per errore
+git reset --hard HEAD~5
+# Persi 5 commit!
+
+# Reflog to the rescue
+git reflog
+# xyz789 HEAD@{1}: commit: Important work 5
+# ...
+
+# Recupera
+git reset --hard xyz789
+# Oppure crea branch
+git branch recovered xyz789
+\end{lstlisting}
+
+\subsection{Quando Reflog Non Funziona}
+
+\begin{lstlisting}
+# Reflog è locale e temporaneo (default 90 giorni)
+
+# Se hai fatto git gc (garbage collection)
+git reflog expire --expire=now --all
+git gc --prune=now
+# I commit unreachable sono persi
+
+# Se repository è clonato recentemente
+# Reflog del repo originale non viene clonato
+\end{lstlisting}
+
+\section{Force Push Gone Wrong}
+
+\subsection{Scenario}
+
+\begin{lstlisting}
+# Developer A fa force push
+git push -f origin main
+
+# Developer B (che aveva commit locali) tenta push
+git push origin main
+# Error: Updates were rejected
+# hint: 'git pull' before pushing
+\end{lstlisting}
+
+\subsection{Soluzione per Developer B}
+
+\begin{lstlisting}
+# Opzione 1: Salva lavoro locale
+git stash
+git pull origin main
+git stash pop
+# Risolvi eventuali conflitti
+
+# Opzione 2: Rebase su nuovo main
+git fetch origin
+git rebase origin/main
+# Risolvi conflitti
+git push origin main
+
+# Opzione 3: Se lavoro è su branch
+git fetch origin
+git checkout feature-branch
+git rebase origin/main
+\end{lstlisting}
+
+\subsection{Recupero dopo Force Push}
+
+\begin{lstlisting}
+# Se qualcuno ha fatto force push su main
+# e hai perso commit
+
+# 1. Verifica reflog
+git reflog origin/main
+# Trova commit prima di force push
+
+# 2. Recupera
+git reset --hard origin/main@{1}
+
+# 3. Crea backup branch
+git branch backup-before-force-push
+
+# 4. Comunica con team per recovery
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Prevenire Force Push Disasters]
+\textbf{Best Practices}:
+\begin{enumerate}
+    \item Proteggi branch main/develop (GitHub: branch protection rules)
+    \item Force push SOLO su feature branch personali
+    \item Usa \texttt{--force-with-lease} invece di \texttt{-f}
+    \item Comunica prima di force push su branch condivisi
+\end{enumerate}
+
+\begin{lstlisting}
+# --force-with-lease fallisce se altri hanno pushato
+git push --force-with-lease origin feature-branch
+# Più sicuro di -f
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Repository Corrotto}
+
+\subsection{Sintomi}
+
+\begin{lstlisting}
+# Errori tipici
+error: object file is empty
+error: bad object
+fatal: loose object is corrupt
+error: unable to read sha1 file
+\end{lstlisting}
+
+\subsection{Diagnosi}
+
+\begin{lstlisting}
+# Verifica integrità repository
+git fsck --full
+
+# Output se ci sono problemi:
+# error: object file is empty
+# error: sha1 mismatch
+# missing blob abc123
+\end{lstlisting}
+
+\subsection{Recovery}
+
+\begin{lstlisting}
+# Soluzione 1: Recupero da remote
+git fetch origin
+git reset --hard origin/main
+
+# Soluzione 2: Clone fresco
+cd ..
+mv myproject myproject-backup
+git clone <remote-url> myproject
+# Copia eventuali modifiche locali da backup
+
+# Soluzione 3: Ricostruzione oggetti
+# Se hai backup del .git
+rm -rf .git/objects/*
+git fetch origin
+git reset --hard origin/main
+
+# Soluzione 4: Pulizia repository
+git gc --aggressive --prune=now
+git fsck --full
+\end{lstlisting}
+
+\subsection{Prevenzione}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Evitare Corruzione]
+\begin{itemize}
+    \item Push regolarmente a remote (backup automatico)
+    \item Non killare git durante operazioni
+    \item Usa file system affidabili
+    \item Backup periodici di .git/
+    \item Evita modifiche manuali in .git/
+\end{itemize}
+\end{tcolorbox}
+
+\section{File Grandi Committati per Errore}
+
+\subsection{Problema}
+
+\begin{lstlisting}
+# Hai committato file grande
+git add large-file.zip  # 500 MB
+git commit -m "Add resources"
+git push origin main
+
+# Error: file exceeds GitHub's limit of 100 MB
+\end{lstlisting}
+
+\subsection{Soluzione: Rimuovi da Ultimo Commit}
+
+\begin{lstlisting}
+# Se NON hai pushato
+git reset --soft HEAD~1
+git restore --staged large-file.zip
+git commit -m "Add resources"
+\end{lstlisting}
+
+\subsection{Soluzione: Rimuovi da Cronologia}
+
+\begin{lstlisting}
+# Se hai pushato o commit è vecchio
+# Usa git filter-repo (tool moderno)
+
+# Installa git filter-repo
+# pip3 install git-filter-repo
+
+# Rimuovi file da tutta la cronologia
+git filter-repo --path large-file.zip --invert-paths
+
+# Force push (attenzione!)
+git push origin --force --all
+
+# Cleanup locale
+git gc --aggressive --prune=now
+\end{lstlisting}
+
+\subsection{Alternativa: BFG Repo-Cleaner}
+
+\begin{lstlisting}
+# Scarica BFG Repo-Cleaner
+
+# Rimuovi file oltre 100MB
+java -jar bfg.jar --strip-blobs-bigger-than 100M myrepo.git
+
+# Cleanup
+cd myrepo
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+
+# Force push
+git push origin --force --all
+\end{lstlisting}
+
+\subsection{Prevenzione: Git LFS}
+
+\begin{lstlisting}
+# Installa Git Large File Storage
+git lfs install
+
+# Traccia file grandi
+git lfs track "*.zip"
+git lfs track "*.mp4"
+git lfs track "*.psd"
+
+# Aggiungi .gitattributes
+git add .gitattributes
+
+# Ora i file grandi sono gestiti da LFS
+git add large-file.zip
+git commit -m "Add large file via LFS"
+git push origin main
+\end{lstlisting}
+
+\section{Commit su Branch Sbagliato}
+
+\subsection{Problema}
+
+\begin{lstlisting}
+# Hai committato su main invece di feature branch
+git status
+# On branch main
+
+git log --oneline
+# abc123 Feature work (OOPS, doveva essere su feature branch)
+\end{lstlisting}
+
+\subsection{Soluzione 1: Sposta Commit su Nuovo Branch}
+
+\begin{lstlisting}
+# Crea branch dal commit corrente
+git branch feature-branch
+
+# Torna indietro main di 1 commit
+git reset --hard HEAD~1
+
+# Vai al branch con il commit
+git checkout feature-branch
+
+# Ora il commit è su feature-branch, non su main
+\end{lstlisting}
+
+\subsection{Soluzione 2: Sposta su Branch Esistente}
+
+\begin{lstlisting}
+# Il commit è su main, vuoi su existing-branch
+git log --oneline
+# abc123 My commit (on main)
+
+# Vai al branch corretto
+git checkout existing-branch
+
+# Cherry-pick il commit
+git cherry-pick abc123
+
+# Torna a main e rimuovi commit
+git checkout main
+git reset --hard HEAD~1
+\end{lstlisting}
+
+\section{Problemi di Autenticazione}
+
+\subsection{HTTPS: Username/Password}
+
+\begin{lstlisting}
+# Errore tipico
+git push origin main
+# remote: Support for password authentication was removed
+# fatal: Authentication failed
+
+# Soluzione: Usa Personal Access Token (GitHub)
+# 1. GitHub -> Settings -> Developer settings -> Personal access tokens
+# 2. Generate new token (classic)
+# 3. Usa token invece di password
+
+# Cache credentials
+git config --global credential.helper cache
+# oppure permanent
+git config --global credential.helper store
+
+# Push con token
+git push https://TOKEN@github.com/user/repo.git
+\end{lstlisting}
+
+\subsection{SSH: Permission Denied}
+
+\begin{lstlisting}
+# Errore
+git push origin main
+# Permission denied (publickey)
+
+# Diagnosi
+ssh -T git@github.com
+# Permission denied (publickey)
+
+# Soluzione
+# 1. Verifica chiave SSH esiste
+ls -la ~/.ssh/
+# Cerca id_ed25519, id_rsa
+
+# 2. Se non esiste, genera
+ssh-keygen -t ed25519 -C "email@example.com"
+
+# 3. Aggiungi a ssh-agent
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+# 4. Copia chiave pubblica
+cat ~/.ssh/id_ed25519.pub
+
+# 5. Aggiungi a GitHub
+# Settings -> SSH and GPG keys -> New SSH key
+
+# 6. Testa
+ssh -T git@github.com
+# Hi username! You've successfully authenticated
+\end{lstlisting}
+
+\section{Performance Issues}
+
+\subsection{Repository Lento}
+
+\begin{lstlisting}
+# Diagnosi: dimensione repository
+git count-objects -vH
+
+# Output:
+# size: 1.5 GB
+# size-pack: 800 MB
+
+# Soluzione 1: Garbage collection
+git gc --aggressive --prune=now
+
+# Soluzione 2: Ottimizza pack files
+git repack -a -d --depth=250 --window=250
+
+# Soluzione 3: Shallow clone (per clonare più veloce)
+git clone --depth 1 <url>
+
+# Soluzione 4: Sparse checkout (solo parte del repo)
+git clone --filter=blob:none --sparse <url>
+git sparse-checkout set folder1 folder2
+\end{lstlisting}
+
+\section{Cheat Sheet Troubleshooting}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Quick Reference]
+\begin{lstlisting}
+# Undo modifiche non staged
+git restore <file>
+
+# Undo staging
+git restore --staged <file>
+
+# Modifica ultimo commit
+git commit --amend
+
+# Annulla ultimo commit (keep changes)
+git reset --soft HEAD~1
+
+# Distruggi ultimo commit
+git reset --hard HEAD~1
+
+# Annulla commit pushato
+git revert <hash>
+
+# Abbandona merge
+git merge --abort
+
+# Recupera commit perso
+git reflog
+
+# Verifica repository
+git fsck --full
+
+# Cleanup repository
+git gc --aggressive --prune=now
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1: Undo Practice}
+
+Simula e risolvi:
+\begin{enumerate}
+    \item Modifica file, poi annulla modifiche
+    \item Aggiungi a staging, poi rimuovi
+    \item Fai commit, poi annulla mantenendo modifiche
+    \item Fai commit pushato, poi annulla con revert
+\end{enumerate}
+
+\subsection{Esercizio 2: Merge Conflict}
+
+\begin{enumerate}
+    \item Crea due branch che modificano stesso file
+    \item Merge e crea conflitto intenzionale
+    \item Risolvi manualmente
+    \item Tenta merge --abort e riprova
+\end{enumerate}
+
+\subsection{Esercizio 3: Recovery}
+
+\begin{enumerate}
+    \item Crea commit
+    \item Cancella branch con \texttt{git branch -D}
+    \item Recupera con reflog
+    \item Verifica che commit sia recuperato
+\end{enumerate}
+
+\subsection{Esercizio 4: Wrong Branch}
+
+\begin{enumerate}
+    \item Fai commit su main per errore
+    \item Sposta commit su nuovo branch
+    \item Verifica che main sia pulito
+\end{enumerate}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Nota Finale]
+La maggior parte dei problemi Git sono risolvibili. Ricorda:
+\begin{itemize}
+    \item Reflog salva quasi tutto (per 90 giorni)
+    \item Non panico: raramente perdi dati definitivamente
+    \item Fai backup (push regolare è backup)
+    \item Impara dai errori: capire cosa è andato storto previene ripetizioni
+\end{itemize}
+\end{tcolorbox}

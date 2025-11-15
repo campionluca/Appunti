@@ -1,0 +1,873 @@
+% Capitolo 08 — Amministrazione di Sistema
+\chapter{Amministrazione di Sistema}
+
+\section{Introduzione}
+L'amministrazione di sistema Linux richiede competenze in gestione utenti, pianificazione task, gestione servizi e analisi log. Questi strumenti sono essenziali per mantenere un sistema sicuro, efficiente e monitorato.
+
+In questo capitolo esploreremo la gestione completa di utenti e gruppi, l'automazione con cron, la gestione moderna dei servizi con systemd, e l'analisi dei log di sistema.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Gestione utenti e gruppi, Gestione permessi avanzati, Cron e scheduling, Systemd e gestione servizi, Log di sistema, Monitoraggio risorse, Best practice sicurezza.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Creare e gestire utenti e gruppi di sistema.
+    \item Configurare permessi avanzati (ACL, setuid, setgid).
+    \item Pianificare task automatici con cron e systemd timers.
+    \item Gestire servizi con systemd.
+    \item Analizzare e monitorare log di sistema con journalctl.
+    \item Implementare best practice di sicurezza.
+\end{itemize}
+
+\section{Gestione Utenti e Gruppi}
+
+\subsection{Gestione Utenti}
+\begin{lstlisting}
+# Creare nuovo utente
+sudo useradd username
+
+# Creare utente con home directory e shell
+sudo useradd -m -s /bin/bash username
+
+# Creare utente con parametri completi
+sudo useradd -m -s /bin/bash -c "John Doe" \
+    -G sudo,developers -e 2025-12-31 username
+
+# Impostare password
+sudo passwd username
+
+# Modificare utente esistente
+sudo usermod -c "New Comment" username
+sudo usermod -s /bin/zsh username
+sudo usermod -L username  # Lock account
+sudo usermod -U username  # Unlock account
+
+# Aggiungere utente a gruppo
+sudo usermod -aG groupname username
+
+# Rimuovere utente da gruppo (solo quello specificato)
+sudo gpasswd -d username groupname
+
+# Cambiare home directory
+sudo usermod -d /new/home/path -m username
+
+# Eliminare utente
+sudo userdel username
+sudo userdel -r username  # rimuove anche home directory
+
+# Visualizzare info utente
+id username
+finger username
+getent passwd username
+
+# Elencare utenti loggati
+who
+w
+users
+last  # storico login
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Opzioni comuni useradd]
+\begin{itemize}
+\item \textbf{-m}: crea home directory
+\item \textbf{-s}: specifica shell di login
+\item \textbf{-c}: commento (nome completo)
+\item \textbf{-G}: gruppi supplementari (separati da virgola)
+\item \textbf{-e}: data scadenza account (YYYY-MM-DD)
+\item \textbf{-d}: home directory custom
+\item \textbf{-u}: UID specifico
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Gestione Gruppi}
+\begin{lstlisting}
+# Creare gruppo
+sudo groupadd developers
+
+# Creare gruppo con GID specifico
+sudo groupadd -g 1500 developers
+
+# Modificare gruppo
+sudo groupmod -n newname oldname
+
+# Eliminare gruppo
+sudo groupdel groupname
+
+# Visualizzare gruppi di un utente
+groups username
+id -Gn username
+
+# Elencare tutti i gruppi
+getent group
+
+# Visualizzare membri di un gruppo
+getent group groupname
+grep groupname /etc/group
+\end{lstlisting}
+
+\subsection{File di configurazione utenti}
+\begin{lstlisting}
+# /etc/passwd - Database utenti
+# Formato: username:x:UID:GID:comment:home:shell
+cat /etc/passwd
+grep username /etc/passwd
+
+# /etc/shadow - Password criptate (solo root)
+# Formato: username:encrypted_password:last_change:min:max:warn:inactive:expire
+sudo cat /etc/shadow
+
+# /etc/group - Database gruppi
+# Formato: groupname:x:GID:members
+cat /etc/group
+
+# /etc/sudoers - Configurazione sudo
+sudo visudo  # SEMPRE usare visudo per editare!
+
+# Esempio /etc/sudoers
+# username ALL=(ALL:ALL) ALL
+# %groupname ALL=(ALL:ALL) ALL
+# username ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nginx
+\end{lstlisting}
+
+\subsection{Script: Creazione utente completo}
+\begin{lstlisting}
+#!/bin/bash
+# create_user.sh - Crea utente con configurazione completa
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <username> <full_name>"
+    exit 1
+fi
+
+USERNAME=$1
+FULLNAME=$2
+
+# Verifica se utente esiste già
+if id "$USERNAME" &>/dev/null; then
+    echo "Error: User $USERNAME already exists"
+    exit 1
+fi
+
+# Crea utente
+sudo useradd -m -s /bin/bash -c "$FULLNAME" "$USERNAME"
+
+# Imposta password
+echo "Setting password for $USERNAME"
+sudo passwd "$USERNAME"
+
+# Aggiungi a gruppo developers
+sudo usermod -aG developers "$USERNAME"
+
+# Crea directory di lavoro
+sudo mkdir -p "/home/$USERNAME/projects"
+sudo chown "$USERNAME:$USERNAME" "/home/$USERNAME/projects"
+
+# Configura skeleton bash
+cat << 'EOF' | sudo tee -a "/home/$USERNAME/.bashrc" > /dev/null
+
+# Custom aliases
+alias ll='ls -lah'
+alias ..='cd ..'
+alias update='sudo apt update && sudo apt upgrade'
+
+# Custom prompt
+PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+EOF
+
+# Fix ownership
+sudo chown "$USERNAME:$USERNAME" "/home/$USERNAME/.bashrc"
+
+echo "User $USERNAME created successfully!"
+echo "Home: /home/$USERNAME"
+echo "Groups: $(groups $USERNAME)"
+\end{lstlisting}
+
+\section{Permessi Avanzati}
+
+\subsection{ACL: Access Control Lists}
+Gli ACL permettono permessi granulari oltre i classici owner/group/others.
+
+\begin{lstlisting}
+# Visualizzare ACL
+getfacl file.txt
+
+# Impostare ACL per utente specifico
+setfacl -m u:username:rw file.txt
+
+# Impostare ACL per gruppo
+setfacl -m g:groupname:rx directory/
+
+# ACL ricorsivi
+setfacl -R -m u:username:rwx directory/
+
+# ACL default (ereditati da nuovi file)
+setfacl -d -m u:username:rw directory/
+
+# Rimuovere ACL specifico
+setfacl -x u:username file.txt
+
+# Rimuovere tutti gli ACL
+setfacl -b file.txt
+
+# Copiare ACL da un file all'altro
+getfacl file1.txt | setfacl --set-file=- file2.txt
+
+# Esempio completo
+sudo setfacl -R -m u:webuser:rwx /var/www/mysite
+sudo setfacl -R -d -m u:webuser:rwx /var/www/mysite
+\end{lstlisting}
+
+\subsection{Permessi Speciali: SUID, SGID, Sticky Bit}
+\begin{lstlisting}
+# SUID (Set User ID) - esegue con permessi owner
+# Esempio: /usr/bin/passwd
+chmod u+s file
+chmod 4755 file
+
+# SGID (Set Group ID)
+# Su file: esegue con permessi gruppo
+# Su directory: nuovi file ereditano gruppo directory
+chmod g+s directory
+chmod 2755 directory
+
+# Sticky Bit (solo su directory)
+# Solo owner può eliminare i propri file
+# Esempio: /tmp
+chmod +t directory
+chmod 1777 directory
+
+# Visualizzare permessi speciali
+ls -l /usr/bin/passwd  # -rwsr-xr-x (SUID)
+ls -ld /tmp            # drwxrwxrwt (Sticky)
+
+# Trovare file con SUID/SGID (potenziali rischi sicurezza)
+find / -perm -4000 -type f 2>/dev/null  # SUID
+find / -perm -2000 -type f 2>/dev/null  # SGID
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Notazione permessi speciali]
+\begin{tabular}{lll}
+\textbf{Simbolo} & \textbf{Numero} & \textbf{Significato} \\
+\hline
+u+s & 4--- & SUID \\
+g+s & 2--- & SGID \\
++t & 1--- & Sticky Bit \\
+\end{tabular}
+
+Permesso completo: 4755 = SUID + rwxr-xr-x
+\end{tcolorbox}
+
+\section{Cron: Task Scheduling}
+
+\subsection{Sintassi Crontab}
+\begin{lstlisting}
+# Formato crontab:
+# ┌─── minuto (0-59)
+# │ ┌─── ora (0-23)
+# │ │ ┌─── giorno del mese (1-31)
+# │ │ │ ┌─── mese (1-12)
+# │ │ │ │ ┌─── giorno della settimana (0-7, 0=domenica)
+# │ │ │ │ │
+# * * * * * comando da eseguire
+
+# Gestione crontab
+crontab -e      # Modifica crontab corrente
+crontab -l      # Lista crontab corrente
+crontab -r      # Rimuovi crontab
+crontab -u user # Gestisci crontab di altro utente (root only)
+
+# Esempi comuni
+# Ogni minuto
+* * * * * /path/to/script.sh
+
+# Ogni ora al minuto 0
+0 * * * * /path/to/script.sh
+
+# Ogni giorno alle 2:30 AM
+30 2 * * * /path/to/backup.sh
+
+# Ogni lunedì alle 9:00
+0 9 * * 1 /path/to/weekly_report.sh
+
+# Primo giorno del mese alle 00:00
+0 0 1 * * /path/to/monthly.sh
+
+# Ogni 15 minuti
+*/15 * * * * /path/to/check.sh
+
+# Ogni 6 ore
+0 */6 * * * /path/to/script.sh
+
+# Giorni lavorativi alle 8:00
+0 8 * * 1-5 /path/to/workday.sh
+
+# Range di ore (9-17)
+0 9-17 * * * /path/to/business_hours.sh
+
+# Multipli valori (alle 9, 12, 18)
+0 9,12,18 * * * /path/to/script.sh
+\end{lstlisting}
+
+\subsection{Cron speciali}
+\begin{lstlisting}
+# Shortcut speciali
+@reboot   /path/to/script.sh    # All'avvio
+@yearly   /path/to/script.sh    # 0 0 1 1 *
+@annually /path/to/script.sh    # (identico a @yearly)
+@monthly  /path/to/script.sh    # 0 0 1 * *
+@weekly   /path/to/script.sh    # 0 0 * * 0
+@daily    /path/to/script.sh    # 0 0 * * *
+@midnight /path/to/script.sh    # (identico a @daily)
+@hourly   /path/to/script.sh    # 0 * * * *
+
+# Esempio completo crontab
+# PATH=/usr/local/bin:/usr/bin:/bin
+# SHELL=/bin/bash
+# MAILTO=admin@example.com
+
+# Backup giornaliero
+@daily /usr/local/bin/backup.sh
+
+# Log cleanup settimanale
+@weekly /usr/local/bin/cleanup_logs.sh
+
+# System update mensile
+@monthly /usr/local/bin/system_update.sh
+
+# Monitor ogni 5 minuti
+*/5 * * * * /usr/local/bin/monitor.sh
+\end{lstlisting}
+
+\subsection{Cron system-wide}
+\begin{lstlisting}
+# Directory system cron
+/etc/cron.hourly/    # Script eseguiti ogni ora
+/etc/cron.daily/     # Script eseguiti ogni giorno
+/etc/cron.weekly/    # Script eseguiti ogni settimana
+/etc/cron.monthly/   # Script eseguiti ogni mese
+
+# Esempio: creare script in /etc/cron.daily/
+sudo nano /etc/cron.daily/backup
+
+#!/bin/bash
+# Backup script
+rsync -av /home/ /backup/home/
+
+# Rendere eseguibile
+sudo chmod +x /etc/cron.daily/backup
+
+# File /etc/crontab (system-wide)
+# Formato include campo username
+# m h dom mon dow user command
+0 2 * * * root /usr/local/bin/backup.sh
+\end{lstlisting}
+
+\subsection{Script cron con logging}
+\begin{lstlisting}
+#!/bin/bash
+# cron_backup.sh - Backup script con logging completo
+
+LOGFILE="/var/log/backup.log"
+BACKUP_SRC="/home/user/documents"
+BACKUP_DEST="/backup/documents"
+DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=30
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOGFILE"
+}
+
+# Redirect output a log
+exec 1>> "$LOGFILE"
+exec 2>> "$LOGFILE"
+
+log "=== Starting backup ==="
+
+# Verifica directory sorgente
+if [ ! -d "$BACKUP_SRC" ]; then
+    log "ERROR: Source directory $BACKUP_SRC does not exist"
+    exit 1
+fi
+
+# Crea directory destinazione se non esiste
+mkdir -p "$BACKUP_DEST"
+
+# Esegui backup
+log "Backing up $BACKUP_SRC to $BACKUP_DEST"
+if rsync -av --delete "$BACKUP_SRC/" "$BACKUP_DEST/"; then
+    log "Backup completed successfully"
+else
+    log "ERROR: Backup failed with exit code $?"
+    exit 1
+fi
+
+# Cleanup backup vecchi
+log "Cleaning up backups older than $RETENTION_DAYS days"
+find "$BACKUP_DEST" -type f -mtime +$RETENTION_DAYS -delete
+
+# Invia notifica se errori
+if grep -q ERROR "$LOGFILE"; then
+    echo "Backup errors detected!" | mail -s "Backup Alert" admin@example.com
+fi
+
+log "=== Backup completed ==="
+\end{lstlisting}
+
+\section{Systemd: Init System Moderno}
+
+\subsection{Gestione Servizi}
+\begin{lstlisting}
+# Stato servizio
+systemctl status nginx
+systemctl status nginx.service  # equivalente
+
+# Start/Stop/Restart
+sudo systemctl start nginx
+sudo systemctl stop nginx
+sudo systemctl restart nginx
+sudo systemctl reload nginx  # ricarica config senza restart
+
+# Enable/Disable (avvio automatico)
+sudo systemctl enable nginx   # avvia al boot
+sudo systemctl disable nginx  # non avvia al boot
+sudo systemctl enable --now nginx  # enable + start
+
+# Verificare se abilitato
+systemctl is-enabled nginx
+systemctl is-active nginx
+
+# Elencare servizi
+systemctl list-units --type=service
+systemctl list-units --type=service --state=running
+systemctl list-units --type=service --state=failed
+
+# Elencare tutti i unit files
+systemctl list-unit-files
+
+# Filtrare servizi
+systemctl list-units --type=service | grep nginx
+
+# Dependency tree
+systemctl list-dependencies nginx
+
+# Reload systemd daemon (dopo modifiche unit files)
+sudo systemctl daemon-reload
+\end{lstlisting}
+
+\subsection{Creare Unit File Custom}
+\begin{lstlisting}
+# File: /etc/systemd/system/myapp.service
+
+[Unit]
+Description=My Custom Application
+After=network.target
+Documentation=https://example.com/docs
+
+[Service]
+Type=simple
+User=appuser
+Group=appgroup
+WorkingDirectory=/opt/myapp
+ExecStart=/opt/myapp/bin/myapp --config /etc/myapp/config.yaml
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+# Environment
+Environment="NODE_ENV=production"
+EnvironmentFile=-/etc/myapp/environment
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=myapp
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Tipi di servizio systemd]
+\begin{itemize}
+\item \textbf{simple}: processo principale del servizio (default)
+\item \textbf{forking}: processo che fa fork e termina (daemon tradizionali)
+\item \textbf{oneshot}: eseguito una volta e completa
+\item \textbf{notify}: notifica a systemd quando pronto
+\item \textbf{dbus}: servizio acquisisce nome D-Bus
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Systemd Timers (alternativa a cron)}
+\begin{lstlisting}
+# File: /etc/systemd/system/backup.service
+[Unit]
+Description=Backup Service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh
+
+# File: /etc/systemd/system/backup.timer
+[Unit]
+Description=Backup Timer
+Requires=backup.service
+
+[Timer]
+# Esegui alle 2:00 ogni giorno
+OnCalendar=*-*-* 02:00:00
+# Esegui 15 minuti dopo boot se mancato
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+# Attivare timer
+sudo systemctl enable backup.timer
+sudo systemctl start backup.timer
+
+# Verificare timer
+systemctl list-timers
+systemctl status backup.timer
+
+# Esempi OnCalendar
+OnCalendar=daily                    # 00:00:00 ogni giorno
+OnCalendar=weekly                   # 00:00:00 ogni lunedì
+OnCalendar=monthly                  # 00:00:00 primo del mese
+OnCalendar=*-*-* 04:00:00          # 4 AM ogni giorno
+OnCalendar=Mon *-*-* 09:00:00      # Lunedì alle 9 AM
+OnCalendar=*-*-01 00:00:00         # Primo del mese
+OnCalendar=*-01,07 00:00:00        # 1 Gennaio e 1 Luglio
+
+# Intervalli
+OnUnitActiveSec=5min                # 5 minuti dopo ultima attivazione
+OnBootSec=10min                     # 10 minuti dopo boot
+\end{lstlisting}
+
+\subsection{Journal: Log Management}
+\begin{lstlisting}
+# Visualizzare tutti i log
+journalctl
+
+# Log di un servizio specifico
+journalctl -u nginx
+journalctl -u nginx.service
+
+# Follow (tempo reale)
+journalctl -u nginx -f
+
+# Ultime N righe
+journalctl -u nginx -n 50
+
+# Da timestamp
+journalctl --since "2025-01-01 00:00:00"
+journalctl --since yesterday
+journalctl --since "1 hour ago"
+journalctl --since 09:00 --until 17:00
+
+# Range temporale
+journalctl --since "2025-01-01" --until "2025-01-31"
+
+# Solo errori
+journalctl -p err
+journalctl -p warning
+
+# Priorità: emerg, alert, crit, err, warning, notice, info, debug
+journalctl -p err -u nginx
+
+# Boot corrente
+journalctl -b
+
+# Boot precedenti
+journalctl --list-boots
+journalctl -b -1  # boot precedente
+
+# Kernel messages
+journalctl -k
+
+# Output format
+journalctl -o json
+journalctl -o json-pretty
+journalctl -o verbose
+
+# Disk usage
+journalctl --disk-usage
+
+# Cleanup
+sudo journalctl --vacuum-time=7d    # più vecchi di 7 giorni
+sudo journalctl --vacuum-size=500M  # mantieni max 500MB
+
+# Configurazione persistenza
+# File: /etc/systemd/journald.conf
+[Journal]
+Storage=persistent
+SystemMaxUse=500M
+SystemMaxFileSize=50M
+MaxRetentionSec=1month
+\end{lstlisting}
+
+\subsection{Monitoring e Status}
+\begin{lstlisting}
+# System status
+systemctl status
+
+# Failed units
+systemctl --failed
+
+# Targets (runlevels)
+systemctl get-default
+systemctl list-units --type=target
+
+# Cambiare target
+sudo systemctl isolate multi-user.target
+sudo systemctl isolate graphical.target
+
+# Shutdown/reboot
+sudo systemctl poweroff
+sudo systemctl reboot
+sudo systemctl suspend
+sudo systemctl hibernate
+
+# Analisi boot time
+systemd-analyze
+systemd-analyze blame  # servizi più lenti
+systemd-analyze critical-chain  # catena critica
+systemd-analyze plot > boot.svg  # grafico SVG
+\end{lstlisting}
+
+\section{Log di Sistema}
+
+\subsection{File di Log Tradizionali}
+\begin{lstlisting}
+# Principali file log
+/var/log/syslog       # Log generale sistema (Debian/Ubuntu)
+/var/log/messages     # Log generale (RedHat/CentOS)
+/var/log/auth.log     # Autenticazione
+/var/log/kern.log     # Kernel
+/var/log/boot.log     # Boot
+/var/log/dmesg        # Device messages
+/var/log/apache2/     # Apache logs
+/var/log/nginx/       # Nginx logs
+
+# Visualizzare log in real-time
+tail -f /var/log/syslog
+tail -f /var/log/auth.log
+
+# Cercare in log
+grep "error" /var/log/syslog
+grep -i "failed" /var/log/auth.log
+
+# Analisi tentativi login falliti
+sudo grep "Failed password" /var/log/auth.log
+
+# IP con più tentativi falliti
+sudo grep "Failed password" /var/log/auth.log | \
+    awk '{print $(NF-3)}' | sort | uniq -c | sort -rn
+
+# Log Apache/Nginx
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+
+# Contare status code HTTP
+awk '{print $9}' /var/log/nginx/access.log | sort | uniq -c | sort -rn
+
+# Top 10 IP visitatori
+awk '{print $1}' /var/log/nginx/access.log | sort | uniq -c | sort -rn | head -10
+\end{lstlisting}
+
+\subsection{Logrotate}
+\begin{lstlisting}
+# Configurazione: /etc/logrotate.conf
+# Configurazioni specifiche: /etc/logrotate.d/
+
+# Esempio: /etc/logrotate.d/myapp
+/var/log/myapp/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 appuser appgroup
+    sharedscripts
+    postrotate
+        systemctl reload myapp > /dev/null 2>&1 || true
+    endscript
+}
+
+# Opzioni comuni
+# daily/weekly/monthly: frequenza rotazione
+# rotate N: mantieni N file ruotati
+# compress: comprimi file vecchi
+# delaycompress: comprimi al prossimo ciclo
+# missingok: non errore se file manca
+# notifempty: non ruotare se vuoto
+# create mode owner group: permessi nuovo file
+# postrotate/endscript: comandi dopo rotazione
+
+# Test configurazione
+sudo logrotate -d /etc/logrotate.d/myapp
+
+# Forzare rotazione
+sudo logrotate -f /etc/logrotate.conf
+\end{lstlisting}
+
+\section{Monitoraggio Risorse}
+
+\begin{lstlisting}
+# CPU e processi
+top
+htop  # più user-friendly
+
+# Memoria
+free -h
+vmstat 1  # ogni secondo
+
+# Disco
+df -h        # spazio disco
+du -sh *     # uso directory
+du -sh /* | sort -rh | head -10  # top 10 directory
+
+# I/O disco
+iostat
+iotop  # richiede root
+
+# Network
+iftop   # traffico per connessione
+nethogs # traffico per processo
+
+# Processo specifico
+ps aux | grep nginx
+pgrep nginx
+pidof nginx
+
+# Resource usage di processo
+ps -p PID -o %cpu,%mem,cmd
+top -p PID
+\end{lstlisting}
+
+\section{Best Practice Amministrazione}
+
+\begin{tcolorbox}[title=Best Practice Sicurezza]
+\begin{enumerate}
+\item \textbf{Principio minimo privilegio}: dare solo permessi necessari
+\item \textbf{Sudo invece di root}: non usare account root direttamente
+\item \textbf{Password forti}: policy di password complesse
+\item \textbf{SSH key auth}: disabilitare password SSH in produzione
+\item \textbf{Audit regolari}: verificare utenti, gruppi, permessi SUID
+\item \textbf{Log centralized}: aggregare log per analisi
+\item \textbf{Updates automatici}: patch sicurezza tempestive
+\item \textbf{Backup}: strategia 3-2-1 (3 copie, 2 media, 1 off-site)
+\item \textbf{Monitoring}: alert proattivi su anomalie
+\item \textbf{Documentation}: documentare modifiche e configurazioni
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Esercizi Pratici}
+
+\begin{enumerate}
+\item Creare 3 utenti (alice, bob, charlie) con home directory e shell bash.
+\item Creare gruppi "developers" e "admins", assegnare utenti appropriatamente.
+\item Configurare ACL su directory condivisa accessibile solo a gruppo developers.
+\item Creare cron job che esegue backup ogni giorno alle 3 AM.
+\item Creare systemd service per applicazione custom.
+\item Creare systemd timer che esegue cleanup ogni domenica.
+\item Analizzare log per trovare IP con più tentativi login falliti.
+\item Configurare logrotate per ruotare log applicazione settimanalmente.
+\item Implementare script monitoring che invia alert se disco > 80\%.
+\item Usare journalctl per debuggare servizio che non si avvia.
+\end{enumerate}
+
+\section{Script Completo: System Health Check}
+\begin{lstlisting}
+#!/bin/bash
+# system_health.sh - Controllo completo salute sistema
+
+REPORT="/var/log/system_health_$(date +%Y%m%d).log"
+ALERT_EMAIL="admin@example.com"
+DISK_THRESHOLD=80
+CPU_THRESHOLD=80
+MEM_THRESHOLD=80
+
+exec > >(tee "$REPORT")
+exec 2>&1
+
+echo "=== System Health Check - $(date) ==="
+
+# CPU Usage
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+echo "CPU Usage: ${CPU_USAGE}%"
+if (( $(echo "$CPU_USAGE > $CPU_THRESHOLD" | bc -l) )); then
+    echo "WARNING: CPU usage above threshold!"
+fi
+
+# Memory Usage
+MEM_USAGE=$(free | grep Mem | awk '{printf("%.0f", $3/$2 * 100.0)}')
+echo "Memory Usage: ${MEM_USAGE}%"
+if [ "$MEM_USAGE" -gt "$MEM_THRESHOLD" ]; then
+    echo "WARNING: Memory usage above threshold!"
+fi
+
+# Disk Usage
+echo -e "\nDisk Usage:"
+df -h | grep -vE '^Filesystem|tmpfs|cdrom' | while read line; do
+    usage=$(echo $line | awk '{print $5}' | sed 's/%//')
+    partition=$(echo $line | awk '{print $1}')
+    if [ "$usage" -gt "$DISK_THRESHOLD" ]; then
+        echo "WARNING: $partition at ${usage}% (threshold: ${DISK_THRESHOLD}%)"
+    fi
+done
+
+# Failed Services
+echo -e "\nFailed Services:"
+FAILED=$(systemctl --failed --no-pager)
+if [ -n "$FAILED" ]; then
+    echo "$FAILED"
+fi
+
+# Recent Login Failures
+echo -e "\nRecent Failed Logins (last 24h):"
+journalctl --since "24 hours ago" | grep "Failed password" | tail -5
+
+# Load Average
+echo -e "\nLoad Average:"
+uptime
+
+# Top 5 CPU processes
+echo -e "\nTop 5 CPU Processes:"
+ps aux --sort=-%cpu | head -6
+
+# Top 5 Memory processes
+echo -e "\nTop 5 Memory Processes:"
+ps aux --sort=-%mem | head -6
+
+echo -e "\n=== Health Check Completed ==="
+
+# Send alert if warnings found
+if grep -q "WARNING" "$REPORT"; then
+    mail -s "System Health Alert" "$ALERT_EMAIL" < "$REPORT"
+fi
+\end{lstlisting}
+
+\section{Riepilogo}
+Hai imparato a:
+\begin{itemize}
+\item Gestire utenti e gruppi con useradd, usermod, groupadd
+\item Configurare permessi avanzati con ACL e permessi speciali
+\item Automatizzare task con cron e systemd timers
+\item Gestire servizi con systemd
+\item Analizzare log con journalctl e file tradizionali
+\item Monitorare risorse e salute del sistema
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+\item \url{https://www.freedesktop.org/software/systemd/man/}
+\item \url{https://man7.org/linux/man-pages/man1/journalctl.1.html}
+\item \url{https://man7.org/linux/man-pages/man8/useradd.8.html}
+\item \url{https://man7.org/linux/man-pages/man5/crontab.5.html}
+\item \url{https://linux.die.net/man/1/setfacl}
+\end{itemize}

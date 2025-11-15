@@ -1,0 +1,635 @@
+\chapter{Git Avanzato}
+
+\section*{Introduzione}
+Questo capitolo esplora funzionalità avanzate di Git che permettono di gestire situazioni complesse nel workflow di sviluppo. Imparerai a salvare temporaneamente modifiche con stash, selezionare commit specifici con cherry-pick, manipolare la cronologia con reset, recuperare commit persi con reflog, trovare bug con bisect e gestire versioni con i tag.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Usare \texttt{git stash} per salvare temporaneamente modifiche non committate
+    \item Applicare commit specifici da altri branch con \texttt{git cherry-pick}
+    \item Comprendere le differenze tra reset soft, mixed e hard
+    \item Recuperare commit persi con \texttt{git reflog}
+    \item Trovare bug usando la ricerca binaria con \texttt{git bisect}
+    \item Creare e gestire tag per versioni del software
+    \item Navigare e manipolare la cronologia di Git in modo efficace
+\end{itemize}
+
+\section{Git Stash: Salvare Modifiche Temporanee}
+
+\subsection{Cos'è lo Stash}
+
+Lo stash è un'area temporanea dove salvare modifiche non committate. È utile quando devi cambiare branch velocemente ma non vuoi fare commit di lavori incompleti.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scenario Tipico]
+Stai lavorando su una feature quando ti chiedono urgentemente di fixare un bug su master. Non vuoi committare codice incompleto, ma neanche perdere il lavoro fatto. Soluzione: \texttt{git stash}.
+\end{tcolorbox}
+
+\subsection{Comandi Base dello Stash}
+
+\begin{lstlisting}
+# Salvare modifiche nello stash
+git stash
+# oppure con messaggio descrittivo
+git stash save "WIP: implementazione login"
+
+# Vedere lista degli stash
+git stash list
+
+# Applicare l'ultimo stash (mantiene lo stash)
+git stash apply
+
+# Applicare e rimuovere l'ultimo stash
+git stash pop
+
+# Applicare uno stash specifico
+git stash apply stash@{2}
+
+# Rimuovere uno stash
+git stash drop stash@{0}
+
+# Cancellare tutti gli stash
+git stash clear
+\end{lstlisting}
+
+\subsection{Esempio Pratico: Cambio Branch con Stash}
+
+\begin{lstlisting}
+# Situazione: stai modificando file su feature-branch
+git status
+# modified: src/login.js
+# modified: src/utils.js
+
+# Salva le modifiche
+git stash save "Login form validation"
+
+# Ora puoi cambiare branch
+git checkout main
+
+# Fix il bug urgente
+echo "bugfix" >> hotfix.txt
+git add hotfix.txt
+git commit -m "Fix critical bug"
+
+# Torna al tuo branch
+git checkout feature-branch
+
+# Recupera le modifiche
+git stash pop
+# I file modificati tornano nella working directory
+\end{lstlisting}
+
+\subsection{Stash Avanzato}
+
+\begin{lstlisting}
+# Includere file untracked nello stash
+git stash -u
+# oppure
+git stash --include-untracked
+
+# Includere anche file ignored
+git stash -a
+# oppure
+git stash --all
+
+# Creare un branch da uno stash
+git stash branch nuovo-branch stash@{1}
+
+# Visualizzare dettagli di uno stash
+git stash show stash@{0}
+
+# Vedere diff completo
+git stash show -p stash@{0}
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Attenzione: Stash non è Permanente]
+Gli stash sono locali e non vengono pushati. Non usare stash per salvare lavoro a lungo termine: usa branch e commit invece.
+\end{tcolorbox}
+
+\section{Git Cherry-Pick: Selezionare Commit Specifici}
+
+\subsection{Cos'è Cherry-Pick}
+
+Cherry-pick permette di applicare modifiche di un commit specifico al branch corrente, senza fare merge dell'intero branch.
+
+\begin{lstlisting}
+# Applicare un singolo commit
+git cherry-pick <commit-hash>
+
+# Applicare multipli commit
+git cherry-pick <commit1> <commit2> <commit3>
+
+# Applicare un range di commit
+git cherry-pick <commit-start>..<commit-end>
+\end{lstlisting}
+
+\subsection{Esempio Pratico: Portare Fix da un Branch}
+
+\begin{lstlisting}
+# Situazione: hai fatto un fix importante su develop
+git checkout develop
+git log --oneline
+# abc123 Fix security vulnerability
+# def456 Add feature X
+# ...
+
+# Vuoi portare solo il fix su main
+git checkout main
+git cherry-pick abc123
+
+# Il commit abc123 viene applicato su main
+# con un nuovo hash (perché parent diverso)
+\end{lstlisting}
+
+\subsection{Cherry-Pick con Conflitti}
+
+\begin{lstlisting}
+# Tentativo di cherry-pick
+git cherry-pick abc123
+
+# Se ci sono conflitti
+# CONFLICT (content): Merge conflict in file.js
+# error: could not apply abc123... Fix security
+
+# Risolvi i conflitti manualmente
+vim file.js  # risolvi conflitti
+
+# Continua il cherry-pick
+git add file.js
+git cherry-pick --continue
+
+# Oppure abbandona
+git cherry-pick --abort
+\end{lstlisting}
+
+\subsection{Opzioni Avanzate di Cherry-Pick}
+
+\begin{lstlisting}
+# Cherry-pick senza committare (staging only)
+git cherry-pick -n <commit>
+git cherry-pick --no-commit <commit>
+
+# Modificare il messaggio del commit
+git cherry-pick -e <commit>
+git cherry-pick --edit <commit>
+
+# Mantenere l'autore originale
+git cherry-pick -x <commit>
+# Aggiunge "(cherry picked from commit ...)"
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=orange!10, colframe=orange!60, title=Best Practice]
+Usa cherry-pick con cautela. Crea duplicazione nella cronologia e può causare confusione. Preferisci merge quando possibile. Cherry-pick è ottimo per:
+\begin{itemize}
+    \item Hotfix urgenti da applicare a multiple branch
+    \item Recuperare commit da branch che verranno cancellati
+    \item Applicare commit specifici senza tutto il branch
+\end{itemize}
+\end{tcolorbox}
+
+\section{Git Reset: Manipolare la Cronologia}
+
+\subsection{Tre Modalità di Reset}
+
+Git reset sposta il puntatore HEAD (e opzionalmente modifica staging area e working directory). Esistono tre modalità:
+
+\begin{description}
+    \item[\texttt{--soft}] Sposta solo HEAD. Staging area e working directory restano invariati.
+    \item[\texttt{--mixed}] (default) Sposta HEAD e resetta staging area. Working directory invariata.
+    \item[\texttt{--hard}] Sposta HEAD, resetta staging area E working directory. \textbf{ATTENZIONE: Perdita dati!}
+\end{description}
+
+\subsection{Reset Soft}
+
+\begin{lstlisting}
+# Situazione: hai fatto 3 commit ma vuoi combinali in uno
+git log --oneline
+# c789 Add tests
+# b456 Add documentation
+# a123 Add feature
+
+# Torna indietro di 2 commit ma mantieni le modifiche
+git reset --soft HEAD~2
+
+# Ora le modifiche dei 3 commit sono in staging
+git status
+# Changes to be committed:
+#   modified: feature.js
+#   new file: feature.test.js
+#   modified: README.md
+
+# Crea un singolo commit
+git commit -m "Add feature with tests and docs"
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Quando Usare Reset Soft]
+Perfetto per:
+\begin{itemize}
+    \item Combinare multipli commit in uno
+    \item Riscrivere messaggi di commit multipli
+    \item Riorganizzare modifiche già committate
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Reset Mixed (Default)}
+
+\begin{lstlisting}
+# Hai aggiunto file allo staging per errore
+git add file1.txt file2.txt file3.txt
+git status
+# Changes to be committed:
+#   modified: file1.txt
+#   modified: file2.txt
+#   modified: file3.txt
+
+# Rimuovi tutto dallo staging
+git reset
+# oppure esplicitamente
+git reset --mixed HEAD
+
+git status
+# Changes not staged for commit:
+#   modified: file1.txt
+#   modified: file2.txt
+#   modified: file3.txt
+\end{lstlisting}
+
+\subsection{Reset Hard: PERICOLO!}
+
+\begin{lstlisting}
+# ATTENZIONE: Questo cancella modifiche!
+git reset --hard HEAD~1
+
+# Tutte le modifiche del commit sono PERSE
+# Working directory torna allo stato del commit precedente
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=PERICOLO: Reset Hard]
+\texttt{git reset --hard} cancella permanentemente modifiche non committate! Usa con estrema cautela. Verifica sempre:
+\begin{lstlisting}
+git status  # cosa perderai
+git stash   # salva modifiche prima se necessario
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Reset vs Revert}
+
+\begin{lstlisting}
+# Reset: riscrive cronologia (pericoloso su branch condivisi)
+git reset --hard HEAD~1
+
+# Revert: crea nuovo commit che annulla modifiche (sicuro)
+git revert HEAD
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Regola d'Oro]
+\textbf{Mai usare reset su commit già pushati e condivisi!} Usa \texttt{git revert} invece.
+\begin{itemize}
+    \item \textbf{Reset}: OK per commit locali
+    \item \textbf{Revert}: OK per commit pushati
+\end{itemize}
+\end{tcolorbox}
+
+\section{Git Reflog: Recuperare Commit Persi}
+
+\subsection{Cos'è Reflog}
+
+Reflog (reference log) è un registro locale di tutte le modifiche a HEAD. Anche se un commit sembra "perso" dopo un reset, reflog permette di recuperarlo.
+
+\begin{lstlisting}
+# Visualizzare reflog
+git reflog
+
+# Output esempio:
+# a1b2c3d HEAD@{0}: commit: Add feature
+# e4f5g6h HEAD@{1}: reset: moving to HEAD~1
+# i7j8k9l HEAD@{2}: commit: Bugfix
+# ...
+\end{lstlisting}
+
+\subsection{Recupero da Reset Hard}
+
+\begin{lstlisting}
+# Situazione disastrosa: hai fatto reset hard per errore
+git reset --hard HEAD~3
+# OH NO! Hai perso 3 commit importanti!
+
+# Calma, usa reflog
+git reflog
+# Output:
+# a1b2c3d HEAD@{0}: reset: moving to HEAD~3
+# m4n5o6p HEAD@{1}: commit: Important work
+# q7r8s9t HEAD@{2}: commit: More important work
+# u0v1w2x HEAD@{3}: commit: Even more work
+
+# Recupera tornando allo stato prima del reset
+git reset --hard HEAD@{1}
+# oppure usando l'hash direttamente
+git reset --hard m4n5o6p
+
+# I tuoi commit sono tornati!
+\end{lstlisting}
+
+\subsection{Altri Usi di Reflog}
+
+\begin{lstlisting}
+# Vedere reflog di un branch specifico
+git reflog show feature-branch
+
+# Vedere solo ultimi N movimenti
+git reflog -5
+
+# Creare branch da posizione reflog
+git branch recovered-branch HEAD@{3}
+
+# Vedere diff tra due posizioni reflog
+git diff HEAD@{0} HEAD@{2}
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Reflog è il Tuo Salvavita]
+Reflog conserva la cronologia per 90 giorni (default). Se hai fatto un errore, reflog può salvare il tuo lavoro. Ma ricorda:
+\begin{itemize}
+    \item Reflog è locale (non viene pushato)
+    \item Dopo 90 giorni le entry vengono rimosse
+    \item \texttt{git gc} può pulire oggetti non referenziati
+\end{itemize}
+\end{tcolorbox}
+
+\section{Git Bisect: Trovare Bug con Ricerca Binaria}
+
+\subsection{Cos'è Bisect}
+
+Bisect usa ricerca binaria per trovare il commit che ha introdotto un bug. Invece di controllare centinaia di commit manualmente, Git dimezza automaticamente lo spazio di ricerca.
+
+\subsection{Workflow Bisect Manuale}
+
+\begin{lstlisting}
+# Inizia bisect
+git bisect start
+
+# Marca commit corrente come cattivo (ha il bug)
+git bisect bad
+
+# Marca un commit vecchio come buono (senza bug)
+git bisect good v1.0
+# oppure
+git bisect good a1b2c3d
+
+# Git checkoutterà commit a metà tra good e bad
+# Testa se il bug è presente
+
+# Se il bug c'è
+git bisect bad
+
+# Se il bug non c'è
+git bisect good
+
+# Ripeti finché Git trova il commit colpevole
+# Git mostrerà:
+# abc123 is the first bad commit
+# commit abc123...
+
+# Termina bisect
+git bisect reset
+\end{lstlisting}
+
+\subsection{Esempio Pratico di Bisect}
+
+\begin{lstlisting}
+# Situazione: il test fallisce ora, ma passava 2 settimane fa
+git log --oneline
+# Ci sono 50 commit tra oggi e 2 settimane fa
+
+git bisect start
+git bisect bad                    # HEAD ha il bug
+git bisect good HEAD~50          # 50 commit fa ok
+
+# Git checkout commit #25
+# Bisecting: 25 revisions left to test
+
+# Esegui test
+npm test
+
+# Test fallisce
+git bisect bad
+
+# Git checkout commit #12
+# Bisecting: 12 revisions left to test
+
+npm test
+
+# Test passa
+git bisect good
+
+# Continua...
+# Dopo ~6 iterazioni (log2(50))
+
+# abc123 is the first bad commit
+# commit abc123
+# Author: Developer
+# Date: 3 days ago
+#     Refactor database connection
+
+git bisect reset
+git show abc123  # analizza il commit colpevole
+\end{lstlisting}
+
+\subsection{Bisect Automatico}
+
+\begin{lstlisting}
+# Automatizzare bisect con uno script di test
+git bisect start HEAD v1.0
+git bisect run ./test.sh
+
+# test.sh deve:
+# - exit 0 se test passa (good)
+# - exit 1-127 (tranne 125) se test fallisce (bad)
+# - exit 125 per skip (commit non testabile)
+\end{lstlisting}
+
+Esempio \texttt{test.sh}:
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+# test.sh
+
+make clean
+make || exit 125  # skip se non compila
+
+# Esegui test
+./run_tests
+
+# Exit code del test diventa exit code dello script
+exit $?
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Efficienza di Bisect]
+Con 1000 commit, bisect trova il colpevole in circa 10 test ($\log_2(1000) \approx 10$). Manualmente impiegheresti ore!
+\end{tcolorbox}
+
+\section{Git Tag: Versioning e Release}
+
+\subsection{Tipi di Tag}
+
+Git supporta due tipi di tag:
+
+\begin{description}
+    \item[Lightweight tag] Semplice puntatore a un commit (come un branch che non si muove)
+    \item[Annotated tag] Oggetto Git completo con autore, data, messaggio, firma GPG
+\end{description}
+
+\subsection{Creare Tag}
+
+\begin{lstlisting}
+# Tag lightweight (sconsigliato per release)
+git tag v1.0.0
+
+# Tag annotato (raccomandato)
+git tag -a v1.0.0 -m "Release 1.0.0 - First stable version"
+
+# Tag su commit specifico
+git tag -a v0.9.0 a1b2c3d -m "Beta release"
+
+# Tag con firma GPG
+git tag -s v1.0.0 -m "Signed release"
+\end{lstlisting}
+
+\subsection{Visualizzare Tag}
+
+\begin{lstlisting}
+# Elenco tutti i tag
+git tag
+
+# Cercare tag con pattern
+git tag -l "v1.*"
+# v1.0.0
+# v1.0.1
+# v1.1.0
+
+# Mostrare informazioni tag annotato
+git show v1.0.0
+
+# Output:
+# tag v1.0.0
+# Tagger: Developer
+# Date: ...
+# Release 1.0.0 - First stable version
+# commit abc123...
+\end{lstlisting}
+
+\subsection{Condividere Tag}
+
+\begin{lstlisting}
+# Push singolo tag
+git push origin v1.0.0
+
+# Push tutti i tag
+git push origin --tags
+
+# Push solo tag annotati
+git push origin --follow-tags
+\end{lstlisting}
+
+\subsection{Cancellare Tag}
+
+\begin{lstlisting}
+# Cancellare tag locale
+git tag -d v1.0.0
+
+# Cancellare tag remoto
+git push origin --delete v1.0.0
+# oppure
+git push origin :refs/tags/v1.0.0
+\end{lstlisting}
+
+\subsection{Checkout di Tag}
+
+\begin{lstlisting}
+# Vedere codice di una release specifica
+git checkout v1.0.0
+# HEAD is now at abc123... (detached HEAD state)
+
+# Per lavorare su quella versione, crea branch
+git checkout -b bugfix-1.0 v1.0.0
+\end{lstlisting}
+
+\subsection{Semantic Versioning}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Semantic Versioning (SemVer)]
+Schema di versioning: \texttt{MAJOR.MINOR.PATCH}
+
+\begin{itemize}
+    \item \textbf{MAJOR}: Cambiamenti incompatibili (breaking changes)
+    \item \textbf{MINOR}: Nuove funzionalità compatibili
+    \item \textbf{PATCH}: Bugfix compatibili
+\end{itemize}
+
+Esempi:
+\begin{itemize}
+    \item \texttt{v1.0.0}: Prima versione stabile
+    \item \texttt{v1.1.0}: Aggiunte feature (compatibile con 1.0.0)
+    \item \texttt{v1.1.1}: Bugfix
+    \item \texttt{v2.0.0}: Breaking changes (non compatibile con 1.x.x)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1: Stash Practice}
+
+\begin{enumerate}
+    \item Crea un nuovo repository e file \texttt{app.js}
+    \item Modifica \texttt{app.js} ma non committare
+    \item Usa \texttt{git stash} per salvare le modifiche
+    \item Crea e committa un altro file
+    \item Recupera le modifiche con \texttt{git stash pop}
+\end{enumerate}
+
+\subsection{Esercizio 2: Cherry-Pick Simulation}
+
+\begin{enumerate}
+    \item Crea branch \texttt{develop} e \texttt{main}
+    \item Su \texttt{develop} fai 3 commit
+    \item Cherry-pick solo il secondo commit su \texttt{main}
+    \item Verifica che \texttt{main} abbia solo quel commit
+\end{enumerate}
+
+\subsection{Esercizio 3: Reset Modes}
+
+\begin{enumerate}
+    \item Crea 3 commit consecutivi
+    \item Usa \texttt{git reset --soft HEAD~2} e osserva staging
+    \item Ripristina con reflog
+    \item Prova \texttt{git reset --mixed HEAD~1}
+    \item Confronta le differenze
+\end{enumerate}
+
+\subsection{Esercizio 4: Reflog Recovery}
+
+\begin{enumerate}
+    \item Crea alcuni commit
+    \item Esegui \texttt{git reset --hard HEAD~3}
+    \item Usa \texttt{git reflog} per trovare i commit persi
+    \item Recupera usando \texttt{git reset --hard HEAD@{n}}
+\end{enumerate}
+
+\subsection{Esercizio 5: Tag Release}
+
+\begin{enumerate}
+    \item Crea tag annotato \texttt{v1.0.0} su HEAD
+    \item Fai altri commit
+    \item Crea tag \texttt{v1.1.0}
+    \item Elenca tutti i tag
+    \item Fai checkout del tag \texttt{v1.0.0} e osserva il codice
+\end{enumerate}
+
+\subsection{Esercizio 6: Bisect Challenge (Avanzato)}
+
+\begin{enumerate}
+    \item Crea repository con file \texttt{calc.sh} che contiene funzione matematica
+    \item Fai 20 commit, introducendo un bug al commit 13
+    \item Usa \texttt{git bisect} per trovare il commit che ha introdotto il bug
+    \item Bonus: Crea script di test e usa \texttt{git bisect run}
+\end{enumerate}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Soluzioni]
+Le soluzioni dettagliate degli esercizi sono nell'Appendice Esercizi alla fine del libro.
+\end{tcolorbox}

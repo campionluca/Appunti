@@ -1,0 +1,921 @@
+\chapter{Programmazione Dinamica}
+\label{cap:programmazione_dinamica}
+
+\section{Introduzione}
+
+La \textbf{Programmazione Dinamica} (Dynamic Programming, DP) è una tecnica di ottimizzazione che risolve problemi complessi scomponendoli in sottoproblemi più semplici e riutilizzando le soluzioni già calcolate.
+
+\subsection{Caratteristiche Fondamentali}
+
+Un problema è adatto alla programmazione dinamica se possiede:
+
+\begin{enumerate}
+    \item \textbf{Sottostruttura ottima}: la soluzione ottima contiene soluzioni ottime dei sottoproblemi
+    \item \textbf{Sottoproblemi sovrapposti}: gli stessi sottoproblemi vengono risolti più volte
+\end{enumerate}
+
+\subsection{Differenza con Divide et Impera}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{Divide et Impera} & \textbf{Programmazione Dinamica} \\
+\hline
+Sottoproblemi & Indipendenti & Sovrapposti \\
+Riuso & No & Sì (memoization) \\
+Approccio & Top-down & Top-down o Bottom-up \\
+Esempi & Merge Sort, Quick Sort & Fibonacci, Knapsack \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Approcci}
+
+\begin{itemize}
+    \item \textbf{Top-down (Memoization)}: ricorsione + cache dei risultati
+    \item \textbf{Bottom-up (Tabulation)}: iterazione + tabella per memorizzare soluzioni
+\end{itemize}
+
+\section{Fibonacci - Caso Studio}
+
+\subsection{Ricorsione Naive}
+
+\begin{lstlisting}[language=Python]
+def fib_recursive(n):
+    """
+    Complessita: O(2^n) - MOLTO INEFFICIENTE
+    """
+    if n <= 1:
+        return n
+    return fib_recursive(n-1) + fib_recursive(n-2)
+\end{lstlisting}
+
+Problema: calcola $F(n-2)$ due volte: da $F(n)$ e da $F(n-1)$.
+
+\subsection{Top-Down con Memoization}
+
+\begin{lstlisting}[language=Python]
+def fib_memoization(n, memo=None):
+    """
+    Complessita: O(n) tempo, O(n) spazio
+    """
+    if memo is None:
+        memo = {}
+
+    # Controlla cache
+    if n in memo:
+        return memo[n]
+
+    # Caso base
+    if n <= 1:
+        return n
+
+    # Calcola e memorizza
+    memo[n] = fib_memoization(n-1, memo) + \
+              fib_memoization(n-2, memo)
+
+    return memo[n]
+\end{lstlisting}
+
+\subsection{Bottom-Up con Tabulation}
+
+\begin{lstlisting}[language=Python]
+def fib_tabulation(n):
+    """
+    Complessita: O(n) tempo, O(n) spazio
+    """
+    if n <= 1:
+        return n
+
+    # Tabella per memorizzare risultati
+    dp = [0] * (n + 1)
+    dp[1] = 1
+
+    # Riempi la tabella dal basso
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+
+    return dp[n]
+\end{lstlisting}
+
+\subsection{Ottimizzazione Spaziale}
+
+\begin{lstlisting}[language=Python]
+def fib_optimized(n):
+    """
+    Complessita: O(n) tempo, O(1) spazio
+    """
+    if n <= 1:
+        return n
+
+    prev2, prev1 = 0, 1
+
+    for _ in range(2, n + 1):
+        current = prev1 + prev2
+        prev2, prev1 = prev1, current
+
+    return prev1
+\end{lstlisting}
+
+\section{Problema dello Zaino (Knapsack)}
+
+\subsection{0/1 Knapsack Problem}
+
+\textbf{Input:}
+\begin{itemize}
+    \item $n$ oggetti, ognuno con peso $w_i$ e valore $v_i$
+    \item Capacità massima dello zaino: $W$
+\end{itemize}
+
+\textbf{Output:} Massimo valore ottenibile scegliendo oggetti il cui peso totale $\leq W$, dove ogni oggetto può essere preso al massimo una volta.
+
+\subsection{Sottostruttura Ottima}
+
+Sia $dp[i][w]$ il massimo valore ottenibile usando i primi $i$ oggetti con capacità $w$:
+
+\[
+dp[i][w] = \begin{cases}
+0 & \text{se } i = 0 \text{ o } w = 0 \\
+dp[i-1][w] & \text{se } w_i > w \\
+\max(dp[i-1][w], \, v_i + dp[i-1][w - w_i]) & \text{altrimenti}
+\end{cases}
+\]
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{0/1 Knapsack - Bottom-Up}
+\begin{algorithmic}[1]
+\Procedure{Knapsack01}{$values, weights, W, n$}
+    \State Crea tabella $dp[0..n][0..W]$
+    \For{$i \gets 0$ \To $n$}
+        \For{$w \gets 0$ \To $W$}
+            \If{$i = 0$ \Or $w = 0$}
+                \State $dp[i][w] \gets 0$
+            \ElsIf{$weights[i-1] \leq w$}
+                \State $include \gets values[i-1] + dp[i-1][w - weights[i-1]]$
+                \State $exclude \gets dp[i-1][w]$
+                \State $dp[i][w] \gets \max(include, exclude)$
+            \Else
+                \State $dp[i][w] \gets dp[i-1][w]$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $dp[n][W]$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\begin{itemize}
+    \item \textbf{Tempo}: $O(nW)$ - pseudo-polinomiale (dipende da $W$)
+    \item \textbf{Spazio}: $O(nW)$ (ottimizzabile a $O(W)$)
+\end{itemize}
+
+\subsection{Implementazioni Python}
+
+\begin{lstlisting}[language=Python]
+def knapsack_01(values, weights, W):
+    """
+    0/1 Knapsack con programmazione dinamica.
+
+    Args:
+        values: lista dei valori
+        weights: lista dei pesi
+        W: capacita massima
+
+    Returns:
+        massimo valore ottenibile
+
+    Complessita: O(nW) tempo, O(nW) spazio
+    """
+    n = len(values)
+
+    # Tabella DP
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+
+    for i in range(1, n + 1):
+        for w in range(1, W + 1):
+            # Opzione 1: non prendere oggetto i-1
+            dp[i][w] = dp[i-1][w]
+
+            # Opzione 2: prendere oggetto i-1 (se possibile)
+            if weights[i-1] <= w:
+                value_with_item = values[i-1] + \
+                                  dp[i-1][w - weights[i-1]]
+                dp[i][w] = max(dp[i][w], value_with_item)
+
+    return dp[n][W]
+
+
+def knapsack_01_optimized(values, weights, W):
+    """
+    Versione ottimizzata per spazio: O(W) invece di O(nW).
+    Usa una sola riga della tabella.
+    """
+    n = len(values)
+    dp = [0] * (W + 1)
+
+    for i in range(n):
+        # Scorri da destra per evitare di sovrascrivere
+        for w in range(W, weights[i] - 1, -1):
+            dp[w] = max(dp[w], values[i] + dp[w - weights[i]])
+
+    return dp[W]
+
+
+def knapsack_01_with_items(values, weights, W):
+    """
+    Ritorna anche gli oggetti selezionati.
+    """
+    n = len(values)
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+
+    # Riempi tabella DP
+    for i in range(1, n + 1):
+        for w in range(1, W + 1):
+            dp[i][w] = dp[i-1][w]
+            if weights[i-1] <= w:
+                value_with = values[i-1] + dp[i-1][w - weights[i-1]]
+                dp[i][w] = max(dp[i][w], value_with)
+
+    # Backtrack per trovare oggetti selezionati
+    selected = []
+    w = W
+    for i in range(n, 0, -1):
+        if dp[i][w] != dp[i-1][w]:
+            selected.append(i - 1)  # Oggetto i-1 selezionato
+            w -= weights[i-1]
+
+    selected.reverse()
+    return dp[n][W], selected
+\end{lstlisting}
+
+\subsection{Variante: Unbounded Knapsack}
+
+Ogni oggetto può essere preso un numero illimitato di volte:
+
+\begin{lstlisting}[language=Python]
+def knapsack_unbounded(values, weights, W):
+    """
+    Unbounded Knapsack: ogni oggetto disponibile infinite volte.
+
+    Complessita: O(nW)
+    """
+    n = len(values)
+    dp = [0] * (W + 1)
+
+    for w in range(1, W + 1):
+        for i in range(n):
+            if weights[i] <= w:
+                dp[w] = max(dp[w],
+                           values[i] + dp[w - weights[i]])
+
+    return dp[W]
+\end{lstlisting}
+
+\section{Longest Common Subsequence (LCS)}
+
+\subsection{Definizione}
+
+Date due sequenze $X = \langle x_1, x_2, \ldots, x_m \rangle$ e $Y = \langle y_1, y_2, \ldots, y_n \rangle$, trovare la più lunga sottosequenza comune (non necessariamente contigua).
+
+\textbf{Esempio:}
+\begin{itemize}
+    \item $X = $ "ABCDGH"
+    \item $Y = $ "AEDFHR"
+    \item LCS = "ADH" (lunghezza 3)
+\end{itemize}
+
+\subsection{Sottostruttura Ottima}
+
+Sia $c[i][j]$ la lunghezza della LCS di $X[1..i]$ e $Y[1..j]$:
+
+\[
+c[i][j] = \begin{cases}
+0 & \text{se } i = 0 \text{ o } j = 0 \\
+c[i-1][j-1] + 1 & \text{se } x_i = y_j \\
+\max(c[i-1][j], c[i][j-1]) & \text{se } x_i \neq y_j
+\end{cases}
+\]
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Longest Common Subsequence}
+\begin{algorithmic}[1]
+\Procedure{LCS}{$X, Y, m, n$}
+    \State Crea tabella $c[0..m][0..n]$
+    \For{$i \gets 0$ \To $m$}
+        \State $c[i][0] \gets 0$
+    \EndFor
+    \For{$j \gets 0$ \To $n$}
+        \State $c[0][j] \gets 0$
+    \EndFor
+    \For{$i \gets 1$ \To $m$}
+        \For{$j \gets 1$ \To $n$}
+            \If{$X[i] = Y[j]$}
+                \State $c[i][j] \gets c[i-1][j-1] + 1$
+            \Else
+                \State $c[i][j] \gets \max(c[i-1][j], c[i][j-1])$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $c[m][n]$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\begin{itemize}
+    \item \textbf{Tempo}: $O(mn)$
+    \item \textbf{Spazio}: $O(mn)$ (ottimizzabile a $O(\min(m,n))$)
+\end{itemize}
+
+\subsection{Implementazioni Python}
+
+\begin{lstlisting}[language=Python]
+def lcs_length(X, Y):
+    """
+    Calcola la lunghezza della LCS.
+
+    Complessita: O(mn) tempo, O(mn) spazio
+    """
+    m, n = len(X), len(Y)
+
+    # Tabella DP
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    return dp[m][n]
+
+
+def lcs_string(X, Y):
+    """
+    Ritorna la stringa LCS effettiva.
+    """
+    m, n = len(X), len(Y)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    # Riempi tabella DP
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    # Backtrack per ricostruire LCS
+    lcs = []
+    i, j = m, n
+
+    while i > 0 and j > 0:
+        if X[i-1] == Y[j-1]:
+            lcs.append(X[i-1])
+            i -= 1
+            j -= 1
+        elif dp[i-1][j] > dp[i][j-1]:
+            i -= 1
+        else:
+            j -= 1
+
+    return ''.join(reversed(lcs))
+
+
+def lcs_optimized_space(X, Y):
+    """
+    Ottimizzazione spaziale: O(min(m,n)) spazio.
+    """
+    # Assicurati che X sia la piu corta
+    if len(X) > len(Y):
+        X, Y = Y, X
+
+    m, n = len(X), len(Y)
+
+    # Usa due righe invece di tutta la matrice
+    prev = [0] * (n + 1)
+    curr = [0] * (n + 1)
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                curr[j] = prev[j-1] + 1
+            else:
+                curr[j] = max(prev[j], curr[j-1])
+        prev, curr = curr, prev
+
+    return prev[n]
+\end{lstlisting}
+
+\subsection{Applicazioni di LCS}
+
+\begin{lstlisting}[language=Python]
+def longest_palindromic_subsequence(s):
+    """
+    Trova la piu lunga sottosequenza palindroma.
+    Idea: LCS(s, reverse(s))
+    """
+    return lcs_length(s, s[::-1])
+
+
+def edit_distance_lcs(X, Y):
+    """
+    Distanza di edit usando LCS.
+    edit_distance = m + n - 2*lcs_length
+    """
+    lcs_len = lcs_length(X, Y)
+    return len(X) + len(Y) - 2 * lcs_len
+
+
+def diff_tool(X, Y):
+    """
+    Implementazione semplificata di 'diff' Unix.
+    Mostra le differenze tra due sequenze.
+    """
+    m, n = len(X), len(Y)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    # Backtrack e mostra diff
+    i, j = m, n
+    diff = []
+
+    while i > 0 or j > 0:
+        if i > 0 and j > 0 and X[i-1] == Y[j-1]:
+            diff.append(f"  {X[i-1]}")
+            i -= 1
+            j -= 1
+        elif j > 0 and (i == 0 or dp[i][j-1] >= dp[i-1][j]):
+            diff.append(f"+ {Y[j-1]}")
+            j -= 1
+        else:
+            diff.append(f"- {X[i-1]}")
+            i -= 1
+
+    return '\n'.join(reversed(diff))
+\end{lstlisting}
+
+\section{Edit Distance (Levenshtein Distance)}
+
+\subsection{Definizione}
+
+Minimo numero di operazioni (inserimento, cancellazione, sostituzione) per trasformare una stringa in un'altra.
+
+\subsection{Ricorrenza}
+
+Sia $dp[i][j]$ la distanza tra $X[1..i]$ e $Y[1..j]$:
+
+\[
+dp[i][j] = \begin{cases}
+i & \text{se } j = 0 \\
+j & \text{se } i = 0 \\
+dp[i-1][j-1] & \text{se } X[i] = Y[j] \\
+1 + \min \begin{cases}
+dp[i-1][j] & \text{(cancella)} \\
+dp[i][j-1] & \text{(inserisci)} \\
+dp[i-1][j-1] & \text{(sostituisci)}
+\end{cases} & \text{altrimenti}
+\end{cases}
+\]
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def edit_distance(X, Y):
+    """
+    Calcola la distanza di edit (Levenshtein).
+
+    Complessita: O(mn) tempo, O(mn) spazio
+    """
+    m, n = len(X), len(Y)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    # Inizializzazione: trasformare stringa vuota
+    for i in range(m + 1):
+        dp[i][0] = i  # i cancellazioni
+    for j in range(n + 1):
+        dp[0][j] = j  # j inserimenti
+
+    # Riempi tabella
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                dp[i][j] = dp[i-1][j-1]  # Nessuna operazione
+            else:
+                dp[i][j] = 1 + min(
+                    dp[i-1][j],      # Cancella X[i]
+                    dp[i][j-1],      # Inserisci Y[j]
+                    dp[i-1][j-1]     # Sostituisci X[i] con Y[j]
+                )
+
+    return dp[m][n]
+
+
+def edit_distance_optimized(X, Y):
+    """
+    Versione ottimizzata per spazio: O(min(m,n)).
+    """
+    if len(X) > len(Y):
+        X, Y = Y, X
+
+    m, n = len(X), len(Y)
+    prev = list(range(n + 1))
+    curr = [0] * (n + 1)
+
+    for i in range(1, m + 1):
+        curr[0] = i
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                curr[j] = prev[j-1]
+            else:
+                curr[j] = 1 + min(prev[j], curr[j-1], prev[j-1])
+        prev, curr = curr, prev
+
+    return prev[n]
+
+
+def edit_distance_with_ops(X, Y):
+    """
+    Ritorna anche le operazioni da eseguire.
+    """
+    m, n = len(X), len(Y)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if X[i-1] == Y[j-1]:
+                dp[i][j] = dp[i-1][j-1]
+            else:
+                dp[i][j] = 1 + min(dp[i-1][j],
+                                   dp[i][j-1],
+                                   dp[i-1][j-1])
+
+    # Backtrack per operazioni
+    operations = []
+    i, j = m, n
+
+    while i > 0 or j > 0:
+        if i == 0:
+            operations.append(f"Insert '{Y[j-1]}'")
+            j -= 1
+        elif j == 0:
+            operations.append(f"Delete '{X[i-1]}'")
+            i -= 1
+        elif X[i-1] == Y[j-1]:
+            i -= 1
+            j -= 1
+        else:
+            # Trova quale operazione e stata fatta
+            if dp[i][j] == dp[i-1][j-1] + 1:
+                operations.append(
+                    f"Replace '{X[i-1]}' with '{Y[j-1]}'"
+                )
+                i -= 1
+                j -= 1
+            elif dp[i][j] == dp[i-1][j] + 1:
+                operations.append(f"Delete '{X[i-1]}'")
+                i -= 1
+            else:
+                operations.append(f"Insert '{Y[j-1]}'")
+                j -= 1
+
+    operations.reverse()
+    return dp[m][n], operations
+\end{lstlisting}
+
+\section{Longest Increasing Subsequence (LIS)}
+
+\subsection{Definizione}
+
+Trovare la più lunga sottosequenza strettamente crescente in un array.
+
+\subsection{Soluzione DP - $O(n^2)$}
+
+\begin{lstlisting}[language=Python]
+def lis_dp(arr):
+    """
+    LIS con programmazione dinamica.
+
+    Complessita: O(n^2) tempo, O(n) spazio
+    """
+    if not arr:
+        return 0
+
+    n = len(arr)
+    # dp[i] = lunghezza LIS che termina in arr[i]
+    dp = [1] * n
+
+    for i in range(1, n):
+        for j in range(i):
+            if arr[j] < arr[i]:
+                dp[i] = max(dp[i], dp[j] + 1)
+
+    return max(dp)
+
+
+def lis_with_sequence(arr):
+    """
+    Ritorna anche la sequenza LIS.
+    """
+    if not arr:
+        return 0, []
+
+    n = len(arr)
+    dp = [1] * n
+    parent = [-1] * n  # Per ricostruire la sequenza
+
+    for i in range(1, n):
+        for j in range(i):
+            if arr[j] < arr[i] and dp[j] + 1 > dp[i]:
+                dp[i] = dp[j] + 1
+                parent[i] = j
+
+    # Trova il massimo
+    max_length = max(dp)
+    max_idx = dp.index(max_length)
+
+    # Ricostruisci sequenza
+    lis = []
+    idx = max_idx
+    while idx != -1:
+        lis.append(arr[idx])
+        idx = parent[idx]
+
+    lis.reverse()
+    return max_length, lis
+\end{lstlisting}
+
+\subsection{Soluzione Ottimizzata - $O(n \log n)$}
+
+Usa ricerca binaria per mantenere una sequenza "tails":
+
+\begin{lstlisting}[language=Python]
+def lis_binary_search(arr):
+    """
+    LIS ottimizzato con binary search.
+
+    Complessita: O(n log n) tempo, O(n) spazio
+    """
+    if not arr:
+        return 0
+
+    # tails[i] = piu piccolo elemento che termina una LIS di lunghezza i+1
+    tails = []
+
+    for num in arr:
+        # Trova posizione per num in tails
+        left, right = 0, len(tails)
+
+        while left < right:
+            mid = (left + right) // 2
+            if tails[mid] < num:
+                left = mid + 1
+            else:
+                right = mid
+
+        # Se left == len(tails), estendi
+        if left == len(tails):
+            tails.append(num)
+        else:
+            tails[left] = num
+
+    return len(tails)
+
+
+# Usando bisect (built-in Python)
+import bisect
+
+def lis_bisect(arr):
+    """
+    LIS usando bisect di Python.
+    """
+    tails = []
+
+    for num in arr:
+        pos = bisect.bisect_left(tails, num)
+        if pos == len(tails):
+            tails.append(num)
+        else:
+            tails[pos] = num
+
+    return len(tails)
+\end{lstlisting}
+
+\section{Coin Change Problem}
+
+\subsection{Numero Minimo di Monete}
+
+Dato un insieme di denominazioni e un ammontare, trovare il minimo numero di monete per ottenere quell'ammontare.
+
+\begin{lstlisting}[language=Python]
+def coin_change_min(coins, amount):
+    """
+    Minimo numero di monete per raggiungere amount.
+
+    Complessita: O(amount * n) dove n = len(coins)
+    """
+    # dp[i] = min monete per ammontare i
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0  # 0 monete per ammontare 0
+
+    for i in range(1, amount + 1):
+        for coin in coins:
+            if coin <= i:
+                dp[i] = min(dp[i], dp[i - coin] + 1)
+
+    return dp[amount] if dp[amount] != float('inf') else -1
+
+
+def coin_change_with_coins(coins, amount):
+    """
+    Ritorna anche le monete usate.
+    """
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    parent = [-1] * (amount + 1)
+
+    for i in range(1, amount + 1):
+        for coin in coins:
+            if coin <= i and dp[i - coin] + 1 < dp[i]:
+                dp[i] = dp[i - coin] + 1
+                parent[i] = coin
+
+    if dp[amount] == float('inf'):
+        return -1, []
+
+    # Ricostruisci monete
+    result = []
+    curr = amount
+    while curr > 0:
+        coin = parent[curr]
+        result.append(coin)
+        curr -= coin
+
+    return dp[amount], result
+\end{lstlisting}
+
+\subsection{Numero di Modi}
+
+Contare quanti modi ci sono per ottenere un ammontare:
+
+\begin{lstlisting}[language=Python]
+def coin_change_ways(coins, amount):
+    """
+    Conta il numero di modi per ottenere amount.
+
+    Complessita: O(amount * n)
+    """
+    dp = [0] * (amount + 1)
+    dp[0] = 1  # Un modo per ottenere 0
+
+    # Per ogni moneta
+    for coin in coins:
+        # Aggiorna tutti gli ammontari >= coin
+        for i in range(coin, amount + 1):
+            dp[i] += dp[i - coin]
+
+    return dp[amount]
+\end{lstlisting}
+
+\section{Matrix Chain Multiplication}
+
+\subsection{Problema}
+
+Date $n$ matrici $A_1, A_2, \ldots, A_n$ con dimensioni compatibili, trovare il modo di parentesizzare il prodotto che minimizza il numero di moltiplicazioni scalari.
+
+\subsection{Ricorrenza}
+
+Sia $m[i][j]$ il minimo numero di moltiplicazioni per calcolare $A_i \cdots A_j$:
+
+\[
+m[i][j] = \begin{cases}
+0 & \text{se } i = j \\
+\min_{i \leq k < j} \{m[i][k] + m[k+1][j] + p_{i-1} \cdot p_k \cdot p_j\} & \text{se } i < j
+\end{cases}
+\]
+
+dove $p_i$ rappresenta le dimensioni delle matrici.
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def matrix_chain_order(dimensions):
+    """
+    Trova l'ordine ottimale per moltiplicare matrici.
+
+    Args:
+        dimensions: lista [p0, p1, ..., pn]
+                   dove matrice i ha dimensioni pi-1 x pi
+
+    Returns:
+        minimo numero di moltiplicazioni
+
+    Complessita: O(n^3) tempo, O(n^2) spazio
+    """
+    n = len(dimensions) - 1  # Numero di matrici
+
+    # m[i][j] = costo minimo per A[i..j]
+    m = [[0] * n for _ in range(n)]
+
+    # l = lunghezza della catena
+    for l in range(2, n + 1):
+        for i in range(n - l + 1):
+            j = i + l - 1
+            m[i][j] = float('inf')
+
+            for k in range(i, j):
+                # Costo = costo sinistra + costo destra + costo merge
+                cost = m[i][k] + m[k+1][j] + \
+                       dimensions[i] * dimensions[k+1] * dimensions[j+1]
+                m[i][j] = min(m[i][j], cost)
+
+    return m[0][n-1]
+
+
+def matrix_chain_with_parenthesis(dimensions):
+    """
+    Ritorna anche la parentesizzazione ottimale.
+    """
+    n = len(dimensions) - 1
+    m = [[0] * n for _ in range(n)]
+    s = [[0] * n for _ in range(n)]  # Split point
+
+    for l in range(2, n + 1):
+        for i in range(n - l + 1):
+            j = i + l - 1
+            m[i][j] = float('inf')
+
+            for k in range(i, j):
+                cost = m[i][k] + m[k+1][j] + \
+                       dimensions[i] * dimensions[k+1] * dimensions[j+1]
+                if cost < m[i][j]:
+                    m[i][j] = cost
+                    s[i][j] = k
+
+    def print_optimal(i, j):
+        if i == j:
+            return f"A{i}"
+        return f"({print_optimal(i, s[i][j])} * " \
+               f"{print_optimal(s[i][j]+1, j)})"
+
+    return m[0][n-1], print_optimal(0, n-1)
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementare e analizzare:
+    \begin{enumerate}
+        \item Subset Sum Problem (esiste un sottoinsieme con somma = target?)
+        \item Partition Problem (dividere in due sottoinsiemi con somma uguale)
+        \item Rod Cutting (tagliare un'asta per massimizzare il profitto)
+    \end{enumerate}
+
+    \item Problemi su stringhe:
+    \begin{enumerate}
+        \item Longest Palindromic Substring
+        \item Wildcard Pattern Matching
+        \item Regular Expression Matching (semplificato)
+    \end{enumerate}
+
+    \item Problemi su griglie:
+    \begin{enumerate}
+        \item Unique Paths (contare cammini in griglia)
+        \item Minimum Path Sum (cammino con costo minimo)
+        \item Maximum Path Sum in Triangle
+    \end{enumerate}
+
+    \item Ottimizzazioni:
+    \begin{enumerate}
+        \item Ottimizzare 0/1 Knapsack a $O(W)$ spazio
+        \item Implementare LCS con $O(\min(m,n))$ spazio
+        \item Analizzare quando conviene top-down vs bottom-up
+    \end{enumerate}
+
+    \item Problemi avanzati:
+    \begin{enumerate}
+        \item Longest Common Substring (contigua)
+        \item Box Stacking (massimizzare altezza stack di scatole)
+        \item Optimal Binary Search Tree
+    \end{enumerate}
+\end{enumerate}

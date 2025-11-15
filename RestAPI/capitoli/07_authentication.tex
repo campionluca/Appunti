@@ -1,0 +1,801 @@
+% 07_authentication.tex
+\chapter{Autenticazione e Autorizzazione}
+
+L'autenticazione è il processo di verifica dell'identità di un client che effettua una richiesta API, mentre l'autorizzazione determina quali risorse e operazioni l'utente autenticato può accedere. In questo capitolo esploreremo i principali meccanismi di autenticazione per REST API.
+
+\section{Principi Fondamentali}
+
+\subsection{Stateless Authentication}
+
+Le REST API seguono il principio di statelessness: ogni richiesta deve contenere tutte le informazioni necessarie per l'autenticazione, senza che il server mantenga lo stato della sessione.
+
+\begin{tcolorbox}[title=Vantaggi dell'Autenticazione Stateless]
+\begin{itemize}
+\item \textbf{Scalabilità}: Nessuna necessità di sincronizzare sessioni tra server
+\item \textbf{Semplicità}: Ogni richiesta è indipendente
+\item \textbf{Cache-friendly}: Le risposte possono essere facilmente cachate
+\item \textbf{Load balancing}: Qualsiasi server può gestire qualsiasi richiesta
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Differenza tra Autenticazione e Autorizzazione}
+
+\begin{itemize}
+\item \textbf{Autenticazione}: "Chi sei?" - Verifica l'identità del client
+\item \textbf{Autorizzazione}: "Cosa puoi fare?" - Verifica i permessi dell'utente
+\end{itemize}
+
+\section{HTTP Basic Authentication}
+
+\subsection{Concetto e Funzionamento}
+
+HTTP Basic Authentication è il meccanismo più semplice definito nello standard HTTP. Le credenziali (username e password) vengono codificate in Base64 e inviate nell'header \texttt{Authorization}.
+
+\begin{lstlisting}[caption=Formato Header Basic Auth]
+Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+\end{lstlisting}
+
+\subsection{Implementazione}
+
+\begin{lstlisting}[language=bash, caption=Esempio cURL con Basic Auth]
+# Metodo 1: Credenziali inline
+curl -X GET https://api.example.com/users \
+  -H "Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+
+# Metodo 2: Flag -u (piu' comodo)
+curl -X GET https://api.example.com/users \
+  -u username:password
+
+# Metodo 3: Credenziali da variabili
+USER="admin"
+PASS="secret123"
+curl -X GET https://api.example.com/users \
+  -u "$USER:$PASS"
+\end{lstlisting}
+
+\subsection{Codifica e Decodifica}
+
+\begin{lstlisting}[language=bash, caption=Codifica Base64 delle Credenziali]
+# Codifica
+echo -n "username:password" | base64
+# Output: dXNlcm5hbWU6cGFzc3dvcmQ=
+
+# Decodifica
+echo "dXNlcm5hbWU6cGFzc3dvcmQ=" | base64 -d
+# Output: username:password
+\end{lstlisting}
+
+\subsection{Vantaggi e Svantaggi}
+
+\begin{tcolorbox}[title=Vantaggi]
+\begin{itemize}
+\item Semplicità di implementazione
+\item Supporto universale
+\item Nessuna configurazione server complessa
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Svantaggi, colframe=red!60]
+\begin{itemize}
+\item Le credenziali viaggiano con ogni richiesta
+\item Base64 non è crittografia (facilmente decodificabile)
+\item \textbf{Richiede HTTPS obbligatorio}
+\item Nessuna scadenza token
+\item Impossibile revocare l'accesso senza cambiare password
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Implementazione Server-side}
+
+\begin{lstlisting}[language=Python, caption=Verifica Basic Auth in Python]
+import base64
+from functools import wraps
+from flask import request, jsonify
+
+def require_basic_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth = request.headers.get('Authorization')
+
+        if not auth or not auth.startswith('Basic '):
+            return jsonify({'error': 'Missing credentials'}), 401
+
+        try:
+            # Decodifica Base64
+            credentials = base64.b64decode(
+                auth[6:]
+            ).decode('utf-8')
+            username, password = credentials.split(':', 1)
+
+            # Verifica credenziali (esempio semplificato)
+            if not verify_credentials(username, password):
+                return jsonify({'error': 'Invalid credentials'}), 401
+
+            # Aggiungi username al contesto
+            request.current_user = username
+            return f(*args, **kwargs)
+
+        except Exception as e:
+            return jsonify({'error': 'Invalid auth format'}), 401
+
+    return decorated_function
+
+@app.route('/api/protected')
+@require_basic_auth
+def protected_resource():
+    return jsonify({'message': f'Hello {request.current_user}'})
+\end{lstlisting}
+
+\section{Bearer Token Authentication}
+
+\subsection{Concetto}
+
+Bearer Token è un meccanismo dove il client presenta un token (una stringa opaca) nell'header Authorization. Il token viene ottenuto tramite un endpoint di login separato.
+
+\begin{lstlisting}[caption=Formato Bearer Token]
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+\end{lstlisting}
+
+\subsection{Flow di Autenticazione}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, minimum width=3cm, minimum height=1cm, align=center},
+  arrow/.style={->, >=Stealth, thick}
+]
+  \node[box] (client) {Client};
+  \node[box, right=4cm of client] (server) {API Server};
+
+  \draw[arrow] (client.north) -- ++(0,0.5) -| node[above, pos=0.25] {1. POST /login}
+    node[below, pos=0.25, font=\small] {\{username, password\}} (server.north);
+
+  \draw[arrow] (server.south) -- ++(0,-0.5) -| node[above, pos=0.75] {2. 200 OK}
+    node[below, pos=0.75, font=\small] {\{token: "abc123"\}} (client.south);
+
+  \draw[arrow] (client) -- node[above] {3. GET /api/resource}
+    node[below, font=\small] {Authorization: Bearer abc123} (server);
+
+  \draw[arrow] (server) -- node[above, pos=0.7] {4. 200 OK + Data} (client);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Esempio Completo}
+
+\begin{lstlisting}[language=bash, caption=Login e Richieste con Bearer Token]
+# 1. Login e ottenimento token
+TOKEN=$(curl -X POST https://api.example.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "user@example.com",
+    "password": "SecurePass123!"
+  }' | jq -r '.token')
+
+echo "Token obtained: $TOKEN"
+
+# 2. Utilizzo del token per richieste API
+curl -X GET https://api.example.com/api/users/me \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. Refresh del token (se supportato)
+NEW_TOKEN=$(curl -X POST https://api.example.com/auth/refresh \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq -r '.token')
+
+# 4. Logout (revoca token)
+curl -X POST https://api.example.com/auth/logout \
+  -H "Authorization: Bearer $TOKEN"
+\end{lstlisting}
+
+\subsection{Struttura Response Login}
+
+\begin{lstlisting}[caption=Response di Login con Token]
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "def50200a1b2c3d4e5f6...",
+  "user": {
+    "id": 12345,
+    "email": "user@example.com",
+    "name": "Mario Rossi"
+  }
+}
+\end{lstlisting}
+
+\section{JSON Web Tokens (JWT)}
+
+\subsection{Struttura JWT}
+
+Un JWT è composto da tre parti separate da punti:
+
+\begin{lstlisting}
+HEADER.PAYLOAD.SIGNATURE
+
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.
+SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+\end{lstlisting}
+
+\subsection{Componenti JWT}
+
+\subsubsection{Header}
+\begin{lstlisting}[caption=JWT Header (Base64URL decoded)]
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+\end{lstlisting}
+
+\subsubsection{Payload}
+\begin{lstlisting}[caption=JWT Payload (Claims)]
+{
+  "sub": "1234567890",
+  "name": "Mario Rossi",
+  "email": "mario.rossi@example.com",
+  "role": "admin",
+  "iat": 1516239022,
+  "exp": 1516242622,
+  "nbf": 1516239022,
+  "iss": "https://api.example.com",
+  "aud": "https://example.com"
+}
+\end{lstlisting}
+
+\subsection{Standard Claims}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{7cm}|}
+\hline
+\textbf{Claim} & \textbf{Nome} & \textbf{Descrizione} \\ \hline
+\texttt{iss} & Issuer & Identifica chi ha emesso il token \\ \hline
+\texttt{sub} & Subject & Identifica il soggetto del token (user ID) \\ \hline
+\texttt{aud} & Audience & Destinatari del token \\ \hline
+\texttt{exp} & Expiration & Timestamp di scadenza (Unix time) \\ \hline
+\texttt{nbf} & Not Before & Il token non è valido prima di questo timestamp \\ \hline
+\texttt{iat} & Issued At & Timestamp di emissione \\ \hline
+\texttt{jti} & JWT ID & Identificatore univoco del token \\ \hline
+\end{tabular}
+\caption{Standard JWT Claims (RFC 7519)}
+\end{table}
+
+\subsection{Algoritmi di Firma}
+
+\begin{itemize}
+\item \textbf{HS256} (HMAC SHA-256): Firma simmetrica, secret condiviso
+\item \textbf{RS256} (RSA SHA-256): Firma asimmetrica, chiave privata/pubblica
+\item \textbf{ES256} (ECDSA SHA-256): Firma asimmetrica con curve ellittiche
+\end{itemize}
+
+\subsection{Generazione e Verifica JWT}
+
+\begin{lstlisting}[language=Python, caption=Creazione JWT in Python]
+import jwt
+import datetime
+
+def generate_jwt(user_id, email, role):
+    """Genera un JWT per un utente"""
+
+    # Payload con claims
+    payload = {
+        'sub': str(user_id),
+        'email': email,
+        'role': role,
+        'iat': datetime.datetime.utcnow(),
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+        'iss': 'api.example.com',
+        'aud': 'example.com'
+    }
+
+    # Secret key (dovrebbe essere in variabile ambiente)
+    secret = 'your-256-bit-secret'
+
+    # Genera token
+    token = jwt.encode(payload, secret, algorithm='HS256')
+
+    return token
+
+def verify_jwt(token):
+    """Verifica e decodifica un JWT"""
+
+    secret = 'your-256-bit-secret'
+
+    try:
+        # Decodifica e verifica
+        payload = jwt.decode(
+            token,
+            secret,
+            algorithms=['HS256'],
+            audience='example.com',
+            issuer='api.example.com'
+        )
+        return payload
+
+    except jwt.ExpiredSignatureError:
+        raise Exception('Token scaduto')
+    except jwt.InvalidAudienceError:
+        raise Exception('Audience non valida')
+    except jwt.InvalidIssuerError:
+        raise Exception('Issuer non valido')
+    except jwt.InvalidSignatureError:
+        raise Exception('Firma non valida')
+
+# Utilizzo
+token = generate_jwt(12345, 'user@example.com', 'admin')
+print(f"Token: {token}")
+
+payload = verify_jwt(token)
+print(f"User ID: {payload['sub']}")
+print(f"Role: {payload['role']}")
+\end{lstlisting}
+
+\subsection{JWT vs Session-based Auth}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+\textbf{Aspetto} & \textbf{JWT} & \textbf{Session} \\ \hline
+Stato & Stateless & Stateful \\ \hline
+Storage & Client-side & Server-side \\ \hline
+Scalabilità & Eccellente & Richiede session store condiviso \\ \hline
+Revoca & Difficile & Facile \\ \hline
+Dimensione & Maggiore & Minore (solo ID) \\ \hline
+Sicurezza & Token può essere rubato & Session ID può essere rubato \\ \hline
+\end{tabular}
+\caption{Confronto JWT vs Session}
+\end{table}
+
+\section{OAuth 2.0}
+
+\subsection{Introduzione}
+
+OAuth 2.0 è un framework di autorizzazione che permette ad applicazioni di terze parti di ottenere accesso limitato a servizi HTTP. È lo standard de facto per autorizzazione API.
+
+\subsection{Ruoli OAuth 2.0}
+
+\begin{itemize}
+\item \textbf{Resource Owner}: L'utente che possiede i dati
+\item \textbf{Client}: L'applicazione che vuole accedere ai dati
+\item \textbf{Authorization Server}: Server che autentica e autorizza
+\item \textbf{Resource Server}: Server che ospita le risorse protette (API)
+\end{itemize}
+
+\subsection{Authorization Code Flow}
+
+Il flow più sicuro per applicazioni web con backend.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=2cm,
+  box/.style={rectangle, draw, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\small},
+  arrow/.style={->, >=Stealth, thick}
+]
+  \node[box] (user) {User\\Browser};
+  \node[box, right=2cm of user] (client) {Client\\App};
+  \node[box, right=2cm of client] (auth) {Auth\\Server};
+  \node[box, right=2cm of auth] (api) {API\\Server};
+
+  \draw[arrow] (user) -- node[above, font=\tiny] {1. Accesso} (client);
+  \draw[arrow] (client) -- node[above, font=\tiny] {2. Redirect to login} (auth);
+  \draw[arrow] (auth) -- node[above, font=\tiny] {3. Login form} (user);
+  \draw[arrow] (user) -- node[above, font=\tiny] {4. Credentials} (auth);
+  \draw[arrow] (auth) -- node[above, font=\tiny] {5. Redirect + code} (client);
+  \draw[arrow] (client) -- node[above, font=\tiny] {6. Exchange code} (auth);
+  \draw[arrow] (auth) -- node[above, font=\tiny] {7. Access token} (client);
+  \draw[arrow] (client) -- node[above, font=\tiny] {8. API call + token} (api);
+  \draw[arrow] (api) -- node[above, font=\tiny] {9. Protected data} (client);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Esempio Authorization Code Flow}
+
+\begin{lstlisting}[language=bash, caption=Step 1: Redirect dell'utente]
+# L'applicazione reindirizza l'utente all'authorization server
+https://auth.example.com/oauth/authorize?
+  response_type=code&
+  client_id=YOUR_CLIENT_ID&
+  redirect_uri=https://yourapp.com/callback&
+  scope=read:users write:posts&
+  state=random_state_string
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Step 2: Callback con authorization code]
+# Dopo il login, l'utente viene reindirizzato a:
+https://yourapp.com/callback?
+  code=AUTHORIZATION_CODE&
+  state=random_state_string
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Step 3: Scambio code con access token]
+curl -X POST https://auth.example.com/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code" \
+  -d "code=AUTHORIZATION_CODE" \
+  -d "redirect_uri=https://yourapp.com/callback" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET"
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Response con Access Token]
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "def50200a1b2c3d4e5f6...",
+  "scope": "read:users write:posts"
+}
+\end{lstlisting}
+
+\subsection{Client Credentials Flow}
+
+Per comunicazioni machine-to-machine senza utente.
+
+\begin{lstlisting}[language=bash, caption=Client Credentials Request]
+curl -X POST https://auth.example.com/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET" \
+  -d "scope=api:read api:write"
+\end{lstlisting}
+
+\subsection{Refresh Token Flow}
+
+\begin{lstlisting}[language=bash, caption=Refresh Access Token]
+curl -X POST https://auth.example.com/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=refresh_token" \
+  -d "refresh_token=def50200a1b2c3d4e5f6..." \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET"
+\end{lstlisting}
+
+\subsection{Scopes e Permissions}
+
+Gli scope definiscono le permission richieste:
+
+\begin{lstlisting}[caption=Esempi di Scopes]
+# Scopes granulari
+read:users          # Leggere informazioni utenti
+write:users         # Modificare utenti
+delete:users        # Eliminare utenti
+read:posts          # Leggere posts
+write:posts         # Creare/modificare posts
+admin:all           # Accesso amministrativo completo
+
+# Scopes combinati
+scope=read:users read:posts write:posts
+\end{lstlisting}
+
+\section{API Keys}
+
+\subsection{Utilizzo}
+
+Le API Key sono semplici token statici usati principalmente per:
+\begin{itemize}
+\item Identificare il client/applicazione
+\item Rate limiting per applicazione
+\item Tracking dell'utilizzo API
+\end{itemize}
+
+\begin{tcolorbox}[title=Nota Importante, colframe=orange]
+Le API Keys \textbf{NON} dovrebbero essere usate per autenticazione utente, ma solo per identificare l'applicazione client.
+\end{tcolorbox}
+
+\subsection{Posizionamento API Key}
+
+\begin{lstlisting}[language=bash, caption=API Key in Header (RACCOMANDATO)]
+curl -X GET https://api.example.com/data \
+  -H "X-API-Key: your-api-key-here"
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=API Key in Query String (sconsigliato)]
+curl -X GET "https://api.example.com/data?api_key=your-api-key-here"
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Perché Query String è Sconsigliato, colframe=red!60]
+\begin{itemize}
+\item Le API key appaiono nei log del server
+\item Possono essere salvate nella cronologia del browser
+\item Vengono inviate nel Referer header
+\item Sono visibili nelle URL condivise
+\end{itemize}
+\end{tcolorbox}
+
+\section{Best Practices di Sicurezza}
+
+\subsection{HTTPS Obbligatorio}
+
+\begin{tcolorbox}[title=Regola Fondamentale, colframe=red!80]
+\textbf{Tutte} le API che richiedono autenticazione DEVONO usare HTTPS. Nessuna eccezione.
+\end{tcolorbox}
+
+\subsection{Token Expiration}
+
+\begin{lstlisting}[caption=Implementazione Token Expiration]
+{
+  "access_token": "short-lived-token",
+  "expires_in": 900,           // 15 minuti
+  "refresh_token": "long-lived-token",
+  "refresh_expires_in": 2592000  // 30 giorni
+}
+\end{lstlisting}
+
+\subsection{Token Revocation}
+
+\begin{lstlisting}[language=bash, caption=Endpoint di Revoca Token]
+curl -X POST https://auth.example.com/oauth/revoke \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "token=access_or_refresh_token" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET"
+\end{lstlisting}
+
+\subsection{Rate Limiting per Auth Endpoints}
+
+\begin{lstlisting}[caption=Response con Rate Limit su Login]
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 60
+
+{
+  "error": "too_many_requests",
+  "error_description": "Too many login attempts. Try again in 60 seconds.",
+  "retry_after": 60
+}
+\end{lstlisting}
+
+\subsection{Secure Storage}
+
+\begin{tcolorbox}[title=Storage dei Token]
+\begin{itemize}
+\item \textbf{Web}: httpOnly cookies (per refresh token) + memoria (access token)
+\item \textbf{Mobile}: Keychain (iOS) / Keystore (Android)
+\item \textbf{Desktop}: Sistema di credential storage dell'OS
+\item \textbf{MAI}: localStorage senza encryption, plain text files
+\end{itemize}
+\end{tcolorbox}
+
+\section{OpenAPI Specification}
+
+\subsection{Definizione Security Schemes}
+
+\begin{lstlisting}[caption=OpenAPI 3.0 - Security Schemes]
+openapi: 3.0.0
+info:
+  title: Example API
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    # HTTP Basic Auth
+    basicAuth:
+      type: http
+      scheme: basic
+
+    # Bearer Token
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    # API Key
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+    # OAuth 2.0
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/oauth/authorize
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            read:users: Read user information
+            write:users: Modify user information
+            admin:all: Full administrative access
+
+        clientCredentials:
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            api:read: Read API data
+            api:write: Write API data
+
+# Security globale (applicata a tutti gli endpoint)
+security:
+  - bearerAuth: []
+
+paths:
+  /public/status:
+    get:
+      summary: Public endpoint
+      security: []  # Override: nessuna autenticazione richiesta
+      responses:
+        '200':
+          description: API status
+
+  /users:
+    get:
+      summary: List users
+      security:
+        - bearerAuth: []
+        - oauth2: [read:users]
+      responses:
+        '200':
+          description: List of users
+        '401':
+          description: Unauthorized
+
+  /admin/users:
+    delete:
+      summary: Delete user (admin only)
+      security:
+        - oauth2: [admin:all]
+      responses:
+        '204':
+          description: User deleted
+        '403':
+          description: Forbidden - insufficient permissions
+\end{lstlisting}
+
+\section{Esempi Pratici Completi}
+
+\subsection{Postman Collection}
+
+\begin{lstlisting}[caption=Postman Collection per Authentication]
+{
+  "info": {
+    "name": "API Authentication Examples",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "pm.environment.set('access_token', response.access_token);",
+                  "pm.environment.set('refresh_token', response.refresh_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{base_url}}/auth/refresh"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protected Resources",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/users/me"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.example.com"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Script di Test Completo}
+
+\begin{lstlisting}[language=bash, caption=Bash Script per Testing Authentication]
+#!/bin/bash
+
+API_BASE="https://api.example.com"
+EMAIL="user@example.com"
+PASSWORD="password123"
+
+echo "=== API Authentication Test ==="
+
+# 1. Login
+echo -e "\n1. Login..."
+LOGIN_RESPONSE=$(curl -s -X POST "$API_BASE/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+
+echo "$LOGIN_RESPONSE" | jq .
+
+# Estrai token
+ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.access_token')
+REFRESH_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.refresh_token')
+
+if [ "$ACCESS_TOKEN" == "null" ]; then
+  echo "Login fallito!"
+  exit 1
+fi
+
+echo "Access Token: $ACCESS_TOKEN"
+
+# 2. Richiesta autenticata
+echo -e "\n2. Get current user..."
+curl -s -X GET "$API_BASE/users/me" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
+
+# 3. Test endpoint non autenticato
+echo -e "\n3. Test senza token (should fail)..."
+curl -s -X GET "$API_BASE/users/me" | jq .
+
+# 4. Refresh token
+echo -e "\n4. Refresh access token..."
+REFRESH_RESPONSE=$(curl -s -X POST "$API_BASE/auth/refresh" \
+  -H "Content-Type: application/json" \
+  -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}")
+
+NEW_ACCESS_TOKEN=$(echo "$REFRESH_RESPONSE" | jq -r '.access_token')
+echo "New Access Token: $NEW_ACCESS_TOKEN"
+
+# 5. Logout
+echo -e "\n5. Logout..."
+curl -s -X POST "$API_BASE/auth/logout" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
+
+echo -e "\n=== Test completato ==="
+\end{lstlisting}
+
+\section{Riepilogo}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{3cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{Metodo} & \textbf{Caso d'Uso} & \textbf{Pro} & \textbf{Contro} \\ \hline
+Basic Auth & Admin tools, script interni & Semplice & Credenziali in ogni request \\ \hline
+API Key & Identificazione app, public API & Facile da implementare & Non per auth utenti \\ \hline
+Bearer Token & App web/mobile & Flessibile, revocabile & Richiede endpoint login \\ \hline
+JWT & Microservizi, app distribuite & Stateless, self-contained & Difficile da revocare \\ \hline
+OAuth 2.0 & Accesso terze parti & Standard, granular permissions & Complesso \\ \hline
+\end{tabular}
+\caption{Confronto Metodi di Autenticazione}
+\end{table}

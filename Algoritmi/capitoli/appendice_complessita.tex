@@ -1,0 +1,488 @@
+\chapter{Appendice: Tabelle di Complessità}
+\label{app:complessita}
+
+\section{Introduzione}
+
+Questa appendice raccoglie le complessità temporali e spaziali di tutti gli algoritmi trattati nel corso, organizzate per categoria.
+
+\section{Algoritmi di Ordinamento}
+
+\subsection{Confronto Generale}
+
+\begin{table}[h]
+\centering
+\caption{Complessità algoritmi di ordinamento}
+\label{tab:sorting}
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Best} & \textbf{Average} & \textbf{Worst} & \textbf{Spazio} & \textbf{Stabile} & \textbf{In-place} & \textbf{Adattivo} \\
+\hline
+Bubble Sort & $O(n)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & Sì & Sì & Sì \\
+Selection Sort & $O(n^2)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & No & Sì & No \\
+Insertion Sort & $O(n)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & Sì & Sì & Sì \\
+Merge Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(n)$ & Sì & No & No \\
+Quick Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n^2)$ & $O(\log n)$ & No & Sì & No \\
+Heap Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(1)$ & No & Sì & No \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Dettagli Aggiuntivi}
+
+\begin{table}[h]
+\centering
+\caption{Caratteristiche dettagliate algoritmi di ordinamento}
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Algoritmo} & \textbf{Caratteristiche e Note} \\
+\hline
+Bubble Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Scambi: $O(n^2)$ nel caso peggiore
+    \item Confronti: sempre $O(n^2)$
+    \item Ottimizzabile con early stopping
+    \item Utile solo per scopi didattici
+\end{itemize} \\
+\hline
+Selection Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Scambi: al massimo $O(n)$ (minimo tra tutti)
+    \item Confronti: sempre $\Theta(n^2)$
+    \item Non adattivo: prestazioni costanti
+    \item Utile quando scambi sono costosi
+\end{itemize} \\
+\hline
+Insertion Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Ottimo per array piccoli ($n < 50$)
+    \item Molto efficiente su array quasi ordinati
+    \item Online: può ordinare stream di dati
+    \item Usato in algoritmi ibridi (Timsort, Introsort)
+\end{itemize} \\
+\hline
+Merge Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Garantisce $O(n\log n)$ sempre
+    \item Eccellente per linked list ($O(1)$ spazio)
+    \item Parallelizzabile
+    \item Base di Timsort (Python, Java)
+\end{itemize} \\
+\hline
+Quick Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Migliori prestazioni in pratica (costanti piccole)
+    \item Randomizzazione: $O(n\log n)$ atteso
+    \item Cache-friendly
+    \item 3-way partition per duplicati
+\end{itemize} \\
+\hline
+Heap Sort &
+\begin{itemize}[nosep,left=0pt]
+    \item Combina vantaggi di Merge Sort (garantito) e Quick Sort (in-place)
+    \item BuildMaxHeap richiede solo $O(n)$
+    \item Non cache-friendly
+    \item Usato in priority queue
+\end{itemize} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Algoritmi Specializzati}
+
+\begin{table}[h]
+\centering
+\caption{Algoritmi di ordinamento non basati su confronti}
+\begin{tabular}{|l|c|c|c|p{5cm}|}
+\hline
+\textbf{Algoritmo} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Stabile} & \textbf{Vincoli/Note} \\
+\hline
+Counting Sort & $O(n+k)$ & $O(k)$ & Sì & $k$ = range valori. Ottimo per $k = O(n)$ \\
+Radix Sort & $O(d(n+k))$ & $O(n+k)$ & Sì & $d$ = numero cifre, $k$ = base \\
+Bucket Sort & $O(n)$ & $O(n)$ & Sì & Distribuzione uniforme richiesta \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Algoritmi di Ricerca}
+
+\begin{table}[h]
+\centering
+\caption{Complessità algoritmi di ricerca}
+\begin{tabular}{|l|c|c|c|p{5cm}|}
+\hline
+\textbf{Algoritmo} & \textbf{Best} & \textbf{Average} & \textbf{Worst} & \textbf{Precondizioni} \\
+\hline
+Linear Search & $O(1)$ & $O(n)$ & $O(n)$ & Nessuna \\
+Binary Search & $O(1)$ & $O(\log n)$ & $O(\log n)$ & Array ordinato \\
+Interpolation & $O(1)$ & $O(\log\log n)$ & $O(n)$ & Ordinato + distribuzione uniforme \\
+Exponential & $O(1)$ & $O(\log i)$ & $O(\log i)$ & Ordinato, $i$ = posizione \\
+Jump Search & $O(1)$ & $O(\sqrt{n})$ & $O(\sqrt{n})$ & Array ordinato \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Ricerca in Strutture Dati}
+
+\begin{table}[h]
+\centering
+\caption{Complessità ricerca in strutture dati}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Struttura} & \textbf{Search} & \textbf{Insert} & \textbf{Delete} & \textbf{Spazio} \\
+\hline
+Array non ordinato & $O(n)$ & $O(1)$ & $O(n)$ & $O(n)$ \\
+Array ordinato & $O(\log n)$ & $O(n)$ & $O(n)$ & $O(n)$ \\
+Linked List & $O(n)$ & $O(1)$ & $O(n)$ & $O(n)$ \\
+Hash Table (avg) & $O(1)$ & $O(1)$ & $O(1)$ & $O(n)$ \\
+Hash Table (worst) & $O(n)$ & $O(n)$ & $O(n)$ & $O(n)$ \\
+BST (avg) & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(n)$ \\
+BST (worst) & $O(n)$ & $O(n)$ & $O(n)$ & $O(n)$ \\
+AVL Tree & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(n)$ \\
+Red-Black Tree & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(n)$ \\
+B-Tree & $O(\log n)$ & $O(\log n)$ & $O(\log n)$ & $O(n)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Programmazione Dinamica}
+
+\begin{table}[h]
+\centering
+\caption{Complessità problemi di programmazione dinamica}
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Problema} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Note} \\
+\hline
+Fibonacci & $O(n)$ & $O(n)$ & Ottimizzabile a $O(1)$ spazio \\
+0/1 Knapsack & $O(nW)$ & $O(nW)$ & $W$ = capacità. Pseudo-polinomiale \\
+Unbounded Knapsack & $O(nW)$ & $O(W)$ & Spazio ottimizzato \\
+LCS & $O(mn)$ & $O(mn)$ & $m,n$ = lunghezze stringhe \\
+Edit Distance & $O(mn)$ & $O(mn)$ & Ottimizzabile a $O(\min(m,n))$ \\
+LIS & $O(n^2)$ & $O(n)$ & DP classico \\
+LIS (ottimizzato) & $O(n\log n)$ & $O(n)$ & Con binary search \\
+Matrix Chain & $O(n^3)$ & $O(n^2)$ & $n$ = numero matrici \\
+Coin Change & $O(nS)$ & $O(S)$ & $S$ = somma target \\
+Rod Cutting & $O(n^2)$ & $O(n)$ & $n$ = lunghezza asta \\
+Subset Sum & $O(nS)$ & $O(nS)$ & Pseudo-polinomiale \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Problemi su Griglie}
+
+\begin{table}[h]
+\centering
+\caption{DP su griglie}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Problema} & \textbf{Tempo} & \textbf{Spazio} \\
+\hline
+Unique Paths & $O(mn)$ & $O(mn)$ ottimizzabile a $O(n)$ \\
+Min Path Sum & $O(mn)$ & $O(mn)$ ottimizzabile a $O(n)$ \\
+Maximal Square & $O(mn)$ & $O(mn)$ \\
+Dungeon Game & $O(mn)$ & $O(mn)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Algoritmi Greedy}
+
+\begin{table}[h]
+\centering
+\caption{Complessità algoritmi greedy}
+\begin{tabular}{|l|c|c|p{6cm}|}
+\hline
+\textbf{Problema} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Note} \\
+\hline
+Activity Selection & $O(n\log n)$ & $O(1)$ & Ordinamento per tempo di fine \\
+Fractional Knapsack & $O(n\log n)$ & $O(1)$ & Ordinamento per ratio valore/peso \\
+Huffman Coding & $O(n\log n)$ & $O(n)$ & Con binary heap \\
+Kruskal MST & $O(E\log E)$ & $O(V)$ & $= O(E\log V)$, con Union-Find \\
+Prim MST & $O(E\log V)$ & $O(V)$ & Con binary heap \\
+Prim (Fibonacci) & $O(E + V\log V)$ & $O(V)$ & Con Fibonacci heap \\
+Dijkstra & $O((V+E)\log V)$ & $O(V)$ & Con binary heap, pesi $\geq 0$ \\
+Dijkstra (Fibonacci) & $O(E + V\log V)$ & $O(V)$ & Con Fibonacci heap \\
+Job Scheduling & $O(n\log n)$ & $O(1)$ & Minimize lateness \\
+Interval Covering & $O(n\log n)$ & $O(n)$ & Ordinamento necessario \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Backtracking}
+
+\begin{table}[h]
+\centering
+\caption{Complessità algoritmi backtracking}
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Problema} & \textbf{Tempo (worst)} & \textbf{Spazio} & \textbf{Note} \\
+\hline
+N-Queens & $O(N!)$ & $O(N)$ & Pruning riduce drasticamente \\
+Sudoku & $O(9^m)$ & $O(m)$ & $m$ = celle vuote \\
+Graph Coloring & $O(k^V)$ & $O(V)$ & $k$ = colori, $V$ = vertici \\
+Hamiltonian Path & $O(N!)$ & $O(N)$ & NP-completo \\
+Subset Sum & $O(2^n)$ & $O(n)$ & Con pruning migliora \\
+Permutazioni & $O(n \cdot n!)$ & $O(n)$ & Genera tutte le permutazioni \\
+Combinazioni $C(n,k)$ & $O(C(n,k) \cdot k)$ & $O(k)$ & $C(n,k) = \frac{n!}{k!(n-k)!}$ \\
+Sottoinsiemi & $O(2^n \cdot n)$ & $O(n)$ & Genera tutti i sottoinsiemi \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Grafi - Traversal}
+
+\begin{table}[h]
+\centering
+\caption{Algoritmi di attraversamento grafi}
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Algoritmo} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Uso} \\
+\hline
+DFS (ricorsivo) & $O(V+E)$ & $O(V)$ & Stack ricorsivo, rilevamento cicli \\
+DFS (iterativo) & $O(V+E)$ & $O(V)$ & Stack esplicito \\
+BFS & $O(V+E)$ & $O(V)$ & Shortest path (non pesato), livelli \\
+Topological Sort & $O(V+E)$ & $O(V)$ & DAG, ordinamento dipendenze \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Grafi - Shortest Paths}
+
+\begin{table}[h]
+\centering
+\caption{Algoritmi shortest path}
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Algoritmo} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Caratteristiche} \\
+\hline
+BFS & $O(V+E)$ & $O(V)$ & Grafi non pesati \\
+Dijkstra (binary heap) & $O((V+E)\log V)$ & $O(V)$ & Pesi $\geq 0$ \\
+Dijkstra (Fibonacci heap) & $O(E + V\log V)$ & $O(V)$ & Pesi $\geq 0$, ottimale \\
+Bellman-Ford & $O(VE)$ & $O(V)$ & Pesi negativi, rileva cicli negativi \\
+Floyd-Warshall & $O(V^3)$ & $O(V^2)$ & All-pairs, pesi negativi OK \\
+Johnson & $O(V^2\log V + VE)$ & $O(V^2)$ & All-pairs, pesi negativi \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Alberi}
+
+\begin{table}[h]
+\centering
+\caption{Operazioni su alberi}
+\begin{tabular}{|l|c|c|p{5cm}|}
+\hline
+\textbf{Operazione} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Note} \\
+\hline
+Traversal (in/pre/post-order) & $O(n)$ & $O(h)$ & $h$ = altezza \\
+Height & $O(n)$ & $O(h)$ & Ricorsivo \\
+Count Nodes & $O(n)$ & $O(h)$ & Ricorsivo \\
+Search BST (avg) & $O(\log n)$ & $O(1)$ & Iterativo \\
+Search BST (worst) & $O(n)$ & $O(1)$ & Albero sbilanciato \\
+Insert BST & $O(\log n)$ avg & $O(h)$ & Può richiedere bilanciamento \\
+Delete BST & $O(\log n)$ avg & $O(h)$ & Tre casi da considerare \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Ricorsione - Problemi Classici}
+
+\begin{table}[h]
+\centering
+\caption{Complessità problemi ricorsivi}
+\begin{tabular}{|l|c|c|p{4cm}|}
+\hline
+\textbf{Problema} & \textbf{Tempo} & \textbf{Spazio} & \textbf{Ricorrenza} \\
+\hline
+Fattoriale & $O(n)$ & $O(n)$ & $T(n) = T(n-1) + O(1)$ \\
+Fibonacci (naive) & $O(2^n)$ & $O(n)$ & $T(n) = T(n-1) + T(n-2)$ \\
+Fibonacci (memo) & $O(n)$ & $O(n)$ & Con memoization \\
+Hanoi & $O(2^n)$ & $O(n)$ & $T(n) = 2T(n-1) + O(1)$ \\
+Binary Search & $O(\log n)$ & $O(\log n)$ & $T(n) = T(n/2) + O(1)$ \\
+Merge Sort & $O(n\log n)$ & $O(n)$ & $T(n) = 2T(n/2) + O(n)$ \\
+Quick Sort (avg) & $O(n\log n)$ & $O(\log n)$ & $T(n) = 2T(n/2) + O(n)$ \\
+Quick Sort (worst) & $O(n^2)$ & $O(n)$ & $T(n) = T(n-1) + O(n)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Master Theorem}
+
+Il \textbf{Master Theorem} fornisce soluzioni dirette per ricorrenze della forma:
+\[ T(n) = aT(n/b) + f(n) \]
+
+dove $a \geq 1$, $b > 1$ e $f(n)$ è asintoticamente positiva.
+
+\begin{table}[h]
+\centering
+\caption{Casi del Master Theorem}
+\begin{tabular}{|c|p{6cm}|p{5cm}|}
+\hline
+\textbf{Caso} & \textbf{Condizione} & \textbf{Soluzione} \\
+\hline
+1 & $f(n) = O(n^{\log_b a - \epsilon})$ per qualche $\epsilon > 0$ & $T(n) = \Theta(n^{\log_b a})$ \\
+\hline
+2 & $f(n) = \Theta(n^{\log_b a} \log^k n)$ per qualche $k \geq 0$ & $T(n) = \Theta(n^{\log_b a} \log^{k+1} n)$ \\
+\hline
+3 & $f(n) = \Omega(n^{\log_b a + \epsilon})$ per qualche $\epsilon > 0$ e $af(n/b) \leq cf(n)$ per $c < 1$ & $T(n) = \Theta(f(n))$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Esempi di Applicazione}
+
+\begin{table}[h]
+\centering
+\caption{Master Theorem - Esempi}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Ricorrenza} & $a$ & $b$ & \textbf{Caso} & \textbf{Soluzione} \\
+\hline
+$T(n) = 2T(n/2) + O(1)$ & 2 & 2 & 1 & $\Theta(n)$ \\
+$T(n) = 2T(n/2) + O(n)$ & 2 & 2 & 2 & $\Theta(n\log n)$ \\
+$T(n) = 2T(n/2) + O(n^2)$ & 2 & 2 & 3 & $\Theta(n^2)$ \\
+$T(n) = 4T(n/2) + O(n)$ & 4 & 2 & 1 & $\Theta(n^2)$ \\
+$T(n) = T(n/2) + O(n)$ & 1 & 2 & 3 & $\Theta(n)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Notazioni Asintotiche}
+
+\subsection{Definizioni}
+
+\begin{table}[h]
+\centering
+\caption{Notazioni asintotiche}
+\begin{tabular}{|c|p{7cm}|p{4cm}|}
+\hline
+\textbf{Notazione} & \textbf{Definizione} & \textbf{Significato} \\
+\hline
+$O(g(n))$ & $\exists c, n_0: 0 \leq f(n) \leq c \cdot g(n), \forall n \geq n_0$ & Upper bound \\
+\hline
+$\Omega(g(n))$ & $\exists c, n_0: 0 \leq c \cdot g(n) \leq f(n), \forall n \geq n_0$ & Lower bound \\
+\hline
+$\Theta(g(n))$ & $f(n) = O(g(n))$ e $f(n) = \Omega(g(n))$ & Tight bound \\
+\hline
+$o(g(n))$ & $\lim_{n \to \infty} \frac{f(n)}{g(n)} = 0$ & Strict upper bound \\
+\hline
+$\omega(g(n))$ & $\lim_{n \to \infty} \frac{f(n)}{g(n)} = \infty$ & Strict lower bound \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Gerarchia di Complessità}
+
+In ordine crescente:
+\begin{align*}
+O(1) &< O(\log\log n) < O(\log n) < O(\sqrt{n}) < O(n) \\
+&< O(n\log n) < O(n^2) < O(n^3) < O(2^n) < O(n!) < O(n^n)
+\end{align*}
+
+\subsection{Proprietà delle Notazioni}
+
+\begin{itemize}
+    \item \textbf{Transitività}: Se $f = O(g)$ e $g = O(h)$, allora $f = O(h)$
+    \item \textbf{Riflessività}: $f = O(f)$
+    \item \textbf{Simmetria} (per $\Theta$): Se $f = \Theta(g)$, allora $g = \Theta(f)$
+    \item \textbf{Somma}: $O(f) + O(g) = O(\max(f, g))$
+    \item \textbf{Prodotto}: $O(f) \cdot O(g) = O(f \cdot g)$
+\end{itemize}
+
+\section{Classi di Complessità}
+
+\begin{table}[h]
+\centering
+\caption{Classi di complessità comuni}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Classe} & \textbf{Tempo} & \textbf{Esempi} \\
+\hline
+Costante & $O(1)$ & Accesso array, operazioni aritmetiche \\
+Logaritmica & $O(\log n)$ & Binary search, operazioni su heap \\
+Lineare & $O(n)$ & Linear search, traversal semplici \\
+Linearithmic & $O(n\log n)$ & Merge sort, heap sort, sorting ottimali \\
+Quadratica & $O(n^2)$ & Bubble sort, selezione sort, nested loops \\
+Cubica & $O(n^3)$ & Floyd-Warshall, matrix multiplication naive \\
+Polinomiale & $O(n^k)$ & Algoritmi efficienti, classe P \\
+Esponenziale & $O(2^n)$ & Subset sum (forza bruta), backtracking \\
+Fattoriale & $O(n!)$ & Permutazioni, traveling salesman (brute force) \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Complessità Spaziali Comuni}
+
+\begin{table}[h]
+\centering
+\caption{Spazio ausiliario per algoritmi comuni}
+\begin{tabular}{|l|c|p{6cm}|}
+\hline
+\textbf{Tecnica/Algoritmo} & \textbf{Spazio} & \textbf{Note} \\
+\hline
+Iterazione semplice & $O(1)$ & Solo variabili locali \\
+Ricorsione lineare & $O(n)$ & Stack depth = $n$ \\
+Ricorsione logaritmica & $O(\log n)$ & Binary search, binary tree balanced \\
+Memoization & $O(n)$ o più & Tabella per sottoproblemi \\
+DP (1D) & $O(n)$ & Array 1D \\
+DP (2D) & $O(n^2)$ o $O(mn)$ & Matrice per stati \\
+Backtracking & $O(h)$ & $h$ = profondità ricorsione \\
+Queue/Stack & $O(n)$ & Per BFS/DFS \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Ottimizzazioni Comuni}
+
+\begin{table}[h]
+\centering
+\caption{Tecniche di ottimizzazione}
+\begin{tabular}{|l|p{5cm}|p{5cm}|}
+\hline
+\textbf{Tecnica} & \textbf{Da} & \textbf{A} \\
+\hline
+Memoization & $O(2^n)$ ricorsione & $O(n)$ o $O(n^2)$ \\
+Two pointers & $O(n^2)$ nested loops & $O(n)$ \\
+Sliding window & $O(nk)$ & $O(n)$ \\
+Binary search & $O(n)$ linear & $O(\log n)$ \\
+Hash table & $O(n)$ search & $O(1)$ average \\
+Heap & $O(n)$ find min & $O(\log n)$ extract, $O(1)$ peek \\
+Union-Find & $O(n)$ per op & $O(\alpha(n)) \approx O(1)$ \\
+Segment Tree & $O(n)$ range query & $O(\log n)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Regole Pratiche}
+
+\subsection{Stima della Complessità dal Codice}
+
+\begin{enumerate}
+    \item \textbf{Loop singolo su $n$}: $O(n)$
+    \item \textbf{Loop annidati su $n$}: $O(n^k)$ dove $k$ = numero di livelli
+    \item \textbf{Divisione per 2 ad ogni passo}: $O(\log n)$
+    \item \textbf{Chiamate ricorsive multiple}: analizzare albero di ricorsione
+    \item \textbf{Ricorsione con memoization}: numero di stati unici
+\end{enumerate}
+
+\subsection{Limiti Pratici per Tempo di Esecuzione}
+
+Assumendo $10^8$ operazioni/secondo:
+
+\begin{table}[h]
+\centering
+\caption{Dimensioni gestibili per complessità diverse}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Complessità} & \textbf{Max $n$ (1 sec)} & \textbf{Max $n$ (1 min)} \\
+\hline
+$O(\log n)$ & $\sim 10^{30}$ & Praticamente illimitato \\
+$O(n)$ & $10^8$ & $6 \times 10^9$ \\
+$O(n\log n)$ & $5 \times 10^6$ & $2 \times 10^8$ \\
+$O(n^2)$ & $10^4$ & $2.4 \times 10^5$ \\
+$O(n^3)$ & $460$ & $3900$ \\
+$O(2^n)$ & $26$ & $32$ \\
+$O(n!)$ & $11$ & $12$ \\
+\hline
+\end{tabular}
+\end{table}

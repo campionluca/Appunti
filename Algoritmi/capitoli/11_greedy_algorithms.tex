@@ -1,0 +1,921 @@
+\chapter{Algoritmi Greedy}
+\label{cap:greedy}
+
+\section{Introduzione}
+
+Un \textbf{algoritmo greedy} (avido o goloso) costruisce una soluzione passo dopo passo, scegliendo ad ogni passo l'opzione localmente ottimale, sperando di arrivare a una soluzione globalmente ottimale.
+
+\subsection{Caratteristiche}
+
+\begin{itemize}
+    \item \textbf{Scelta greedy}: ad ogni passo, sceglie l'opzione che sembra migliore al momento
+    \item \textbf{Proprietà greedy}: una scelta localmente ottimale porta a una soluzione globalmente ottimale
+    \item \textbf{Sottostruttura ottima}: la soluzione ottima contiene soluzioni ottime dei sottoproblemi
+    \item \textbf{Irrevocabilità}: le scelte non vengono mai riviste
+\end{itemize}
+
+\subsection{Greedy vs Dynamic Programming}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{Greedy} & \textbf{Dynamic Programming} \\
+\hline
+Scelta & Locale, irrevocabile & Considera tutte le opzioni \\
+Complessità & Generalmente più bassa & Generalmente più alta \\
+Correttezza & Non sempre garantita & Garantita (se applicabile) \\
+Applicabilità & Problemi specifici & Classe più ampia \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Quando Usare Greedy}
+
+Un algoritmo greedy funziona se il problema ha:
+\begin{enumerate}
+    \item \textbf{Sottostruttura ottima}
+    \item \textbf{Proprietà greedy choice}: la scelta localmente ottima è sempre corretta
+\end{enumerate}
+
+\section{Activity Selection Problem}
+
+\subsection{Definizione}
+
+Dato un insieme di $n$ attività con tempo di inizio $s_i$ e tempo di fine $f_i$, selezionare il massimo numero di attività mutualmente compatibili (non sovrapposte).
+
+\subsection{Strategia Greedy}
+
+\textbf{Scelta greedy}: Seleziona sempre l'attività con tempo di fine più precoce tra quelle compatibili.
+
+\textbf{Intuizione}: Terminando prima, lasciamo più tempo per altre attività.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Activity Selection}
+\begin{algorithmic}[1]
+\Procedure{ActivitySelection}{$s, f, n$}
+    \State Ordina attività per tempo di fine crescente
+    \State $A \gets \{a_1\}$ \Comment{Prima attività}
+    \State $last\_finish \gets f_1$
+    \For{$i \gets 2$ \To $n$}
+        \If{$s_i \geq last\_finish$}
+            \State $A \gets A \cup \{a_i\}$
+            \State $last\_finish \gets f_i$
+        \EndIf
+    \EndFor
+    \State \Return $A$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Prova di Correttezza}
+
+\textbf{Teorema}: La strategia greedy produce una soluzione ottima.
+
+\textbf{Dimostrazione} (per scambio):
+Sia $A = \{a_1, a_2, \ldots, a_k\}$ la soluzione greedy e $O = \{o_1, o_2, \ldots, o_m\}$ una soluzione ottima (ordinate per tempo di fine).
+
+Vogliamo mostrare che $k = m$ (stesso numero di attività).
+
+Per induzione, possiamo trasformare $O$ in $A$ scambiando attività senza ridurre la dimensione:
+\begin{itemize}
+    \item Se $a_1 = o_1$, applica induzione al resto
+    \item Se $a_1 \neq o_1$, $f(a_1) \leq f(o_1)$ per scelta greedy
+    \item Sostituisci $o_1$ con $a_1$ in $O$: rimane ottima
+    \item Continua per induzione
+\end{itemize}
+
+\subsection{Analisi di Complessità}
+
+\begin{itemize}
+    \item \textbf{Ordinamento}: $O(n \log n)$
+    \item \textbf{Selezione}: $O(n)$
+    \item \textbf{Totale}: $O(n \log n)$
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def activity_selection(activities):
+    """
+    Seleziona il massimo numero di attivita compatibili.
+
+    Args:
+        activities: lista di tuple (start, finish)
+
+    Returns:
+        lista di attivita selezionate
+
+    Complessita: O(n log n)
+    """
+    if not activities:
+        return []
+
+    # Ordina per tempo di fine
+    sorted_activities = sorted(activities, key=lambda x: x[1])
+
+    selected = [sorted_activities[0]]
+    last_finish = sorted_activities[0][1]
+
+    for start, finish in sorted_activities[1:]:
+        # Se compatibile, seleziona
+        if start >= last_finish:
+            selected.append((start, finish))
+            last_finish = finish
+
+    return selected
+
+
+def activity_selection_weighted(activities, weights):
+    """
+    Variante pesata: massimizza il peso totale.
+    Nota: richiede Dynamic Programming, non greedy!
+
+    Questo e un esempio dove greedy NON funziona.
+    """
+    # Ordina per tempo di fine
+    n = len(activities)
+    sorted_indices = sorted(range(n),
+                           key=lambda i: activities[i][1])
+
+    # DP: dp[i] = max peso usando attivita 0..i
+    dp = [0] * n
+    dp[0] = weights[sorted_indices[0]]
+
+    for i in range(1, n):
+        # Peso includendo attivita i
+        weight_with = weights[sorted_indices[i]]
+
+        # Trova ultima attivita compatibile
+        for j in range(i - 1, -1, -1):
+            if activities[sorted_indices[j]][1] <= \
+               activities[sorted_indices[i]][0]:
+                weight_with += dp[j]
+                break
+
+        # Peso escludendo attivita i
+        weight_without = dp[i - 1]
+
+        dp[i] = max(weight_with, weight_without)
+
+    return dp[n - 1]
+\end{lstlisting}
+
+\section{Fractional Knapsack}
+
+\subsection{Definizione}
+
+Simile a 0/1 Knapsack, ma possiamo prendere frazioni di oggetti.
+
+\textbf{Input:}
+\begin{itemize}
+    \item $n$ oggetti con peso $w_i$ e valore $v_i$
+    \item Capacità $W$
+\end{itemize}
+
+\textbf{Output:} Massimo valore prendendo frazioni di oggetti con peso totale $\leq W$.
+
+\subsection{Strategia Greedy}
+
+\textbf{Scelta greedy}: Ordina per rapporto valore/peso decrescente, prendi quanto possibile di ogni oggetto.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Fractional Knapsack}
+\begin{algorithmic}[1]
+\Procedure{FractionalKnapsack}{$values, weights, W$}
+    \State Calcola $ratios[i] \gets values[i] / weights[i]$
+    \State Ordina oggetti per $ratios$ decrescente
+    \State $total\_value \gets 0$
+    \State $remaining\_capacity \gets W$
+    \For{ogni oggetto $i$ in ordine}
+        \If{$weights[i] \leq remaining\_capacity$}
+            \State Prendi tutto l'oggetto $i$
+            \State $total\_value \gets total\_value + values[i]$
+            \State $remaining\_capacity \gets remaining\_capacity - weights[i]$
+        \Else
+            \State Prendi frazione $remaining\_capacity / weights[i]$ di $i$
+            \State $total\_value \gets total\_value + values[i] \cdot (remaining\_capacity / weights[i])$
+            \State \Return $total\_value$
+        \EndIf
+    \EndFor
+    \State \Return $total\_value$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Prova di Correttezza}
+
+La scelta greedy funziona perché:
+\begin{itemize}
+    \item Prendere l'oggetto con massimo valore/peso è sempre ottimale
+    \item Se una soluzione ottima prende meno di questo oggetto, possiamo scambiare parte di un altro oggetto (con rapporto inferiore) con più di questo oggetto, migliorando la soluzione
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def fractional_knapsack(values, weights, capacity):
+    """
+    Fractional Knapsack con approccio greedy.
+
+    Complessita: O(n log n)
+    """
+    n = len(values)
+
+    # Crea lista di (valore, peso, indice, rapporto)
+    items = []
+    for i in range(n):
+        ratio = values[i] / weights[i]
+        items.append((values[i], weights[i], i, ratio))
+
+    # Ordina per rapporto decrescente
+    items.sort(key=lambda x: x[3], reverse=True)
+
+    total_value = 0
+    remaining_capacity = capacity
+    fractions = [0.0] * n  # Frazione di ogni oggetto presa
+
+    for value, weight, idx, ratio in items:
+        if remaining_capacity == 0:
+            break
+
+        if weight <= remaining_capacity:
+            # Prendi tutto
+            fractions[idx] = 1.0
+            total_value += value
+            remaining_capacity -= weight
+        else:
+            # Prendi frazione
+            fraction = remaining_capacity / weight
+            fractions[idx] = fraction
+            total_value += value * fraction
+            remaining_capacity = 0
+
+    return total_value, fractions
+
+
+# Esempio d'uso
+values = [60, 100, 120]
+weights = [10, 20, 30]
+capacity = 50
+
+max_value, fractions = fractional_knapsack(values, weights, capacity)
+print(f"Valore massimo: {max_value}")
+print(f"Frazioni prese: {fractions}")
+# Output: Valore massimo: 240.0
+# Frazioni: [1.0, 1.0, 0.6666...]
+\end{lstlisting}
+
+\section{Huffman Coding}
+
+\subsection{Problema}
+
+Costruire un codice a lunghezza variabile ottimale per comprimere dati.
+
+\subsection{Idea}
+
+Assegna codici più corti ai caratteri più frequenti.
+
+\subsection{Strategia Greedy}
+
+\begin{enumerate}
+    \item Crea un nodo foglia per ogni carattere con la sua frequenza
+    \item Ripetutamente:
+    \begin{itemize}
+        \item Trova i due nodi con frequenza minima
+        \item Crea un nodo padre con frequenza = somma dei figli
+        \item Rimuovi i due nodi, aggiungi il padre
+    \end{itemize}
+    \item Continua finché rimane un solo nodo (radice)
+\end{enumerate}
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Huffman Coding}
+\begin{algorithmic}[1]
+\Procedure{Huffman}{$C$} \Comment{C = caratteri con frequenze}
+    \State $n \gets |C|$
+    \State $Q \gets C$ \Comment{Min-priority queue}
+    \For{$i \gets 1$ \To $n-1$}
+        \State $z \gets$ nuovo nodo
+        \State $z.left \gets$ \Call{ExtractMin}{$Q$}
+        \State $z.right \gets$ \Call{ExtractMin}{$Q$}
+        \State $z.freq \gets z.left.freq + z.right.freq$
+        \State \Call{Insert}{$Q, z$}
+    \EndFor
+    \State \Return \Call{ExtractMin}{$Q$} \Comment{Radice dell'albero}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+Con heap binario:
+\begin{itemize}
+    \item Costruzione heap: $O(n)$
+    \item $n-1$ iterazioni, ognuna con 2 extract-min e 1 insert: $O(n \log n)$
+    \item \textbf{Totale}: $O(n \log n)$
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+import heapq
+from collections import defaultdict, Counter
+
+
+class HuffmanNode:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+
+def huffman_encoding(text):
+    """
+    Costruisce albero di Huffman e codifica testo.
+
+    Complessita: O(n log n) dove n = numero caratteri unici
+    """
+    if not text:
+        return "", None, {}
+
+    # Calcola frequenze
+    freq = Counter(text)
+
+    # Caso speciale: un solo carattere
+    if len(freq) == 1:
+        char = list(freq.keys())[0]
+        codes = {char: '0'}
+        encoded = '0' * len(text)
+        return encoded, None, codes
+
+    # Crea heap con nodi foglia
+    heap = [HuffmanNode(char, f) for char, f in freq.items()]
+    heapq.heapify(heap)
+
+    # Costruisci albero
+    while len(heap) > 1:
+        left = heapq.heappop(heap)
+        right = heapq.heappop(heap)
+
+        parent = HuffmanNode(None, left.freq + right.freq)
+        parent.left = left
+        parent.right = right
+
+        heapq.heappush(heap, parent)
+
+    root = heap[0]
+
+    # Genera codici
+    codes = {}
+
+    def generate_codes(node, code=""):
+        if node is None:
+            return
+
+        if node.char is not None:  # Foglia
+            codes[node.char] = code if code else "0"
+            return
+
+        generate_codes(node.left, code + "0")
+        generate_codes(node.right, code + "1")
+
+    generate_codes(root)
+
+    # Codifica testo
+    encoded = ''.join(codes[char] for char in text)
+
+    return encoded, root, codes
+
+
+def huffman_decoding(encoded, root):
+    """
+    Decodifica testo usando albero di Huffman.
+
+    Complessita: O(m) dove m = lunghezza testo codificato
+    """
+    if not encoded or not root:
+        return ""
+
+    # Caso speciale: un solo carattere
+    if root.char is not None:
+        return root.char * len(encoded)
+
+    decoded = []
+    current = root
+
+    for bit in encoded:
+        if bit == '0':
+            current = current.left
+        else:
+            current = current.right
+
+        # Raggiunto foglia
+        if current.char is not None:
+            decoded.append(current.char)
+            current = root
+
+    return ''.join(decoded)
+
+
+# Esempio d'uso
+text = "this is an example for huffman encoding"
+encoded, tree, codes = huffman_encoding(text)
+
+print("Codici Huffman:")
+for char, code in sorted(codes.items()):
+    print(f"  '{char}': {code}")
+
+print(f"\nTesto originale: {len(text) * 8} bits (ASCII)")
+print(f"Testo codificato: {len(encoded)} bits")
+print(f"Compressione: {100 * (1 - len(encoded)/(len(text)*8)):.1f}%")
+
+decoded = huffman_decoding(encoded, tree)
+assert decoded == text
+print(f"\nDecodifica corretta: {decoded == text}")
+\end{lstlisting}
+
+\section{Minimum Spanning Tree (MST)}
+
+\subsection{Definizione}
+
+Dato un grafo non orientato connesso e pesato $G = (V, E)$, trovare un albero che:
+\begin{itemize}
+    \item Connette tutti i vertici
+    \item Ha peso totale minimo
+\end{itemize}
+
+\subsection{Algoritmo di Kruskal}
+
+\subsubsection{Strategia}
+
+Ordina gli archi per peso crescente e aggiungi archi che non creano cicli.
+
+\subsubsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Kruskal's MST}
+\begin{algorithmic}[1]
+\Procedure{Kruskal}{$G = (V, E)$}
+    \State $A \gets \emptyset$
+    \For{ogni vertice $v \in V$}
+        \State \Call{MakeSet}{$v$}
+    \EndFor
+    \State Ordina $E$ per peso crescente
+    \For{ogni arco $(u, v) \in E$ in ordine}
+        \If{\Call{FindSet}{$u$} $\neq$ \Call{FindSet}{$v$}}
+            \State $A \gets A \cup \{(u, v)\}$
+            \State \Call{Union}{$u, v$}
+        \EndIf
+    \EndFor
+    \State \Return $A$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+class UnionFind:
+    """
+    Union-Find (Disjoint Set Union) con path compression
+    e union by rank.
+    """
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+
+    def find(self, x):
+        """Trova il rappresentante con path compression."""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        """Unisci due insiemi con union by rank."""
+        root_x = self.find(x)
+        root_y = self.find(y)
+
+        if root_x == root_y:
+            return False
+
+        # Union by rank
+        if self.rank[root_x] < self.rank[root_y]:
+            self.parent[root_x] = root_y
+        elif self.rank[root_x] > self.rank[root_y]:
+            self.parent[root_y] = root_x
+        else:
+            self.parent[root_y] = root_x
+            self.rank[root_x] += 1
+
+        return True
+
+
+def kruskal_mst(n, edges):
+    """
+    Algoritmo di Kruskal per MST.
+
+    Args:
+        n: numero di vertici (0..n-1)
+        edges: lista di (weight, u, v)
+
+    Returns:
+        (peso_totale, lista_archi_mst)
+
+    Complessita: O(E log E) = O(E log V)
+    """
+    # Ordina archi per peso
+    edges.sort()
+
+    uf = UnionFind(n)
+    mst = []
+    total_weight = 0
+
+    for weight, u, v in edges:
+        # Se non crea ciclo, aggiungi
+        if uf.union(u, v):
+            mst.append((u, v, weight))
+            total_weight += weight
+
+            # MST completo quando ha n-1 archi
+            if len(mst) == n - 1:
+                break
+
+    return total_weight, mst
+
+
+# Esempio
+edges = [
+    (1, 0, 1),  # (peso, u, v)
+    (2, 0, 2),
+    (3, 1, 2),
+    (4, 1, 3),
+    (5, 2, 3)
+]
+
+weight, mst = kruskal_mst(4, edges)
+print(f"Peso MST: {weight}")
+print(f"Archi MST: {mst}")
+\end{lstlisting}
+
+\subsection{Algoritmo di Prim}
+
+\subsubsection{Strategia}
+
+Parti da un vertice, espandi l'albero aggiungendo sempre l'arco di peso minimo che connette un nuovo vertice.
+
+\subsubsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Prim's MST}
+\begin{algorithmic}[1]
+\Procedure{Prim}{$G, w, r$} \Comment{r = radice}
+    \For{ogni vertice $u \in V$}
+        \State $key[u] \gets \infty$
+        \State $parent[u] \gets \text{NIL}$
+    \EndFor
+    \State $key[r] \gets 0$
+    \State $Q \gets V$ \Comment{Min-priority queue}
+    \While{$Q \neq \emptyset$}
+        \State $u \gets$ \Call{ExtractMin}{$Q$}
+        \For{ogni $v \in Adj[u]$}
+            \If{$v \in Q$ \And $w(u,v) < key[v]$}
+                \State $parent[v] \gets u$
+                \State $key[v] \gets w(u,v)$
+            \EndIf
+        \EndFor
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+import heapq
+
+
+def prim_mst(n, graph, start=0):
+    """
+    Algoritmo di Prim per MST.
+
+    Args:
+        n: numero di vertici
+        graph: dict {u: [(v, weight), ...]}
+        start: vertice di partenza
+
+    Returns:
+        (peso_totale, lista_archi_mst)
+
+    Complessita: O(E log V) con binary heap
+    """
+    visited = [False] * n
+    mst = []
+    total_weight = 0
+
+    # Min-heap: (peso, vertice_corrente, vertice_precedente)
+    heap = [(0, start, -1)]
+
+    while heap:
+        weight, u, parent = heapq.heappop(heap)
+
+        if visited[u]:
+            continue
+
+        visited[u] = True
+        total_weight += weight
+
+        if parent != -1:
+            mst.append((parent, u, weight))
+
+        # Aggiungi archi adiacenti
+        for v, edge_weight in graph.get(u, []):
+            if not visited[v]:
+                heapq.heappush(heap, (edge_weight, v, u))
+
+    return total_weight, mst
+
+
+# Esempio
+graph = {
+    0: [(1, 1), (2, 2)],
+    1: [(0, 1), (2, 3), (3, 4)],
+    2: [(0, 2), (1, 3), (3, 5)],
+    3: [(1, 4), (2, 5)]
+}
+
+weight, mst = prim_mst(4, graph)
+print(f"Peso MST: {weight}")
+print(f"Archi MST: {mst}")
+\end{lstlisting}
+
+\section{Shortest Path - Dijkstra}
+
+\subsection{Problema}
+
+Trovare il cammino più breve da una sorgente a tutti gli altri vertici in un grafo con pesi non negativi.
+
+\subsection{Strategia Greedy}
+
+Mantieni un insieme $S$ di vertici con distanza minima già calcolata. Ad ogni passo, aggiungi a $S$ il vertice $u \notin S$ con distanza minima.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Dijkstra's Algorithm}
+\begin{algorithmic}[1]
+\Procedure{Dijkstra}{$G, w, s$}
+    \For{ogni vertice $v \in V$}
+        \State $dist[v] \gets \infty$
+        \State $parent[v] \gets \text{NIL}$
+    \EndFor
+    \State $dist[s] \gets 0$
+    \State $Q \gets V$
+    \While{$Q \neq \emptyset$}
+        \State $u \gets$ vertice in $Q$ con $dist[u]$ minima
+        \State Rimuovi $u$ da $Q$
+        \For{ogni vicino $v$ di $u$}
+            \State $alt \gets dist[u] + w(u, v)$
+            \If{$alt < dist[v]$}
+                \State $dist[v] \gets alt$
+                \State $parent[v] \gets u$
+            \EndIf
+        \EndFor
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+import heapq
+
+
+def dijkstra(graph, start, n):
+    """
+    Algoritmo di Dijkstra per shortest paths.
+
+    Args:
+        graph: dict {u: [(v, weight), ...]}
+        start: vertice sorgente
+        n: numero di vertici
+
+    Returns:
+        (distanze, predecessori)
+
+    Complessita: O((V + E) log V) con binary heap
+    """
+    dist = [float('inf')] * n
+    parent = [-1] * n
+    dist[start] = 0
+
+    # Min-heap: (distanza, vertice)
+    heap = [(0, start)]
+    visited = set()
+
+    while heap:
+        d, u = heapq.heappop(heap)
+
+        if u in visited:
+            continue
+
+        visited.add(u)
+
+        # Rilassamento degli archi
+        for v, weight in graph.get(u, []):
+            new_dist = dist[u] + weight
+
+            if new_dist < dist[v]:
+                dist[v] = new_dist
+                parent[v] = u
+                heapq.heappush(heap, (new_dist, v))
+
+    return dist, parent
+
+
+def get_path(parent, target):
+    """Ricostruisce il cammino dalla sorgente a target."""
+    path = []
+    current = target
+
+    while current != -1:
+        path.append(current)
+        current = parent[current]
+
+    return list(reversed(path))
+
+
+# Esempio
+graph = {
+    0: [(1, 4), (2, 1)],
+    1: [(3, 1)],
+    2: [(1, 2), (3, 5)],
+    3: []
+}
+
+distances, parents = dijkstra(graph, 0, 4)
+
+print("Distanze dalla sorgente 0:")
+for i, d in enumerate(distances):
+    print(f"  Vertice {i}: {d}")
+    if d != float('inf'):
+        path = get_path(parents, i)
+        print(f"    Cammino: {' -> '.join(map(str, path))}")
+\end{lstlisting}
+
+\section{Job Scheduling}
+
+\subsection{Minimize Maximum Lateness}
+
+\textbf{Problema}: Schedule $n$ job su una macchina, ognuno con durata $t_i$ e deadline $d_i$. Minimizzare il massimo ritardo.
+
+\textbf{Strategia greedy}: Ordina per deadline (Earliest Deadline First).
+
+\begin{lstlisting}[language=Python]
+def minimize_lateness(jobs):
+    """
+    Minimizza il massimo ritardo.
+
+    Args:
+        jobs: lista di (duration, deadline)
+
+    Returns:
+        (max_lateness, schedule)
+
+    Complessita: O(n log n)
+    """
+    # Ordina per deadline
+    sorted_jobs = sorted(jobs, key=lambda x: x[1])
+
+    schedule = []
+    time = 0
+    max_lateness = 0
+
+    for duration, deadline in sorted_jobs:
+        start = time
+        finish = time + duration
+        lateness = max(0, finish - deadline)
+
+        schedule.append({
+            'start': start,
+            'finish': finish,
+            'deadline': deadline,
+            'lateness': lateness
+        })
+
+        time = finish
+        max_lateness = max(max_lateness, lateness)
+
+    return max_lateness, schedule
+\end{lstlisting}
+
+\section{Intervalli su Linea}
+
+\subsection{Interval Covering}
+
+Coprire una linea $[0, L]$ con il minimo numero di intervalli.
+
+\begin{lstlisting}[language=Python]
+def interval_covering(intervals, L):
+    """
+    Copri [0, L] con minimo numero di intervalli.
+
+    Greedy: scegli sempre l'intervallo che estende
+    di piu la copertura corrente.
+
+    Complessita: O(n log n)
+    """
+    # Ordina per inizio
+    intervals.sort()
+
+    covered = 0
+    selected = []
+    i = 0
+    n = len(intervals)
+
+    while covered < L and i < n:
+        # Salta intervalli che non estendono copertura
+        if intervals[i][0] > covered:
+            return None  # Impossibile coprire
+
+        # Trova intervallo che estende di piu
+        max_end = covered
+        best_interval = None
+
+        while i < n and intervals[i][0] <= covered:
+            if intervals[i][1] > max_end:
+                max_end = intervals[i][1]
+                best_interval = intervals[i]
+            i += 1
+
+        if best_interval is None:
+            return None
+
+        selected.append(best_interval)
+        covered = max_end
+
+    if covered < L:
+        return None
+
+    return selected
+\end{lstlisting}
+
+\section{Quando Greedy NON Funziona}
+
+\subsection{0/1 Knapsack}
+
+Greedy (rapporto valore/peso) non funziona:
+
+\textbf{Esempio:}
+\begin{itemize}
+    \item Capacità: 10
+    \item Oggetti: (peso=10, valore=100), (peso=1, valore=11) $\times$ 10
+    \item Greedy sceglie il primo: valore = 100
+    \item Ottimo sceglie i 10 piccoli: valore = 110
+\end{itemize}
+
+\subsection{Longest Path}
+
+Trovare il cammino più lungo in un grafo: greedy fallisce, serve DP o esplorazione esaustiva.
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Dimostrare formalmente la correttezza di:
+    \begin{enumerate}
+        \item Activity Selection
+        \item Fractional Knapsack
+        \item Huffman Coding
+    \end{enumerate}
+
+    \item Implementare e analizzare:
+    \begin{enumerate}
+        \item Job scheduling con profitti
+        \item Interval partitioning (minimo numero di risorse)
+        \item Gas station problem
+    \end{enumerate}
+
+    \item Confrontare sperimentalmente:
+    \begin{enumerate}
+        \item Kruskal vs Prim su grafi densi e sparsi
+        \item Dijkstra vs Bellman-Ford
+    \end{enumerate}
+
+    \item Problemi avanzati:
+    \begin{enumerate}
+        \item Set Cover con approssimazione greedy
+        \item Vertex Cover con greedy
+        \item Traveling Salesman con euristica greedy
+    \end{enumerate}
+\end{enumerate}

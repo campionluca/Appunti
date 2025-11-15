@@ -1,0 +1,834 @@
+\chapter{Appendice: Esercizi con Soluzioni}
+\label{app:esercizi}
+
+\section{Introduzione}
+
+Questa appendice contiene esercizi selezionati con soluzioni dettagliate, analisi di complessità e implementazioni Python.
+
+\section{Ordinamento}
+
+\subsection{Esercizio 1: Dutch National Flag}
+
+\textbf{Problema}: Dato un array contenente solo 0, 1 e 2, ordinarlo in tempo $O(n)$ e spazio $O(1)$.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  [2, 0, 1, 2, 1, 0]
+Output: [0, 0, 1, 1, 2, 2]
+\end{verbatim}
+
+\textbf{Soluzione}: Usa tre puntatori (three-way partition)
+
+\begin{lstlisting}[language=Python]
+def dutch_flag(arr):
+    """
+    Ordina array di 0, 1, 2.
+
+    Complessita: O(n) tempo, O(1) spazio
+
+    Invarianti:
+    - arr[0..low-1] contiene 0
+    - arr[low..mid-1] contiene 1
+    - arr[high+1..n-1] contiene 2
+    """
+    low = 0      # Prossima posizione per 0
+    mid = 0      # Elemento corrente
+    high = len(arr) - 1  # Prossima posizione per 2
+
+    while mid <= high:
+        if arr[mid] == 0:
+            # Scambia con low e avanza entrambi
+            arr[low], arr[mid] = arr[mid], arr[low]
+            low += 1
+            mid += 1
+        elif arr[mid] == 1:
+            # Gia nella posizione corretta
+            mid += 1
+        else:  # arr[mid] == 2
+            # Scambia con high e arretra high
+            arr[mid], arr[high] = arr[high], arr[mid]
+            high -= 1
+            # Non incrementare mid (elemento scambiato non esaminato)
+
+    return arr
+\end{lstlisting}
+
+\textbf{Analisi}:
+\begin{itemize}
+    \item Ogni elemento viene visitato al massimo una volta
+    \item Complessità temporale: $O(n)$
+    \item Complessità spaziale: $O(1)$ - solo puntatori
+\end{itemize}
+
+\subsection{Esercizio 2: Kth Largest Element}
+
+\textbf{Problema}: Trovare il k-esimo elemento più grande in un array non ordinato.
+
+\textbf{Soluzione 1}: QuickSelect (average $O(n)$)
+
+\begin{lstlisting}[language=Python]
+import random
+
+def kth_largest(arr, k):
+    """
+    Trova k-esimo elemento piu grande usando QuickSelect.
+
+    Complessita: O(n) average, O(n^2) worst case
+    """
+    def partition(left, right, pivot_idx):
+        pivot = arr[pivot_idx]
+        # Sposta pivot alla fine
+        arr[pivot_idx], arr[right] = arr[right], arr[pivot_idx]
+
+        store_idx = left
+        for i in range(left, right):
+            if arr[i] > pivot:  # Ordine decrescente
+                arr[store_idx], arr[i] = arr[i], arr[store_idx]
+                store_idx += 1
+
+        # Metti pivot nella posizione finale
+        arr[right], arr[store_idx] = arr[store_idx], arr[right]
+        return store_idx
+
+    def select(left, right, k):
+        if left == right:
+            return arr[left]
+
+        # Randomized pivot
+        pivot_idx = random.randint(left, right)
+        pivot_idx = partition(left, right, pivot_idx)
+
+        if k == pivot_idx:
+            return arr[k]
+        elif k < pivot_idx:
+            return select(left, pivot_idx - 1, k)
+        else:
+            return select(pivot_idx + 1, right, k)
+
+    return select(0, len(arr) - 1, k - 1)
+\end{lstlisting}
+
+\textbf{Soluzione 2}: Min-Heap ($O(n \log k)$)
+
+\begin{lstlisting}[language=Python]
+import heapq
+
+def kth_largest_heap(arr, k):
+    """
+    Usa min-heap di dimensione k.
+
+    Complessita: O(n log k)
+    Spazio: O(k)
+    """
+    # Mantieni min-heap di k elementi piu grandi
+    heap = arr[:k]
+    heapq.heapify(heap)  # O(k)
+
+    for num in arr[k:]:
+        if num > heap[0]:
+            heapq.heapreplace(heap, num)
+
+    return heap[0]
+\end{lstlisting}
+
+\section{Ricerca}
+
+\subsection{Esercizio 3: First and Last Position}
+
+\textbf{Problema}: Dato un array ordinato con duplicati, trova le posizioni iniziale e finale di un target.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  arr = [5,7,7,8,8,10], target = 8
+Output: [3, 4]
+\end{verbatim}
+
+\textbf{Soluzione}: Due ricerche binarie
+
+\begin{lstlisting}[language=Python]
+def search_range(arr, target):
+    """
+    Trova primo e ultimo indice di target.
+
+    Complessita: O(log n)
+    """
+    def binary_search_left(arr, target):
+        """Trova primo indice >= target."""
+        left, right = 0, len(arr)
+
+        while left < right:
+            mid = left + (right - left) // 2
+            if arr[mid] < target:
+                left = mid + 1
+            else:
+                right = mid
+
+        return left
+
+    def binary_search_right(arr, target):
+        """Trova primo indice > target."""
+        left, right = 0, len(arr)
+
+        while left < right:
+            mid = left + (right - left) // 2
+            if arr[mid] <= target:
+                left = mid + 1
+            else:
+                right = mid
+
+        return left
+
+    start = binary_search_left(arr, target)
+
+    # Target non trovato
+    if start >= len(arr) or arr[start] != target:
+        return [-1, -1]
+
+    end = binary_search_right(arr, target) - 1
+
+    return [start, end]
+\end{lstlisting}
+
+\textbf{Prova di Correttezza}:
+\begin{itemize}
+    \item \texttt{binary\_search\_left} trova il primo indice $i$ tale che $arr[i] \geq target$
+    \item \texttt{binary\_search\_right} trova il primo indice $j$ tale che $arr[j] > target$
+    \item Quindi $arr[i..j-1]$ contiene tutti gli elementi uguali a $target$
+\end{itemize}
+
+\subsection{Esercizio 4: Search in Rotated Array}
+
+\textbf{Problema}: Ricerca in array ordinato ruotato senza duplicati.
+
+\textbf{Soluzione}:
+
+\begin{lstlisting}[language=Python]
+def search_rotated(arr, target):
+    """
+    Ricerca in array ordinato ruotato.
+
+    Complessita: O(log n)
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2
+
+        if arr[mid] == target:
+            return mid
+
+        # Determina quale meta e ordinata
+        if arr[left] <= arr[mid]:  # Meta sinistra ordinata
+            if arr[left] <= target < arr[mid]:
+                right = mid - 1  # Target in meta ordinata
+            else:
+                left = mid + 1   # Target in meta non ordinata
+        else:  # Meta destra ordinata
+            if arr[mid] < target <= arr[right]:
+                left = mid + 1   # Target in meta ordinata
+            else:
+                right = mid - 1  # Target in meta non ordinata
+
+    return -1
+\end{lstlisting}
+
+\section{Programmazione Dinamica}
+
+\subsection{Esercizio 5: Longest Palindromic Substring}
+
+\textbf{Problema}: Trova la più lunga sottostringa palindroma.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  "babad"
+Output: "bab" o "aba"
+\end{verbatim}
+
+\textbf{Soluzione 1}: DP ($O(n^2)$ tempo e spazio)
+
+\begin{lstlisting}[language=Python]
+def longest_palindrome_dp(s):
+    """
+    DP: dp[i][j] = True se s[i..j] e palindroma.
+
+    Complessita: O(n^2) tempo, O(n^2) spazio
+    """
+    n = len(s)
+    if n < 2:
+        return s
+
+    dp = [[False] * n for _ in range(n)]
+
+    # Ogni singolo carattere e palindromo
+    for i in range(n):
+        dp[i][i] = True
+
+    start = 0
+    max_len = 1
+
+    # Sottostringhe di lunghezza 2
+    for i in range(n - 1):
+        if s[i] == s[i + 1]:
+            dp[i][i + 1] = True
+            start = i
+            max_len = 2
+
+    # Sottostringhe di lunghezza >= 3
+    for length in range(3, n + 1):
+        for i in range(n - length + 1):
+            j = i + length - 1
+
+            # s[i..j] e palindroma se:
+            # - s[i] == s[j]
+            # - s[i+1..j-1] e palindroma
+            if s[i] == s[j] and dp[i + 1][j - 1]:
+                dp[i][j] = True
+                start = i
+                max_len = length
+
+    return s[start:start + max_len]
+\end{lstlisting}
+
+\textbf{Soluzione 2}: Expand Around Center ($O(n^2)$ tempo, $O(1)$ spazio)
+
+\begin{lstlisting}[language=Python]
+def longest_palindrome_expand(s):
+    """
+    Espandi intorno a ogni possibile centro.
+
+    Complessita: O(n^2) tempo, O(1) spazio
+    """
+    def expand_around_center(left, right):
+        """Espandi finche palindroma."""
+        while left >= 0 and right < len(s) and s[left] == s[right]:
+            left -= 1
+            right += 1
+        return right - left - 1  # Lunghezza
+
+    if not s:
+        return ""
+
+    start = 0
+    max_len = 0
+
+    for i in range(len(s)):
+        # Centro singolo (lunghezza dispari)
+        len1 = expand_around_center(i, i)
+        # Centro doppio (lunghezza pari)
+        len2 = expand_around_center(i, i + 1)
+
+        length = max(len1, len2)
+
+        if length > max_len:
+            max_len = length
+            start = i - (length - 1) // 2
+
+    return s[start:start + max_len]
+\end{lstlisting}
+
+\subsection{Esercizio 6: Word Break}
+
+\textbf{Problema}: Determina se una stringa può essere segmentata in parole da un dizionario.
+
+\textbf{Esempio}:
+\begin{verbatim}
+s = "leetcode"
+wordDict = ["leet", "code"]
+Output: True (can be segmented as "leet code")
+\end{verbatim}
+
+\textbf{Soluzione}: DP
+
+\begin{lstlisting}[language=Python]
+def word_break(s, word_dict):
+    """
+    Verifica se s puo essere segmentata in parole.
+
+    dp[i] = True se s[0..i-1] puo essere segmentata
+
+    Complessita: O(n^2 * m) dove m = lunghezza parola max
+    """
+    n = len(s)
+    word_set = set(word_dict)  # O(1) lookup
+    dp = [False] * (n + 1)
+    dp[0] = True  # Stringa vuota
+
+    for i in range(1, n + 1):
+        for j in range(i):
+            # Se s[0..j-1] segmentabile e s[j..i-1] nel dizionario
+            if dp[j] and s[j:i] in word_set:
+                dp[i] = True
+                break
+
+    return dp[n]
+
+
+# Ottimizzazione: controlla solo lunghezze valide
+def word_break_optimized(s, word_dict):
+    """
+    Ottimizzato: considera solo lunghezze nel dizionario.
+    """
+    word_set = set(word_dict)
+    max_len = max(len(word) for word in word_dict)
+
+    n = len(s)
+    dp = [False] * (n + 1)
+    dp[0] = True
+
+    for i in range(1, n + 1):
+        # Controlla solo finestre di lunghezza valida
+        for j in range(max(0, i - max_len), i):
+            if dp[j] and s[j:i] in word_set:
+                dp[i] = True
+                break
+
+    return dp[n]
+\end{lstlisting}
+
+\section{Algoritmi Greedy}
+
+\subsection{Esercizio 7: Jump Game}
+
+\textbf{Problema}: Dato un array dove $arr[i]$ indica il massimo salto da posizione $i$, determina se è possibile raggiungere l'ultima posizione.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  [2,3,1,1,4]
+Output: True (0 -> 1 -> 4)
+\end{verbatim}
+
+\textbf{Soluzione}: Greedy
+
+\begin{lstlisting}[language=Python]
+def can_jump(nums):
+    """
+    Verifica se raggiungibile ultima posizione.
+
+    Greedy: mantieni la posizione piu lontana raggiungibile.
+
+    Complessita: O(n) tempo, O(1) spazio
+    """
+    max_reach = 0
+
+    for i in range(len(nums)):
+        # Se posizione corrente non raggiungibile
+        if i > max_reach:
+            return False
+
+        # Aggiorna massima portata
+        max_reach = max(max_reach, i + nums[i])
+
+        # Early exit se gia raggiunta la fine
+        if max_reach >= len(nums) - 1:
+            return True
+
+    return True
+
+
+def min_jumps(nums):
+    """
+    Minimo numero di salti per raggiungere la fine.
+
+    Complessita: O(n)
+    """
+    if len(nums) <= 1:
+        return 0
+
+    jumps = 0
+    current_end = 0    # Fine dell'intervallo corrente
+    farthest = 0       # Piu lontano raggiungibile
+
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+
+        # Raggiunta fine intervallo corrente
+        if i == current_end:
+            jumps += 1
+            current_end = farthest
+
+            # Gia possibile raggiungere la fine
+            if current_end >= len(nums) - 1:
+                break
+
+    return jumps
+\end{lstlisting}
+
+\textbf{Prova di Correttezza (can\_jump)}:
+
+\textbf{Invariante}: All'iterazione $i$, $max\_reach$ è la posizione più lontana raggiungibile da $0..i$.
+
+\textbf{Base}: $i=0$, $max\_reach = nums[0]$ (corretto).
+
+\textbf{Passo}: Se $i \leq max\_reach$, allora $i$ è raggiungibile. Da $i$ possiamo saltare fino a $i + nums[i]$, quindi:
+\[ max\_reach = \max(max\_reach, i + nums[i]) \]
+
+\textbf{Terminazione}: Se alla fine $max\_reach \geq n-1$, l'ultima posizione è raggiungibile.
+
+\subsection{Esercizio 8: Meeting Rooms II}
+
+\textbf{Problema}: Dato un insieme di intervalli di meeting, trova il minimo numero di sale conferenze richieste.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  [[0,30],[5,10],[15,20]]
+Output: 2
+\end{verbatim}
+
+\textbf{Soluzione}:
+
+\begin{lstlisting}[language=Python]
+import heapq
+
+def min_meeting_rooms(intervals):
+    """
+    Minimo numero di sale conferenze.
+
+    Strategia: mantieni un min-heap dei tempi di fine.
+
+    Complessita: O(n log n)
+    """
+    if not intervals:
+        return 0
+
+    # Ordina per tempo di inizio
+    intervals.sort(key=lambda x: x[0])
+
+    # Min-heap per tempi di fine
+    rooms = []  # Contiene tempi di fine meeting correnti
+    heapq.heappush(rooms, intervals[0][1])
+
+    for i in range(1, len(intervals)):
+        start, end = intervals[i]
+
+        # Se il meeting piu vecchio e finito, riusa la sala
+        if start >= rooms[0]:
+            heapq.heappop(rooms)
+
+        # Aggiungi il nuovo meeting
+        heapq.heappush(rooms, end)
+
+    return len(rooms)
+
+
+# Soluzione alternativa: eventi
+def min_meeting_rooms_events(intervals):
+    """
+    Approccio con eventi di inizio/fine.
+
+    Complessita: O(n log n)
+    """
+    events = []
+
+    for start, end in intervals:
+        events.append((start, 1))   # Inizio meeting
+        events.append((end, -1))    # Fine meeting
+
+    # Ordina: se stesso tempo, fine prima di inizio
+    events.sort(key=lambda x: (x[0], x[1]))
+
+    max_rooms = 0
+    current_rooms = 0
+
+    for time, delta in events:
+        current_rooms += delta
+        max_rooms = max(max_rooms, current_rooms)
+
+    return max_rooms
+\end{lstlisting}
+
+\section{Backtracking}
+
+\subsection{Esercizio 9: Generate Parentheses}
+
+\textbf{Problema}: Genera tutte le combinazioni di $n$ coppie di parentesi bilanciate.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+\end{verbatim}
+
+\textbf{Soluzione}:
+
+\begin{lstlisting}[language=Python]
+def generate_parentheses(n):
+    """
+    Genera tutte le parentesi bilanciate.
+
+    Complessita: O(4^n / sqrt(n)) - n-esimo numero di Catalan
+    """
+    result = []
+
+    def backtrack(current, open_count, close_count):
+        # Caso base: generata una soluzione completa
+        if len(current) == 2 * n:
+            result.append(current)
+            return
+
+        # Aggiungi '(' se possibile
+        if open_count < n:
+            backtrack(current + '(', open_count + 1, close_count)
+
+        # Aggiungi ')' se bilancia una '('
+        if close_count < open_count:
+            backtrack(current + ')', open_count, close_count + 1)
+
+    backtrack('', 0, 0)
+    return result
+\end{lstlisting}
+
+\textbf{Invariante}: In ogni momento, $close\_count \leq open\_count \leq n$.
+
+\subsection{Esercizio 10: Letter Combinations of Phone Number}
+
+\textbf{Problema}: Dato una stringa di cifre, ritorna tutte le possibili combinazioni di lettere (come tastiera telefono).
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  "23"
+Output: ["ad","ae","af","bd","be","bf","cd","ce","cf"]
+\end{verbatim}
+
+\textbf{Soluzione}:
+
+\begin{lstlisting}[language=Python]
+def letter_combinations(digits):
+    """
+    Genera combinazioni di lettere da cifre.
+
+    Complessita: O(4^n) worst case (n = len(digits))
+    """
+    if not digits:
+        return []
+
+    # Mappa cifre -> lettere
+    phone = {
+        '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+        '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+    }
+
+    result = []
+
+    def backtrack(index, current):
+        # Caso base: combinazione completa
+        if index == len(digits):
+            result.append(current)
+            return
+
+        # Prova ogni lettera per la cifra corrente
+        for letter in phone[digits[index]]:
+            backtrack(index + 1, current + letter)
+
+    backtrack(0, '')
+    return result
+
+
+# Versione iterativa
+def letter_combinations_iterative(digits):
+    """
+    Versione iterativa con queue.
+    """
+    if not digits:
+        return []
+
+    phone = {
+        '2': 'abc', '3': 'def', '4': 'ghi', '5': 'jkl',
+        '6': 'mno', '7': 'pqrs', '8': 'tuv', '9': 'wxyz'
+    }
+
+    result = ['']
+
+    for digit in digits:
+        temp = []
+        for combination in result:
+            for letter in phone[digit]:
+                temp.append(combination + letter)
+        result = temp
+
+    return result
+\end{lstlisting}
+
+\section{Problemi Misti}
+
+\subsection{Esercizio 11: Trapping Rain Water}
+
+\textbf{Problema}: Dato un array di altezze, calcola quanta acqua può essere intrappolata dopo la pioggia.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  [0,1,0,2,1,0,1,3,2,1,2,1]
+Output: 6
+\end{verbatim}
+
+\textbf{Soluzione 1}: DP ($O(n)$ tempo, $O(n)$ spazio)
+
+\begin{lstlisting}[language=Python]
+def trap_dp(height):
+    """
+    Calcola acqua intrappolata.
+
+    Idea: per ogni posizione, acqua = min(max_left, max_right) - height
+
+    Complessita: O(n) tempo, O(n) spazio
+    """
+    if not height:
+        return 0
+
+    n = len(height)
+
+    # Calcola max a sinistra per ogni posizione
+    left_max = [0] * n
+    left_max[0] = height[0]
+    for i in range(1, n):
+        left_max[i] = max(left_max[i - 1], height[i])
+
+    # Calcola max a destra per ogni posizione
+    right_max = [0] * n
+    right_max[n - 1] = height[n - 1]
+    for i in range(n - 2, -1, -1):
+        right_max[i] = max(right_max[i + 1], height[i])
+
+    # Calcola acqua
+    water = 0
+    for i in range(n):
+        water += min(left_max[i], right_max[i]) - height[i]
+
+    return water
+\end{lstlisting}
+
+\textbf{Soluzione 2}: Two Pointers ($O(n)$ tempo, $O(1)$ spazio)
+
+\begin{lstlisting}[language=Python]
+def trap_two_pointers(height):
+    """
+    Two pointers ottimizzato.
+
+    Complessita: O(n) tempo, O(1) spazio
+    """
+    if not height:
+        return 0
+
+    left, right = 0, len(height) - 1
+    left_max, right_max = 0, 0
+    water = 0
+
+    while left < right:
+        if height[left] < height[right]:
+            if height[left] >= left_max:
+                left_max = height[left]
+            else:
+                water += left_max - height[left]
+            left += 1
+        else:
+            if height[right] >= right_max:
+                right_max = height[right]
+            else:
+                water += right_max - height[right]
+            right -= 1
+
+    return water
+\end{lstlisting}
+
+\textbf{Analisi Two Pointers}:
+\begin{itemize}
+    \item Manteniamo $left\_max$ e $right\_max$ per i lati sinistro e destro
+    \item Spostiamo il puntatore dalla parte con altezza minore
+    \item L'acqua in posizione $i$ dipende solo dal minimo tra il max a sinistra e a destra
+    \item Poiché processiamo dal lato più basso, sappiamo che il max dall'altro lato è almeno uguale
+\end{itemize}
+
+\subsection{Esercizio 12: Longest Consecutive Sequence}
+
+\textbf{Problema}: Trova la lunghezza della più lunga sequenza consecutiva in un array non ordinato, in tempo $O(n)$.
+
+\textbf{Esempio}:
+\begin{verbatim}
+Input:  [100, 4, 200, 1, 3, 2]
+Output: 4 (sequenza [1, 2, 3, 4])
+\end{verbatim}
+
+\textbf{Soluzione}:
+
+\begin{lstlisting}[language=Python]
+def longest_consecutive(nums):
+    """
+    Trova lunghezza massima sequenza consecutiva.
+
+    Strategia: usa set per O(1) lookup
+
+    Complessita: O(n) tempo, O(n) spazio
+    """
+    if not nums:
+        return 0
+
+    num_set = set(nums)
+    max_length = 0
+
+    for num in num_set:
+        # Inizia sequenza solo se num e l'inizio
+        # (cioe num-1 non esiste)
+        if num - 1 not in num_set:
+            current_num = num
+            current_length = 1
+
+            # Estendi sequenza finche possibile
+            while current_num + 1 in num_set:
+                current_num += 1
+                current_length += 1
+
+            max_length = max(max_length, current_length)
+
+    return max_length
+\end{lstlisting}
+
+\textbf{Prova di $O(n)$}:
+Anche se ci sono loop annidati, ogni numero viene visitato al massimo due volte:
+\begin{itemize}
+    \item Una volta nel loop esterno
+    \item Una volta nel loop interno (solo se è parte di una sequenza)
+\end{itemize}
+
+Quindi complessità totale è $O(n)$.
+
+\section{Tecniche di Analisi}
+
+\subsection{Analisi Ammortizzata}
+
+\textbf{Esempio}: Array dinamico con raddoppio
+
+\begin{lstlisting}[language=Python]
+class DynamicArray:
+    """
+    Analisi ammortizzata: insert e O(1) ammortizzato
+    anche se occasionalmente richiede O(n).
+    """
+    def __init__(self):
+        self.capacity = 1
+        self.size = 0
+        self.array = [None] * self.capacity
+
+    def insert(self, value):
+        """
+        Insert e O(1) ammortizzato.
+
+        Dimostrazione:
+        - Costo totale per n inserimenti:
+          n + (2 + 4 + 8 + ... + n) < n + 2n = 3n
+        - Costo ammortizzato per operazione: 3n/n = O(1)
+        """
+        if self.size == self.capacity:
+            self._resize()
+
+        self.array[self.size] = value
+        self.size += 1
+
+    def _resize(self):
+        """Raddoppia capacita."""
+        self.capacity *= 2
+        new_array = [None] * self.capacity
+        for i in range(self.size):
+            new_array[i] = self.array[i]
+        self.array = new_array
+\end{lstlisting}
+
+Questa appendice fornisce una base solida per comprendere e applicare gli algoritmi studiati. Ogni esercizio illustra tecniche chiave e pattern di soluzione comuni in informatica.

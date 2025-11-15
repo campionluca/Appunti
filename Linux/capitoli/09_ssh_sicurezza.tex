@@ -1,0 +1,974 @@
+% Capitolo 09 — SSH e Sicurezza
+\chapter{SSH e Sicurezza}
+
+\section{Introduzione}
+SSH (Secure Shell) è il protocollo standard per l'accesso remoto sicuro ai sistemi Linux. Oltre alla semplice connessione, SSH offre funzionalità avanzate come autenticazione tramite chiavi crittografiche, tunneling, port forwarding e trasferimento file sicuro.
+
+In questo capitolo approfondiremo la generazione e gestione delle chiavi SSH, configurazioni avanzate, tecniche di tunneling e best practice di sicurezza per proteggere i sistemi.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: SSH keys (generazione, gestione), Configurazione client/server, Port forwarding e tunneling, SSH Agent, ProxyJump, Hardening SSH server, Firewall, Fail2ban, Best practice sicurezza.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Generare e gestire coppie di chiavi SSH (RSA, Ed25519).
+    \item Configurare autenticazione senza password.
+    \item Utilizzare SSH config per gestire connessioni multiple.
+    \item Implementare port forwarding e tunneling SSH.
+    \item Configurare e hardening SSH server.
+    \item Proteggere sistema con firewall e fail2ban.
+    \item Implementare best practice di sicurezza.
+\end{itemize}
+
+\section{SSH Keys: Autenticazione a Chiave Pubblica}
+
+\subsection{Generazione Chiavi SSH}
+\begin{lstlisting}
+# Generare chiave RSA (4096 bit)
+ssh-keygen -t rsa -b 4096 -C "user@email.com"
+
+# Generare chiave Ed25519 (raccomandato, più sicuro e veloce)
+ssh-keygen -t ed25519 -C "user@email.com"
+
+# Specificare nome file
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C "github@email.com"
+
+# Generare senza passphrase (NON raccomandato)
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519_test
+
+# Cambiare passphrase di chiave esistente
+ssh-keygen -p -f ~/.ssh/id_ed25519
+
+# Visualizzare fingerprint chiave
+ssh-keygen -lf ~/.ssh/id_ed25519.pub
+ssh-keygen -lf ~/.ssh/id_ed25519 -E md5
+ssh-keygen -lf ~/.ssh/id_ed25519 -E sha256
+
+# Visualizzare formato ASCII art
+ssh-keygen -lvf ~/.ssh/id_ed25519.pub
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Tipi di chiavi SSH]
+\begin{itemize}
+\item \textbf{RSA}: tradizionale, supportato ovunque (min 2048 bit, raccomandato 4096)
+\item \textbf{Ed25519}: moderno, più sicuro, più veloce, chiavi più piccole (raccomandato)
+\item \textbf{ECDSA}: elliptic curve, buono ma controversie su implementazione
+\item \textbf{DSA}: deprecato, NON usare
+\end{itemize}
+\textbf{Raccomandazione}: usare Ed25519 quando possibile, altrimenti RSA 4096 bit.
+\end{tcolorbox}
+
+\subsection{Copiare Chiave Pubblica su Server}
+\begin{lstlisting}
+# Metodo 1: ssh-copy-id (più semplice)
+ssh-copy-id user@server
+
+# Con chiave specifica
+ssh-copy-id -i ~/.ssh/id_ed25519.pub user@server
+
+# Con porta custom
+ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 2222 user@server
+
+# Metodo 2: manuale
+cat ~/.ssh/id_ed25519.pub | ssh user@server "mkdir -p ~/.ssh && \
+    chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && \
+    chmod 600 ~/.ssh/authorized_keys"
+
+# Metodo 3: copiare direttamente (se hai già accesso)
+scp ~/.ssh/id_ed25519.pub user@server:~/temp_key.pub
+ssh user@server
+mkdir -p ~/.ssh
+cat ~/temp_key.pub >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+rm ~/temp_key.pub
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Permessi corretti per SSH]
+\textbf{IMPORTANTE}: SSH è molto rigido sui permessi per sicurezza.
+\begin{lstlisting}
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_ed25519
+chmod 644 ~/.ssh/id_ed25519.pub
+chmod 600 ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/config
+\end{lstlisting}
+Se i permessi non sono corretti, SSH rifiuterà di usare le chiavi!
+\end{tcolorbox}
+
+\subsection{Gestione Multiple Chiavi}
+\begin{lstlisting}
+# Struttura tipica ~/.ssh/
+~/.ssh/
+├── id_ed25519          # Chiave privata generale
+├── id_ed25519.pub      # Chiave pubblica generale
+├── id_rsa_github       # Chiave privata GitHub
+├── id_rsa_github.pub   # Chiave pubblica GitHub
+├── id_ed25519_work     # Chiave privata lavoro
+├── id_ed25519_work.pub # Chiave pubblica lavoro
+├── authorized_keys     # Chiavi autorizzate (server)
+├── known_hosts         # Host fidati
+└── config              # Configurazione SSH client
+
+# Usare chiave specifica
+ssh -i ~/.ssh/id_ed25519_work user@work-server
+
+# Aggiungere chiave all'SSH agent
+ssh-add ~/.ssh/id_ed25519_work
+ssh-add -l  # Lista chiavi caricate
+ssh-add -D  # Rimuovi tutte le chiavi
+\end{lstlisting}
+
+\section{SSH Config: Configurazione Avanzata}
+
+\subsection{File \texttt{\textasciitilde/.ssh/config}}
+\begin{lstlisting}
+# File: ~/.ssh/config
+# Configurazione SSH client
+
+# Configurazione di default per tutti gli host
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    Compression yes
+    AddKeysToAgent yes
+
+# Server personale
+Host myserver
+    HostName 192.168.1.100
+    User admin
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    ForwardAgent yes
+
+# Server con porta custom
+Host vps
+    HostName vps.example.com
+    User root
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519_vps
+
+# Jump host (bastion)
+Host jump
+    HostName jump.company.com
+    User jumper
+    IdentityFile ~/.ssh/id_rsa_work
+
+# Server interno accessibile via jump host
+Host internal
+    HostName 10.0.0.50
+    User developer
+    ProxyJump jump
+    # Alternativa vecchia sintassi
+    # ProxyCommand ssh -W %h:%p jump
+
+# GitHub
+Host github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_github
+    IdentitiesOnly yes
+
+# Pattern matching multipli server
+Host server-*
+    User admin
+    IdentityFile ~/.ssh/id_ed25519_work
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+
+# Database server con port forwarding automatico
+Host db
+    HostName db.internal.company.com
+    User dbadmin
+    LocalForward 3306 localhost:3306
+    IdentityFile ~/.ssh/id_ed25519_work
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Opzioni SSH Config comuni]
+\begin{itemize}
+\item \textbf{HostName}: indirizzo IP o hostname reale
+\item \textbf{User}: username per login
+\item \textbf{Port}: porta SSH (default 22)
+\item \textbf{IdentityFile}: percorso chiave privata
+\item \textbf{ForwardAgent}: forwarding SSH agent
+\item \textbf{ProxyJump}: server jump/bastion
+\item \textbf{LocalForward}: port forwarding locale
+\item \textbf{RemoteForward}: port forwarding remoto
+\item \textbf{ServerAliveInterval}: keep-alive ping
+\item \textbf{Compression}: abilita compressione
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Utilizzo dopo Configurazione}
+\begin{lstlisting}
+# Con config, connessione semplificata
+ssh myserver  # invece di: ssh -p 22 admin@192.168.1.100
+
+ssh vps       # invece di: ssh -p 2222 root@vps.example.com
+
+ssh internal  # usa automaticamente jump host
+
+# Copiare file usando alias
+scp file.txt myserver:/path/to/destination/
+
+# Rsync con alias
+rsync -av documents/ myserver:/backup/
+\end{lstlisting}
+
+\section{SSH Agent: Gestione Chiavi in Memoria}
+
+\begin{lstlisting}
+# Avviare SSH agent
+eval "$(ssh-agent -s)"
+
+# Verificare se agent è in esecuzione
+echo $SSH_AGENT_PID
+ssh-add -l
+
+# Aggiungere chiave all'agent
+ssh-add ~/.ssh/id_ed25519
+# Inserire passphrase una volta
+
+# Aggiungere con timeout (secondi)
+ssh-add -t 3600 ~/.ssh/id_ed25519  # 1 ora
+
+# Elencare chiavi caricate
+ssh-add -l
+ssh-add -L  # mostra chiavi pubbliche complete
+
+# Rimuovere chiave specifica
+ssh-add -d ~/.ssh/id_ed25519
+
+# Rimuovere tutte le chiavi
+ssh-add -D
+
+# Configurazione permanente in ~/.bashrc o ~/.zshrc
+if [ -z "$SSH_AUTH_SOCK" ]; then
+   eval "$(ssh-agent -s)"
+   ssh-add ~/.ssh/id_ed25519 2>/dev/null
+fi
+
+# macOS: usare Keychain
+# Aggiungere a ~/.ssh/config
+Host *
+    AddKeysToAgent yes
+    UseKeychain yes
+    IdentityFile ~/.ssh/id_ed25519
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Agent Forwarding]
+Agent forwarding permette di usare chiavi locali su server remoto.
+
+\textbf{ATTENZIONE}: abilita solo su server fidati! Root del server remoto può accedere alle tue chiavi.
+
+\begin{lstlisting}
+# Connessione con agent forwarding
+ssh -A user@server
+
+# In config
+Host trusted
+    HostName trusted.example.com
+    ForwardAgent yes
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Port Forwarding e Tunneling}
+
+\subsection{Local Port Forwarding}
+Redirige porta locale a porta su server remoto.
+
+\begin{lstlisting}
+# Sintassi: ssh -L [local_addr:]local_port:destination:destination_port server
+
+# Accedere a database remoto
+ssh -L 3306:localhost:3306 user@dbserver
+# Ora: mysql -h localhost -P 3306 connette a dbserver
+
+# Accedere a web server remoto
+ssh -L 8080:localhost:80 user@webserver
+# Ora: http://localhost:8080 mostra webserver remoto
+
+# Bind su interfaccia specifica
+ssh -L 0.0.0.0:8080:localhost:80 user@server  # accessibile da rete
+ssh -L 127.0.0.1:8080:localhost:80 user@server  # solo localhost
+
+# Accedere a host interno via jump server
+ssh -L 3389:internal-windows:3389 user@jumpserver
+# Connette RDP a internal-windows passando per jumpserver
+
+# Multipli forwarding
+ssh -L 8080:localhost:80 -L 3306:localhost:3306 user@server
+
+# Background
+ssh -fN -L 8080:localhost:80 user@server
+# -f: background
+# -N: no remote command
+
+# Script tunneling automatico
+#!/bin/bash
+# tunnel.sh
+ssh -fN -L 8080:localhost:80 \
+        -L 3306:localhost:3306 \
+        -L 5432:localhost:5432 \
+        user@server
+echo "Tunnels established"
+\end{lstlisting}
+
+\subsection{Remote Port Forwarding}
+Redirige porta su server remoto a porta locale.
+
+\begin{lstlisting}
+# Sintassi: ssh -R [remote_addr:]remote_port:destination:destination_port server
+
+# Esporre web server locale su server remoto
+ssh -R 8080:localhost:3000 user@publicserver
+# Ora: publicserver:8080 mostra localhost:3000
+
+# Esporre servizio dietro NAT
+ssh -R 2222:localhost:22 user@publicserver
+# Permette SSH reverse: ssh -p 2222 user@publicserver
+
+# Allow remote bind (config server)
+# /etc/ssh/sshd_config
+# GatewayPorts yes
+
+# Esempio: demo app locale su server pubblico
+ssh -R 80:localhost:8000 user@demo-server
+# Utile per mostrare lavori in progress
+\end{lstlisting}
+
+\subsection{Dynamic Port Forwarding (SOCKS Proxy)}
+Crea proxy SOCKS per tunneling tutto il traffico.
+
+\begin{lstlisting}
+# Creare SOCKS proxy
+ssh -D 8080 user@server
+
+# Configurare browser:
+# Proxy SOCKS: localhost:8080
+
+# Con Firefox: Preferences > Network Settings
+# Manual proxy: SOCKS Host: localhost, Port: 8080, SOCKS v5
+
+# Con curl
+curl --socks5 localhost:8080 https://api.example.com
+
+# Script proxy SSH
+#!/bin/bash
+# socks_proxy.sh
+PORT=8080
+SERVER="user@proxy-server"
+
+ssh -fN -D $PORT $SERVER
+
+echo "SOCKS proxy running on localhost:$PORT"
+echo "Configure your browser or use:"
+echo "curl --socks5 localhost:$PORT https://example.com"
+
+# Chiudere tunnel
+pkill -f "ssh -fN -D $PORT"
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Casi d'uso Port Forwarding]
+\begin{enumerate}
+\item \textbf{Database access}: accedere a DB in rete privata
+\item \textbf{Web development}: testare app locale su dominio pubblico
+\item \textbf{Bypass firewall}: accedere a servizi bloccati
+\item \textbf{Sicurezza}: crittografare connessioni non sicure
+\item \textbf{NAT traversal}: esporre servizi dietro NAT/firewall
+\item \textbf{VPN alternativa}: SOCKS proxy come lightweight VPN
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Configurazione e Hardening SSH Server}
+
+\subsection{File \texttt{/etc/ssh/sshd\_config}}
+\begin{lstlisting}
+# File: /etc/ssh/sshd_config
+# Configurazione SSH server (richiede root)
+
+# Porta SSH (cambiare da default 22)
+Port 2222
+
+# Indirizzo bind (specifica interfaccia)
+ListenAddress 0.0.0.0
+# ListenAddress 192.168.1.100  # solo interfaccia specifica
+
+# Protocol 2 (SSH-2 solo, mai SSH-1)
+Protocol 2
+
+# Log level
+SyslogFacility AUTH
+LogLevel VERBOSE  # per audit, altrimenti INFO
+
+# Autenticazione
+PermitRootLogin no  # IMPORTANTE: mai permettere root diretto
+PubkeyAuthentication yes
+PasswordAuthentication no  # Solo chiavi, no password
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+
+# Limitare utenti/gruppi
+AllowUsers user1 user2 admin
+# AllowGroups ssh-users
+# DenyUsers baduser
+# DenyGroups notssh
+
+# Autenticazione key
+AuthorizedKeysFile .ssh/authorized_keys
+
+# Timeouts
+LoginGraceTime 60
+ClientAliveInterval 300
+ClientAliveCountMax 2
+
+# Limiti connessioni
+MaxAuthTries 3
+MaxSessions 10
+MaxStartups 10:30:60
+
+# Forwarding
+AllowTcpForwarding yes
+GatewayPorts no
+X11Forwarding no  # disabilita se non necessario
+AllowAgentForwarding yes
+
+# Banner (messaggio pre-login)
+Banner /etc/ssh/banner.txt
+
+# Subsystem (per SFTP)
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# Match blocks per configurazioni specifiche
+Match User deployer
+    AllowTcpForwarding no
+    X11Forwarding no
+    PermitTTY no
+    ForceCommand internal-sftp
+
+Match Address 192.168.1.*
+    PasswordAuthentication yes
+\end{lstlisting}
+
+\subsection{Applicare e Verificare Configurazione}
+\begin{lstlisting}
+# Testare configurazione (non riavvia)
+sudo sshd -t
+
+# Verificare sintassi con output dettagliato
+sudo sshd -T
+
+# Riavviare SSH service
+sudo systemctl restart sshd
+sudo systemctl restart ssh  # Debian/Ubuntu
+
+# Verificare status
+sudo systemctl status sshd
+
+# Verificare porta in ascolto
+sudo ss -tlpn | grep ssh
+sudo netstat -tlpn | grep ssh
+
+# Log SSH in real-time
+sudo journalctl -u sshd -f
+sudo tail -f /var/log/auth.log
+\end{lstlisting}
+
+\begin{tcolorbox}[title=ATTENZIONE: Testing SSH Config]
+\textbf{IMPORTANTE}: Prima di chiudere sessione SSH corrente, testa la nuova configurazione in una \textit{nuova} sessione!
+
+\begin{enumerate}
+\item Modifica \texttt{/etc/ssh/sshd\_config}
+\item Test: \texttt{sudo sshd -t}
+\item Riavvia: \texttt{sudo systemctl restart sshd}
+\item Apri \textbf{nuova} sessione SSH per testare
+\item Solo dopo test OK, chiudi vecchia sessione
+\end{enumerate}
+
+Altrimenti rischi di bloccarti fuori dal server!
+\end{tcolorbox}
+
+\section{Firewall: UFW e iptables}
+
+\subsection{UFW (Uncomplicated Firewall)}
+\begin{lstlisting}
+# Installare UFW (Ubuntu/Debian)
+sudo apt install ufw
+
+# Status
+sudo ufw status
+sudo ufw status verbose
+sudo ufw status numbered
+
+# Abilitare/Disabilitare
+sudo ufw enable
+sudo ufw disable
+
+# Default policy
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+
+# Permettere SSH (PRIMA di enable!)
+sudo ufw allow ssh
+sudo ufw allow 22/tcp
+
+# SSH su porta custom
+sudo ufw allow 2222/tcp
+
+# Permettere da IP specifico
+sudo ufw allow from 192.168.1.100
+sudo ufw allow from 192.168.1.0/24
+
+# Permettere porta da IP specifico
+sudo ufw allow from 192.168.1.100 to any port 22
+
+# Permettere servizi comuni
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Range porte
+sudo ufw allow 6000:6007/tcp
+
+# Negare porta
+sudo ufw deny 23/tcp  # telnet
+
+# Eliminare regola
+sudo ufw delete allow 80/tcp
+sudo ufw delete 3  # per numero (da status numbered)
+
+# Limitare tentativi connessione (rate limiting)
+sudo ufw limit ssh  # max 6 connessioni in 30 secondi
+
+# Reset (elimina tutte le regole)
+sudo ufw reset
+
+# Log
+sudo ufw logging on
+sudo ufw logging medium
+sudo tail -f /var/log/ufw.log
+
+# Configurazione completa esempio
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw limit 2222/tcp comment 'SSH custom port'
+sudo ufw allow 80/tcp comment 'HTTP'
+sudo ufw allow 443/tcp comment 'HTTPS'
+sudo ufw allow from 192.168.1.0/24 comment 'Local network'
+sudo ufw enable
+\end{lstlisting}
+
+\subsection{iptables (low-level)}
+\begin{lstlisting}
+# Visualizzare regole
+sudo iptables -L -n -v
+sudo iptables -L INPUT -n -v
+sudo iptables -t nat -L -n -v
+
+# Permettere SSH
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+# Permettere traffico locale
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Permettere connessioni stabilite
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# HTTP/HTTPS
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Da IP specifico
+sudo iptables -A INPUT -s 192.168.1.100 -j ACCEPT
+
+# Rate limiting (protezione brute force)
+sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW \
+    -m recent --set --name SSH
+sudo iptables -A INPUT -p tcp --dport 22 -m state --state NEW \
+    -m recent --update --seconds 60 --hitcount 4 --name SSH -j DROP
+
+# Default policy
+sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+sudo iptables -P OUTPUT ACCEPT
+
+# Eliminare regola
+sudo iptables -D INPUT -p tcp --dport 80 -j ACCEPT
+
+# Flush tutte le regole
+sudo iptables -F
+
+# Salvare regole (persistent)
+# Debian/Ubuntu
+sudo apt install iptables-persistent
+sudo netfilter-persistent save
+
+# RedHat/CentOS
+sudo service iptables save
+\end{lstlisting}
+
+\section{Fail2ban: Protezione Brute Force}
+
+\begin{lstlisting}
+# Installare fail2ban
+sudo apt install fail2ban  # Debian/Ubuntu
+sudo yum install fail2ban  # RedHat/CentOS
+
+# Avviare servizio
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Status
+sudo systemctl status fail2ban
+sudo fail2ban-client status
+sudo fail2ban-client status sshd
+
+# Configurazione: /etc/fail2ban/jail.local
+# NON modificare jail.conf, creare jail.local
+
+sudo nano /etc/fail2ban/jail.local
+\end{lstlisting}
+
+\begin{lstlisting}
+# File: /etc/fail2ban/jail.local
+
+[DEFAULT]
+# Ban per 1 ora
+bantime = 3600
+# Finestra 10 minuti
+findtime = 600
+# Max 5 tentativi
+maxretry = 5
+
+# Email notifiche
+destemail = admin@example.com
+sendername = Fail2Ban
+mta = sendmail
+action = %(action_mwl)s
+
+[sshd]
+enabled = true
+port = 2222  # porta SSH custom
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 7200  # 2 ore
+
+[sshd-ddos]
+enabled = true
+port = 2222
+logpath = /var/log/auth.log
+maxretry = 2
+
+[nginx-http-auth]
+enabled = true
+filter = nginx-http-auth
+port = http,https
+logpath = /var/log/nginx/error.log
+
+[nginx-noscript]
+enabled = true
+port = http,https
+filter = nginx-noscript
+logpath = /var/log/nginx/access.log
+maxretry = 6
+
+[nginx-badbots]
+enabled = true
+port = http,https
+filter = nginx-badbots
+logpath = /var/log/nginx/access.log
+maxretry = 2
+\end{lstlisting}
+
+\begin{lstlisting}
+# Applicare configurazione
+sudo systemctl restart fail2ban
+
+# Verificare jail attivi
+sudo fail2ban-client status
+
+# Status jail specifico
+sudo fail2ban-client status sshd
+
+# Unbannare IP
+sudo fail2ban-client set sshd unbanip 192.168.1.100
+
+# Bannare IP manualmente
+sudo fail2ban-client set sshd banip 1.2.3.4
+
+# Log fail2ban
+sudo tail -f /var/log/fail2ban.log
+
+# IP bannati (in iptables)
+sudo iptables -L -n | grep -i reject
+\end{lstlisting}
+
+\section{Best Practice Sicurezza}
+
+\begin{tcolorbox}[title=SSH Security Best Practice]
+\begin{enumerate}
+\item \textbf{Chiavi invece password}: sempre autenticazione a chiave pubblica
+\item \textbf{Passphrase forte}: proteggere chiave privata con passphrase robusta
+\item \textbf{Ed25519}: usare algoritmo moderno ed25519
+\item \textbf{No root login}: \texttt{PermitRootLogin no}
+\item \textbf{Porta custom}: cambiare da default 22 (riduce rumore log)
+\item \textbf{Whitelist utenti}: \texttt{AllowUsers} per limitare accesso
+\item \textbf{Fail2ban}: protezione automatica brute force
+\item \textbf{Firewall}: limitare accesso SSH a IP fidati quando possibile
+\item \textbf{2FA}: implementare two-factor authentication (Google Authenticator)
+\item \textbf{Audit regolari}: monitorare \texttt{/var/log/auth.log} e \texttt{~/.ssh/authorized\_keys}
+\item \textbf{Aggiornamenti}: mantenere OpenSSH aggiornato
+\item \textbf{Backup chiavi}: backup sicuro chiavi private (offline, criptato)
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=System Security Checklist]
+\begin{itemize}
+\item[$\square$] Aggiornamenti automatici sicurezza abilitati
+\item[$\square$] Firewall configurato e attivo
+\item[$\square$] SSH: solo chiavi, no password
+\item[$\square$] SSH: root login disabilitato
+\item[$\square$] Fail2ban installato e configurato
+\item[$\square$] Utenti: sudo solo a chi necessario
+\item[$\square$] Audit file SUID/SGID regolare
+\item[$\square$] Log monitoring attivo
+\item[$\square$] Backup regolari e testati
+\item[$\square$] Intrusion detection (AIDE, Tripwire)
+\item[$\square$] SELinux o AppArmor abilitato
+\item[$\square$] Porte non necessarie chiuse
+\end{itemize}
+\end{tcolorbox}
+
+\section{Two-Factor Authentication (2FA)}
+
+\begin{lstlisting}
+# Installare Google Authenticator PAM
+sudo apt install libpam-google-authenticator
+
+# Configurare per utente
+google-authenticator
+# Rispondere domande:
+# - Time-based tokens: y
+# - Update .google_authenticator: y
+# - Disallow reuse: y
+# - Rate limiting: y
+# - Time skew: n (o y se problemi sincronizzazione)
+
+# Scan QR code con app mobile (Google Authenticator, Authy)
+
+# Configurare SSH PAM
+sudo nano /etc/pam.d/sshd
+
+# Aggiungere in fondo:
+auth required pam_google_authenticator.so
+
+# Configurare SSH daemon
+sudo nano /etc/ssh/sshd_config
+
+# Modificare/aggiungere:
+ChallengeResponseAuthentication yes
+UsePAM yes
+
+# Restart SSH
+sudo systemctl restart sshd
+
+# Test: nuova connessione richiederà verification code
+\end{lstlisting}
+
+\section{Monitoring e Auditing}
+
+\begin{lstlisting}
+# Login correnti
+who
+w
+last
+lastlog
+
+# Tentativi login falliti
+sudo lastb
+sudo grep "Failed password" /var/log/auth.log
+
+# IP con più tentativi falliti
+sudo grep "Failed password" /var/log/auth.log | \
+    awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head -10
+
+# Sessioni SSH attive
+who | grep pts
+ss -tnp | grep sshd
+
+# File accessi unauthorized
+sudo cat ~/.ssh/authorized_keys  # verificare chiavi
+sudo find / -name authorized_keys 2>/dev/null
+
+# File SUID potenzialmente pericolosi
+sudo find / -perm -4000 -type f -ls 2>/dev/null
+
+# Port scan detection (monitorare tentativi)
+sudo journalctl -u sshd | grep "Connection from"
+
+# Script monitoring SSH
+#!/bin/bash
+# ssh_monitor.sh
+echo "=== SSH Security Check ==="
+echo ""
+echo "Current SSH Sessions:"
+who | grep pts
+echo ""
+echo "Recent Failed Logins:"
+sudo lastb | head -10
+echo ""
+echo "Failed Password Attempts (last 24h):"
+sudo journalctl --since "24 hours ago" | \
+    grep "Failed password" | wc -l
+echo ""
+echo "Banned IPs (fail2ban):"
+sudo fail2ban-client status sshd | grep "Banned IP"
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\begin{enumerate}
+\item Generare coppia di chiavi Ed25519 e configurare autenticazione senza password.
+\item Configurare \texttt{~/.ssh/config} per 3 server diversi con alias.
+\item Implementare jump host per accedere a server interno.
+\item Configurare local port forwarding per accedere a database remoto.
+\item Creare SOCKS proxy SSH e configurare browser.
+\item Hardening SSH server: porta custom, no root, no password.
+\item Configurare UFW per permettere solo SSH, HTTP, HTTPS.
+\item Installare e configurare fail2ban per SSH.
+\item Implementare 2FA con Google Authenticator.
+\item Creare script monitoring che invia alert su tentativi brute force.
+\end{enumerate}
+
+\section{Script Completo: SSH Security Audit}
+\begin{lstlisting}
+#!/bin/bash
+# ssh_security_audit.sh - Audit completo sicurezza SSH
+
+REPORT="/var/log/ssh_audit_$(date +%Y%m%d).log"
+
+exec > >(tee "$REPORT")
+exec 2>&1
+
+echo "=== SSH Security Audit - $(date) ==="
+
+# Check SSH config
+echo -e "\n[1] SSH Server Configuration:"
+if sudo grep -q "^PermitRootLogin no" /etc/ssh/sshd_config; then
+    echo "✓ Root login disabled"
+else
+    echo "✗ WARNING: Root login enabled!"
+fi
+
+if sudo grep -q "^PasswordAuthentication no" /etc/ssh/sshd_config; then
+    echo "✓ Password authentication disabled"
+else
+    echo "✗ WARNING: Password authentication enabled!"
+fi
+
+if sudo grep -q "^Port [0-9]" /etc/ssh/sshd_config; then
+    PORT=$(sudo grep "^Port" /etc/ssh/sshd_config | awk '{print $2}')
+    echo "✓ SSH port: $PORT"
+    if [ "$PORT" == "22" ]; then
+        echo "  ⚠ Consider using non-default port"
+    fi
+else
+    echo "⚠ SSH on default port 22"
+fi
+
+# Check firewall
+echo -e "\n[2] Firewall Status:"
+if sudo ufw status | grep -q "Status: active"; then
+    echo "✓ UFW firewall active"
+    sudo ufw status numbered | grep -E "22|ssh"
+else
+    echo "✗ WARNING: UFW firewall inactive!"
+fi
+
+# Check fail2ban
+echo -e "\n[3] Fail2ban Status:"
+if systemctl is-active --quiet fail2ban; then
+    echo "✓ Fail2ban active"
+    sudo fail2ban-client status sshd 2>/dev/null || echo "⚠ SSH jail not configured"
+else
+    echo "✗ WARNING: Fail2ban not running!"
+fi
+
+# Recent failed logins
+echo -e "\n[4] Failed Login Attempts (last 24h):"
+FAILED_COUNT=$(sudo journalctl --since "24 hours ago" | grep "Failed password" | wc -l)
+echo "Total failed attempts: $FAILED_COUNT"
+
+if [ "$FAILED_COUNT" -gt 10 ]; then
+    echo "⚠ High number of failed attempts detected!"
+    echo "Top 5 attacking IPs:"
+    sudo journalctl --since "24 hours ago" | \
+        grep "Failed password" | \
+        awk '{print $(NF-3)}' | \
+        sort | uniq -c | sort -rn | head -5
+fi
+
+# Check authorized_keys
+echo -e "\n[5] Authorized Keys Check:"
+for home in /home/*; do
+    user=$(basename "$home")
+    authkeys="$home/.ssh/authorized_keys"
+    if [ -f "$authkeys" ]; then
+        count=$(wc -l < "$authkeys")
+        echo "User $user: $count authorized key(s)"
+        # Check permissions
+        perms=$(stat -c %a "$authkeys")
+        if [ "$perms" != "600" ]; then
+            echo "  ✗ WARNING: Wrong permissions: $perms (should be 600)"
+        fi
+    fi
+done
+
+# Check SUID files
+echo -e "\n[6] SUID Files Check:"
+SUID_COUNT=$(sudo find / -perm -4000 -type f 2>/dev/null | wc -l)
+echo "Total SUID files: $SUID_COUNT"
+
+# Updates
+echo -e "\n[7] System Updates:"
+if command -v apt &> /dev/null; then
+    UPDATES=$(apt list --upgradable 2>/dev/null | grep -c upgradable)
+    echo "Available updates: $UPDATES"
+    if [ "$UPDATES" -gt 0 ]; then
+        echo "⚠ System updates available"
+    fi
+fi
+
+echo -e "\n=== Audit Completed ==="
+echo "Report saved to: $REPORT"
+
+# Send alert if critical issues
+if grep -qE "✗|WARNING" "$REPORT"; then
+    echo "Critical issues found! Sending alert..."
+    # mail -s "SSH Security Alert" admin@example.com < "$REPORT"
+fi
+\end{lstlisting}
+
+\section{Riepilogo}
+Hai imparato:
+\begin{itemize}
+\item Generare e gestire chiavi SSH (RSA, Ed25519)
+\item Configurare autenticazione senza password
+\item Usare SSH config per gestione server multipli
+\item Implementare port forwarding (local, remote, dynamic)
+\item Configurare e hardening SSH server
+\item Proteggere sistema con firewall (UFW, iptables)
+\item Implementare fail2ban contro brute force
+\item Best practice sicurezza e auditing
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+\item \url{https://www.openssh.com/manual.html}
+\item \url{https://man.openbsd.org/sshd_config}
+\item \url{https://help.ubuntu.com/community/UFW}
+\item \url{https://www.fail2ban.org/}
+\item \url{https://www.ssh.com/academy/ssh/tunneling}
+\item NIST SSH Guidelines: \url{https://nvlpubs.nist.gov/nistpubs/ir/2015/NIST.IR.7966.pdf}
+\end{itemize}

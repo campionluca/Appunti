@@ -1,0 +1,889 @@
+% 11_performance.tex - Memoization, Code Splitting, React.memo, Profiler
+
+\chapter{Ottimizzazione delle Performance}
+\label{ch:performance}
+
+\section{Introduzione}
+
+L'ottimizzazione delle performance è cruciale per creare applicazioni React veloci e reattive. Questo capitolo copre tecniche di memoization, code splitting, lazy loading e profiling.
+
+\subsection{Quando Ottimizzare}
+
+\begin{tcolorbox}[title=Regola d'Oro]
+\textbf{Ottimizza solo quando necessario!}
+
+Premature optimization è la radice di tutti i mali. Prima misura, poi ottimizza.
+\end{tcolorbox}
+
+\begin{itemize}
+\item Misura le performance con React DevTools Profiler
+\item Identifica bottleneck reali
+\item Ottimizza solo componenti problematici
+\item Non ottimizzare tutto preventivamente
+\end{itemize}
+
+\section{React.memo}
+
+\texttt{React.memo} è un Higher Order Component che memoizza i componenti per evitare re-render inutili.
+
+\subsection{Utilizzo Base}
+
+\begin{lstlisting}[caption={React.memo base}]
+import { memo } from 'react';
+
+// Componente senza memo (ri-renderizza sempre)
+function ExpensiveComponent({ data }) {
+  console.log('Rendering ExpensiveComponent');
+
+  // Calcoli costosi...
+  const processedData = data.map(item => {
+    // elaborazione complessa
+    return item * 2;
+  });
+
+  return (
+    <div>
+      {processedData.map((item, i) => (
+        <div key={i}>{item}</div>
+      ))}
+    </div>
+  );
+}
+
+// Componente con memo (ri-renderizza solo se props cambiano)
+const MemoizedExpensiveComponent = memo(ExpensiveComponent);
+
+// Utilizzo
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [data, setData] = useState([1, 2, 3, 4, 5]);
+
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+
+      {/* Questo NON ri-renderizza quando count cambia */}
+      <MemoizedExpensiveComponent data={data} />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Custom Comparison Function}
+
+\begin{lstlisting}[caption={React.memo con comparatore personalizzato}]
+import { memo } from 'react';
+
+function UserCard({ user, onEdit }) {
+  console.log('Rendering UserCard for', user.name);
+
+  return (
+    <div className="user-card">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <button onClick={() => onEdit(user.id)}>Edit</button>
+    </div>
+  );
+}
+
+// Custom comparison: ri-renderizza solo se user.id o user.name cambiano
+const MemoizedUserCard = memo(UserCard, (prevProps, nextProps) => {
+  // Ritorna true se props sono uguali (NON re-render)
+  // Ritorna false se props sono diverse (re-render)
+  return (
+    prevProps.user.id === nextProps.user.id &&
+    prevProps.user.name === nextProps.user.name
+  );
+});
+
+export default MemoizedUserCard;
+\end{lstlisting}
+
+\subsection{Quando NON usare React.memo}
+
+\begin{lstlisting}[caption={Casi in cui React.memo non aiuta}]
+import { memo, useState } from 'react';
+
+// SBAGLIATO: Component che cambia sempre
+const BadMemo = memo(({ timestamp }) => {
+  // timestamp cambia sempre, memo inutile
+  return <div>Time: {timestamp}</div>;
+});
+
+// SBAGLIATO: Props non primitive sempre nuove
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+
+      {/* Oggetto creato ogni render, memo inutile */}
+      <MemoizedChild config={{ theme: 'dark' }} />
+
+      {/* Funzione creata ogni render, memo inutile */}
+      <MemoizedChild onClick={() => console.log('click')} />
+    </div>
+  );
+}
+
+// CORRETTO: Usa useCallback e useMemo
+function ParentFixed() {
+  const [count, setCount] = useState(0);
+
+  const config = useMemo(() => ({ theme: 'dark' }), []);
+  const handleClick = useCallback(() => console.log('click'), []);
+
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <MemoizedChild config={config} onClick={handleClick} />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{useMemo Hook}
+
+\texttt{useMemo} memoizza il risultato di un calcolo costoso.
+
+\subsection{Utilizzo Base}
+
+\begin{lstlisting}[caption={useMemo per calcoli costosi}]
+import { useState, useMemo } from 'react';
+
+function ProductList({ products }) {
+  const [filter, setFilter] = useState('');
+
+  // Calcolo costoso memoizzato
+  const filteredProducts = useMemo(() => {
+    console.log('Filtering products...');
+
+    return products.filter(product =>
+      product.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [products, filter]); // Ri-calcola solo se products o filter cambiano
+
+  // Calcolo costoso: somma prezzi
+  const totalPrice = useMemo(() => {
+    console.log('Calculating total price...');
+
+    return filteredProducts.reduce((sum, p) => sum + p.price, 0);
+  }, [filteredProducts]);
+
+  return (
+    <div>
+      <input
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        placeholder="Filtra prodotti..."
+      />
+
+      <p>Totale: {totalPrice.toFixed(2)}€</p>
+
+      <ul>
+        {filteredProducts.map(product => (
+          <li key={product.id}>
+            {product.name} - {product.price}€
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Esempi Pratici}
+
+\begin{lstlisting}[caption={useMemo per vari scenari}]
+import { useMemo } from 'react';
+
+function DataAnalysis({ data }) {
+  // 1. Calcolo statistiche
+  const stats = useMemo(() => {
+    const sum = data.reduce((acc, val) => acc + val, 0);
+    const avg = sum / data.length;
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+
+    return { sum, avg, max, min };
+  }, [data]);
+
+  // 2. Ordinamento
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => a - b);
+  }, [data]);
+
+  // 3. Trasformazione complessa
+  const processedData = useMemo(() => {
+    return data.map(item => ({
+      value: item,
+      squared: item * item,
+      isEven: item % 2 === 0
+    }));
+  }, [data]);
+
+  // 4. Creazione oggetto config
+  const chartConfig = useMemo(() => ({
+    type: 'line',
+    data: sortedData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top'
+        }
+      }
+    }
+  }), [sortedData]);
+
+  return (
+    <div>
+      <h3>Statistiche</h3>
+      <p>Media: {stats.avg.toFixed(2)}</p>
+      <p>Max: {stats.max}</p>
+      <p>Min: {stats.min}</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Quando NON usare useMemo}
+
+\begin{lstlisting}[caption={useMemo inutile o dannoso}]
+import { useMemo } from 'react';
+
+function Component() {
+  // SBAGLIATO: Calcolo semplice, overhead inutile
+  const doubleValue = useMemo(() => value * 2, [value]);
+
+  // CORRETTO: Calcolo diretto
+  const doubleValue = value * 2;
+
+  // SBAGLIATO: String interpolation
+  const greeting = useMemo(() => `Hello, ${name}`, [name]);
+
+  // CORRETTO: Calcolo diretto
+  const greeting = `Hello, ${name}`;
+
+  // SBAGLIATO: Array.map semplice
+  const doubled = useMemo(() => numbers.map(n => n * 2), [numbers]);
+
+  // CORRETTO: Solo se numbers è MOLTO grande
+  // Altrimenti calcolo diretto
+  const doubled = numbers.map(n => n * 2);
+}
+\end{lstlisting}
+
+\section{useCallback Hook}
+
+\texttt{useCallback} memoizza funzioni per evitare che siano ricreate ad ogni render.
+
+\subsection{Utilizzo Base}
+
+\begin{lstlisting}[caption={useCallback con React.memo}]
+import { useState, useCallback, memo } from 'react';
+
+// Child component memoizzato
+const Button = memo(({ onClick, children }) => {
+  console.log('Rendering Button:', children);
+  return <button onClick={onClick}>{children}</button>;
+});
+
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [otherState, setOtherState] = useState(0);
+
+  // SBAGLIATO: Funzione ricreata ogni render
+  const handleClick = () => {
+    setCount(count + 1);
+  };
+
+  // CORRETTO: Funzione memoizzata
+  const handleClickMemo = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []); // Dipendenze vuote: funzione mai ricreata
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <p>Other: {otherState}</p>
+
+      {/* Questo ri-renderizza sempre */}
+      <Button onClick={handleClick}>Increment</Button>
+
+      {/* Questo NON ri-renderizza quando otherState cambia */}
+      <Button onClick={handleClickMemo}>Increment Memo</Button>
+
+      <button onClick={() => setOtherState(otherState + 1)}>
+        Update Other
+      </button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{useCallback con Dipendenze}
+
+\begin{lstlisting}[caption={useCallback con dipendenze}]
+import { useState, useCallback } from 'react';
+
+function TodoList() {
+  const [todos, setTodos] = useState([]);
+  const [filter, setFilter] = useState('all');
+
+  // Callback con dipendenza da filter
+  const handleAddTodo = useCallback((text) => {
+    const newTodo = {
+      id: Date.now(),
+      text,
+      completed: false,
+      category: filter
+    };
+
+    setTodos(prev => [...prev, newTodo]);
+  }, [filter]); // Ri-crea quando filter cambia
+
+  // Callback senza dipendenze esterne
+  const handleToggleTodo = useCallback((id) => {
+    setTodos(prev =>
+      prev.map(todo =>
+        todo.id === id
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      )
+    );
+  }, []); // Mai ri-creata
+
+  // Callback con multiple dipendenze
+  const handleDeleteCompleted = useCallback(() => {
+    setTodos(prev => prev.filter(todo => !todo.completed));
+    console.log('Deleted in category:', filter);
+  }, [filter]); // Dipende da filter
+
+  return (
+    <div>
+      <AddTodoForm onAdd={handleAddTodo} />
+      <TodoItems todos={todos} onToggle={handleToggleTodo} />
+      <button onClick={handleDeleteCompleted}>
+        Delete Completed
+      </button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Pattern: Event Handlers}
+
+\begin{lstlisting}[caption={useCallback per event handlers}]
+import { useCallback } from 'react';
+
+function UserProfile({ user, onUpdate }) {
+  // Handler per form submit
+  const handleSubmit = useCallback((e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const updates = Object.fromEntries(formData);
+    onUpdate(user.id, updates);
+  }, [user.id, onUpdate]);
+
+  // Handler per campo specifico
+  const handleNameChange = useCallback((e) => {
+    onUpdate(user.id, { name: e.target.value });
+  }, [user.id, onUpdate]);
+
+  // Handler per click con parametro
+  const handleDelete = useCallback(() => {
+    if (confirm(`Delete ${user.name}?`)) {
+      onUpdate(user.id, { deleted: true });
+    }
+  }, [user.id, user.name, onUpdate]);
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        defaultValue={user.name}
+        onChange={handleNameChange}
+      />
+      <button type="submit">Save</button>
+      <button type="button" onClick={handleDelete}>Delete</button>
+    </form>
+  );
+}
+\end{lstlisting}
+
+\section{Code Splitting e Lazy Loading}
+
+Il code splitting divide il bundle in chunks più piccoli, caricati on-demand.
+
+\subsection{React.lazy e Suspense}
+
+\begin{lstlisting}[caption={Lazy loading di componenti}]
+import { lazy, Suspense } from 'react';
+
+// Lazy import
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Settings = lazy(() => import('./pages/Settings'));
+
+// Loading component
+function LoadingSpinner() {
+  return (
+    <div className="loading">
+      <div className="spinner"></div>
+      <p>Caricamento...</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+      </Routes>
+    </Suspense>
+  );
+}
+\end{lstlisting}
+
+\subsection{Route-based Code Splitting}
+
+\begin{lstlisting}[caption={Code splitting per route}]
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// Lazy load route components
+const Home = lazy(() => import('./routes/Home'));
+const About = lazy(() => import('./routes/About'));
+const Products = lazy(() => import('./routes/Products'));
+const ProductDetail = lazy(() => import('./routes/ProductDetail'));
+const Admin = lazy(() => import('./routes/Admin'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+        <Route path="/admin/*" element={<Admin />} />
+      </Routes>
+    </Suspense>
+  );
+}
+\end{lstlisting}
+
+\subsection{Component-based Splitting}
+
+\begin{lstlisting}[caption={Lazy loading di componenti pesanti}]
+import { lazy, Suspense, useState } from 'react';
+
+// Componenti pesanti caricati solo quando necessario
+const ChartComponent = lazy(() => import('./components/Chart'));
+const DataTable = lazy(() => import('./components/DataTable'));
+const VideoPlayer = lazy(() => import('./components/VideoPlayer'));
+
+function Dashboard() {
+  const [showChart, setShowChart] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+
+      <button onClick={() => setShowChart(true)}>Show Chart</button>
+      <button onClick={() => setShowTable(true)}>Show Table</button>
+
+      {showChart && (
+        <Suspense fallback={<div>Loading chart...</div>}>
+          <ChartComponent data={chartData} />
+        </Suspense>
+      )}
+
+      {showTable && (
+        <Suspense fallback={<div>Loading table...</div>}>
+          <DataTable data={tableData} />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Preloading}
+
+\begin{lstlisting}[caption={Preload componenti al hover}]
+import { lazy } from 'react';
+
+const HeavyComponent = lazy(() => import('./HeavyComponent'));
+
+// Preload function
+const preloadHeavyComponent = () => {
+  import('./HeavyComponent');
+};
+
+function Navigation() {
+  return (
+    <nav>
+      <Link
+        to="/heavy"
+        onMouseEnter={preloadHeavyComponent}
+        onFocus={preloadHeavyComponent}
+      >
+        Heavy Page
+      </Link>
+    </nav>
+  );
+}
+\end{lstlisting}
+
+\section{Virtualizzazione Liste}
+
+Per liste molto lunghe, renderizza solo elementi visibili.
+
+\subsection{React Window}
+
+\begin{lstlisting}[caption={Liste virtualizzate con react-window}]
+import { FixedSizeList } from 'react-window';
+
+function VirtualizedList({ items }) {
+  const Row = ({ index, style }) => (
+    <div style={style} className="list-item">
+      {items[index].name}
+    </div>
+  );
+
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={items.length}
+      itemSize={50}
+      width="100%"
+    >
+      {Row}
+    </FixedSizeList>
+  );
+}
+
+// Utilizzo
+function App() {
+  const items = Array.from({ length: 10000 }, (_, i) => ({
+    id: i,
+    name: `Item ${i}`
+  }));
+
+  return <VirtualizedList items={items} />;
+}
+\end{lstlisting}
+
+\subsection{Liste a Dimensioni Variabili}
+
+\begin{lstlisting}[caption={Liste con altezze variabili}]
+import { VariableSizeList } from 'react-window';
+
+function VariableList({ items }) {
+  // Funzione per calcolare altezza
+  const getItemSize = (index) => {
+    const item = items[index];
+    // Calcola in base al contenuto
+    return item.content.length > 100 ? 100 : 50;
+  };
+
+  const Row = ({ index, style }) => (
+    <div style={style} className="list-item">
+      <h3>{items[index].title}</h3>
+      <p>{items[index].content}</p>
+    </div>
+  );
+
+  return (
+    <VariableSizeList
+      height={600}
+      itemCount={items.length}
+      itemSize={getItemSize}
+      width="100%"
+    >
+      {Row}
+    </VariableSizeList>
+  );
+}
+\end{lstlisting}
+
+\section{React Profiler}
+
+Strumento per misurare performance e identificare bottleneck.
+
+\subsection{Utilizzo del Profiler}
+
+\begin{lstlisting}[caption={Profiler Component}]
+import { Profiler } from 'react';
+
+function onRenderCallback(
+  id, // id del Profiler
+  phase, // "mount" o "update"
+  actualDuration, // tempo speso per render
+  baseDuration, // tempo stimato senza memoization
+  startTime, // quando React ha iniziato
+  commitTime, // quando React ha committato
+  interactions // Set di interazioni
+) {
+  console.log(`${id} (${phase}):`, {
+    actualDuration,
+    baseDuration
+  });
+
+  // Log su servizio analytics
+  // analytics.track('render', { id, phase, actualDuration });
+}
+
+function App() {
+  return (
+    <Profiler id="App" onRender={onRenderCallback}>
+      <Dashboard />
+    </Profiler>
+  );
+}
+
+// Multiple profilers
+function ComplexApp() {
+  return (
+    <div>
+      <Profiler id="Navigation" onRender={onRenderCallback}>
+        <Navigation />
+      </Profiler>
+
+      <Profiler id="Content" onRender={onRenderCallback}>
+        <Content />
+      </Profiler>
+
+      <Profiler id="Sidebar" onRender={onRenderCallback}>
+        <Sidebar />
+      </Profiler>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Custom Performance Hook}
+
+\begin{lstlisting}[caption={Hook per misurare performance}]
+import { useEffect, useRef } from 'react';
+
+function useRenderTime(componentName) {
+  const renderCount = useRef(0);
+  const startTime = useRef(performance.now());
+
+  useEffect(() => {
+    renderCount.current += 1;
+    const endTime = performance.now();
+    const renderTime = endTime - startTime.current;
+
+    console.log(
+      `${componentName} render #${renderCount.current}: ${renderTime.toFixed(2)}ms`
+    );
+
+    startTime.current = performance.now();
+  });
+}
+
+// Utilizzo
+function ExpensiveComponent() {
+  useRenderTime('ExpensiveComponent');
+
+  // ... component logic
+  return <div>Component</div>;
+}
+\end{lstlisting}
+
+\section{Ottimizzazioni Varie}
+
+\subsection{Debounce e Throttle}
+
+\begin{lstlisting}[caption={Debounce per input}]
+import { useState, useEffect } from 'react';
+
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Utilizzo
+function SearchComponent() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    if (debouncedSearch) {
+      // Esegui ricerca API
+      console.log('Searching for:', debouncedSearch);
+    }
+  }, [debouncedSearch]);
+
+  return (
+    <input
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Search..."
+    />
+  );
+}
+\end{lstlisting}
+
+\subsection{Immagini Ottimizzate}
+
+\begin{lstlisting}[caption={Lazy loading immagini}]
+import { useState, useEffect, useRef } from 'react';
+
+function LazyImage({ src, alt, placeholder }) {
+  const [imageSrc, setImageSrc] = useState(placeholder);
+  const [imageRef, setImageRef] = useState();
+
+  useEffect(() => {
+    let observer;
+
+    if (imageRef && imageSrc === placeholder) {
+      observer = new IntersectionObserver(
+        entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              setImageSrc(src);
+              observer.unobserve(imageRef);
+            }
+          });
+        }
+      );
+
+      observer.observe(imageRef);
+    }
+
+    return () => {
+      if (observer && imageRef) {
+        observer.unobserve(imageRef);
+      }
+    };
+  }, [imageRef, imageSrc, placeholder, src]);
+
+  return (
+    <img
+      ref={setImageRef}
+      src={imageSrc}
+      alt={alt}
+      className={imageSrc === placeholder ? 'loading' : 'loaded'}
+    />
+  );
+}
+
+// Utilizzo
+function Gallery({ images }) {
+  return (
+    <div className="gallery">
+      {images.map(img => (
+        <LazyImage
+          key={img.id}
+          src={img.url}
+          alt={img.title}
+          placeholder="/placeholder.jpg"
+        />
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Web Workers}
+
+\begin{lstlisting}[caption={Calcoli pesanti in Web Worker}]
+// worker.js
+self.addEventListener('message', (e) => {
+  const { data } = e.data;
+
+  // Calcolo pesante
+  const result = data.map(item => {
+    // Elaborazione complessa
+    return item * item * Math.random();
+  });
+
+  self.postMessage({ result });
+});
+
+// Componente React
+import { useState, useEffect } from 'react';
+
+function HeavyCalculation({ data }) {
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const worker = new Worker(new URL('./worker.js', import.meta.url));
+
+    worker.onmessage = (e) => {
+      setResult(e.data.result);
+      setLoading(false);
+    };
+
+    setLoading(true);
+    worker.postMessage({ data });
+
+    return () => {
+      worker.terminate();
+    };
+  }, [data]);
+
+  if (loading) return <div>Calculating...</div>;
+
+  return (
+    <div>
+      Result: {result?.length} items processed
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Performance Best Practices]
+\begin{itemize}
+\item Misura prima di ottimizzare (React DevTools Profiler)
+\item Usa React.memo solo per componenti costosi
+\item useMemo/useCallback solo se migliora performance misurate
+\item Implementa code splitting per route
+\item Virtualizza liste molto lunghe
+\item Lazy load immagini e componenti pesanti
+\item Debounce input che triggherano API calls
+\item Evita inline functions in props di componenti memoizzati
+\item Usa key stabili in liste
+\item Minimizza re-render con state colocation
+\item Considera Web Workers per calcoli pesanti
+\item Ottimizza bundle size (tree shaking, minification)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusioni}
+
+L'ottimizzazione delle performance richiede un approccio misurato e strategico. Gli strumenti principali sono:
+
+\begin{itemize}
+\item \textbf{React.memo}: Per evitare re-render di componenti
+\item \textbf{useMemo/useCallback}: Per memoizzare valori e funzioni
+\item \textbf{Code Splitting}: Per ridurre bundle size iniziale
+\item \textbf{Virtualizzazione}: Per liste molto lunghe
+\item \textbf{Profiler}: Per identificare bottleneck
+\end{itemize}
+
+Ricorda: premature optimization è inutile. Misura, identifica problemi reali, poi ottimizza in modo mirato.

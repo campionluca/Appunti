@@ -1,0 +1,1003 @@
+% 07_lifecycle.tex - Component Lifecycle, useEffect Cleanup, Mounting/Unmounting
+
+\chapter{Ciclo di Vita dei Componenti}
+\label{ch:lifecycle}
+
+\section{Introduzione al Lifecycle}
+
+Il ciclo di vita di un componente React rappresenta l'insieme delle fasi che un componente attraversa dalla sua creazione alla sua distruzione. Comprendere il lifecycle è fondamentale per gestire correttamente effetti collaterali, sottoscrizioni, timer e operazioni asincrone.
+
+\subsection{Fasi del Lifecycle}
+
+Ogni componente React passa attraverso tre fasi principali:
+
+\begin{enumerate}
+\item \textbf{Mounting} (Montaggio): Il componente viene creato e inserito nel DOM
+\item \textbf{Updating} (Aggiornamento): Il componente viene ri-renderizzato a causa di cambiamenti in props o state
+\item \textbf{Unmounting} (Smontaggio): Il componente viene rimosso dal DOM
+\end{enumerate}
+
+\begin{tcolorbox}[title=Nota Importante]
+Con i Function Components e gli Hooks, non parliamo più di "lifecycle methods" ma di "effetti" gestiti tramite \texttt{useEffect}. Il paradigma è diverso: invece di pensare a "quando" fare qualcosa, pensiamo a "cosa" sincronizzare.
+\end{tcolorbox}
+
+\subsection{Diagramma del Lifecycle}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, rounded corners, draw=blue!60, fill=blue!5, very thick, minimum width=3cm, minimum height=1cm, text centered},
+  arrow/.style={->, >=Stealth, thick}
+]
+
+  \node[box] (mount) {MOUNTING};
+  \node[box, below=of mount] (update) {UPDATING};
+  \node[box, below=of update] (unmount) {UNMOUNTING};
+
+  \draw[arrow] (mount) -- node[right, text width=3cm] {Props/State cambiano} (update);
+  \draw[arrow] (update.east) -- ++(1.5,0) |- node[right, near start] {Nuove modifiche} (update.east);
+  \draw[arrow] (update) -- node[right, text width=3cm] {Componente rimosso} (unmount);
+
+\end{tikzpicture}
+\end{center}
+
+\section{useEffect: Il Hook del Lifecycle}
+
+\texttt{useEffect} è il principale strumento per gestire il lifecycle nei Function Components. Permette di eseguire effetti collaterali in risposta a cambiamenti nel componente.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[caption={Sintassi base di useEffect}]
+import { useEffect } from 'react';
+
+function MyComponent() {
+  useEffect(() => {
+    // Codice da eseguire (effetto)
+
+    return () => {
+      // Codice di cleanup (opzionale)
+    };
+  }, [dependencies]); // Array di dipendenze
+}
+\end{lstlisting}
+
+\subsection{Componenti di useEffect}
+
+\begin{enumerate}
+\item \textbf{Effect Function}: La funzione che contiene il codice dell'effetto
+\item \textbf{Cleanup Function}: La funzione opzionale di pulizia (cleanup)
+\item \textbf{Dependency Array}: L'array che determina quando l'effetto viene ri-eseguito
+\end{enumerate}
+
+\section{Dependency Array: Controllo dell'Esecuzione}
+
+L'array di dipendenze è cruciale per controllare quando un effetto viene eseguito.
+
+\subsection{Tre Pattern Principali}
+
+\begin{lstlisting}[caption={Pattern del dependency array}]
+// 1. Nessun array: esegue ad ogni render
+useEffect(() => {
+  console.log('Esegue ad ogni render');
+});
+
+// 2. Array vuoto: esegue solo al mount
+useEffect(() => {
+  console.log('Esegue solo una volta al mount');
+}, []);
+
+// 3. Con dipendenze: esegue quando cambiano le dipendenze
+useEffect(() => {
+  console.log('Esegue quando userId cambia');
+}, [userId]);
+\end{lstlisting}
+
+\subsection{Esempio Pratico: Document Title}
+
+\begin{lstlisting}[caption={Aggiornamento dinamico del titolo della pagina}]
+import { useState, useEffect } from 'react';
+
+function DocumentTitleUpdater() {
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState('Utente');
+
+  // Effetto che dipende da count
+  useEffect(() => {
+    document.title = `Hai cliccato ${count} volte`;
+  }, [count]); // Si ri-esegue solo quando count cambia
+
+  // Effetto che dipende da name
+  useEffect(() => {
+    console.log(`L'utente ora si chiama: ${name}`);
+  }, [name]); // Si ri-esegue solo quando name cambia
+
+  return (
+    <div>
+      <h2>Ciao, {name}!</h2>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Il tuo nome"
+      />
+
+      <p>Hai cliccato {count} volte</p>
+      <button onClick={() => setCount(count + 1)}>
+        Clicca qui
+      </button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Mounting: Inizializzazione del Componente}
+
+La fase di mounting è quando il componente viene creato e inserito nel DOM per la prima volta.
+
+\subsection{Operazioni Tipiche al Mount}
+
+\begin{itemize}
+\item Fetch di dati iniziali da API
+\item Sottoscrizione a eventi o servizi esterni
+\item Inizializzazione di librerie terze parti
+\item Setup di timer o intervalli
+\item Connessione a WebSocket
+\end{itemize}
+
+\subsection{Esempio: Fetch Dati al Mount}
+
+\begin{lstlisting}[caption={Caricamento dati all'inizializzazione}]
+import { useState, useEffect } from 'react';
+
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Questa funzione viene eseguita solo al mount
+    // (o quando userId cambia)
+
+    setLoading(true);
+    setError(null);
+
+    fetch(`https://api.example.com/users/${userId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Errore nel caricamento');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setUser(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [userId]); // Ri-esegue quando userId cambia
+
+  if (loading) return <p>Caricamento...</p>;
+  if (error) return <p>Errore: {error}</p>;
+  if (!user) return null;
+
+  return (
+    <div className="user-profile">
+      <h2>{user.name}</h2>
+      <p>Email: {user.email}</p>
+      <p>Username: {user.username}</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Pattern Avanzato: Async/Await nel useEffect}
+
+\begin{lstlisting}[caption={Uso di async/await in useEffect}]
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Non possiamo rendere useEffect async direttamente
+    // Quindi creiamo una funzione async interna
+
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('https://api.example.com/users');
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        console.error('Errore nel fetch:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []); // Array vuoto = esegue solo al mount
+
+  if (loading) {
+    return <div>Caricamento utenti...</div>;
+  }
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Perché non possiamo usare async direttamente?]
+\texttt{useEffect} si aspetta che la funzione ritorni \texttt{undefined} o una funzione di cleanup. Una funzione \texttt{async} ritorna sempre una Promise, quindi non possiamo usarla direttamente. La soluzione è creare una funzione async interna e chiamarla.
+\end{tcolorbox}
+
+\section{Unmounting: Pulizia del Componente}
+
+La fase di unmounting è quando il componente viene rimosso dal DOM. È fondamentale pulire le risorse per evitare memory leak.
+
+\subsection{Cleanup Function}
+
+La funzione di cleanup viene eseguita:
+\begin{itemize}
+\item Prima che l'effetto venga ri-eseguito (se le dipendenze cambiano)
+\item Quando il componente viene smontato dal DOM
+\end{itemize}
+
+\subsection{Esempio: Timer con Cleanup}
+
+\begin{lstlisting}[caption={Gestione di un timer con cleanup}]
+import { useState, useEffect } from 'react';
+
+function Timer() {
+  const [seconds, setSeconds] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    let intervalId = null;
+
+    if (isRunning) {
+      // Setup: avvia il timer
+      intervalId = setInterval(() => {
+        setSeconds(prev => prev + 1);
+      }, 1000);
+
+      console.log('Timer avviato');
+    }
+
+    // Cleanup: pulisce il timer
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        console.log('Timer pulito');
+      }
+    };
+  }, [isRunning]); // Ri-esegue quando isRunning cambia
+
+  const toggle = () => setIsRunning(!isRunning);
+  const reset = () => {
+    setIsRunning(false);
+    setSeconds(0);
+  };
+
+  return (
+    <div className="timer">
+      <h2>Timer: {seconds}s</h2>
+      <button onClick={toggle}>
+        {isRunning ? 'Pausa' : 'Avvia'}
+      </button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Esempio: Event Listener con Cleanup}
+
+\begin{lstlisting}[caption={Gestione di event listener del browser}]
+import { useState, useEffect } from 'react';
+
+function WindowSize() {
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
+
+  useEffect(() => {
+    // Handler dell'evento
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    // Setup: aggiungi event listener
+    window.addEventListener('resize', handleResize);
+    console.log('Event listener aggiunto');
+
+    // Cleanup: rimuovi event listener
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      console.log('Event listener rimosso');
+    };
+  }, []); // Array vuoto = setup al mount, cleanup all'unmount
+
+  return (
+    <div>
+      <h2>Dimensioni Finestra</h2>
+      <p>Larghezza: {windowSize.width}px</p>
+      <p>Altezza: {windowSize.height}px</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Esempio: WebSocket con Cleanup}
+
+\begin{lstlisting}[caption={Connessione WebSocket con pulizia corretta}]
+import { useState, useEffect } from 'react';
+
+function ChatRoom({ roomId }) {
+  const [messages, setMessages] = useState([]);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
+  useEffect(() => {
+    // Setup: crea connessione WebSocket
+    const ws = new WebSocket(`wss://chat.example.com/room/${roomId}`);
+
+    ws.onopen = () => {
+      console.log('Connesso alla chat room:', roomId);
+      setConnectionStatus('connected');
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      setMessages(prev => [...prev, message]);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatus('error');
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnesso dalla chat room');
+      setConnectionStatus('disconnected');
+    };
+
+    // Cleanup: chiudi connessione quando il componente si smonta
+    // o quando roomId cambia
+    return () => {
+      console.log('Chiusura connessione WebSocket...');
+      ws.close();
+    };
+  }, [roomId]); // Ri-connetti quando cambia la room
+
+  return (
+    <div className="chat-room">
+      <div className="status">
+        Status: <span className={connectionStatus}>{connectionStatus}</span>
+      </div>
+      <div className="messages">
+        {messages.map((msg, index) => (
+          <div key={index} className="message">
+            <strong>{msg.user}:</strong> {msg.text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Updating: Aggiornamenti del Componente}
+
+La fase di updating si verifica ogni volta che props o state cambiano, causando un re-render del componente.
+
+\subsection{Controllo degli Aggiornamenti}
+
+\begin{lstlisting}[caption={Esempio di effetto che si ri-esegue agli aggiornamenti}]
+import { useState, useEffect } from 'react';
+
+function SearchResults({ searchTerm }) {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Questo effetto si ri-esegue ogni volta che searchTerm cambia
+    if (!searchTerm) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+
+    // Simula chiamata API
+    const timeoutId = setTimeout(() => {
+      const mockResults = [
+        `Risultato 1 per "${searchTerm}"`,
+        `Risultato 2 per "${searchTerm}"`,
+        `Risultato 3 per "${searchTerm}"`
+      ];
+      setResults(mockResults);
+      setLoading(false);
+    }, 500);
+
+    // Cleanup: annulla la ricerca precedente se searchTerm cambia
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [searchTerm]);
+
+  if (loading) return <div>Ricerca in corso...</div>;
+
+  return (
+    <ul>
+      {results.map((result, index) => (
+        <li key={index}>{result}</li>
+      ))}
+    </ul>
+  );
+}
+
+// Componente padre con input
+function SearchApp() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Cerca..."
+      />
+      <SearchResults searchTerm={searchTerm} />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Debouncing con useEffect}
+
+Il debouncing è una tecnica per ritardare l'esecuzione di un'operazione fino a quando l'utente smette di effettuare azioni.
+
+\begin{lstlisting}[caption={Implementazione di debounce con useEffect}]
+import { useState, useEffect } from 'react';
+
+function DebouncedSearch() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedTerm, setDebouncedTerm] = useState('');
+
+  // Effetto per il debouncing
+  useEffect(() => {
+    // Imposta un timer per aggiornare debouncedTerm dopo 500ms
+    const timerId = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+    }, 500);
+
+    // Cleanup: cancella il timer se searchTerm cambia
+    // prima che i 500ms siano trascorsi
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [searchTerm]);
+
+  // Effetto per la ricerca (si attiva solo quando debouncedTerm cambia)
+  useEffect(() => {
+    if (debouncedTerm) {
+      console.log('Eseguo ricerca per:', debouncedTerm);
+      // Qui faremmo la chiamata API
+    }
+  }, [debouncedTerm]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Cerca (con debounce)..."
+      />
+      <p>Termine di ricerca: {searchTerm}</p>
+      <p>Ricerca attiva per: {debouncedTerm}</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Pattern Avanzati del Lifecycle}
+
+\subsection{Cancellazione di Fetch con AbortController}
+
+Per evitare race condition e aggiornamenti su componenti smontati, è importante cancellare le richieste HTTP.
+
+\begin{lstlisting}[caption={Fetch con cancellazione tramite AbortController}]
+import { useState, useEffect } from 'react';
+
+function UserData({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Crea un AbortController per questa richiesta
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `https://api.example.com/users/${userId}`,
+          { signal } // Passa il signal alla fetch
+        );
+
+        if (!response.ok) {
+          throw new Error('Errore nel caricamento');
+        }
+
+        const data = await response.json();
+
+        // Controlla se il componente è ancora montato
+        if (!signal.aborted) {
+          setUser(data);
+        }
+      } catch (err) {
+        // Ignora errori di abort
+        if (err.name !== 'AbortError') {
+          setError(err.message);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUser();
+
+    // Cleanup: annulla la richiesta se il componente si smonta
+    // o se userId cambia
+    return () => {
+      controller.abort();
+    };
+  }, [userId]);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (error) return <div>Errore: {error}</div>;
+  if (!user) return null;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Custom Hook per il Lifecycle}
+
+Possiamo creare custom hooks per riutilizzare logica di lifecycle.
+
+\begin{lstlisting}[caption={Custom hook useMount e useUnmount}]
+import { useEffect } from 'react';
+
+// Hook che esegue una funzione solo al mount
+function useMount(callback) {
+  useEffect(() => {
+    callback();
+  }, []); // Array vuoto = esegue solo al mount
+}
+
+// Hook che esegue una funzione solo all'unmount
+function useUnmount(callback) {
+  useEffect(() => {
+    return callback; // Ritorna la funzione di cleanup
+  }, []); // Array vuoto = cleanup solo all'unmount
+}
+
+// Hook che esegue codice al mount e all'unmount
+function useMountUnmount(onMount, onUnmount) {
+  useEffect(() => {
+    onMount();
+    return onUnmount;
+  }, []);
+}
+
+// Esempio di utilizzo
+function ExampleComponent() {
+  useMount(() => {
+    console.log('Componente montato!');
+  });
+
+  useUnmount(() => {
+    console.log('Componente smontato!');
+  });
+
+  return <div>Esempio</div>;
+}
+\end{lstlisting}
+
+\subsection{Hook useUpdateEffect}
+
+Un hook che esegue l'effetto solo agli aggiornamenti, non al mount iniziale.
+
+\begin{lstlisting}[caption={Custom hook useUpdateEffect}]
+import { useEffect, useRef, useState } from 'react';
+
+function useUpdateEffect(effect, dependencies) {
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    return effect();
+  }, dependencies);
+}
+
+// Esempio di utilizzo
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  // Questo NON si esegue al primo render
+  useUpdateEffect(() => {
+    console.log('Count è stato aggiornato a:', count);
+  }, [count]);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>Incrementa</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Hook useInterval}
+
+Un hook personalizzato per gestire intervalli in modo sicuro.
+
+\begin{lstlisting}[caption={Custom hook useInterval}]
+import { useEffect, useRef, useState } from 'react';
+
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  // Salva la callback più recente
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Setup dell'intervallo
+  useEffect(() => {
+    if (delay === null) return;
+
+    const tick = () => {
+      savedCallback.current();
+    };
+
+    const id = setInterval(tick, delay);
+
+    // Cleanup
+    return () => clearInterval(id);
+  }, [delay]);
+}
+
+// Esempio di utilizzo
+function Clock() {
+  const [time, setTime] = useState(new Date());
+
+  useInterval(() => {
+    setTime(new Date());
+  }, 1000); // Aggiorna ogni secondo
+
+  return (
+    <div>
+      <h2>{time.toLocaleTimeString()}</h2>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Errori Comuni e Best Practices}
+
+\subsection{Errore: Dipendenze Mancanti}
+
+\begin{lstlisting}[caption={Esempio di dipendenze mancanti}]
+// SBAGLIATO: count non è nelle dipendenze
+function BadExample() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log(count); // Usa count ma non è nelle dipendenze!
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []); // Manca count
+
+  return <button onClick={() => setCount(count + 1)}>Click</button>;
+}
+
+// CORRETTO: Usa la forma funzionale di setState
+function GoodExample() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount(prev => {
+        console.log(prev); // Accedi al valore tramite callback
+        return prev;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []); // Corretto: non dipende da count
+
+  return <button onClick={() => setCount(count + 1)}>Click</button>;
+}
+\end{lstlisting}
+
+\subsection{Errore: Memory Leak}
+
+\begin{lstlisting}[caption={Come evitare memory leak}]
+// SBAGLIATO: Nessun cleanup
+function BadComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('https://api.example.com/data')
+      .then(res => res.json())
+      .then(data => setData(data)); // Potrebbe eseguire su componente smontato
+  }, []);
+
+  return <div>{data?.value}</div>;
+}
+
+// CORRETTO: Con flag di cleanup
+function GoodComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch('https://api.example.com/data')
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted) { // Controlla se il componente è ancora montato
+          setData(data);
+        }
+      });
+
+    return () => {
+      isMounted = false; // Cleanup
+    };
+  }, []);
+
+  return <div>{data?.value}</div>;
+}
+\end{lstlisting}
+
+\subsection{Best Practice: Separazione degli Effetti}
+
+\begin{lstlisting}[caption={Separare effetti con dipendenze diverse}]
+// SBAGLIATO: Un unico effetto con troppe responsabilità
+function BadComponent({ userId, theme }) {
+  useEffect(() => {
+    // Fetch user data
+    fetchUser(userId);
+
+    // Update theme
+    document.body.className = theme;
+
+    // Setup analytics
+    analytics.track('page_view');
+  }, [userId, theme]); // Entrambe le operazioni si ri-eseguono
+}
+
+// CORRETTO: Effetti separati
+function GoodComponent({ userId, theme }) {
+  // Effetto per il fetch dell'utente
+  useEffect(() => {
+    fetchUser(userId);
+  }, [userId]);
+
+  // Effetto per il tema
+  useEffect(() => {
+    document.body.className = theme;
+  }, [theme]);
+
+  // Effetto per analytics (solo al mount)
+  useEffect(() => {
+    analytics.track('page_view');
+  }, []);
+}
+\end{lstlisting}
+
+\section{Casi d'Uso Pratici Completi}
+
+\subsection{Sistema di Notifiche con Timeout}
+
+\begin{lstlisting}[caption={Sistema completo di notifiche}]
+import { useState, useEffect } from 'react';
+
+function Notification({ message, duration = 3000, onClose }) {
+  useEffect(() => {
+    // Imposta timer per chiudere automaticamente
+    const timer = setTimeout(() => {
+      onClose();
+    }, duration);
+
+    // Cleanup: cancella timer se il componente si smonta prima
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [duration, onClose]);
+
+  return (
+    <div className="notification">
+      <p>{message}</p>
+      <button onClick={onClose}>X</button>
+    </div>
+  );
+}
+
+function NotificationSystem() {
+  const [notifications, setNotifications] = useState([]);
+
+  const addNotification = (message) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message }]);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  return (
+    <div>
+      <button onClick={() => addNotification('Nuova notifica!')}>
+        Mostra Notifica
+      </button>
+
+      <div className="notifications-container">
+        {notifications.map(notification => (
+          <Notification
+            key={notification.id}
+            message={notification.message}
+            onClose={() => removeNotification(notification.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Auto-Save con Debounce}
+
+\begin{lstlisting}[caption={Auto-save di un form con debounce}]
+import { useState, useEffect, useRef } from 'react';
+
+function AutoSaveForm() {
+  const [formData, setFormData] = useState({
+    title: '',
+    content: ''
+  });
+  const [saveStatus, setSaveStatus] = useState('saved'); // saved, saving, error
+  const [lastSaved, setLastSaved] = useState(null);
+
+  // Debounce e auto-save
+  useEffect(() => {
+    // Non salvare se i campi sono vuoti
+    if (!formData.title && !formData.content) {
+      return;
+    }
+
+    setSaveStatus('saving');
+
+    // Debounce di 2 secondi
+    const saveTimer = setTimeout(async () => {
+      try {
+        // Simula chiamata API
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('Dati salvati:', formData);
+
+        setSaveStatus('saved');
+        setLastSaved(new Date());
+      } catch (error) {
+        setSaveStatus('error');
+        console.error('Errore nel salvataggio:', error);
+      }
+    }, 2000);
+
+    // Cleanup: cancella il timer se formData cambia prima di 2 secondi
+    return () => {
+      clearTimeout(saveTimer);
+    };
+  }, [formData]);
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="auto-save-form">
+      <div className="status-bar">
+        {saveStatus === 'saving' && <span>Salvataggio in corso...</span>}
+        {saveStatus === 'saved' && (
+          <span>
+            Salvato {lastSaved && `alle ${lastSaved.toLocaleTimeString()}`}
+          </span>
+        )}
+        {saveStatus === 'error' && <span className="error">Errore salvataggio</span>}
+      </div>
+
+      <input
+        type="text"
+        value={formData.title}
+        onChange={(e) => handleChange('title', e.target.value)}
+        placeholder="Titolo"
+      />
+
+      <textarea
+        value={formData.content}
+        onChange={(e) => handleChange('content', e.target.value)}
+        placeholder="Contenuto"
+        rows={10}
+      />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Riepilogo Best Practices}
+
+\begin{tcolorbox}[title=Checklist Lifecycle Best Practices]
+\begin{itemize}
+\item Sempre includere tutte le dipendenze necessarie nell'array di dipendenze
+\item Separare effetti con dipendenze diverse in useEffect distinti
+\item Implementare sempre cleanup per timer, event listener, subscription
+\item Usare AbortController per cancellare fetch in corso
+\item Controllare se il componente è ancora montato prima di setState dopo operazioni async
+\item Non usare async direttamente in useEffect, creare funzione async interna
+\item Usare useRef per valori che non devono causare re-render
+\item Evitare di avere troppe responsabilità in un singolo effetto
+\item Preferire custom hooks per logica di lifecycle riutilizzabile
+\item Testare sempre il comportamento all'unmount
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusioni}
+
+La gestione del lifecycle è uno degli aspetti più importanti di React. Con \texttt{useEffect} e i pattern corretti, possiamo:
+
+\begin{itemize}
+\item Gestire effetti collaterali in modo dichiarativo
+\item Sincronizzare componenti con sistemi esterni
+\item Evitare memory leak e race condition
+\item Creare applicazioni performanti e affidabili
+\end{itemize}
+
+La chiave è pensare in termini di "sincronizzazione" piuttosto che di "eventi del lifecycle". Ogni effetto dovrebbe rispondere alla domanda: "Con cosa devo sincronizzare questo componente?"

@@ -1,0 +1,692 @@
+\chapter{Appendice: Cheat Sheet Comandi Docker}\label{app:comandi}
+
+\section{Container Management}
+
+\subsection{Lifecycle Commands}
+\begin{lstlisting}[language=bash, caption={Container Basics}]
+# Run container
+docker run -d --name myapp nginx:alpine
+docker run -it --rm alpine sh              # Interactive, auto-remove
+docker run -d -p 8080:80 nginx             # Port mapping
+docker run -d -v /data:/app/data myapp     # Volume mount
+
+# Start/Stop/Restart
+docker start container_name
+docker stop container_name
+docker restart container_name
+docker pause container_name                # Pause processes
+docker unpause container_name
+
+# Remove containers
+docker rm container_name                   # Remove stopped container
+docker rm -f container_name                # Force remove running
+docker container prune                     # Remove all stopped
+docker rm $(docker ps -aq)                 # Remove all containers
+
+# Execute commands in running container
+docker exec -it container_name bash
+docker exec container_name ls /app
+docker exec -u root container_name sh      # As different user
+\end{lstlisting}
+
+\subsection{Inspection \& Monitoring}
+\begin{lstlisting}[language=bash, caption={Container Info}]
+# List containers
+docker ps                                  # Running containers
+docker ps -a                               # All containers
+docker ps -q                               # Only IDs
+docker ps --filter "status=exited"
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+# Inspect container
+docker inspect container_name
+docker inspect --format='{{.State.Status}}' container_name
+docker inspect --format='{{.NetworkSettings.IPAddress}}' container_name
+
+# Logs
+docker logs container_name
+docker logs -f container_name              # Follow
+docker logs --tail 100 container_name
+docker logs --since 2024-01-01 container_name
+docker logs -t container_name              # With timestamps
+
+# Stats & Resource Usage
+docker stats                               # Real-time stats
+docker stats --no-stream                   # One-time snapshot
+docker top container_name                  # Processes in container
+
+# Events
+docker events                              # Real-time events
+docker events --since 1h --filter type=container
+\end{lstlisting}
+
+\subsection{Advanced Container Operations}
+\begin{lstlisting}[language=bash, caption={Advanced Commands}]
+# Copy files to/from container
+docker cp local_file.txt container:/path/
+docker cp container:/app/log.txt ./
+
+# Commit container to image
+docker commit container_name new_image:tag
+
+# Export/Import container filesystem
+docker export container_name > container.tar
+docker import container.tar new_image:tag
+
+# Attach to running container
+docker attach container_name               # Attach to STDIN/STDOUT
+
+# Rename container
+docker rename old_name new_name
+
+# Update container resources
+docker update --cpus 2 --memory 1g container_name
+
+# Wait for container to stop
+docker wait container_name
+\end{lstlisting}
+
+\section{Image Management}
+
+\subsection{Image Operations}
+\begin{lstlisting}[language=bash, caption={Image Commands}]
+# Pull images
+docker pull nginx:alpine
+docker pull --platform linux/amd64 ubuntu:22.04
+
+# List images
+docker images
+docker images -a                           # Include intermediates
+docker images --filter "dangling=true"     # Untagged images
+docker images --format "table {{.Repository}}:{{.Tag}}\t{{.Size}}"
+
+# Tag images
+docker tag myapp:latest myregistry.io/myapp:v1.0.0
+docker tag myapp:latest myapp:stable
+
+# Push to registry
+docker push myregistry.io/myapp:v1.0.0
+
+# Remove images
+docker rmi image_name:tag
+docker rmi -f image_id                     # Force remove
+docker image prune                         # Remove dangling
+docker image prune -a                      # Remove unused
+docker rmi $(docker images -q)             # Remove all
+
+# Save/Load images
+docker save myapp:latest > myapp.tar
+docker save myapp:latest | gzip > myapp.tar.gz
+docker load < myapp.tar
+
+# Image history
+docker history myapp:latest
+docker history --no-trunc myapp:latest     # Full commands
+
+# Inspect image
+docker inspect myapp:latest
+docker inspect --format='{{.Config.Env}}' myapp:latest
+\end{lstlisting}
+
+\subsection{Build Commands}
+\begin{lstlisting}[language=bash, caption={Docker Build}]
+# Basic build
+docker build -t myapp:latest .
+docker build -t myapp:v1.0.0 -f Dockerfile.prod .
+
+# Build arguments
+docker build --build-arg VERSION=1.0.0 -t myapp .
+docker build --build-arg HTTP_PROXY=http://proxy:8080 -t myapp .
+
+# BuildKit features
+export DOCKER_BUILDKIT=1
+docker build --cache-from myapp:latest -t myapp:new .
+docker build --secret id=npmrc,src=$HOME/.npmrc -t myapp .
+docker build --ssh default -t myapp .
+
+# Multi-platform build
+docker buildx create --use
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t myapp:latest --push .
+
+# Target specific stage
+docker build --target production -t myapp:prod .
+
+# No cache
+docker build --no-cache -t myapp .
+docker build --pull -t myapp .            # Pull base image
+
+# Squash layers (experimental)
+docker build --squash -t myapp .
+\end{lstlisting}
+
+\section{Volume Management}
+
+\subsection{Volume Commands}
+\begin{lstlisting}[language=bash, caption={Volumes}]
+# Create volume
+docker volume create myvolume
+docker volume create --driver local \
+  --opt type=nfs \
+  --opt o=addr=192.168.1.1,rw \
+  --opt device=:/path/to/dir \
+  nfs-volume
+
+# List volumes
+docker volume ls
+docker volume ls --filter "dangling=true"
+
+# Inspect volume
+docker volume inspect myvolume
+
+# Remove volumes
+docker volume rm myvolume
+docker volume prune                        # Remove unused
+docker volume prune -f                     # No confirmation
+
+# Use volume in container
+docker run -d -v myvolume:/app/data myapp
+docker run -d -v /host/path:/container/path:ro myapp
+docker run -d --mount source=myvolume,target=/data myapp
+\end{lstlisting}
+
+\section{Network Management}
+
+\subsection{Network Commands}
+\begin{lstlisting}[language=bash, caption={Docker Networks}]
+# Create networks
+docker network create mynetwork
+docker network create --driver bridge mybridge
+docker network create --driver overlay --attachable myoverlay
+docker network create --subnet 172.20.0.0/16 custom-net
+
+# List networks
+docker network ls
+docker network ls --filter driver=bridge
+
+# Inspect network
+docker network inspect mynetwork
+docker network inspect --format='{{json .Containers}}' mynetwork
+
+# Connect/Disconnect containers
+docker network connect mynetwork container_name
+docker network disconnect mynetwork container_name
+
+# Remove networks
+docker network rm mynetwork
+docker network prune                       # Remove unused
+
+# Create container on specific network
+docker run -d --network mynetwork --name app myapp
+docker run -d --network mynetwork --ip 172.20.0.10 myapp
+\end{lstlisting}
+
+\section{Docker Compose}
+
+\subsection{Compose Commands}
+\begin{lstlisting}[language=bash, caption={Docker Compose}]
+# Start services
+docker-compose up                          # Foreground
+docker-compose up -d                       # Detached
+docker-compose up --build                  # Rebuild images
+docker-compose up --force-recreate         # Recreate containers
+docker-compose up --scale app=3            # Scale service
+
+# Stop services
+docker-compose stop
+docker-compose down                        # Stop and remove
+docker-compose down -v                     # Remove volumes too
+docker-compose down --rmi all              # Remove images
+
+# View services
+docker-compose ps
+docker-compose ps -a
+docker-compose top
+
+# Logs
+docker-compose logs
+docker-compose logs -f app
+docker-compose logs --tail=100
+
+# Execute commands
+docker-compose exec app bash
+docker-compose exec -T app npm test       # No TTY
+docker-compose run --rm app npm install   # One-off command
+
+# Build
+docker-compose build
+docker-compose build --no-cache app
+docker-compose build --pull
+
+# Configuration
+docker-compose config                      # Validate and view
+docker-compose config --services           # List services
+docker-compose config --volumes
+
+# Pull images
+docker-compose pull
+docker-compose pull app
+
+# Restart services
+docker-compose restart
+docker-compose restart app
+
+# Pause/Unpause
+docker-compose pause
+docker-compose unpause
+\end{lstlisting}
+
+\section{Docker Swarm}
+
+\subsection{Swarm Management}
+\begin{lstlisting}[language=bash, caption={Swarm Commands}]
+# Initialize swarm
+docker swarm init
+docker swarm init --advertise-addr 192.168.1.10
+
+# Join swarm
+docker swarm join --token TOKEN 192.168.1.10:2377
+docker swarm join-token worker             # Get worker token
+docker swarm join-token manager            # Get manager token
+
+# Leave swarm
+docker swarm leave
+docker swarm leave --force                 # Force manager leave
+
+# Node management
+docker node ls
+docker node inspect node_name
+docker node update --availability drain node_name
+docker node update --label-add type=worker node_name
+docker node rm node_name
+
+# Service management
+docker service create --name web --replicas 3 -p 80:80 nginx
+docker service ls
+docker service ps web
+docker service inspect web
+docker service logs web
+
+# Scale service
+docker service scale web=5
+
+# Update service
+docker service update --image nginx:alpine web
+docker service update --replicas 10 web
+docker service update --rollback web
+
+# Remove service
+docker service rm web
+
+# Stack management
+docker stack deploy -c docker-compose.yml mystack
+docker stack ls
+docker stack services mystack
+docker stack ps mystack
+docker stack rm mystack
+\end{lstlisting}
+
+\section{Registry \& Authentication}
+
+\subsection{Registry Commands}
+\begin{lstlisting}[language=bash, caption={Registry Operations}]
+# Login to registry
+docker login
+docker login myregistry.io
+docker login -u username -p password myregistry.io
+docker login ghcr.io -u USERNAME --password-stdin < token.txt
+
+# Logout
+docker logout
+docker logout myregistry.io
+
+# Search images
+docker search nginx
+docker search --filter stars=100 nginx
+
+# Push/Pull with different registries
+docker pull myregistry.io/myapp:v1.0.0
+docker push ghcr.io/myorg/myapp:latest
+
+# Tag for different registries
+docker tag myapp:latest docker.io/myorg/myapp:latest
+docker tag myapp:latest ghcr.io/myorg/myapp:latest
+docker tag myapp:latest gcr.io/myproject/myapp:latest
+\end{lstlisting}
+
+\section{System Management}
+
+\subsection{System Commands}
+\begin{lstlisting}[language=bash, caption={System Operations}]
+# System info
+docker info
+docker version
+docker system df                           # Disk usage
+
+# Clean up
+docker system prune                        # Remove unused data
+docker system prune -a                     # Remove all unused
+docker system prune --volumes              # Include volumes
+docker system prune -a --volumes -f        # Force, all+volumes
+
+# Events
+docker system events
+docker system events --since 1h
+docker system events --filter type=container
+
+# Check plugins
+docker plugin ls
+docker plugin install plugin_name
+docker plugin disable plugin_name
+docker plugin rm plugin_name
+\end{lstlisting}
+
+\section{Security \& Scanning}
+
+\subsection{Security Commands}
+\begin{lstlisting}[language=bash, caption={Security \& Scanning}]
+# Scan image (Docker Scout)
+docker scout quickview myapp:latest
+docker scout cves myapp:latest
+docker scout recommendations myapp:latest
+
+# Trivy scanning
+trivy image myapp:latest
+trivy image --severity HIGH,CRITICAL myapp:latest
+trivy image --exit-code 1 myapp:latest
+trivy fs .                                 # Scan filesystem
+
+# Image signing (Cosign)
+cosign sign --key cosign.key myregistry.io/myapp:v1.0.0
+cosign verify --key cosign.pub myregistry.io/myapp:v1.0.0
+
+# Secrets management (Swarm)
+echo "password" | docker secret create db_pass -
+docker secret ls
+docker secret inspect db_pass
+docker secret rm db_pass
+
+# Config management
+docker config create nginx_conf nginx.conf
+docker config ls
+docker config inspect nginx_conf
+docker config rm nginx_conf
+\end{lstlisting}
+
+\section{Advanced Debugging}
+
+\subsection{Debugging Commands}
+\begin{lstlisting}[language=bash, caption={Debugging}]
+# Container inspection
+docker inspect --format='{{json .State}}' container | jq
+docker inspect --format='{{.NetworkSettings.Networks}}' container
+
+# Check container processes
+docker top container
+docker stats container --no-stream
+
+# Port mappings
+docker port container
+
+# Filesystem changes
+docker diff container
+
+# Resource usage
+docker stats --all --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+# Network troubleshooting
+docker network inspect bridge
+docker exec container ping other_container
+docker exec container netstat -tuln
+docker exec container ip addr show
+
+# Health check status
+docker inspect --format='{{.State.Health.Status}}' container
+docker inspect --format='{{json .State.Health}}' container | jq
+
+# Check why container exited
+docker inspect --format='{{.State.ExitCode}}' container
+docker logs --tail 50 container
+\end{lstlisting}
+
+\section{Context \& Remote Docker}
+
+\subsection{Context Management}
+\begin{lstlisting}[language=bash, caption={Docker Context}]
+# List contexts
+docker context ls
+
+# Create context
+docker context create remote-docker \
+  --docker "host=ssh://user@remote-host"
+
+# Use context
+docker context use remote-docker
+docker context use default
+
+# Inspect context
+docker context inspect remote-docker
+
+# Remove context
+docker context rm remote-docker
+
+# Remote Docker via SSH
+docker -H ssh://user@remote-host ps
+export DOCKER_HOST=ssh://user@remote-host
+\end{lstlisting}
+
+\section{BuildKit Advanced}
+
+\subsection{BuildKit Commands}
+\begin{lstlisting}[language=bash, caption={BuildKit}]
+# Enable BuildKit
+export DOCKER_BUILDKIT=1
+
+# Buildx commands
+docker buildx create --name mybuilder --use
+docker buildx ls
+docker buildx inspect mybuilder
+docker buildx use mybuilder
+
+# Multi-platform build
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t myapp:latest --push .
+
+# Build with cache
+docker buildx build \
+  --cache-from type=registry,ref=myapp:buildcache \
+  --cache-to type=registry,ref=myapp:buildcache,mode=max \
+  -t myapp:latest .
+
+# Build with secrets
+docker buildx build \
+  --secret id=aws,src=$HOME/.aws/credentials \
+  -t myapp .
+
+# Build with SSH
+docker buildx build --ssh default -t myapp .
+
+# Inspect build
+docker buildx imagetools inspect myapp:latest
+
+# Remove builder
+docker buildx rm mybuilder
+\end{lstlisting}
+
+\section{Performance \& Optimization}
+
+\subsection{Performance Commands}
+\begin{lstlisting}[language=bash, caption={Performance}]
+# Benchmark build
+time docker build -t myapp .
+
+# Check layer sizes
+docker history myapp:latest --human=true --no-trunc=false
+
+# Analyze image
+dive myapp:latest                          # Interactive layer analysis
+
+# Check disk usage
+docker system df -v
+
+# Container resource limits
+docker run -d \
+  --cpus="1.5" \
+  --memory="1g" \
+  --memory-reservation="512m" \
+  --pids-limit=100 \
+  myapp
+
+# Check container resource usage
+docker stats --no-stream --format \
+  "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}"
+\end{lstlisting}
+
+\section{Useful One-Liners}
+
+\subsection{Cheat Sheet One-Liners}
+\begin{lstlisting}[language=bash, caption={Useful One-Liners}]
+# Remove all stopped containers
+docker rm $(docker ps -aq -f status=exited)
+
+# Remove all dangling images
+docker rmi $(docker images -q -f dangling=true)
+
+# Stop all running containers
+docker stop $(docker ps -q)
+
+# Get container IP address
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' container
+
+# Get container logs for last hour
+docker logs --since 1h container
+
+# Follow logs from all compose services
+docker-compose logs -f --tail=100
+
+# Execute command in all running containers
+docker ps -q | xargs -I {} docker exec {} command
+
+# Backup volume
+docker run --rm -v myvolume:/data -v $(pwd):/backup \
+  alpine tar czf /backup/backup.tar.gz /data
+
+# Restore volume
+docker run --rm -v myvolume:/data -v $(pwd):/backup \
+  alpine tar xzf /backup/backup.tar.gz -C /
+
+# Get all container IPs
+docker ps -q | xargs docker inspect \
+  --format='{{.Name}} {{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+
+# Clean everything (DANGEROUS!)
+docker system prune -a --volumes -f
+
+# Monitor container resources real-time
+watch -n 1 'docker stats --no-stream'
+
+# Get environment variables from container
+docker inspect --format='{{.Config.Env}}' container
+
+# Check which containers use an image
+docker ps -a --filter ancestor=myapp:latest
+
+# Export container as tarball
+docker export container > container-backup.tar
+
+# Get container creation time
+docker inspect --format='{{.Created}}' container
+\end{lstlisting}
+
+\section{Environment Variables}
+
+\subsection{Useful Docker Environment Variables}
+\begin{lstlisting}[language=bash, caption={Environment Variables}]
+# Enable BuildKit
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
+# Docker host
+export DOCKER_HOST=tcp://192.168.1.10:2376
+export DOCKER_HOST=ssh://user@remote
+export DOCKER_HOST=unix:///var/run/docker.sock
+
+# Docker TLS
+export DOCKER_TLS_VERIFY=1
+export DOCKER_CERT_PATH=/path/to/certs
+
+# Registry config
+export DOCKER_CONFIG=$HOME/.docker
+
+# Buildx builder
+export BUILDX_BUILDER=mybuilder
+
+# Compose project
+export COMPOSE_PROJECT_NAME=myproject
+export COMPOSE_FILE=docker-compose.yml:docker-compose.override.yml
+
+# Log driver
+export DOCKER_LOGGING_DRIVER=json-file
+
+# Default platform
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
+\end{lstlisting}
+
+\section{Quick Reference Tables}
+
+\subsection{Common Flags}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Flag} & \textbf{Description} \\
+\hline
+-d & Detached mode (background) \\
+-it & Interactive + TTY \\
+--rm & Auto-remove on exit \\
+-p & Port mapping (host:container) \\
+-v & Volume mount \\
+-e & Environment variable \\
+--name & Container name \\
+--network & Network to connect \\
+-u & User (UID:GID) \\
+--restart & Restart policy \\
+-w & Working directory \\
+--entrypoint & Override entrypoint \\
+--env-file & Load env from file \\
+--link & Link to another container \\
+-h & Hostname \\
+\hline
+\end{tabular}
+
+\subsection{Restart Policies}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Policy} & \textbf{Behavior} \\
+\hline
+no & Never restart (default) \\
+on-failure & Restart on non-zero exit \\
+always & Always restart \\
+unless-stopped & Restart unless manually stopped \\
+\hline
+\end{tabular}
+
+\subsection{Network Drivers}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Driver} & \textbf{Use Case} \\
+\hline
+bridge & Single host networking \\
+host & Use host network stack \\
+overlay & Swarm multi-host networking \\
+macvlan & Assign MAC address to container \\
+none & Disable networking \\
+\hline
+\end{tabular}
+
+\section{Riferimenti Rapidi}
+
+\begin{itemize}
+\item Docker CLI Reference: \url{https://docs.docker.com/engine/reference/commandline/cli/}
+\item Docker Compose CLI: \url{https://docs.docker.com/compose/reference/}
+\item Dockerfile Reference: \url{https://docs.docker.com/engine/reference/builder/}
+\item Docker Hub: \url{https://hub.docker.com/}
+\end{itemize}

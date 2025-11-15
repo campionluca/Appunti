@@ -1,0 +1,1462 @@
+\chapter{Form in React}
+
+\section{Introduzione ai Form}
+
+I form sono una parte essenziale di quasi tutte le applicazioni web. React offre un approccio potente e flessibile per gestire form attraverso i "controlled components".
+
+\subsection{Controlled vs Uncontrolled Components}
+
+\begin{lstlisting}[language=JavaScript, caption=Controlled vs Uncontrolled]
+// ❌ Uncontrolled: Il DOM gestisce lo stato
+function UncontrolledForm() {
+    const nameRef = useRef();
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Name:', nameRef.current.value);
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input ref={nameRef} defaultValue="Mario" />
+            <button type="submit">Submit</button>
+        </form>
+    );
+}
+
+// ✅ Controlled: React gestisce lo stato
+function ControlledForm() {
+    const [name, setName] = useState('Mario');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Name:', name);
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+            />
+            <button type="submit">Submit</button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\textbf{Vantaggi Controlled Components:}
+\begin{itemize}
+    \item Validazione in tempo reale
+    \item Formattazione automatica dell'input
+    \item Disabilitazione condizionale del submit
+    \item Stato sincronizzato con React
+    \item Più facile da testare
+\end{itemize}
+
+\section{Form Base Controllati}
+
+\subsection{Form con Input Multipli}
+
+\begin{lstlisting}[language=JavaScript, caption=Form completo controllato]
+function RegistrationForm() {
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        age: '',
+        country: '',
+        gender: '',
+        terms: false,
+        newsletter: false
+    });
+
+    // Handler generico per tutti gli input
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        console.log('Form data:', formData);
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            {/* Text Input */}
+            <div>
+                <label htmlFor="username">Username:</label>
+                <input
+                    id="username"
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+
+            {/* Email Input */}
+            <div>
+                <label htmlFor="email">Email:</label>
+                <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+
+            {/* Password Input */}
+            <div>
+                <label htmlFor="password">Password:</label>
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+                <label htmlFor="confirmPassword">Conferma Password:</label>
+                <input
+                    id="confirmPassword"
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                />
+            </div>
+
+            {/* Number Input */}
+            <div>
+                <label htmlFor="age">Età:</label>
+                <input
+                    id="age"
+                    type="number"
+                    name="age"
+                    value={formData.age}
+                    onChange={handleChange}
+                    min="18"
+                    max="120"
+                />
+            </div>
+
+            {/* Select */}
+            <div>
+                <label htmlFor="country">Paese:</label>
+                <select
+                    id="country"
+                    name="country"
+                    value={formData.country}
+                    onChange={handleChange}
+                >
+                    <option value="">Seleziona...</option>
+                    <option value="IT">Italia</option>
+                    <option value="US">USA</option>
+                    <option value="UK">UK</option>
+                    <option value="FR">Francia</option>
+                </select>
+            </div>
+
+            {/* Radio Buttons */}
+            <div>
+                <label>Genere:</label>
+                <label>
+                    <input
+                        type="radio"
+                        name="gender"
+                        value="male"
+                        checked={formData.gender === 'male'}
+                        onChange={handleChange}
+                    />
+                    Maschio
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="gender"
+                        value="female"
+                        checked={formData.gender === 'female'}
+                        onChange={handleChange}
+                    />
+                    Femmina
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="gender"
+                        value="other"
+                        checked={formData.gender === 'other'}
+                        onChange={handleChange}
+                    />
+                    Altro
+                </label>
+            </div>
+
+            {/* Checkboxes */}
+            <div>
+                <label>
+                    <input
+                        type="checkbox"
+                        name="terms"
+                        checked={formData.terms}
+                        onChange={handleChange}
+                    />
+                    Accetto i termini e condizioni
+                </label>
+            </div>
+
+            <div>
+                <label>
+                    <input
+                        type="checkbox"
+                        name="newsletter"
+                        checked={formData.newsletter}
+                        onChange={handleChange}
+                    />
+                    Iscriviti alla newsletter
+                </label>
+            </div>
+
+            {/* Submit Button */}
+            <button type="submit">Registrati</button>
+
+            {/* Debug */}
+            <pre>{JSON.stringify(formData, null, 2)}</pre>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\section{Validazione Form}
+
+\subsection{Validazione Base}
+
+\begin{lstlisting}[language=JavaScript, caption=Validazione manuale]
+function ValidatedForm() {
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    });
+
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+
+        // Rimuovi errore quando l'utente inizia a digitare
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleBlur = (e) => {
+        const { name } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+        validateField(name, formData[name]);
+    };
+
+    const validateField = (name, value) => {
+        let error = '';
+
+        switch (name) {
+            case 'username':
+                if (!value) {
+                    error = 'Username è richiesto';
+                } else if (value.length < 3) {
+                    error = 'Username deve essere almeno 3 caratteri';
+                } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                    error = 'Username può contenere solo lettere, numeri e underscore';
+                }
+                break;
+
+            case 'email':
+                if (!value) {
+                    error = 'Email è richiesta';
+                } else if (!/\S+@\S+\.\S+/.test(value)) {
+                    error = 'Email non valida';
+                }
+                break;
+
+            case 'password':
+                if (!value) {
+                    error = 'Password è richiesta';
+                } else if (value.length < 8) {
+                    error = 'Password deve essere almeno 8 caratteri';
+                } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+                    error = 'Password deve contenere maiuscola, minuscola e numero';
+                }
+                break;
+
+            case 'confirmPassword':
+                if (!value) {
+                    error = 'Conferma password è richiesta';
+                } else if (value !== formData.password) {
+                    error = 'Le password non corrispondono';
+                }
+                break;
+        }
+
+        setErrors(prev => ({ ...prev, [name]: error }));
+        return error;
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        Object.keys(formData).forEach(key => {
+            const error = validateField(key, formData[key]);
+            if (error) newErrors[key] = error;
+        });
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        // Mark all fields as touched
+        const allTouched = Object.keys(formData).reduce(
+            (acc, key) => ({ ...acc, [key]: true }),
+            {}
+        );
+        setTouched(allTouched);
+
+        if (validateForm()) {
+            console.log('Form valido:', formData);
+            // Submit...
+        } else {
+            console.log('Form non valido');
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <label htmlFor="username">Username:</label>
+                <input
+                    id="username"
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.username && errors.username ? 'error' : ''}
+                />
+                {touched.username && errors.username && (
+                    <span className="error-message">{errors.username}</span>
+                )}
+            </div>
+
+            <div>
+                <label htmlFor="email">Email:</label>
+                <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.email && errors.email ? 'error' : ''}
+                />
+                {touched.email && errors.email && (
+                    <span className="error-message">{errors.email}</span>
+                )}
+            </div>
+
+            <div>
+                <label htmlFor="password">Password:</label>
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.password && errors.password ? 'error' : ''}
+                />
+                {touched.password && errors.password && (
+                    <span className="error-message">{errors.password}</span>
+                )}
+            </div>
+
+            <div>
+                <label htmlFor="confirmPassword">Conferma Password:</label>
+                <input
+                    id="confirmPassword"
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={touched.confirmPassword && errors.confirmPassword ? 'error' : ''}
+                />
+                {touched.confirmPassword && errors.confirmPassword && (
+                    <span className="error-message">{errors.confirmPassword}</span>
+                )}
+            </div>
+
+            <button type="submit">Registrati</button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{Custom Hook per Validazione}
+
+\begin{lstlisting}[language=JavaScript, caption=useForm custom hook]
+function useForm(initialValues, validate) {
+    const [values, setValues] = useState(initialValues);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const newValue = type === 'checkbox' ? checked : value;
+
+        setValues(prev => ({ ...prev, [name]: newValue }));
+
+        // Rimuovi errore
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleBlur = (e) => {
+        const { name } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+    };
+
+    const handleSubmit = async (onSubmit) => {
+        // Mark all as touched
+        const allTouched = Object.keys(values).reduce(
+            (acc, key) => ({ ...acc, [key]: true }),
+            {}
+        );
+        setTouched(allTouched);
+
+        // Validate
+        const validationErrors = validate(values);
+        setErrors(validationErrors);
+
+        if (Object.keys(validationErrors).length === 0) {
+            setIsSubmitting(true);
+            try {
+                await onSubmit(values);
+            } finally {
+                setIsSubmitting(false);
+            }
+        }
+    };
+
+    const resetForm = () => {
+        setValues(initialValues);
+        setErrors({});
+        setTouched({});
+        setIsSubmitting(false);
+    };
+
+    return {
+        values,
+        errors,
+        touched,
+        isSubmitting,
+        handleChange,
+        handleBlur,
+        handleSubmit,
+        resetForm
+    };
+}
+
+// Uso
+function LoginForm() {
+    const validate = (values) => {
+        const errors = {};
+
+        if (!values.email) {
+            errors.email = 'Email richiesta';
+        } else if (!/\S+@\S+\.\S+/.test(values.email)) {
+            errors.email = 'Email non valida';
+        }
+
+        if (!values.password) {
+            errors.password = 'Password richiesta';
+        } else if (values.password.length < 6) {
+            errors.password = 'Password troppo corta';
+        }
+
+        return errors;
+    };
+
+    const form = useForm(
+        { email: '', password: '' },
+        validate
+    );
+
+    const onSubmit = async (values) => {
+        console.log('Submitting:', values);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Submitted!');
+        form.resetForm();
+    };
+
+    return (
+        <form onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(onSubmit);
+        }}>
+            <div>
+                <input
+                    name="email"
+                    type="email"
+                    value={form.values.email}
+                    onChange={form.handleChange}
+                    onBlur={form.handleBlur}
+                    placeholder="Email"
+                />
+                {form.touched.email && form.errors.email && (
+                    <span>{form.errors.email}</span>
+                )}
+            </div>
+
+            <div>
+                <input
+                    name="password"
+                    type="password"
+                    value={form.values.password}
+                    onChange={form.handleChange}
+                    onBlur={form.handleBlur}
+                    placeholder="Password"
+                />
+                {form.touched.password && form.errors.password && (
+                    <span>{form.errors.password}</span>
+                )}
+            </div>
+
+            <button type="submit" disabled={form.isSubmitting}>
+                {form.isSubmitting ? 'Accedendo...' : 'Accedi'}
+            </button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\section{React Hook Form}
+
+React Hook Form è una libreria popolare per la gestione dei form con performance ottimali.
+
+\subsection{Setup React Hook Form}
+
+\begin{lstlisting}[language=bash, caption=Installazione]
+npm install react-hook-form
+\end{lstlisting}
+
+\subsection{Form Base con React Hook Form}
+
+\begin{lstlisting}[language=JavaScript, caption=React Hook Form esempio base]
+import { useForm } from 'react-hook-form';
+
+function BasicForm() {
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+        reset
+    } = useForm({
+        defaultValues: {
+            username: '',
+            email: '',
+            password: ''
+        }
+    });
+
+    const onSubmit = async (data) => {
+        console.log('Form data:', data);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Submitted!');
+        reset();
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Username */}
+            <div>
+                <label htmlFor="username">Username:</label>
+                <input
+                    id="username"
+                    {...register('username', {
+                        required: 'Username è richiesto',
+                        minLength: {
+                            value: 3,
+                            message: 'Minimo 3 caratteri'
+                        },
+                        pattern: {
+                            value: /^[a-zA-Z0-9_]+$/,
+                            message: 'Solo lettere, numeri e underscore'
+                        }
+                    })}
+                />
+                {errors.username && (
+                    <span className="error">{errors.username.message}</span>
+                )}
+            </div>
+
+            {/* Email */}
+            <div>
+                <label htmlFor="email">Email:</label>
+                <input
+                    id="email"
+                    type="email"
+                    {...register('email', {
+                        required: 'Email è richiesta',
+                        pattern: {
+                            value: /\S+@\S+\.\S+/,
+                            message: 'Email non valida'
+                        }
+                    })}
+                />
+                {errors.email && (
+                    <span className="error">{errors.email.message}</span>
+                )}
+            </div>
+
+            {/* Password */}
+            <div>
+                <label htmlFor="password">Password:</label>
+                <input
+                    id="password"
+                    type="password"
+                    {...register('password', {
+                        required: 'Password è richiesta',
+                        minLength: {
+                            value: 8,
+                            message: 'Minimo 8 caratteri'
+                        },
+                        validate: {
+                            hasUpperCase: (value) =>
+                                /[A-Z]/.test(value) || 'Deve contenere maiuscola',
+                            hasLowerCase: (value) =>
+                                /[a-z]/.test(value) || 'Deve contenere minuscola',
+                            hasNumber: (value) =>
+                                /\d/.test(value) || 'Deve contenere un numero'
+                        }
+                    })}
+                />
+                {errors.password && (
+                    <span className="error">{errors.password.message}</span>
+                )}
+            </div>
+
+            <button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Invio...' : 'Invia'}
+            </button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{Validazione Avanzata React Hook Form}
+
+\begin{lstlisting}[language=JavaScript, caption=Validazione custom]
+import { useForm } from 'react-hook-form';
+
+function AdvancedForm() {
+    const { register, handleSubmit, watch, formState: { errors } } = useForm();
+
+    // Watch per validazione dipendente
+    const password = watch('password');
+
+    const onSubmit = (data) => {
+        console.log(data);
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Password */}
+            <input
+                type="password"
+                {...register('password', {
+                    required: 'Password richiesta',
+                    minLength: { value: 8, message: 'Minimo 8 caratteri' }
+                })}
+            />
+            {errors.password && <span>{errors.password.message}</span>}
+
+            {/* Confirm Password - dipende da password */}
+            <input
+                type="password"
+                {...register('confirmPassword', {
+                    required: 'Conferma password richiesta',
+                    validate: (value) =>
+                        value === password || 'Le password non corrispondono'
+                })}
+            />
+            {errors.confirmPassword && (
+                <span>{errors.confirmPassword.message}</span>
+            )}
+
+            {/* Age - validazione numerica */}
+            <input
+                type="number"
+                {...register('age', {
+                    required: 'Età richiesta',
+                    min: { value: 18, message: 'Devi avere almeno 18 anni' },
+                    max: { value: 120, message: 'Età non valida' },
+                    valueAsNumber: true
+                })}
+            />
+            {errors.age && <span>{errors.age.message}</span>}
+
+            {/* Terms - checkbox */}
+            <label>
+                <input
+                    type="checkbox"
+                    {...register('terms', {
+                        required: 'Devi accettare i termini'
+                    })}
+                />
+                Accetto i termini
+            </label>
+            {errors.terms && <span>{errors.terms.message}</span>}
+
+            <button type="submit">Invia</button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{Form Arrays con React Hook Form}
+
+\begin{lstlisting}[language=JavaScript, caption=Dynamic form fields]
+import { useForm, useFieldArray } from 'react-hook-form';
+
+function DynamicForm() {
+    const { register, control, handleSubmit } = useForm({
+        defaultValues: {
+            users: [{ name: '', email: '' }]
+        }
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'users'
+    });
+
+    const onSubmit = (data) => {
+        console.log('Users:', data.users);
+    };
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)}>
+            {fields.map((field, index) => (
+                <div key={field.id}>
+                    <input
+                        {...register(`users.${index}.name`, {
+                            required: 'Nome richiesto'
+                        })}
+                        placeholder="Nome"
+                    />
+
+                    <input
+                        {...register(`users.${index}.email`, {
+                            required: 'Email richiesta',
+                            pattern: {
+                                value: /\S+@\S+\.\S+/,
+                                message: 'Email non valida'
+                            }
+                        })}
+                        placeholder="Email"
+                    />
+
+                    <button type="button" onClick={() => remove(index)}>
+                        Rimuovi
+                    </button>
+                </div>
+            ))}
+
+            <button
+                type="button"
+                onClick={() => append({ name: '', email: '' })}
+            >
+                Aggiungi Utente
+            </button>
+
+            <button type="submit">Invia</button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\section{Formik}
+
+Formik è un'altra libreria popolare per la gestione dei form in React.
+
+\subsection{Setup Formik}
+
+\begin{lstlisting}[language=bash, caption=Installazione Formik]
+npm install formik yup
+\end{lstlisting}
+
+\subsection{Form Base con Formik}
+
+\begin{lstlisting}[language=JavaScript, caption=Formik esempio base]
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+
+// Schema validazione con Yup
+const validationSchema = Yup.object({
+    username: Yup.string()
+        .min(3, 'Minimo 3 caratteri')
+        .required('Username richiesto'),
+    email: Yup.string()
+        .email('Email non valida')
+        .required('Email richiesta'),
+    password: Yup.string()
+        .min(8, 'Minimo 8 caratteri')
+        .matches(/[A-Z]/, 'Deve contenere maiuscola')
+        .matches(/[a-z]/, 'Deve contenere minuscola')
+        .matches(/\d/, 'Deve contenere numero')
+        .required('Password richiesta'),
+    confirmPassword: Yup.string()
+        .oneOf([Yup.ref('password')], 'Le password non corrispondono')
+        .required('Conferma password richiesta'),
+    age: Yup.number()
+        .min(18, 'Devi avere almeno 18 anni')
+        .max(120, 'Età non valida')
+        .required('Età richiesta'),
+    terms: Yup.boolean()
+        .oneOf([true], 'Devi accettare i termini')
+});
+
+function FormikExample() {
+    const initialValues = {
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        age: '',
+        terms: false
+    };
+
+    const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+        console.log('Form values:', values);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Submitted!');
+        resetForm();
+        setSubmitting(false);
+    };
+
+    return (
+        <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+        >
+            {({ isSubmitting, errors, touched }) => (
+                <Form>
+                    {/* Username */}
+                    <div>
+                        <label htmlFor="username">Username:</label>
+                        <Field
+                            id="username"
+                            name="username"
+                            type="text"
+                        />
+                        <ErrorMessage name="username" component="span" className="error" />
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                        <label htmlFor="email">Email:</label>
+                        <Field
+                            id="email"
+                            name="email"
+                            type="email"
+                        />
+                        <ErrorMessage name="email" component="span" className="error" />
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <label htmlFor="password">Password:</label>
+                        <Field
+                            id="password"
+                            name="password"
+                            type="password"
+                        />
+                        <ErrorMessage name="password" component="span" className="error" />
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div>
+                        <label htmlFor="confirmPassword">Conferma Password:</label>
+                        <Field
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                        />
+                        <ErrorMessage name="confirmPassword" component="span" className="error" />
+                    </div>
+
+                    {/* Age */}
+                    <div>
+                        <label htmlFor="age">Età:</label>
+                        <Field
+                            id="age"
+                            name="age"
+                            type="number"
+                        />
+                        <ErrorMessage name="age" component="span" className="error" />
+                    </div>
+
+                    {/* Terms Checkbox */}
+                    <div>
+                        <label>
+                            <Field
+                                type="checkbox"
+                                name="terms"
+                            />
+                            Accetto i termini e condizioni
+                        </label>
+                        <ErrorMessage name="terms" component="span" className="error" />
+                    </div>
+
+                    <button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Invio...' : 'Invia'}
+                    </button>
+                </Form>
+            )}
+        </Formik>
+    );
+}
+\end{lstlisting}
+
+\subsection{Formik con Custom Components}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom input components con Formik]
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+
+// Custom Input Component
+function TextInput({ label, ...props }) {
+    return (
+        <div className="form-field">
+            <label htmlFor={props.id || props.name}>{label}</label>
+            <Field {...props} />
+            <ErrorMessage name={props.name} component="div" className="error" />
+        </div>
+    );
+}
+
+// Custom Select Component
+function Select({ label, options, ...props }) {
+    return (
+        <div className="form-field">
+            <label htmlFor={props.id || props.name}>{label}</label>
+            <Field as="select" {...props}>
+                <option value="">Seleziona...</option>
+                {options.map(option => (
+                    <option key={option.value} value={option.value}>
+                        {option.label}
+                    </option>
+                ))}
+            </Field>
+            <ErrorMessage name={props.name} component="div" className="error" />
+        </div>
+    );
+}
+
+// Custom Checkbox Component
+function Checkbox({ children, ...props }) {
+    return (
+        <div className="form-field">
+            <label className="checkbox-label">
+                <Field type="checkbox" {...props} />
+                {children}
+            </label>
+            <ErrorMessage name={props.name} component="div" className="error" />
+        </div>
+    );
+}
+
+// Uso
+function CustomComponentsForm() {
+    return (
+        <Formik
+            initialValues={{
+                name: '',
+                email: '',
+                country: '',
+                terms: false
+            }}
+            onSubmit={(values) => console.log(values)}
+        >
+            <Form>
+                <TextInput
+                    label="Nome"
+                    name="name"
+                    type="text"
+                />
+
+                <TextInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                />
+
+                <Select
+                    label="Paese"
+                    name="country"
+                    options={[
+                        { value: 'IT', label: 'Italia' },
+                        { value: 'US', label: 'USA' },
+                        { value: 'UK', label: 'UK' }
+                    ]}
+                />
+
+                <Checkbox name="terms">
+                    Accetto i termini e condizioni
+                </Checkbox>
+
+                <button type="submit">Invia</button>
+            </Form>
+        </Formik>
+    );
+}
+\end{lstlisting}
+
+\section{Form Patterns Avanzati}
+
+\subsection{Multi-Step Form}
+
+\begin{lstlisting}[language=JavaScript, caption=Form multi-step]
+function MultiStepForm() {
+    const [step, setStep] = useState(1);
+    const [formData, setFormData] = useState({
+        // Step 1
+        personalInfo: {
+            firstName: '',
+            lastName: '',
+            email: ''
+        },
+        // Step 2
+        address: {
+            street: '',
+            city: '',
+            country: ''
+        },
+        // Step 3
+        account: {
+            username: '',
+            password: ''
+        }
+    });
+
+    const nextStep = () => setStep(prev => prev + 1);
+    const prevStep = () => setStep(prev => prev - 1);
+
+    const updateFormData = (section, data) => {
+        setFormData(prev => ({
+            ...prev,
+            [section]: { ...prev[section], ...data }
+        }));
+    };
+
+    const handleSubmit = () => {
+        console.log('Final form data:', formData);
+    };
+
+    return (
+        <div className="multi-step-form">
+            {/* Progress Indicator */}
+            <div className="progress">
+                <div className={`step ${step >= 1 ? 'active' : ''}`}>1</div>
+                <div className={`step ${step >= 2 ? 'active' : ''}`}>2</div>
+                <div className={`step ${step >= 3 ? 'active' : ''}`}>3</div>
+            </div>
+
+            {/* Step 1: Personal Info */}
+            {step === 1 && (
+                <Step1
+                    data={formData.personalInfo}
+                    onNext={(data) => {
+                        updateFormData('personalInfo', data);
+                        nextStep();
+                    }}
+                />
+            )}
+
+            {/* Step 2: Address */}
+            {step === 2 && (
+                <Step2
+                    data={formData.address}
+                    onNext={(data) => {
+                        updateFormData('address', data);
+                        nextStep();
+                    }}
+                    onPrev={prevStep}
+                />
+            )}
+
+            {/* Step 3: Account */}
+            {step === 3 && (
+                <Step3
+                    data={formData.account}
+                    onSubmit={(data) => {
+                        updateFormData('account', data);
+                        handleSubmit();
+                    }}
+                    onPrev={prevStep}
+                />
+            )}
+        </div>
+    );
+}
+
+// Step 1 Component
+function Step1({ data, onNext }) {
+    const [formData, setFormData] = useState(data);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onNext(formData);
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <h2>Informazioni Personali</h2>
+            <input
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="Nome"
+                required
+            />
+            <input
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Cognome"
+                required
+            />
+            <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Email"
+                required
+            />
+            <button type="submit">Avanti</button>
+        </form>
+    );
+}
+
+// Step 2 e Step 3 simili...
+\end{lstlisting}
+
+\subsection{Form con File Upload}
+
+\begin{lstlisting}[language=JavaScript, caption=File upload form]
+function FileUploadForm() {
+    const [file, setFile] = useState(null);
+    const [preview, setPreview] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+
+        if (selectedFile) {
+            setFile(selectedFile);
+
+            // Preview per immagini
+            if (selectedFile.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreview(reader.result);
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (!file) {
+            alert('Seleziona un file');
+            return;
+        }
+
+        setUploading(true);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('description', 'File upload');
+
+        try {
+            const xhr = new XMLHttpRequest();
+
+            // Progress tracking
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    setProgress(percentComplete);
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    console.log('Upload completato!');
+                    setFile(null);
+                    setPreview(null);
+                    setProgress(0);
+                }
+            });
+
+            xhr.open('POST', '/api/upload');
+            xhr.send(formData);
+        } catch (error) {
+            console.error('Errore upload:', error);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <input
+                    type="file"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                />
+            </div>
+
+            {preview && (
+                <div>
+                    <h3>Anteprima:</h3>
+                    <img src={preview} alt="Preview" style={{ maxWidth: '300px' }} />
+                </div>
+            )}
+
+            {file && (
+                <div>
+                    <p>File: {file.name}</p>
+                    <p>Dimensione: {(file.size / 1024).toFixed(2)} KB</p>
+                </div>
+            )}
+
+            {uploading && (
+                <div>
+                    <progress value={progress} max="100" />
+                    <p>{progress.toFixed(0)}%</p>
+                </div>
+            )}
+
+            <button type="submit" disabled={!file || uploading}>
+                {uploading ? 'Caricamento...' : 'Carica'}
+            </button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{Form con Async Validation}
+
+\begin{lstlisting}[language=JavaScript, caption=Validazione asincrona]
+function AsyncValidationForm() {
+    const [username, setUsername] = useState('');
+    const [checking, setChecking] = useState(false);
+    const [isAvailable, setIsAvailable] = useState(null);
+    const debounceRef = useRef(null);
+
+    // Check username availability
+    const checkUsername = async (value) => {
+        if (value.length < 3) {
+            setIsAvailable(null);
+            return;
+        }
+
+        setChecking(true);
+
+        try {
+            // Simula API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const response = await fetch(`/api/check-username?username=${value}`);
+            const data = await response.json();
+
+            setIsAvailable(data.available);
+        } catch (error) {
+            console.error('Error checking username:', error);
+        } finally {
+            setChecking(false);
+        }
+    };
+
+    const handleUsernameChange = (e) => {
+        const value = e.target.value;
+        setUsername(value);
+        setIsAvailable(null);
+
+        // Debounce check
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+            checkUsername(value);
+        }, 500);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+
+        if (isAvailable) {
+            console.log('Submitting username:', username);
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div>
+                <label>Username:</label>
+                <input
+                    value={username}
+                    onChange={handleUsernameChange}
+                    placeholder="Scegli username"
+                />
+
+                {checking && <span>Controllo disponibilità...</span>}
+
+                {!checking && isAvailable === true && (
+                    <span style={{ color: 'green' }}>✓ Disponibile</span>
+                )}
+
+                {!checking && isAvailable === false && (
+                    <span style={{ color: 'red' }}>✗ Non disponibile</span>
+                )}
+            </div>
+
+            <button type="submit" disabled={!isAvailable}>
+                Registra
+            </button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\subsection{1. Accessibilità}
+
+\begin{lstlisting}[language=JavaScript, caption=Form accessibili]
+function AccessibleForm() {
+    return (
+        <form>
+            {/* ✅ Label associata a input */}
+            <label htmlFor="email">Email:</label>
+            <input id="email" type="email" name="email" />
+
+            {/* ✅ Aria attributes */}
+            <input
+                id="username"
+                aria-label="Username"
+                aria-required="true"
+                aria-invalid={errors.username ? 'true' : 'false'}
+                aria-describedby="username-error"
+            />
+            <span id="username-error" role="alert">
+                {errors.username}
+            </span>
+
+            {/* ✅ Fieldset per raggruppamento */}
+            <fieldset>
+                <legend>Informazioni di contatto</legend>
+                <input type="tel" name="phone" />
+                <input type="email" name="email" />
+            </fieldset>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{2. Performance}
+
+\begin{lstlisting}[language=JavaScript, caption=Ottimizzazione performance]
+// ✅ Debounce validation
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
+};
+
+// ✅ Memoizza callbacks
+const handleSubmit = useCallback(async (data) => {
+    await submitForm(data);
+}, []);
+
+// ✅ Controlled components solo quando necessario
+// Se non hai bisogno di validazione real-time, usa uncontrolled
+\end{lstlisting}
+
+\subsection{3. Security}
+
+\begin{lstlisting}[language=JavaScript, caption=Sicurezza form]
+function SecureForm() {
+    const handleSubmit = async (data) => {
+        // ✅ Sanitize input prima di inviare
+        const sanitized = {
+            username: DOMPurify.sanitize(data.username),
+            email: data.email.toLowerCase().trim()
+        };
+
+        // ✅ HTTPS sempre
+        await fetch('https://api.example.com/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // ✅ CSRF token
+                'X-CSRF-Token': getCsrfToken()
+            },
+            body: JSON.stringify(sanitized)
+        });
+    };
+
+    return <form onSubmit={handleSubmit}>...</form>;
+}
+\end{lstlisting}
+
+\section{Conclusione}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item Controlled vs Uncontrolled components
+    \item Form base con validazione manuale
+    \item React Hook Form per form performanti
+    \item Formik per form complessi
+    \item Pattern avanzati: multi-step, file upload, async validation
+    \item Best practices: accessibilità, performance, security
+\end{itemize}
+
+Ora hai tutti gli strumenti per gestire form complessi in React!

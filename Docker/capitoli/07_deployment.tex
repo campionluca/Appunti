@@ -1,0 +1,868 @@
+\chapter{Deployment e Orchestrazione}\label{cap:deployment}
+
+\section{Introduzione}
+Il deployment di applicazioni containerizzate richiede strategie sofisticate per garantire alta disponibilità, scalabilità e zero-downtime. Questo capitolo esplora pattern di deployment, introduzione all'orchestrazione e fondamenti di Kubernetes.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Strategie di deployment, Docker Swarm, Kubernetes basics, Service mesh, Load balancing, Rolling updates, Blue-green deployment, Canary releases, Health checks avanzati, Secrets management.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Comprendere le strategie di deployment per applicazioni containerizzate
+    \item Implementare orchestrazione con Docker Swarm e Kubernetes
+    \item Gestire rolling updates e rollback senza downtime
+    \item Configurare health checks e readiness probes
+    \item Applicare pattern di deployment avanzati (blue-green, canary)
+\end{itemize}
+
+\section{Strategie di Deployment}
+
+\subsection{Deployment Patterns}
+\begin{lstlisting}[language=bash, caption={Recreate Strategy - Downtime Accettabile}]
+# Stop tutti i container vecchi
+docker-compose down
+
+# Deploy nuova versione
+docker-compose up -d
+
+# Pro: Semplice, resource-efficient
+# Contro: Downtime durante il deploy
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Rolling Update - Zero Downtime}]
+# Update incrementale container per container
+docker service update \
+  --image myapp:v2 \
+  --update-parallelism 1 \
+  --update-delay 10s \
+  --update-failure-action rollback \
+  myapp-service
+
+# Pro: Zero downtime, graduale
+# Contro: Più complesso, richiede orchestratore
+\end{lstlisting}
+
+\subsection{Blue-Green Deployment}
+\begin{lstlisting}[language=yaml, caption={Blue-Green con Docker Compose}]
+# docker-compose-blue-green.yml
+version: '3.8'
+
+services:
+  # BLUE environment (current production)
+  app-blue:
+    image: myapp:v1
+    networks:
+      - app-network
+    environment:
+      - ENV=production
+      - VERSION=blue
+    deploy:
+      replicas: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`app.example.com`)"
+
+  # GREEN environment (new version staging)
+  app-green:
+    image: myapp:v2
+    networks:
+      - app-network
+    environment:
+      - ENV=staging
+      - VERSION=green
+    deploy:
+      replicas: 3
+    labels:
+      - "traefik.enable=false"  # Non ancora in produzione
+
+  # Load Balancer (Traefik)
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: overlay
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Switch Traffic da Blue a Green}]
+#!/bin/bash
+# blue-green-switch.sh
+
+echo "Testing GREEN environment health..."
+curl -f http://app-green:8080/health || exit 1
+
+echo "Switching traffic to GREEN..."
+docker service update \
+  --label-add "traefik.enable=true" \
+  app-green
+
+docker service update \
+  --label-add "traefik.enable=false" \
+  app-blue
+
+echo "Traffic switched to GREEN (v2)"
+echo "Monitor for issues. To rollback:"
+echo "  ./blue-green-switch.sh --rollback"
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Blue-Green Vantaggi]
+\begin{itemize}
+\item \textbf{Zero downtime}: Switch istantaneo tra ambienti
+\item \textbf{Fast rollback}: Ritorno immediato alla versione precedente
+\item \textbf{Testing}: Ambiente GREEN testabile prima dello switch
+\item \textbf{Contro}: Richiede risorse doppie durante il deployment
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Canary Deployment}
+\begin{lstlisting}[language=yaml, caption={Canary Release - Traffic Splitting}]
+# kubernetes-canary.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-stable
+spec:
+  replicas: 9  # 90% del traffico
+  selector:
+    matchLabels:
+      app: myapp
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: stable
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v1
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-canary
+spec:
+  replicas: 1  # 10% del traffico
+  selector:
+    matchLabels:
+      app: myapp
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: canary
+    spec:
+      containers:
+      - name: myapp
+        image: myapp:v2  # Nuova versione
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  selector:
+    app: myapp  # Match entrambe le versioni
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: LoadBalancer
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Canary Progressivo}]
+#!/bin/bash
+# canary-rollout.sh
+
+# Fase 1: 10% canary
+kubectl scale deployment myapp-canary --replicas=1
+kubectl scale deployment myapp-stable --replicas=9
+sleep 300  # Monitor 5 minuti
+
+# Controllo metriche errori
+ERROR_RATE=$(kubectl exec -it prometheus -- \
+  curl -s 'http://localhost:9090/api/v1/query?query=error_rate' | \
+  jq '.data.result[0].value[1]')
+
+if (( $(echo "$ERROR_RATE < 0.01" | bc -l) )); then
+  # Fase 2: 50% canary
+  kubectl scale deployment myapp-canary --replicas=5
+  kubectl scale deployment myapp-stable --replicas=5
+  sleep 300
+
+  # Fase 3: 100% canary (rollout completo)
+  kubectl scale deployment myapp-canary --replicas=10
+  kubectl scale deployment myapp-stable --replicas=0
+else
+  echo "ERROR_RATE too high, rolling back..."
+  kubectl scale deployment myapp-canary --replicas=0
+fi
+\end{lstlisting}
+
+\section{Docker Swarm}
+
+\subsection{Inizializzazione Cluster}
+\begin{lstlisting}[language=bash, caption={Setup Docker Swarm Cluster}]
+# Su manager node
+docker swarm init --advertise-addr 192.168.1.10
+
+# Output fornisce token per worker nodes:
+# docker swarm join --token SWMTKN-1-xxx... 192.168.1.10:2377
+
+# Su worker nodes
+docker swarm join \
+  --token SWMTKN-1-5abc... \
+  192.168.1.10:2377
+
+# Verifica cluster
+docker node ls
+# ID        HOSTNAME  STATUS  AVAILABILITY  MANAGER STATUS
+# abc123    manager1  Ready   Active        Leader
+# def456    worker1   Ready   Active
+# ghi789    worker2   Ready   Active
+\end{lstlisting}
+
+\subsection{Deploy Stack con Docker Swarm}
+\begin{lstlisting}[language=yaml, caption={Stack Multi-Service Production}]
+# stack-production.yml
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      placement:
+        constraints:
+          - node.role == worker
+    networks:
+      - frontend
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+    secrets:
+      - ssl_certificate
+      - ssl_key
+
+  app:
+    image: myapp:latest
+    deploy:
+      replicas: 5
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      update_config:
+        parallelism: 2
+        delay: 10s
+        monitor: 30s
+        failure_action: rollback
+        order: start-first  # Start new before stopping old
+    networks:
+      - frontend
+      - backend
+    environment:
+      - DATABASE_URL_FILE=/run/secrets/db_connection
+    secrets:
+      - db_connection
+
+  db:
+    image: postgres:15-alpine
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.database == true
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+    secrets:
+      - db_password
+
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.cache == true
+    networks:
+      - backend
+
+networks:
+  frontend:
+    driver: overlay
+  backend:
+    driver: overlay
+    internal: true  # No external access
+
+volumes:
+  db-data:
+    driver: local
+
+configs:
+  nginx_config:
+    external: true
+
+secrets:
+  ssl_certificate:
+    external: true
+  ssl_key:
+    external: true
+  db_connection:
+    external: true
+  db_password:
+    external: true
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Deploy e Gestione Stack}]
+# Create secrets
+echo "postgresql://user:pass@db:5432/mydb" | \
+  docker secret create db_connection -
+
+echo "supersecretpassword" | \
+  docker secret create db_password -
+
+# Deploy stack
+docker stack deploy -c stack-production.yml myapp
+
+# Monitor services
+docker stack services myapp
+docker service ls
+docker service ps myapp_app
+
+# Scale service
+docker service scale myapp_app=10
+
+# Update service
+docker service update \
+  --image myapp:v2 \
+  --update-parallelism 2 \
+  myapp_app
+
+# Rollback
+docker service rollback myapp_app
+
+# Remove stack
+docker stack rm myapp
+\end{lstlisting}
+
+\section{Kubernetes Fundamentals}
+
+\subsection{Architettura Kubernetes}
+\begin{tcolorbox}[title=Componenti Kubernetes Cluster]
+\textbf{Control Plane}:
+\begin{itemize}
+\item \textbf{kube-apiserver}: API REST per gestione cluster
+\item \textbf{etcd}: Database distribuito per stato cluster
+\item \textbf{kube-scheduler}: Assegnazione Pods ai Nodes
+\item \textbf{kube-controller-manager}: Controller per Deployments, Services, etc.
+\end{itemize}
+
+\textbf{Worker Nodes}:
+\begin{itemize}
+\item \textbf{kubelet}: Agente che esegue Pods sul node
+\item \textbf{kube-proxy}: Network proxy per Services
+\item \textbf{Container runtime}: Docker, containerd, CRI-O
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Deployment Completo Kubernetes}
+\begin{lstlisting}[language=yaml, caption={Production Deployment con Kubernetes}]
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+  namespace: production
+  labels:
+    app: web-app
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Max pods oltre replicas durante update
+      maxUnavailable: 0  # Zero downtime
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+        version: v1
+    spec:
+      containers:
+      - name: app
+        image: myregistry.io/web-app:v1.2.3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Startup probe for slow-starting apps
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30  # 30*10s = 5 minuti max startup
+
+        # Resource management
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        # Environment variables
+        env:
+        - name: ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: database.host
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+
+        # Volume mounts
+        volumeMounts:
+        - name: config
+          mountPath: /etc/app/config
+          readOnly: true
+        - name: cache
+          mountPath: /var/cache/app
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      # Image pull secrets
+      imagePullSecrets:
+      - name: registry-credentials
+
+      # Volumes
+      volumes:
+      - name: config
+        configMap:
+          name: app-config
+      - name: cache
+        emptyDir: {}
+
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-app-service
+  namespace: production
+spec:
+  selector:
+    app: web-app
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  type: ClusterIP
+  sessionAffinity: ClientIP
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-app-ingress
+  namespace: production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  tls:
+  - hosts:
+    - app.example.com
+    secretName: web-app-tls
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-app-service
+            port:
+              number: 80
+
+---
+# HorizontalPodAutoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-app-hpa
+  namespace: production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: production
+data:
+  database.host: "postgres.database.svc.cluster.local"
+  database.port: "5432"
+  redis.host: "redis.cache.svc.cluster.local"
+  app.config.json: |
+    {
+      "features": {
+        "beta": false,
+        "analytics": true
+      }
+    }
+\end{lstlisting}
+
+\subsection{Gestione Secrets Kubernetes}
+\begin{lstlisting}[language=bash, caption={Secrets Management}]
+# Create secret da file
+kubectl create secret generic db-credentials \
+  --from-literal=username=admin \
+  --from-literal=password=supersecret \
+  --namespace=production
+
+# Create secret da file
+kubectl create secret generic tls-cert \
+  --from-file=tls.crt=./server.crt \
+  --from-file=tls.key=./server.key \
+  --namespace=production
+
+# Create Docker registry secret
+kubectl create secret docker-registry registry-credentials \
+  --docker-server=myregistry.io \
+  --docker-username=user \
+  --docker-password=pass \
+  --docker-email=user@example.com \
+  --namespace=production
+
+# Encrypt secrets at rest (encryption config)
+# /etc/kubernetes/encryption-config.yaml
+cat <<EOF > encryption-config.yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+      - secrets
+    providers:
+      - aescbc:
+          keys:
+            - name: key1
+              secret: $(head -c 32 /dev/urandom | base64)
+      - identity: {}
+EOF
+\end{lstlisting}
+
+\section{Load Balancing e Service Discovery}
+
+\subsection{Kubernetes Services}
+\begin{lstlisting}[language=yaml, caption={Service Types}]
+# ClusterIP (default) - Internal only
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: ClusterIP
+  selector:
+    app: backend
+  ports:
+  - port: 80
+    targetPort: 8080
+
+---
+# NodePort - Exposed on each Node
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30080  # 30000-32767
+
+---
+# LoadBalancer - Cloud provider integration
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 8080
+
+---
+# Headless Service - Direct pod access
+apiVersion: v1
+kind: Service
+metadata:
+  name: database-headless
+spec:
+  clusterIP: None  # Headless
+  selector:
+    app: database
+  ports:
+  - port: 5432
+\end{lstlisting}
+
+\section{Advanced Health Checks}
+
+\subsection{Multi-Level Health Checks}
+\begin{lstlisting}[language=go, caption={Health Check Endpoints in Go}]
+// healthcheck.go
+package main
+
+import (
+    "database/sql"
+    "encoding/json"
+    "net/http"
+    "time"
+)
+
+type HealthChecker struct {
+    db    *sql.DB
+    redis *RedisClient
+}
+
+// Liveness: Is the app running?
+func (h *HealthChecker) LivenessHandler(w http.ResponseWriter, r *http.Request) {
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte("OK"))
+}
+
+// Readiness: Can the app serve traffic?
+func (h *HealthChecker) ReadinessHandler(w http.ResponseWriter, r *http.Request) {
+    status := map[string]interface{}{
+        "status": "UP",
+        "checks": make(map[string]string),
+    }
+
+    // Check database
+    ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+    defer cancel()
+
+    if err := h.db.PingContext(ctx); err != nil {
+        status["status"] = "DOWN"
+        status["checks"].(map[string]string)["database"] = "DOWN"
+        w.WriteHeader(http.StatusServiceUnavailable)
+    } else {
+        status["checks"].(map[string]string)["database"] = "UP"
+    }
+
+    // Check Redis
+    if err := h.redis.Ping(ctx); err != nil {
+        status["status"] = "DOWN"
+        status["checks"].(map[string]string)["redis"] = "DOWN"
+        w.WriteHeader(http.StatusServiceUnavailable)
+    } else {
+        status["checks"].(map[string]string)["redis"] = "UP"
+    }
+
+    json.NewEncoder(w).Encode(status)
+}
+
+// Startup: Is initialization complete?
+func (h *HealthChecker) StartupHandler(w http.ResponseWriter, r *http.Request) {
+    if !h.isInitialized() {
+        w.WriteHeader(http.StatusServiceUnavailable)
+        w.Write([]byte("Initializing..."))
+        return
+    }
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte("Ready"))
+}
+\end{lstlisting}
+
+\section{Deployment Automation}
+
+\subsection{GitOps con ArgoCD}
+\begin{lstlisting}[language=yaml, caption={ArgoCD Application}]
+# argocd-application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: web-app
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/myorg/k8s-manifests
+    targetRevision: main
+    path: apps/web-app/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+
+  syncPolicy:
+    automated:
+      prune: true      # Delete resources not in Git
+      selfHeal: true   # Auto-sync on drift
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+\end{lstlisting}
+
+\section{Best Practice Deployment}
+
+\begin{tcolorbox}[title=Production Deployment Checklist]
+\begin{enumerate}
+\item \textbf{Health Checks}: Implementare liveness, readiness, startup probes
+\item \textbf{Resource Limits}: Definire CPU/memory requests e limits
+\item \textbf{Rolling Updates}: Configurare maxSurge e maxUnavailable
+\item \textbf{Secrets}: Mai hardcode credentials, usare Secrets/Vault
+\item \textbf{Monitoring}: Prometheus metrics, Grafana dashboards
+\item \textbf{Logging}: Centralized logging (ELK, Loki)
+\item \textbf{Security}: NetworkPolicies, PodSecurityPolicies
+\item \textbf{Backup}: Velero per backup Kubernetes
+\item \textbf{Disaster Recovery}: Multi-zone/region deployment
+\item \textbf{GitOps}: Versioned infrastructure as code
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Errori Comuni}
+
+\begin{itemize}
+\item \textbf{Errore}: Deployment senza health checks
+\begin{itemize}
+\item \textbf{Conseguenza}: Traffic inviato a pods non pronti
+\item \textbf{Soluzione}: Implementare readiness probe
+\end{itemize}
+
+\item \textbf{Errore}: Resource limits non configurati
+\begin{itemize}
+\item \textbf{Conseguenza}: OOMKilled, performance degradation
+\item \textbf{Soluzione}: Profiling e configurazione requests/limits
+\end{itemize}
+
+\item \textbf{Errore}: Secrets in ConfigMaps o environment variables
+\begin{itemize}
+\item \textbf{Conseguenza}: Credential exposure
+\item \textbf{Soluzione}: Usare Kubernetes Secrets + encryption at rest
+\end{itemize}
+\end{itemize}
+
+\section{Riepilogo}
+
+Abbiamo esplorato strategie di deployment production-ready: blue-green per switch istantanei, canary per rollout graduali, rolling updates per zero downtime. Docker Swarm offre orchestrazione semplice per cluster piccoli, mentre Kubernetes fornisce piattaforma enterprise-grade con autoscaling, service discovery, e GitOps integration.
+
+\section{Riferimenti}
+\begin{itemize}
+\item Kubernetes Documentation: \url{https://kubernetes.io/docs/}
+\item Docker Swarm: \url{https://docs.docker.com/engine/swarm/}
+\item ArgoCD GitOps: \url{https://argo-cd.readthedocs.io/}
+\item Prometheus Monitoring: \url{https://prometheus.io/docs/}
+\end{itemize}

@@ -1,0 +1,1133 @@
+% 05_bash_scripting.tex — Programmazione Bash
+\chapter{Bash Scripting}
+
+\section{Introduzione allo Scripting}
+
+Uno script Bash è un file di testo contenente comandi che vengono eseguiti sequenzialmente. Gli script permettono di automatizzare task ripetitivi, creare tool personalizzati e gestire configurazioni complesse.
+
+\subsection{Primo Script}
+
+\begin{lstlisting}[style=bash]
+# Create file hello.sh
+cat > hello.sh << 'EOF'
+#!/bin/bash
+# Questo è un commento
+echo "Hello, World!"
+EOF
+
+# Rendi eseguibile
+chmod +x hello.sh
+
+# Esegui
+./hello.sh
+# Output: Hello, World!
+\end{lstlisting}
+
+\subsection{Shebang}
+
+La prima riga \texttt{\#!/bin/bash} è chiamata \textbf{shebang} e indica quale interprete usare:
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash              # Bash script
+#!/bin/sh                # POSIX shell (più portabile)
+#!/usr/bin/env bash      # Trova bash nel PATH (più portabile)
+#!/usr/bin/env python3   # Python script
+#!/usr/bin/perl          # Perl script
+
+# Senza shebang, devi eseguire esplicitamente:
+bash script.sh
+
+# Con shebang, puoi eseguire direttamente:
+./script.sh
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Best Practice: Shebang]
+Usa \texttt{\#!/usr/bin/env bash} invece di \texttt{\#!/bin/bash} per massima portabilità. Questo trova bash nel PATH invece di assumere una posizione fissa.
+\end{tcolorbox}
+
+\section{Variabili}
+
+\subsection{Definizione e Uso}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Definizione variabile (NO spazi intorno a =)
+NAME="Alice"
+AGE=25
+PI=3.14159
+
+# Uso variabile (con $)
+echo "Hello, $NAME"
+echo "You are $AGE years old"
+
+# Sintassi alternativa (più sicura)
+echo "Hello, ${NAME}"
+echo "Age: ${AGE} years"
+
+# ERRORE: spazi intorno a =
+NAME = "Alice"     # ERRORE!
+NAME= "Alice"      # ERRORE!
+NAME ="Alice"      # ERRORE!
+\end{lstlisting}
+
+\subsection{Tipi di Variabili}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Stringhe
+STRING="Hello World"
+EMPTY_STRING=""
+
+# Numeri (in Bash sono trattati come stringhe)
+NUMBER=42
+FLOAT=3.14    # Bash non supporta nativamente float
+
+# Array
+FRUITS=("apple" "banana" "orange")
+NUMBERS=(1 2 3 4 5)
+
+# Array associativi (hash/dictionary)
+declare -A CAPITALS
+CAPITALS["Italy"]="Rome"
+CAPITALS["France"]="Paris"
+CAPITALS["Spain"]="Madrid"
+
+# Variabili di sola lettura
+readonly CONSTANT="Cannot change"
+CONSTANT="new value"    # Errore!
+
+# Variabili d'ambiente (disponibili ai processi figli)
+export GLOBAL_VAR="visible to child processes"
+\end{lstlisting}
+
+\subsection{Espansione Variabili}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+NAME="Alice"
+
+# Espansione base
+echo $NAME              # Alice
+echo "$NAME"            # Alice (preferito)
+echo '$NAME'            # $NAME (letterale, no espansione)
+
+# Protezione con graffe
+FILE="document"
+echo $FILEtxt           # Errore: variabile FILEtxt non esiste
+echo ${FILE}txt         # documenttxt
+
+# Lunghezza stringa
+echo ${#NAME}           # 5
+
+# Substring
+STRING="Hello World"
+echo ${STRING:0:5}      # Hello (da indice 0, lunghezza 5)
+echo ${STRING:6}        # World (da indice 6 fino alla fine)
+echo ${STRING: -5}      # World (ultimi 5 caratteri, nota lo spazio)
+
+# Sostituzione pattern
+PATH_STRING="/home/user/documents/file.txt"
+echo ${PATH_STRING/user/admin}          # Sostituisci prima occorrenza
+echo ${PATH_STRING//\//\\}              # Sostituisci tutte / con \
+
+# Rimozione pattern
+echo ${PATH_STRING%.txt}                # Rimuovi .txt dalla fine
+echo ${PATH_STRING#/home/}              # Rimuovi /home/ dall'inizio
+echo ${PATH_STRING##*/}                 # file.txt (rimuovi tutto fino a ultimo /)
+echo ${PATH_STRING%%/*}                 # (vuoto, rimuovi tutto da primo /)
+
+# Default values
+echo ${UNDEFINED:-"default"}            # default (se UNDEFINED non esiste)
+echo ${UNDEFINED:="default"}            # default (e imposta UNDEFINED)
+echo ${DEFINED:+alternative}            # alternative (se DEFINED esiste)
+echo ${UNDEFINED:?"Error message"}      # Errore se non esiste
+\end{lstlisting}
+
+\subsection{Variabili Speciali}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Script name e parametri
+$0          # Nome dello script
+$1, $2...   # Parametri posizionali
+$#          # Numero di parametri
+$@          # Tutti i parametri (come array)
+$*          # Tutti i parametri (come stringa)
+
+# Exit status
+$?          # Exit code dell'ultimo comando
+            # 0 = successo, non-zero = errore
+
+# Process IDs
+$$          # PID dello script corrente
+$!          # PID dell'ultimo processo in background
+
+# Esempi
+echo "Script name: $0"
+echo "First argument: $1"
+echo "Number of arguments: $#"
+echo "All arguments: $@"
+echo "PID: $$"
+
+# Exit status
+ls /existing_dir
+echo $?     # 0 (successo)
+
+ls /nonexistent_dir
+echo $?     # 2 (errore)
+\end{lstlisting}
+
+\section{Input/Output}
+
+\subsection{Echo e Printf}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# echo - semplice output
+echo "Simple text"
+echo "Line 1\nLine 2"          # \n non interpretato di default
+echo -e "Line 1\nLine 2"       # -e abilita escape sequences
+echo -n "No newline"           # -n sopprime newline finale
+
+# printf - formattazione avanzata (come C)
+printf "Hello, %s\n" "World"
+printf "Number: %d\n" 42
+printf "Float: %.2f\n" 3.14159
+printf "Hex: %x\n" 255
+
+# Formattazione tabulare
+printf "%-10s %-10s %s\n" "Name" "Age" "City"
+printf "%-10s %-10d %s\n" "Alice" 25 "Rome"
+printf "%-10s %-10d %s\n" "Bob" 30 "Milan"
+\end{lstlisting}
+
+\subsection{Input Utente}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# read - leggi input
+read -p "Enter your name: " NAME
+echo "Hello, $NAME"
+
+# Leggi multipli valori
+read -p "Enter name and age: " NAME AGE
+echo "Name: $NAME, Age: $AGE"
+
+# Leggi array
+read -a ARRAY -p "Enter numbers: "
+echo "First number: ${ARRAY[0]}"
+
+# Timeout (secondi)
+read -t 5 -p "Quick! Answer in 5 seconds: " ANSWER
+
+# Silent (per password)
+read -s -p "Enter password: " PASSWORD
+echo  # Newline dopo input silenzioso
+
+# Leggi singolo carattere
+read -n 1 -p "Press any key to continue..."
+echo
+
+# Default value
+read -p "Enter name [default: User]: " NAME
+NAME=${NAME:-User}
+echo "Name: $NAME"
+
+# Leggi da file
+while read LINE; do
+    echo "Line: $LINE"
+done < input.txt
+\end{lstlisting}
+
+\subsection{Redirezioni}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Output redirection
+echo "text" > file.txt          # Sovrascrive
+echo "more" >> file.txt         # Append
+
+# Input redirection
+wc -l < file.txt                # Leggi da file
+
+# Error redirection
+command 2> errors.txt           # Solo stderr
+command > output.txt 2>&1       # stdout e stderr insieme
+command &> all_output.txt       # Shortcut (Bash 4+)
+
+# Scarta output
+command > /dev/null             # Scarta stdout
+command 2> /dev/null            # Scarta stderr
+command &> /dev/null            # Scarta tutto
+
+# Here document
+cat << EOF
+Multiple lines
+of text
+EOF
+
+# Here string
+grep "pattern" <<< "text to search"
+
+# Pipeline
+cat file.txt | grep "pattern" | sort | uniq
+\end{lstlisting}
+
+\section{Strutture di Controllo}
+
+\subsection{Condizionali: if-then-else}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Sintassi base
+if [ condition ]; then
+    # commands
+fi
+
+# Con else
+if [ condition ]; then
+    # commands se true
+else
+    # commands se false
+fi
+
+# Con elif
+if [ condition1 ]; then
+    # commands
+elif [ condition2 ]; then
+    # commands
+else
+    # commands
+fi
+
+# Esempi pratici
+AGE=25
+
+if [ $AGE -gt 18 ]; then
+    echo "Adult"
+else
+    echo "Minor"
+fi
+
+# Multipli elif
+SCORE=75
+
+if [ $SCORE -ge 90 ]; then
+    echo "Grade: A"
+elif [ $SCORE -ge 80 ]; then
+    echo "Grade: B"
+elif [ $SCORE -ge 70 ]; then
+    echo "Grade: C"
+elif [ $SCORE -ge 60 ]; then
+    echo "Grade: D"
+else
+    echo "Grade: F"
+fi
+\end{lstlisting}
+
+\subsection{Test Conditions}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# OPERATORI NUMERICI
+-eq     # uguale
+-ne     # diverso
+-lt     # minore di
+-le     # minore o uguale
+-gt     # maggiore di
+-ge     # maggiore o uguale
+
+# Esempi
+[ 5 -eq 5 ]      # true
+[ 5 -gt 3 ]      # true
+[ 10 -le 20 ]    # true
+
+# OPERATORI STRINGA
+=       # uguale
+!=      # diverso
+-z      # stringa vuota
+-n      # stringa non vuota
+<       # minore (lessicografico)
+>       # maggiore (lessicografico)
+
+# Esempi
+[ "$STR1" = "$STR2" ]      # uguale
+[ "$STR" != "" ]           # non vuota
+[ -z "$STR" ]              # vuota
+[ -n "$STR" ]              # non vuota
+
+# FILE TEST
+-e      # esiste
+-f      # è un file regolare
+-d      # è una directory
+-r      # è leggibile
+-w      # è scrivibile
+-x      # è eseguibile
+-s      # dimensione > 0
+-L      # è symbolic link
+
+# Esempi
+if [ -f "/etc/passwd" ]; then
+    echo "File exists"
+fi
+
+if [ -d "/home" ]; then
+    echo "Directory exists"
+fi
+
+if [ -x "./script.sh" ]; then
+    echo "Script is executable"
+fi
+
+# OPERATORI LOGICI
+&&      # AND
+||      # OR
+!       # NOT
+
+# Esempi
+if [ $AGE -gt 18 ] && [ $AGE -lt 65 ]; then
+    echo "Working age"
+fi
+
+if [ -f "$FILE" ] || [ -d "$FILE" ]; then
+    echo "Path exists"
+fi
+
+if [ ! -f "$FILE" ]; then
+    echo "File does not exist"
+fi
+
+# Sintassi alternativa (doppia parentesi quadra)
+if [[ $NAME == "Alice" ]]; then
+    echo "Hello Alice"
+fi
+
+# Supporta pattern matching
+if [[ $FILENAME == *.txt ]]; then
+    echo "Text file"
+fi
+
+# Supporta regex
+if [[ $EMAIL =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+    echo "Valid email"
+fi
+\end{lstlisting}
+
+\subsection{Case Statement}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Sintassi
+case $VARIABLE in
+    pattern1)
+        # commands
+        ;;
+    pattern2)
+        # commands
+        ;;
+    *)
+        # default
+        ;;
+esac
+
+# Esempio: menu
+echo "Select option:"
+echo "1. List files"
+echo "2. Show date"
+echo "3. Exit"
+read -p "Choice: " CHOICE
+
+case $CHOICE in
+    1)
+        ls -l
+        ;;
+    2)
+        date
+        ;;
+    3)
+        echo "Goodbye!"
+        exit 0
+        ;;
+    *)
+        echo "Invalid option"
+        ;;
+esac
+
+# Pattern matching
+FILE="document.txt"
+
+case $FILE in
+    *.txt)
+        echo "Text file"
+        ;;
+    *.jpg|*.png|*.gif)
+        echo "Image file"
+        ;;
+    *.sh)
+        echo "Shell script"
+        ;;
+    *)
+        echo "Unknown type"
+        ;;
+esac
+
+# Multipli statement per pattern
+case $ANSWER in
+    [Yy]|[Yy][Ee][Ss])
+        echo "Confirmed"
+        ;;
+    [Nn]|[Nn][Oo])
+        echo "Declined"
+        ;;
+    *)
+        echo "Invalid answer"
+        ;;
+esac
+\end{lstlisting}
+
+\section{Loop}
+
+\subsection{For Loop}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Iterazione su lista
+for ITEM in apple banana orange; do
+    echo "Fruit: $ITEM"
+done
+
+# Iterazione su range
+for i in {1..10}; do
+    echo "Number: $i"
+done
+
+# Con step
+for i in {0..100..10}; do
+    echo $i    # 0, 10, 20, ..., 100
+done
+
+# C-style for loop
+for ((i=0; i<10; i++)); do
+    echo "Count: $i"
+done
+
+# Iterazione su file
+for FILE in *.txt; do
+    echo "Processing: $FILE"
+    # processa file
+done
+
+# Iterazione su output comando
+for USER in $(cat /etc/passwd | cut -d: -f1); do
+    echo "User: $USER"
+done
+
+# Iterazione su array
+FRUITS=("apple" "banana" "orange")
+for FRUIT in "${FRUITS[@]}"; do
+    echo "Fruit: $FRUIT"
+done
+
+# Con indice
+for i in "${!FRUITS[@]}"; do
+    echo "Index $i: ${FRUITS[$i]}"
+done
+\end{lstlisting}
+
+\subsection{While Loop}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Sintassi base
+while [ condition ]; do
+    # commands
+done
+
+# Esempio: contatore
+COUNT=0
+while [ $COUNT -lt 10 ]; do
+    echo "Count: $COUNT"
+    COUNT=$((COUNT + 1))
+done
+
+# Leggi file riga per riga
+while read LINE; do
+    echo "Line: $LINE"
+done < input.txt
+
+# Leggi con IFS personalizzato
+while IFS=: read USERNAME PASSWORD UID GID COMMENT HOME SHELL; do
+    echo "User: $USERNAME, Home: $HOME"
+done < /etc/passwd
+
+# Loop infinito
+while true; do
+    echo "Press Ctrl+C to stop"
+    sleep 1
+done
+
+# Condizione su comando
+while ps aux | grep -q "[m]yprocess"; do
+    echo "Process still running..."
+    sleep 5
+done
+echo "Process terminated"
+\end{lstlisting}
+
+\subsection{Until Loop}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# until: esegue finché condizione è FALSE
+until [ condition ]; do
+    # commands
+done
+
+# Esempio
+COUNT=0
+until [ $COUNT -ge 10 ]; do
+    echo "Count: $COUNT"
+    COUNT=$((COUNT + 1))
+done
+
+# Aspetta che file esista
+until [ -f "/tmp/ready.flag" ]; do
+    echo "Waiting for ready flag..."
+    sleep 2
+done
+echo "Ready flag found!"
+
+# Aspetta che servizio risponda
+until curl -s http://localhost:8080 > /dev/null; do
+    echo "Waiting for service..."
+    sleep 5
+done
+echo "Service is up!"
+\end{lstlisting}
+
+\subsection{Break e Continue}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# break: esce dal loop
+for i in {1..10}; do
+    if [ $i -eq 5 ]; then
+        break    # Esce quando i=5
+    fi
+    echo $i
+done
+# Output: 1 2 3 4
+
+# continue: salta all'iterazione successiva
+for i in {1..10}; do
+    if [ $i -eq 5 ]; then
+        continue    # Salta 5
+    fi
+    echo $i
+done
+# Output: 1 2 3 4 6 7 8 9 10
+
+# Loop nidificati
+for i in {1..3}; do
+    for j in {1..3}; do
+        if [ $i -eq 2 ] && [ $j -eq 2 ]; then
+            break 2    # Esce da entrambi i loop
+        fi
+        echo "$i,$j"
+    done
+done
+\end{lstlisting}
+
+\section{Funzioni}
+
+\subsection{Definizione e Chiamata}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Definizione funzione
+function greet() {
+    echo "Hello, World!"
+}
+
+# Sintassi alternativa (preferita)
+greet() {
+    echo "Hello, World!"
+}
+
+# Chiamata funzione
+greet
+
+# Funzione con parametri
+greet_user() {
+    echo "Hello, $1!"
+}
+
+greet_user "Alice"     # Output: Hello, Alice!
+greet_user "Bob"       # Output: Hello, Bob!
+
+# Multipli parametri
+add() {
+    local RESULT=$(($1 + $2))
+    echo $RESULT
+}
+
+SUM=$(add 5 3)
+echo "5 + 3 = $SUM"
+
+# Return value (exit code)
+is_even() {
+    if [ $(($1 % 2)) -eq 0 ]; then
+        return 0    # true
+    else
+        return 1    # false
+    fi
+}
+
+if is_even 4; then
+    echo "4 is even"
+fi
+
+if ! is_even 5; then
+    echo "5 is not even"
+fi
+\end{lstlisting}
+
+\subsection{Variabili Locali}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Variabili globali (default)
+GLOBAL="I'm global"
+
+test_scope() {
+    GLOBAL="Modified inside function"
+    LOCAL_VAR="I'm only in function"
+}
+
+echo $GLOBAL           # I'm global
+test_scope
+echo $GLOBAL           # Modified inside function
+echo $LOCAL_VAR        # (vuoto - non esiste fuori dalla funzione)
+
+# Variabili locali (best practice)
+better_scope() {
+    local INSIDE="I'm local"
+    echo $INSIDE
+}
+
+better_scope           # I'm local
+echo $INSIDE           # (vuoto - locale alla funzione)
+\end{lstlisting}
+
+\subsection{Funzioni Avanzate}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Return multipli valori (via echo)
+get_user_info() {
+    local NAME="Alice"
+    local AGE=25
+    local CITY="Rome"
+    echo "$NAME|$AGE|$CITY"
+}
+
+USER_INFO=$(get_user_info)
+IFS='|' read -r NAME AGE CITY <<< "$USER_INFO"
+echo "Name: $NAME, Age: $AGE, City: $CITY"
+
+# Funzione ricorsiva: fattoriale
+factorial() {
+    local NUM=$1
+    if [ $NUM -le 1 ]; then
+        echo 1
+    else
+        local PREV=$(factorial $((NUM - 1)))
+        echo $((NUM * PREV))
+    fi
+}
+
+echo "5! = $(factorial 5)"    # 120
+
+# Funzione con default parameters
+greet_with_default() {
+    local NAME=${1:-"Guest"}
+    echo "Hello, $NAME!"
+}
+
+greet_with_default           # Hello, Guest!
+greet_with_default "Alice"   # Hello, Alice!
+
+# Funzione con validazione parametri
+divide() {
+    if [ $# -ne 2 ]; then
+        echo "Error: Need exactly 2 arguments" >&2
+        return 1
+    fi
+
+    if [ $2 -eq 0 ]; then
+        echo "Error: Division by zero" >&2
+        return 1
+    fi
+
+    echo $(($1 / $2))
+}
+
+divide 10 2    # 5
+divide 10 0    # Error: Division by zero
+\end{lstlisting}
+
+\section{Array}
+
+\subsection{Array Indicizzati}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Definizione
+FRUITS=("apple" "banana" "orange")
+NUMBERS=(1 2 3 4 5)
+MIXED=("text" 123 "more text")
+
+# Accesso elementi
+echo ${FRUITS[0]}        # apple (primo elemento)
+echo ${FRUITS[1]}        # banana
+echo ${FRUITS[2]}        # orange
+echo ${FRUITS[-1]}       # orange (ultimo elemento)
+
+# Tutti gli elementi
+echo ${FRUITS[@]}        # apple banana orange
+echo ${FRUITS[*]}        # apple banana orange
+
+# Numero elementi
+echo ${#FRUITS[@]}       # 3
+
+# Lunghezza elemento specifico
+echo ${#FRUITS[0]}       # 5 (length of "apple")
+
+# Aggiungere elementi
+FRUITS+=("grape")
+FRUITS[4]="mango"
+
+# Modificare elemento
+FRUITS[1]="pear"
+
+# Rimuovere elemento
+unset FRUITS[2]
+
+# Iterare
+for FRUIT in "${FRUITS[@]}"; do
+    echo "Fruit: $FRUIT"
+done
+
+# Iterare con indice
+for i in "${!FRUITS[@]}"; do
+    echo "Index $i: ${FRUITS[$i]}"
+done
+
+# Slice (subset)
+ARRAY=(0 1 2 3 4 5 6 7 8 9)
+echo ${ARRAY[@]:2:3}     # 2 3 4 (da indice 2, prendi 3 elementi)
+echo ${ARRAY[@]:5}       # 5 6 7 8 9 (da indice 5 fino alla fine)
+\end{lstlisting}
+
+\subsection{Array Associativi}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+
+# Dichiarazione (richiesta per array associativi)
+declare -A CAPITALS
+
+# Assegnazione
+CAPITALS["Italy"]="Rome"
+CAPITALS["France"]="Paris"
+CAPITALS["Spain"]="Madrid"
+CAPITALS["Germany"]="Berlin"
+
+# Accesso
+echo ${CAPITALS["Italy"]}        # Rome
+
+# Tutte le chiavi
+echo ${!CAPITALS[@]}             # Italy France Spain Germany
+
+# Tutti i valori
+echo ${CAPITALS[@]}              # Rome Paris Madrid Berlin
+
+# Numero elementi
+echo ${#CAPITALS[@]}             # 4
+
+# Iterare
+for COUNTRY in "${!CAPITALS[@]}"; do
+    echo "$COUNTRY: ${CAPITALS[$COUNTRY]}"
+done
+
+# Controllare se chiave esiste
+if [ ${CAPITALS["Italy"]+_} ]; then
+    echo "Italy exists in array"
+fi
+
+# Rimuovere elemento
+unset CAPITALS["Spain"]
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 5.1: Script Base}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+# Esercizio: Create uno script che accetta nome e età,
+# poi stampa un messaggio personalizzato
+
+read -p "Enter your name: " NAME
+read -p "Enter your age: " AGE
+
+echo "Hello, $NAME!"
+
+if [ $AGE -lt 18 ]; then
+    echo "You are a minor."
+elif [ $AGE -lt 65 ]; then
+    echo "You are an adult."
+else
+    echo "You are a senior."
+fi
+
+echo "In 10 years, you will be $((AGE + 10)) years old."
+\end{lstlisting}
+
+\subsection{Esercizio 5.2: Calcolatrice}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+# Calcolatrice semplice
+
+echo "Simple Calculator"
+read -p "Enter first number: " NUM1
+read -p "Enter operator (+, -, *, /): " OP
+read -p "Enter second number: " NUM2
+
+case $OP in
+    +)
+        RESULT=$((NUM1 + NUM2))
+        ;;
+    -)
+        RESULT=$((NUM1 - NUM2))
+        ;;
+    \*)
+        RESULT=$((NUM1 * NUM2))
+        ;;
+    /)
+        if [ $NUM2 -eq 0 ]; then
+            echo "Error: Division by zero"
+            exit 1
+        fi
+        RESULT=$((NUM1 / NUM2))
+        ;;
+    *)
+        echo "Error: Invalid operator"
+        exit 1
+        ;;
+esac
+
+echo "$NUM1 $OP $NUM2 = $RESULT"
+\end{lstlisting}
+
+\subsection{Esercizio 5.3: Backup Script}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+# Backup di directory
+
+# Configurazione
+SOURCE_DIR="$HOME/documents"
+BACKUP_DIR="$HOME/backups"
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_FILE="backup_${DATE}.tar.gz"
+
+# Verifica esistenza directory source
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory does not exist: $SOURCE_DIR"
+    exit 1
+fi
+
+# Crea directory backup se non esiste
+mkdir -p "$BACKUP_DIR"
+
+# Esegui backup
+echo "Creating backup..."
+tar czf "${BACKUP_DIR}/${BACKUP_FILE}" "$SOURCE_DIR"
+
+if [ $? -eq 0 ]; then
+    echo "Backup successful: ${BACKUP_DIR}/${BACKUP_FILE}"
+
+    # Mostra dimensione
+    SIZE=$(du -h "${BACKUP_DIR}/${BACKUP_FILE}" | cut -f1)
+    echo "Size: $SIZE"
+else
+    echo "Backup failed!"
+    exit 1
+fi
+
+# Cleanup: mantieni solo ultimi 5 backup
+cd "$BACKUP_DIR"
+ls -t backup_*.tar.gz | tail -n +6 | xargs -r rm
+echo "Old backups cleaned up"
+\end{lstlisting}
+
+\subsection{Esercizio 5.4: System Monitor}
+
+\begin{lstlisting}[style=bash]
+#!/bin/bash
+# Monitor sistema con funzioni
+
+# Funzione: info CPU
+show_cpu() {
+    echo "=== CPU INFO ==="
+    grep "model name" /proc/cpuinfo | head -1
+    echo "CPU Usage:"
+    top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}'
+    echo
+}
+
+# Funzione: info memoria
+show_memory() {
+    echo "=== MEMORY INFO ==="
+    free -h
+    echo
+}
+
+# Funzione: info disco
+show_disk() {
+    echo "=== DISK INFO ==="
+    df -h / | tail -1
+    echo
+}
+
+# Funzione: top processi
+show_top_processes() {
+    echo "=== TOP 5 PROCESSES (CPU) ==="
+    ps aux --sort=-%cpu | head -6
+    echo
+}
+
+# Menu
+while true; do
+    echo "System Monitor"
+    echo "1. CPU Info"
+    echo "2. Memory Info"
+    echo "3. Disk Info"
+    echo "4. Top Processes"
+    echo "5. All Info"
+    echo "6. Exit"
+    read -p "Choice: " CHOICE
+
+    case $CHOICE in
+        1) show_cpu ;;
+        2) show_memory ;;
+        3) show_disk ;;
+        4) show_top_processes ;;
+        5)
+            show_cpu
+            show_memory
+            show_disk
+            show_top_processes
+            ;;
+        6)
+            echo "Goodbye!"
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice"
+            ;;
+    esac
+
+    read -p "Press Enter to continue..."
+    clear
+done
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Scripting Best Practices]
+\begin{enumerate}
+    \item \textbf{Sempre quote le variabili}
+    \begin{lstlisting}[style=bash]
+# MALE
+if [ $VAR = "value" ]; then    # Errore se VAR è vuota
+
+# BENE
+if [ "$VAR" = "value" ]; then  # Sicuro
+    \end{lstlisting}
+
+    \item \textbf{Usa set per debug e sicurezza}
+    \begin{lstlisting}[style=bash]
+#!/bin/bash
+set -euo pipefail
+# -e: exit on error
+# -u: error on undefined variable
+# -o pipefail: error se comando in pipe fallisce
+    \end{lstlisting}
+
+    \item \textbf{Validare input}
+    \begin{lstlisting}[style=bash]
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <arg1> <arg2>" >&2
+    exit 1
+fi
+    \end{lstlisting}
+
+    \item \textbf{Usa funzioni per codice riutilizzabile}
+    \begin{lstlisting}[style=bash]
+error() {
+    echo "ERROR: $1" >&2
+    exit 1
+}
+
+[ -f "$FILE" ] || error "File not found: $FILE"
+    \end{lstlisting}
+
+    \item \textbf{Commenta il codice}
+    \begin{lstlisting}[style=bash]
+# Spiega PERCHÉ, non cosa fa il codice
+# MALE: Loop through files
+# BENE: Process each log file to extract errors
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item \textbf{Script base}: shebang, esecuzione, commenti
+    \item \textbf{Variabili}: definizione, tipi, espansione
+    \item \textbf{I/O}: echo, printf, read, redirezioni
+    \item \textbf{Condizionali}: if-then-else, test conditions, case
+    \item \textbf{Loop}: for, while, until, break, continue
+    \item \textbf{Funzioni}: definizione, parametri, return values
+    \item \textbf{Array}: indicizzati e associativi
+\end{itemize}
+
+Bash scripting è uno strumento potente per automatizzare task e gestire sistemi Linux.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
+Nel Capitolo 6 impareremo il text processing con sed, awk e altri strumenti per manipolare file di testo in modo efficiente.
+\end{tcolorbox}
