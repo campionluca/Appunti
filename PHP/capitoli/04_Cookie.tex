@@ -1,36 +1,82 @@
 \chapter{Cookie e Preferenze}\label{cap:cookie}
 
-\begin{tcolorbox}[title=Mappa del capitolo]
-Obiettivi, Impostazione/Lettura, Sicurezza, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
+\begin{itemize}
+  \item Comprendere cosa sono i cookie e come funzionano nel protocollo HTTP
+  \item Configurare cookie con opzioni di sicurezza adeguate (HttpOnly, Secure, SameSite)
+  \item Leggere, validare e serializzare valori cookie in sicurezza
+  \item Implementare pattern comuni: preferenze utente, remember me, tracking
+  \item Gestire limiti e problemi comuni dei cookie
+  \item Applicare best practices per sicurezza e privacy
+\end{itemize}
 \end{tcolorbox}
 
-\section{Obiettivi di apprendimento}
+\section{Teoria}
+
+\subsection{Cosa sono i cookie}
+I cookie sono \textbf{piccoli file di testo} (max 4KB) salvati nel browser dell'utente e inviati automaticamente dal browser al server in ogni richiesta HTTP che corrisponde a path e domain specificati.
+
+\textbf{Caratteristiche chiave}:
 \begin{itemize}
-  \item Configurare cookie con opzioni di sicurezza adeguate.
-  \item Leggere, validare e serializzare valori cookie in sicurezza.
-  \item Comprendere limiti e uso di SameSite/HttpOnly/Secure.
+  \item \textbf{Persistenza}: Possono durare minuti o anni (o essere cancellati alla chiusura browser)
+  \item \textbf{Storage client-side}: Salvati sul dispositivo utente (non sul server)
+  \item \textbf{Invio automatico}: Browser li invia in ogni richiesta HTTP al dominio corrispondente
+  \item \textbf{Limite dimensione}: Max 4KB per cookie, ~50 cookie per dominio
+  \item \textbf{Visibilità utente}: Utente può visualizzare, modificare, cancellare cookie dal browser
 \end{itemize}
 
-\section{Impostazione e lettura di un cookie}
-Esempio di impostazione di un cookie con flag di sicurezza.
+\subsection{Cookie vs Session vs LocalStorage}
 
-\begin{lstlisting}[language=PHP, caption={Cookie sicuri}]
-<?php
-$valore = json_encode(['tema' => 'scuro']);
-setcookie('preferenze', $valore, [
-  'expires' => time() + 3600*24*30,
-  'path' => '/',
-  'domain' => '',
-  'secure' => true,
-  'httponly' => true,
-  'samesite' => 'Strict',
-]);
+\textbf{Cookie}:
+\begin{itemize}
+  \item Storage: Client (browser)
+  \item Dimensione: Max 4KB
+  \item Invio: Automatico in ogni HTTP request
+  \item Scadenza: Configurabile (sessione o data specifica)
+  \item Accesso JS: Configurabile (HttpOnly flag)
+  \item Uso tipico: Autenticazione, preferenze, tracking
+\end{itemize}
 
-echo htmlspecialchars($_COOKIE['preferenze'] ?? '');
-?>
-\end{lstlisting}
+\textbf{Session} (PHP):
+\begin{itemize}
+  \item Storage: Server (file, database, Redis)
+  \item Dimensione: Illimitata (pratica: MB)
+  \item Invio: Solo session ID via cookie
+  \item Scadenza: Timeout server-side
+  \item Accesso JS: No (dati solo server-side)
+  \item Uso tipico: Dati sensibili, carrello, auth state
+\end{itemize}
 
-\subsection{Ciclo di vita dei Cookie}
+\textbf{LocalStorage/SessionStorage}:
+\begin{itemize}
+  \item Storage: Client (browser)
+  \item Dimensione: 5-10MB
+  \item Invio: Mai (solo client-side)
+  \item Scadenza: Permanente (LocalStorage) o sessione (SessionStorage)
+  \item Accesso JS: Sempre
+  \item Uso tipico: Cache client, app state, offline data
+\end{itemize}
+
+\subsection{Quando usare i cookie}
+\textbf{Usa cookie per}:
+\begin{itemize}
+  \item Session ID (autenticazione)
+  \item Preferenze utente (tema, lingua, layout)
+  \item "Remember me" functionality
+  \item Tracking analytics
+  \item Carrello acquisti (se no autenticazione)
+\end{itemize}
+
+\textbf{NON usare cookie per}:
+\begin{itemize}
+  \item Dati sensibili non cifrati (password, carte credito)
+  \item Dati grandi (> 4KB)
+  \item Dati che non servono al server (usa LocalStorage)
+  \item Token anti-CSRF (usa session, non cookie diretto)
+\end{itemize}
+
+\section{Ciclo di vita dei Cookie}
 
 I cookie seguono un ciclo preciso tra client (browser) e server:
 
@@ -105,6 +151,248 @@ I cookie seguono un ciclo preciso tra client (browser) e server:
 \end{enumerate}
 \end{tcolorbox}
 
+\section{Impostazione cookie}
+
+\subsection{Sintassi base}
+\begin{lstlisting}
+<?php
+// Sintassi moderna (PHP 7.3+, array opzioni)
+setcookie('nome', 'valore', [
+    'expires' => time() + 3600,      // Scadenza (Unix timestamp)
+    'path' => '/',                   // Path (default: /)
+    'domain' => '',                  // Domain (default: dominio corrente)
+    'secure' => true,                // Solo HTTPS
+    'httponly' => true,              // No accesso JavaScript
+    'samesite' => 'Lax'              // CSRF protection (Strict|Lax|None)
+]);
+
+// Sintassi vecchia (PHP < 7.3, parametri posizionali)
+setcookie('nome', 'valore', time() + 3600, '/', '', true, true);
+?>
+\end{lstlisting}
+
+\subsection{Attributi cookie}
+
+\textbf{expires} (Unix timestamp):
+\begin{itemize}
+  \item Se omesso o 0: cookie di sessione (cancellato alla chiusura browser)
+  \item \texttt{time() + 3600}: scade tra 1 ora
+  \item \texttt{time() + 86400}: scade tra 1 giorno
+  \item \texttt{time() + 86400 * 30}: scade tra 30 giorni
+  \item \texttt{time() - 1}: scaduto (cancella cookie)
+\end{itemize}
+
+\textbf{path} (string):
+\begin{itemize}
+  \item \texttt{'/'}: cookie valido per tutto il dominio
+  \item \texttt{'/admin'}: cookie valido solo sotto /admin
+  \item Default: path della pagina corrente
+\end{itemize}
+
+\textbf{domain} (string):
+\begin{itemize}
+  \item \texttt{''}: dominio corrente (default)
+  \item \texttt{'.example.com'}: valido per tutti i sottodomini
+  \item NON può impostare cookie per altri domini (sicurezza browser)
+\end{itemize}
+
+\textbf{secure} (bool):
+\begin{itemize}
+  \item \texttt{true}: cookie trasmesso SOLO su HTTPS
+  \item \texttt{false}: trasmesso anche su HTTP (INSICURO per dati sensibili)
+  \item SEMPRE true per session cookie e dati sensibili
+\end{itemize}
+
+\textbf{httponly} (bool):
+\begin{itemize}
+  \item \texttt{true}: cookie NON accessibile da JavaScript (\texttt{document.cookie})
+  \item \texttt{false}: JavaScript può leggere/scrivere cookie
+  \item SEMPRE true per session cookie (previene XSS cookie theft)
+\end{itemize}
+
+\textbf{samesite} (string):
+\begin{itemize}
+  \item \texttt{'Strict'}: cookie MAI inviato in richieste cross-site (max sicurezza CSRF)
+  \item \texttt{'Lax'}: cookie inviato solo in navigazioni top-level GET (bilanciamento sicurezza/UX)
+  \item \texttt{'None'}: cookie sempre inviato (richiede \texttt{secure = true})
+\end{itemize}
+
+\subsection{Esempi pratici impostazione}
+\begin{lstlisting}
+<?php
+// Cookie di sessione (cancellato alla chiusura browser)
+setcookie('temp_id', uniqid(), [
+    'path' => '/',
+    'httponly' => true,
+    'secure' => true,
+    'samesite' => 'Lax'
+]);
+
+// Cookie persistente (30 giorni)
+setcookie('user_preferences', json_encode(['theme' => 'dark']), [
+    'expires' => time() + 86400 * 30,
+    'path' => '/',
+    'httponly' => false,  // JavaScript può leggere per applicare tema
+    'secure' => true,
+    'samesite' => 'Lax'
+]);
+
+// Session cookie sicuro (autenticazione)
+setcookie('PHPSESSID', session_id(), [
+    'expires' => 0,  // Sessione (cancellato alla chiusura)
+    'path' => '/',
+    'httponly' => true,  // SEMPRE true per session
+    'secure' => true,    // SEMPRE true per session
+    'samesite' => 'Lax'  // O Strict per max sicurezza
+]);
+
+// Cancellazione cookie (expires nel passato)
+setcookie('old_cookie', '', [
+    'expires' => time() - 3600,  // 1 ora fa
+    'path' => '/'
+]);
+?>
+\end{lstlisting}
+
+\section{Lettura cookie}
+
+\subsection{Accesso base}
+\begin{lstlisting}
+<?php
+// Leggi cookie (disponibile in $_COOKIE superglobal)
+$theme = $_COOKIE['theme'] ?? 'light';  // Fallback se non esiste
+
+// Verifica esistenza
+if (isset($_COOKIE['user_id'])) {
+    $userId = (int) $_COOKIE['user_id'];
+    echo "Utente: $userId";
+} else {
+    echo "Utente non riconosciuto";
+}
+
+// Array di tutti i cookie
+print_r($_COOKIE);
+?>
+\end{lstlisting}
+
+\subsection{Validazione e sanitizzazione}
+\begin{lstlisting}
+<?php
+// SEMPRE validare input da cookie (controllato dall'utente!)
+
+// Validazione stringa semplice
+$theme = $_COOKIE['theme'] ?? 'light';
+$allowedThemes = ['light', 'dark', 'auto'];
+if (!in_array($theme, $allowedThemes, true)) {
+    $theme = 'light';  // Fallback sicuro
+}
+
+// Validazione numero
+$userId = isset($_COOKIE['user_id']) ? (int) $_COOKIE['user_id'] : 0;
+if ($userId <= 0) {
+    $userId = null;  // Invalido
+}
+
+// Validazione pattern (regex)
+$lang = $_COOKIE['lang'] ?? 'en';
+if (!preg_match('/^[a-z]{2}$/', $lang)) {
+    $lang = 'en';  // Fallback se formato errato
+}
+
+// Output sanitizzazione (SEMPRE htmlspecialchars per output HTML)
+echo htmlspecialchars($_COOKIE['username'] ?? 'Guest', ENT_QUOTES, 'UTF-8');
+?>
+\end{lstlisting}
+
+\subsection{Deserializzazione JSON}
+\begin{lstlisting}
+<?php
+// Cookie con dati strutturati (JSON)
+$defaultPrefs = ['theme' => 'light', 'lang' => 'en', 'notifications' => true];
+
+if (isset($_COOKIE['preferences'])) {
+    $prefs = json_decode($_COOKIE['preferences'], true);
+
+    // Valida JSON e struttura
+    if (json_last_error() === JSON_ERROR_NONE && is_array($prefs)) {
+        // Merge con default (previene chiavi mancanti)
+        $prefs = array_merge($defaultPrefs, $prefs);
+
+        // Valida ogni campo
+        if (!in_array($prefs['theme'], ['light', 'dark'], true)) {
+            $prefs['theme'] = 'light';
+        }
+        if (!preg_match('/^[a-z]{2}$/', $prefs['lang'])) {
+            $prefs['lang'] = 'en';
+        }
+    } else {
+        $prefs = $defaultPrefs;  // JSON corrotto
+    }
+} else {
+    $prefs = $defaultPrefs;  // Cookie non esiste
+}
+
+echo "Tema: " . htmlspecialchars($prefs['theme']);
+?>
+\end{lstlisting}
+
+\section{Sicurezza cookie}
+
+\subsection{Minacce principali}
+
+\textbf{XSS (Cross-Site Scripting)}:
+\begin{itemize}
+  \item Attaccante inietta JavaScript che legge \texttt{document.cookie}
+  \item Ruba session cookie e impersona utente
+  \item \textbf{Difesa}: \texttt{httponly = true} (cookie non accessibile a JS)
+\end{itemize}
+
+\textbf{CSRF (Cross-Site Request Forgery)}:
+\begin{itemize}
+  \item Sito malevolo invia richieste al tuo sito con cookie utente
+  \item Browser invia automaticamente cookie anche in richieste cross-site
+  \item \textbf{Difesa}: \texttt{samesite = 'Lax'} o \texttt{'Strict'}
+\end{itemize}
+
+\textbf{Man-in-the-Middle (MITM)}:
+\begin{itemize}
+  \item Attaccante intercetta traffico HTTP non cifrato
+  \item Legge o modifica cookie in transito
+  \item \textbf{Difesa}: \texttt{secure = true} (solo HTTPS)
+\end{itemize}
+
+\textbf{Session Fixation}:
+\begin{itemize}
+  \item Attaccante imposta session ID noto all'utente
+  \item Utente si autentica con quel session ID
+  \item Attaccante accede con stesso session ID
+  \item \textbf{Difesa}: Rigenera session ID dopo login (\texttt{session\_regenerate\_id()})
+\end{itemize}
+
+\subsection{Cookie sicuri per autenticazione}
+\begin{lstlisting}
+<?php
+// SEMPRE usare questo pattern per session cookie
+session_set_cookie_params([
+    'lifetime' => 0,              // Sessione (chiusura browser)
+    'path' => '/',
+    'domain' => '',
+    'secure' => true,             // SOLO HTTPS
+    'httponly' => true,           // NO JavaScript
+    'samesite' => 'Lax'           // CSRF protection
+]);
+
+session_start();
+
+// Dopo login, rigenera session ID (previene session fixation)
+if ($loginSuccess) {
+    session_regenerate_id(true);  // true = cancella vecchia sessione
+    $_SESSION['user_id'] = $userId;
+    $_SESSION['authenticated'] = true;
+}
+?>
+\end{lstlisting}
+
 \begin{attenzione}
 I cookie sono \textbf{sempre inviati automaticamente} dal browser per ogni richiesta al dominio corrispondente. Questo rende necessari i flag di sicurezza:
 \begin{itemize}
@@ -114,75 +402,273 @@ I cookie sono \textbf{sempre inviati automaticamente} dal browser per ogni richi
 \end{itemize}
 \end{attenzione}
 
-\subsection{Analisi tecnica dei cookie sicuri}
-\begin{itemize}
-\item \textbf{Funzione e scopo}: Implementazione di cookie sicuri con protezioni complete contro attacchi XSS e session hijacking, utilizzando le opzioni di sicurezza disponibili in PHP.
+\section{Pattern comuni}
 
-\item \textbf{Componenti principali}:
+\subsection{Remember Me}
+\begin{lstlisting}
+<?php
+// Login con "remember me"
+if ($loginSuccess && $_POST['remember_me']) {
+    // Genera token sicuro
+    $selector = bin2hex(random_bytes(16));
+    $validator = bin2hex(random_bytes(32));
+
+    // Hash validator prima di salvare in DB
+    $hashedValidator = hash('sha256', $validator);
+
+    // Salva in database
+    $db->query(
+        "INSERT INTO remember_tokens (user_id, selector, hashed_validator, expires)
+         VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 30 DAY))",
+        [$userId, $selector, $hashedValidator]
+    );
+
+    // Imposta cookie con selector:validator
+    setcookie('remember', $selector . ':' . $validator, [
+        'expires' => time() + 86400 * 30,
+        'path' => '/',
+        'httponly' => true,
+        'secure' => true,
+        'samesite' => 'Lax'
+    ]);
+}
+
+// Verifica remember token
+if (!isset($_SESSION['user_id']) && isset($_COOKIE['remember'])) {
+    [$selector, $validator] = explode(':', $_COOKIE['remember'], 2);
+
+    $token = $db->query(
+        "SELECT user_id, hashed_validator FROM remember_tokens
+         WHERE selector = ? AND expires > NOW()",
+        [$selector]
+    )->fetch();
+
+    if ($token && hash_equals($token['hashed_validator'], hash('sha256', $validator))) {
+        // Token valido: autentica utente
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $token['user_id'];
+    } else {
+        // Token invalido: cancella cookie
+        setcookie('remember', '', ['expires' => time() - 3600, 'path' => '/']);
+    }
+}
+?>
+\end{lstlisting}
+
+\subsection{Preferenze utente}
+\begin{lstlisting}
+<?php
+// Salva preferenze (tema, lingua, layout)
+class UserPreferences {
+    private array $defaults = [
+        'theme' => 'light',
+        'lang' => 'en',
+        'layout' => 'grid',
+        'notifications' => true
+    ];
+
+    public function get(): array {
+        if (!isset($_COOKIE['prefs'])) {
+            return $this->defaults;
+        }
+
+        $prefs = json_decode($_COOKIE['prefs'], true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($prefs)) {
+            return $this->defaults;
+        }
+
+        // Merge con default e valida
+        $prefs = array_merge($this->defaults, $prefs);
+        $prefs['theme'] = in_array($prefs['theme'], ['light', 'dark'], true)
+            ? $prefs['theme'] : 'light';
+        $prefs['lang'] = preg_match('/^[a-z]{2}$/', $prefs['lang'])
+            ? $prefs['lang'] : 'en';
+        $prefs['layout'] = in_array($prefs['layout'], ['grid', 'list'], true)
+            ? $prefs['layout'] : 'grid';
+
+        return $prefs;
+    }
+
+    public function set(array $prefs): bool {
+        $prefs = array_merge($this->defaults, $prefs);
+        $json = json_encode($prefs);
+
+        return setcookie('prefs', $json, [
+            'expires' => time() + 86400 * 365,  // 1 anno
+            'path' => '/',
+            'httponly' => false,  // JavaScript può leggere per applicare tema
+            'secure' => true,
+            'samesite' => 'Lax'
+        ]);
+    }
+}
+
+// Uso
+$prefs = new UserPreferences();
+$currentPrefs = $prefs->get();
+echo "Tema: " . htmlspecialchars($currentPrefs['theme']);
+
+// Update
+$prefs->set(['theme' => 'dark', 'lang' => 'it']);
+?>
+\end{lstlisting}
+
+\subsection{Cookie cifrati (dati sensibili)}
+\begin{lstlisting}
+<?php
+// Cifratura cookie con OpenSSL (per dati sensibili)
+class EncryptedCookie {
+    private string $key;
+
+    public function __construct() {
+        // Chiave segreta (32 byte per AES-256)
+        $this->key = hex2bin(getenv('COOKIE_ENCRYPTION_KEY'));
+    }
+
+    public function set(string $name, string $value, array $options = []): bool {
+        $encrypted = $this->encrypt($value);
+        return setcookie($name, $encrypted, $options);
+    }
+
+    public function get(string $name): ?string {
+        if (!isset($_COOKIE[$name])) {
+            return null;
+        }
+
+        return $this->decrypt($_COOKIE[$name]);
+    }
+
+    private function encrypt(string $plaintext): string {
+        $iv = random_bytes(16);  // IV casuale
+        $ciphertext = openssl_encrypt($plaintext, 'aes-256-cbc', $this->key, 0, $iv);
+        return base64_encode($iv . $ciphertext);
+    }
+
+    private function decrypt(string $encrypted): ?string {
+        $data = base64_decode($encrypted);
+        $iv = substr($data, 0, 16);
+        $ciphertext = substr($data, 16);
+
+        $plaintext = openssl_decrypt($ciphertext, 'aes-256-cbc', $this->key, 0, $iv);
+        return $plaintext !== false ? $plaintext : null;
+    }
+}
+
+// Uso
+$cookie = new EncryptedCookie();
+$cookie->set('sensitive_data', 'secret value', [
+    'expires' => time() + 3600,
+    'httponly' => true,
+    'secure' => true,
+    'samesite' => 'Lax'
+]);
+
+$value = $cookie->get('sensitive_data');
+?>
+\end{lstlisting}
+
+\section{Troubleshooting}
+
+\textbf{Problema}: Warning "Cannot modify header information - headers already sent"
 \begin{itemize}
-\item \texttt{json\_encode(['tema' => 'scuro'])}: Serializzazione dati strutturati per storage
-\item \texttt{setcookie()} con array opzioni: Configurazione completa sicurezza
-\item \texttt{expires}: Scadenza 30 giorni per cookie persistente
-\item \texttt{path = '/'}: Accessibile in tutto il dominio
-\item \texttt{secure = true}: Trasmissione solo HTTPS
-\item \texttt{httponly = true}: Blocco accesso JavaScript
-\item \texttt{samesite = 'Strict'}: Limitazione invii cross-site dei cookie
-\item \texttt{htmlspecialchars(\$\_COOKIE[...] ?? '')}: Sanitizzazione output
+  \item \texttt{setcookie()} deve essere chiamato PRIMA di qualsiasi output (HTML, echo, whitespace)
+  \item Verifica che non ci sia output prima di \texttt{<?php}
+  \item Usa \texttt{ob\_start()} all'inizio dello script se necessario
 \end{itemize}
 
-\section{Caso di studio: preferenze tema e lingua}
-Gestione di preferenze non sensibili (tema/lingua) tramite cookie JSON con opzioni \verb|httponly|, \verb|secure| e \verb|samesite| appropriate; validazione e fallback lato server in caso di valori assenti o corrotti.
+\textbf{Problema}: Cookie non viene impostato
+\begin{itemize}
+  \item Verifica che non ci sia output prima di \texttt{setcookie()}
+  \item Controlla che \texttt{expires} non sia nel passato
+  \item Se \texttt{secure = true}, verifica che sito sia HTTPS
+  \item Verifica che \texttt{path} e \texttt{domain} corrispondano
+\end{itemize}
+
+\textbf{Problema}: Cookie viene cancellato subito
+\begin{itemize}
+  \item Browser in modalità privata cancella cookie alla chiusura
+  \item Utente ha bloccato cookie nelle impostazioni
+  \item \texttt{expires = 0} crea session cookie (cancellato alla chiusura)
+\end{itemize}
+
+\textbf{Problema}: Cookie non viene inviato in richieste cross-site
+\begin{itemize}
+  \item \texttt{samesite = 'Strict'} blocca invio cross-site
+  \item Usa \texttt{'Lax'} per permettere navigazioni GET
+  \item Usa \texttt{'None'} solo se necessario (richiede \texttt{secure = true})
+\end{itemize}
+
+\begin{tcolorbox}[title=Best practices]
+\begin{itemize}
+  \item SEMPRE \texttt{httponly = true} e \texttt{secure = true} per session cookie
+  \item Usa \texttt{samesite = 'Lax'} come default (bilanciamento sicurezza/UX)
+  \item Valida e sanitizza TUTTI i valori cookie (controllati dall'utente)
+  \item Limita dimensione cookie (max 4KB, idealmente < 1KB)
+  \item Non salvare dati sensibili in cookie (o cifra con OpenSSL)
+  \item Imposta \texttt{expires} esplicito (non fare affidamento su default)
+  \item Usa JSON per dati strutturati (con validazione)
+  \item Rigenera session ID dopo login (\texttt{session\_regenerate\_id()})
+  \item Usa HTTPS in produzione (necessario per \texttt{secure = true})
+  \item Informa utenti su uso cookie (GDPR compliance)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+\begin{itemize}
+  \item Output HTML prima di \texttt{setcookie()} (headers already sent)
+  \item \texttt{httponly = false} per session cookie (vulnerabile a XSS)
+  \item \texttt{secure = false} in produzione (vulnerabile a MITM)
+  \item Non validare valori cookie (XSS, injection)
+  \item Salvare password o token in chiaro in cookie
+  \item Dimenticare \texttt{htmlspecialchars()} quando output cookie
+  \item Usare \texttt{samesite = 'None'} senza motivo (espone a CSRF)
+  \item Non impostare \texttt{path} (cookie accessibile solo da directory corrente)
+  \item Cookie > 4KB (troncato o rifiutato dal browser)
+  \item Non gestire caso "cookie non esiste" (causa Notice/Warning)
+\end{itemize}
+\end{tcolorbox}
 
 \section{Esercizi}
+
+\subsection{Livello base}
 \begin{itemize}
-  \item Estendi l'esempio per includere la lingua preferita e valida i valori ammessi.
-  \item Implementa una pagina che mostri le preferenze correnti con output opportunamente sanificato.
+  \item Implementa sistema preferenze tema (light/dark) con cookie persistente 30 giorni
+  \item Crea contatore visite con cookie, mostra "Prima visita" o "Visita \#N"
+  \item Salva lingua preferita (it, en, es) in cookie e applica a interfaccia
+\end{itemize}
+
+\subsection{Livello intermedio}
+\begin{itemize}
+  \item Implementa "Remember me" con token selector/validator salvato in database
+  \item Crea sistema preferenze completo (tema, lingua, layout, notifiche) con JSON
+  \item Implementa cookie consent banner con preferenze (analytics, marketing, necessari)
+\end{itemize}
+
+\subsection{Livello avanzato}
+\begin{itemize}
+  \item Implementa cookie cifrati con OpenSSL per salvare dati sensibili
+  \item Crea sistema A/B testing con cookie che assegna variante (A o B) persistentemente
+  \item Implementa cookie-based shopping cart con validazione quantità e prodotti
 \end{itemize}
 
 \section{Verifica}
+
 \begin{itemize}
+  \item Qual è la dimensione massima di un cookie?
   \item Quali flag sono indispensabili per cookie di autenticazione?
-  \item Quando \verb|SameSite=Strict| può causare problemi e quale alternativa usare?
+  \item Quando \texttt{SameSite=Strict} può causare problemi e quale alternativa usare?
+  \item Differenza tra cookie di sessione e cookie persistente?
+  \item Perché \texttt{httponly = true} è importante per session cookie?
+  \item Come prevenire session fixation attack?
+  \item Cosa succede se chiami \texttt{setcookie()} dopo output HTML?
+  \item Quando usare cookie vs session vs LocalStorage?
 \end{itemize}
 
 \section{Riferimenti}
 \begin{itemize}
-  \item RFC 6265 — HTTP State Management Mechanism
-  \item OWASP — Session Management
-\end{itemize}
-
-\item \textbf{Esempi pratici}: Questo pattern si applica in:
-\begin{itemize}
-\item Preferenze utente (tema, lingua, layout)
-\item Token di autenticazione sicuri
-\parametri di configurazione personalizzati
-\item Carrelli acquisto e sessioni utente
-\end{itemize}
-
-\item \textbf{Varianti e alternative}:
-\begin{itemize}
-\item \texttt{setrawcookie()} per valori non URL-encoded
-\item \texttt{session\_set\_cookie\_params()} per configurazione globale
-\item Cookie cifrati con OpenSSL per dati sensibili
-\item LocalStorage/SessionStorage per dati client-side
-\item HttpOnly session cookies per autenticazione
-\end{itemize}
-
-\item \textbf{Best practices e insidie}:
-\begin{itemize}
-\item \textbf{Best practice}: Sempre \texttt{httponly} e \texttt{secure} per dati sensibili
-\item \textbf{Insidia}: Cookie impostati dopo output HTML causano errori headers
-\item \textbf{Sicurezza}: Validare e sanitizzare tutti i valori cookie
-\item \textbf{Performance}: Limitare dimensione cookie (max 4KB)
-\item \textbf{Compatibilità}: \texttt{samesite} supportato da Chrome/Firefox/Safari
-\end{itemize}
-
-\item \textbf{Riferimenti teorici}:
-\begin{itemize}
-\item \textbf{HTTP Cookies}: Standard RFC 6265 per gestione cookie
-\item \textbf{SameSite Cookies}: Limitazione condivisione cross-site dei cookie
-\item \textbf{Content Security Policy}: Difesa avanzata XSS
-\item \textbf{JSON Serialization}: Formato dati strutturati per storage
-\item \textbf{Secure Flag}: Enforcement HTTPS per trasmissione sicura
-\end{itemize}
+  \item RFC 6265 — HTTP State Management Mechanism: \url{https://tools.ietf.org/html/rfc6265}
+  \item OWASP — Session Management: \url{https://owasp.org/www-project-web-security-testing-guide/}
+  \item PHP setcookie() documentation: \url{https://www.php.net/manual/en/function.setcookie.php}
+  \item SameSite Cookies Explained: \url{https://web.dev/samesite-cookies-explained/}
 \end{itemize}
