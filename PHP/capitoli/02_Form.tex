@@ -456,6 +456,45 @@ Il pattern PRG evita il ri-submit del form premendo F5:
     \item Browser richiede pagina successo (GET)
 \end{enumerate}
 
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2.5cm,
+    box/.style={rectangle, draw, fill=blue!20, text width=3cm, align=center, minimum height=1cm},
+    action/.style={rectangle, draw, fill=green!20, text width=3cm, align=center, minimum height=0.8cm}
+]
+    % Nodi
+    \node[box] (browser1) {Browser};
+    \node[action, right=of browser1] (post) {1. POST form\\(submit)};
+    \node[action, right=of post] (server) {2. Server\\processa};
+    \node[action, below=of server] (redirect) {3. HTTP 303\\Redirect};
+    \node[action, left=of redirect] (get) {4. GET\\nuova pagina};
+    \node[box, left=of get] (browser2) {Browser};
+
+    % Frecce
+    \draw[->, thick, blue] (browser1) -- (post);
+    \draw[->, thick, blue] (post) -- (server);
+    \draw[->, thick, red] (server) -- (redirect);
+    \draw[->, thick, red] (redirect) -- (get);
+    \draw[->, thick, green!60!black] (get) -- (browser2);
+
+    % Etichette
+    \node[below=0.3cm of browser1, font=\small] {Stato iniziale};
+    \node[below=0.3cm of browser2, font=\small] {Stato finale};
+
+    % Problema risolto
+    \node[draw, fill=yellow!30, text width=4cm, align=center, below=1cm of get, font=\small]
+        {F5 = GET ripetuto\\(safe, no re-submit)};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Vantaggi PRG}:
+\begin{itemize}
+    \item F5/Refresh esegue GET (sicuro), non POST
+    \item Bookmark funziona (pagina di successo, non form)
+    \item Back button non causa warning "Reinviare dati?"
+    \item Migliore UX e prevenzione duplicazioni
+\end{itemize}
+
 \subsection{Implementazione PRG}
 
 \begin{lstlisting}[language=PHP]

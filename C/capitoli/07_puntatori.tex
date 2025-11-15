@@ -36,6 +36,80 @@ I puntatori sono potenti ma possono causare errori gravi se usati incorrettament
 
 \section{Concetti Fondamentali}
 
+\subsection{Organizzazione della Memoria}
+
+Ogni programma C utilizza diverse aree di memoria, ognuna con uno scopo specifico. Comprendere questa organizzazione è fondamentale per lavorare con i puntatori.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Definisci gli stili
+    \tikzstyle{segment}=[rectangle, draw=black, thick, minimum width=6cm, align=center]
+
+    % Disegna i segmenti dal basso verso l'alto
+    % Text Segment
+    \node[segment, fill=blue!20, minimum height=1.5cm] (text) at (0,0) {
+        \textbf{Text Segment (Code)}\\
+        \footnotesize Codice eseguibile (read-only)
+    };
+
+    % Data Segment
+    \node[segment, fill=green!20, minimum height=1.2cm, above=0 of text] (data) {
+        \textbf{Data Segment}\\
+        \footnotesize Variabili globali/statiche inizializzate
+    };
+
+    % BSS Segment
+    \node[segment, fill=yellow!30, minimum height=1.2cm, above=0 of data] (bss) {
+        \textbf{BSS Segment}\\
+        \footnotesize Variabili globali/statiche non inizializzate
+    };
+
+    % Heap
+    \node[segment, fill=orange!20, minimum height=2cm, above=0 of bss] (heap) {
+        \textbf{Heap}\\
+        \footnotesize Allocazione dinamica (malloc, calloc, realloc)\\
+        \footnotesize \textcolor{red}{$\downarrow$ Cresce verso l'alto}
+    };
+
+    % Spazio vuoto
+    \node[minimum height=0.8cm, above=0 of heap] (space) {
+        \footnotesize \textcolor{gray}{Spazio libero}
+    };
+
+    % Stack
+    \node[segment, fill=purple!20, minimum height=2cm, above=0 of space] (stack) {
+        \textbf{Stack}\\
+        \footnotesize Variabili locali, parametri funzioni, indirizzi di ritorno\\
+        \footnotesize \textcolor{red}{$\uparrow$ Cresce verso il basso}
+    };
+
+    % Etichette laterali con indirizzi
+    \node[left=0.3cm of text, font=\footnotesize] {Indirizzi bassi};
+    \node[left=0.3cm of stack, font=\footnotesize] {Indirizzi alti};
+
+    % Frecce per indicare la crescita
+    \draw[->, thick, red!70] ($(heap.north) + (-2,0)$) -- ($(heap.north) + (-2,0.3)$);
+    \draw[->, thick, red!70] ($(stack.south) + (2,0)$) -- ($(stack.south) + (2,-0.3)$);
+\end{tikzpicture}
+\end{center}
+
+\begin{description}
+    \item[Text Segment:] Contiene il codice eseguibile del programma (istruzioni macchina). Area read-only.
+    \item[Data Segment:] Contiene variabili globali e statiche inizializzate esplicitamente nel codice.
+    \item[BSS Segment:] Contiene variabili globali e statiche non inizializzate (inizializzate a zero automaticamente).
+    \item[Heap:] Area di memoria per allocazione dinamica (malloc, calloc). Cresce verso indirizzi più alti.
+    \item[Stack:] Contiene variabili locali, parametri delle funzioni e indirizzi di ritorno. Cresce verso indirizzi più bassi.
+\end{description}
+
+\begin{nota}
+I puntatori possono referenziare memoria in qualsiasi segmento, ma è importante comprendere il ciclo di vita della memoria:
+\begin{itemize}
+    \item \textbf{Stack}: memoria automatica (allocata/deallocata automaticamente)
+    \item \textbf{Heap}: memoria dinamica (richiede malloc/free espliciti)
+    \item \textbf{Data/BSS}: memoria statica (esiste per tutta la durata del programma)
+\end{itemize}
+\end{nota}
+
 \subsection{Indirizzi di Memoria}
 
 Ogni variabile è memorizzata in una specifica posizione di memoria, identificata da un indirizzo.
