@@ -43,6 +43,103 @@ Un form HTML è definito dal tag \texttt{<form>} con attributi che controllano i
 
 \section{Metodi HTTP: GET vs POST}
 
+\subsection{Ciclo Request/Response HTTP}
+
+Prima di approfondire GET e POST, è fondamentale comprendere il ciclo completo di una richiesta HTTP:
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    box/.style={rectangle, draw, thick, minimum width=3.5cm, minimum height=1cm, align=center, font=\small},
+    client/.style={box, fill=blue!20},
+    server/.style={box, fill=orange!20},
+    process/.style={box, fill=green!15},
+    data/.style={box, fill=yellow!20, font=\footnotesize},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Client side
+    \node[client] (browser) at (0,6) {\textbf{Browser}\\(Client)};
+    \node[data] (form) at (0,4.5) {Form HTML\\<form method="POST">};
+
+    \draw[arrow, dashed] (browser) -- (form);
+
+    % HTTP Request
+    \node[above, font=\small\bfseries] at (3.5,3.8) {1. HTTP Request};
+    \node[process] (request) at (3.5,3) {POST /login.php\\HTTP/1.1};
+    \node[data, text width=3cm] (reqdata) at (3.5,1.5) {Headers:\\Content-Type: ...\\\\Body:\\username=mario\\password=***};
+
+    \draw[arrow, blue, very thick] (form) -- (request);
+    \draw[arrow, dashed] (request) -- (reqdata);
+
+    % Server side
+    \node[server] (webserver) at (7,6) {\textbf{Web Server}\\(Apache/Nginx)};
+    \node[process] (php) at (7,4) {\textbf{PHP Script}\\login.php};
+    \node[data, text width=3cm] (phpdata) at (7,2.5) {\$\_POST['username']\\Validazione\\Query DB\\Crea sessione};
+
+    \draw[arrow, blue, very thick] (request) |- (webserver);
+    \draw[arrow] (webserver) -- node[right, font=\footnotesize] {Esegue} (php);
+    \draw[arrow, dashed] (php) -- (phpdata);
+
+    % HTTP Response
+    \node[above, font=\small\bfseries] at (3.5,-0.5) {2. HTTP Response};
+    \node[process] (response) at (3.5,-1.3) {HTTP/1.1 200 OK\\(oppure 302 Redirect)};
+    \node[data, text width=3cm] (resdata) at (3.5,-2.8) {Headers:\\Content-Type: text/html\\Set-Cookie: ...\\\\Body: HTML};
+
+    \draw[arrow, red, very thick] (php) |- (response);
+    \draw[arrow, dashed] (response) -- (resdata);
+
+    % Browser rendering
+    \node[client] (render) at (0,0) {\textbf{Browser}\\Rendering};
+    \node[data] (html) at (0,-1.5) {HTML renderizzato\\Dashboard utente};
+
+    \draw[arrow, red, very thick] (response) -- (render);
+    \draw[arrow, dashed] (render) -- (html);
+
+    % Ciclo completo
+    \draw[arrow, gray, thick, dashed] (html) to[bend right=60] node[left, font=\tiny, text width=1.5cm, align=center] {Nuova interazione\\utente} (form);
+
+    % Legenda
+    \node[below, font=\footnotesize, align=left] at (3.5,-4) {
+        \textcolor{blue}{$\rightarrow$ Request (Browser→Server)} \quad
+        \textcolor{red}{$\rightarrow$ Response (Server→Browser)}
+    };
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Fasi del ciclo HTTP]
+\begin{enumerate}
+    \item \textbf{User Action}: Utente compila form e clicca submit
+    \item \textbf{HTTP Request}: Browser invia richiesta al server (GET o POST)
+        \begin{itemize}
+            \item \textbf{GET}: Dati in query string (\texttt{?username=mario})
+            \item \textbf{POST}: Dati nel body della richiesta
+        \end{itemize}
+    \item \textbf{Server Processing}: Web server esegue script PHP
+        \begin{itemize}
+            \item Legge dati da \texttt{\$\_GET} o \texttt{\$\_POST}
+            \item Valida input
+            \item Esegue logica (query DB, business logic)
+            \item Genera risposta (HTML, JSON, redirect)
+        \end{itemize}
+    \item \textbf{HTTP Response}: Server invia risposta al browser
+        \begin{itemize}
+            \item Status code (200 OK, 302 Redirect, 404 Not Found, etc.)
+            \item Headers (Content-Type, Set-Cookie, Location)
+            \item Body (HTML, JSON, XML)
+        \end{itemize}
+    \item \textbf{Browser Rendering}: Browser interpreta risposta e la mostra
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{attenzione}
+Ogni richiesta HTTP è \textbf{stateless} (senza stato): il server non "ricorda" richieste precedenti. Per mantenere stato tra richieste si usano:
+\begin{itemize}
+    \item \textbf{Cookie}: Piccoli dati salvati nel browser
+    \item \textbf{Session}: Dati salvati sul server, identificati da session cookie
+    \item \textbf{Database}: Dati permanenti (utenti, carrelli, ordini)
+\end{itemize}
+\end{attenzione}
+
 \subsection{GET Method}
 
 Invia dati tramite query string nell'URL:
