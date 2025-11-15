@@ -1,111 +1,538 @@
 % Modulo 11 — GUI con Tkinter
 \chapter{GUI con Tkinter}
 
-\section{Introduzione}
-Creare interfacce grafiche desktop con Tkinter: finestre, widget e eventi.
-
-Questa descrizione spiega il ciclo di eventi, l'uso dei widget principali e come strutturare piccole applicazioni desktop rapidamente. Evidenziamo pratiche di layout e separazione tra logica e interfaccia.
-
-Tkinter è ideale per utility locali, strumenti didattici e prototipi che richiedono input/feedback immediati.
-
-\section{Obiettivi di Apprendimento}
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
 \begin{itemize}
-  \item Creare una finestra e aggiungere widget.
-  \item Gestire eventi e callback.
-  \item Organizzare layout con \texttt{pack}/\texttt{grid}.
+  \item Creare finestre e dialog con Tkinter
+  \item Usare widgets base (Label, Button, Entry, Text)
+  \item Gestire layout con pack, grid, place
+  \item Implementare eventi e callbacks
+  \item Usare widgets avanzati (Combobox, Scale, Progressbar)
+  \item Creare menu e dialogs
+  \item Usare Canvas per grafica
+  \item Threading per operazioni lunghe
+  \item Applicare pattern MVC per GUI
+\end{itemize}
+\end{tcolorbox}
+
+\section{Teoria}
+
+Tkinter è la libreria GUI standard di Python (inclusa). Basata su Tk/Tcl, è:
+\begin{itemize}
+  \item \textbf{Cross-platform}: Windows, macOS, Linux
+  \item \textbf{Lightweight}: Nessuna dipendenza esterna
+  \item \textbf{Event-driven}: Main loop gestisce eventi
+  \item \textbf{Semplice}: Ideale per tool, prototipi, utility
 \end{itemize}
 
-\section{Concetti Fondamentali}
-\begin{tcolorbox}[title=Event loop e layout]
-- Il loop di eventi gestisce input e aggiornamenti UI.
-- Scegli tra \texttt{pack}, \texttt{grid} e \texttt{place} consapevolmente.
-- Evita blocchi: delega lavoro pesante a thread/processi.
-- Separa logica dall'interfaccia (controller vs view).
-\end{tcolorbox}
+\textbf{Limitazioni}:
+\begin{itemize}
+  \item Look nativo solo con ttk (themed widgets)
+  \item Meno widgets/features vs PyQt/wxPython
+  \item Performance limitata con molti widgets
+\end{itemize}
 
-\section{Esempi Pratici}
-\subsection{Finestra base}
+\section{Finestra Base}
+
 \begin{lstlisting}
 import tkinter as tk
+
+# Crea finestra principale
 root = tk.Tk()
-root.title("Hello")
-tk.Label(root, text="Ciao!").pack()
+root.title("My Application")
+root.geometry("400x300")  # Width x Height
+
+# Aggiungi widget
+label = tk.Label(root, text="Hello, Tkinter!")
+label.pack()
+
+# Start event loop
 root.mainloop()
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{Tk()} crea la finestra principale; \texttt{mainloop()} avvia il ciclo eventi.
-- I widget (\texttt{Label}, \texttt{Button}, ecc.) si posizionano con gestori di geometria.
-- Tenere la logica separata (controller) per testabilità e manutenzione.
-\end{tcolorbox}
+\section{Widgets Base}
 
-\subsection{Button e callback}
+\subsection{Label}
+
 \begin{lstlisting}
 import tkinter as tk
+
+root = tk.Tk()
+
+# Label con testo
+label1 = tk.Label(root, text="Simple Label")
+label1.pack()
+
+# Label con styling
+label2 = tk.Label(
+    root,
+    text="Styled Label",
+    font=("Arial", 16, "bold"),
+    fg="blue",
+    bg="yellow"
+)
+label2.pack()
+
+# Label con variabile dinamica
+text_var = tk.StringVar()
+text_var.set("Dynamic Text")
+
+label3 = tk.Label(root, textvariable=text_var)
+label3.pack()
+
+# Update text
+text_var.set("Updated Text!")
+
+root.mainloop()
+\end{lstlisting}
+
+\subsection{Button}
+
+\begin{lstlisting}
+import tkinter as tk
+
 def on_click():
-    print("Clicked")
+    print("Button clicked!")
+    label.config(text="Button was clicked")
+
 root = tk.Tk()
-tk.Button(root, text="Click", command=on_click).pack()
+
+label = tk.Label(root, text="Click the button")
+label.pack()
+
+button = tk.Button(
+    root,
+    text="Click Me",
+    command=on_click,
+    bg="green",
+    fg="white",
+    font=("Arial", 12)
+)
+button.pack()
+
 root.mainloop()
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- Le callback legano eventi UI a funzioni/metodi; evitare lavoro pesante nel thread GUI.
-- Per attività lunghe, usare thread/processi e comunicare lo stato alla UI.
-- Validare input e gestire errori senza bloccare l'interfaccia.
-\end{tcolorbox}
+\subsection{Entry (Text Input)}
 
-\subsection{Layout grid}
 \begin{lstlisting}
 import tkinter as tk
+
+def submit():
+    text = entry.get()
+    print(f"Input: {text}")
+    result_label.config(text=f"You entered: {text}")
+    entry.delete(0, tk.END)  # Clear
+
 root = tk.Tk()
-tk.Label(root, text="Nome").grid(row=0, column=0)
-tk.Entry(root).grid(row=0, column=1)
+
+entry = tk.Entry(root, width=30)
+entry.pack()
+
+button = tk.Button(root, text="Submit", command=submit)
+button.pack()
+
+result_label = tk.Label(root, text="")
+result_label.pack()
+
 root.mainloop()
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{grid} posiziona i widget in righe/colonne; utile per form.
-- Non mescolare \texttt{pack} e \texttt{grid} nello stesso container.
-- Pianificare layout responsivi e gestione del focus per UX migliore.
+\subsection{Text (Multi-line)}
+
+\begin{lstlisting}
+import tkinter as tk
+
+root = tk.Tk()
+
+text = tk.Text(root, height=10, width=40)
+text.pack()
+
+# Insert text
+text.insert(tk.END, "Line 1\n")
+text.insert(tk.END, "Line 2\n")
+
+# Get text
+def get_text():
+    content = text.get("1.0", tk.END)  # From start to end
+    print(content)
+
+tk.Button(root, text="Get Text", command=get_text).pack()
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Layout Managers}
+
+\subsection{Pack}
+
+\begin{lstlisting}
+import tkinter as tk
+
+root = tk.Tk()
+
+# Stack vertically (default)
+tk.Label(root, text="Top").pack()
+tk.Label(root, text="Middle").pack()
+tk.Label(root, text="Bottom").pack()
+
+# Side by side
+tk.Label(root, text="Left").pack(side=tk.LEFT)
+tk.Label(root, text="Right").pack(side=tk.RIGHT)
+
+# With padding
+tk.Label(root, text="Padded").pack(padx=20, pady=10)
+
+root.mainloop()
+\end{lstlisting}
+
+\subsection{Grid}
+
+\begin{lstlisting}
+import tkinter as tk
+
+root = tk.Tk()
+
+# Grid layout (row, column)
+tk.Label(root, text="Name:").grid(row=0, column=0, sticky=tk.W)
+tk.Entry(root).grid(row=0, column=1)
+
+tk.Label(root, text="Email:").grid(row=1, column=0, sticky=tk.W)
+tk.Entry(root).grid(row=1, column=1)
+
+tk.Label(root, text="Password:").grid(row=2, column=0, sticky=tk.W)
+tk.Entry(root, show="*").grid(row=2, column=1)
+
+tk.Button(root, text="Submit").grid(row=3, column=0, columnspan=2)
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Eventi e Bindings}
+
+\begin{lstlisting}
+import tkinter as tk
+
+def on_key(event):
+    print(f"Key pressed: {event.char}")
+
+def on_mouse_click(event):
+    print(f"Mouse clicked at ({event.x}, {event.y})")
+
+root = tk.Tk()
+
+# Bind keyboard
+root.bind("<Key>", on_key)
+root.bind("<Return>", lambda e: print("Enter pressed"))
+
+# Bind mouse
+canvas = tk.Canvas(root, width=300, height=200, bg="white")
+canvas.pack()
+canvas.bind("<Button-1>", on_mouse_click)  # Left click
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Widgets Avanzati (ttk)}
+
+\begin{lstlisting}
+import tkinter as tk
+from tkinter import ttk
+
+root = tk.Tk()
+
+# Combobox
+combo = ttk.Combobox(root, values=["Python", "Java", "C++"])
+combo.set("Python")
+combo.pack()
+
+# Progressbar
+progress = ttk.Progressbar(root, length=200, mode="determinate")
+progress["maximum"] = 100
+progress["value"] = 50
+progress.pack()
+
+# Spinbox
+spinbox = tk.Spinbox(root, from_=0, to=100, increment=5)
+spinbox.pack()
+
+# Scale (Slider)
+scale = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL)
+scale.pack()
+
+def show_value():
+    print(f"Scale value: {scale.get()}")
+
+tk.Button(root, text="Show Value", command=show_value).pack()
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Menu}
+
+\begin{lstlisting}
+import tkinter as tk
+from tkinter import messagebox
+
+def new_file():
+    messagebox.showinfo("New", "New file created")
+
+def open_file():
+    messagebox.showinfo("Open", "Open file dialog")
+
+def exit_app():
+    root.quit()
+
+root = tk.Tk()
+
+# Create menubar
+menubar = tk.Menu(root)
+root.config(menu=menubar)
+
+# File menu
+file_menu = tk.Menu(menubar, tearoff=0)
+menubar.add_cascade(label="File", menu=file_menu)
+file_menu.add_command(label="New", command=new_file)
+file_menu.add_command(label="Open", command=open_file)
+file_menu.add_separator()
+file_menu.add_command(label="Exit", command=exit_app)
+
+# Edit menu
+edit_menu = tk.Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Edit", menu=edit_menu)
+edit_menu.add_command(label="Cut", command=lambda: print("Cut"))
+edit_menu.add_command(label="Copy", command=lambda: print("Copy"))
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Dialogs}
+
+\begin{lstlisting}
+import tkinter as tk
+from tkinter import messagebox, filedialog, simpledialog
+
+root = tk.Tk()
+
+def show_info():
+    messagebox.showinfo("Info", "This is info")
+
+def show_warning():
+    messagebox.showwarning("Warning", "This is warning")
+
+def show_error():
+    messagebox.showerror("Error", "This is error")
+
+def ask_question():
+    result = messagebox.askyesno("Question", "Do you like Python?")
+    print(f"Answer: {result}")
+
+def open_file():
+    filename = filedialog.askopenfilename(
+        title="Select file",
+        filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+    )
+    print(f"Selected: {filename}")
+
+def ask_name():
+    name = simpledialog.askstring("Input", "Enter your name:")
+    print(f"Name: {name}")
+
+tk.Button(root, text="Info", command=show_info).pack()
+tk.Button(root, text="Warning", command=show_warning).pack()
+tk.Button(root, text="Error", command=show_error).pack()
+tk.Button(root, text="Question", command=ask_question).pack()
+tk.Button(root, text="Open File", command=open_file).pack()
+tk.Button(root, text="Ask Name", command=ask_name).pack()
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Canvas: Grafica}
+
+\begin{lstlisting}
+import tkinter as tk
+
+root = tk.Tk()
+
+canvas = tk.Canvas(root, width=400, height=300, bg="white")
+canvas.pack()
+
+# Draw shapes
+canvas.create_line(0, 0, 400, 300, fill="red", width=2)
+canvas.create_rectangle(50, 50, 150, 100, fill="blue", outline="black")
+canvas.create_oval(200, 50, 300, 150, fill="green")
+canvas.create_polygon(100, 200, 150, 250, 50, 250, fill="yellow")
+
+# Draw text
+canvas.create_text(200, 270, text="Hello Canvas!", font=("Arial", 16))
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Threading per Operazioni Lunghe}
+
+\begin{lstlisting}
+import tkinter as tk
+import threading
+import time
+
+def long_task():
+    """Simula operazione lunga"""
+    button.config(state=tk.DISABLED, text="Working...")
+
+    def worker():
+        time.sleep(3)  # Simula lavoro
+        # Update UI dal main thread
+        root.after(0, task_completed)
+
+    thread = threading.Thread(target=worker)
+    thread.start()
+
+def task_completed():
+    button.config(state=tk.NORMAL, text="Start Task")
+    label.config(text="Task completed!")
+
+root = tk.Tk()
+
+label = tk.Label(root, text="Ready")
+label.pack()
+
+button = tk.Button(root, text="Start Task", command=long_task)
+button.pack()
+
+root.mainloop()
+\end{lstlisting}
+
+\section{Progetto: Calculator}
+
+\begin{lstlisting}
+import tkinter as tk
+
+class Calculator:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Calculator")
+
+        self.expression = ""
+
+        # Display
+        self.display = tk.Entry(root, font=("Arial", 20), justify=tk.RIGHT)
+        self.display.grid(row=0, column=0, columnspan=4, sticky="ew", padx=5, pady=5)
+
+        # Buttons
+        buttons = [
+            ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
+            ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
+            ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
+            ('0', 4, 0), ('.', 4, 1), ('+', 4, 2), ('=', 4, 3),
+        ]
+
+        for (text, row, col) in buttons:
+            button = tk.Button(
+                root,
+                text=text,
+                font=("Arial", 16),
+                command=lambda t=text: self.on_button_click(t)
+            )
+            button.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
+
+        # Clear button
+        tk.Button(
+            root,
+            text="C",
+            font=("Arial", 16),
+            command=self.clear
+        ).grid(row=4, column=3, sticky="nsew", padx=2, pady=2)
+
+        # Configure grid weights
+        for i in range(5):
+            root.grid_rowconfigure(i, weight=1)
+        for i in range(4):
+            root.grid_columnconfigure(i, weight=1)
+
+    def on_button_click(self, char):
+        if char == '=':
+            try:
+                result = eval(self.expression)
+                self.display.delete(0, tk.END)
+                self.display.insert(0, str(result))
+                self.expression = str(result)
+            except:
+                self.display.delete(0, tk.END)
+                self.display.insert(0, "Error")
+                self.expression = ""
+        else:
+            self.expression += char
+            self.display.delete(0, tk.END)
+            self.display.insert(0, self.expression)
+
+    def clear(self):
+        self.expression = ""
+        self.display.delete(0, tk.END)
+
+root = tk.Tk()
+app = Calculator(root)
+root.mainloop()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best Practices]
+\begin{itemize}
+  \item Separa logica business da UI (pattern MVC/MVP)
+  \item Non bloccare main thread (usa threading per I/O)
+  \item Usa ttk widgets per look nativo moderno
+  \item Valida input prima di processare
+  \item Gestisci eccezioni in callbacks
+  \item Usa StringVar/IntVar per dati dinamici
+  \item Organizza codice in classi per app complesse
+  \item Usa grid per form, pack per semplici layout
+  \item Non mescolare pack/grid nello stesso container
+  \item Fai cleanup su close (close files, threads)
+\end{itemize}
 \end{tcolorbox}
 
-\begin{tcolorbox}[title=Casi d'uso]
-- Tool desktop per gestione file o batch process.
-- Applicazioni didattiche con feedback immediato.
-- Pannelli di controllo per script di automazione.
-- Editor semplici con campi di input e validazioni.
+\begin{tcolorbox}[title=Errori Comuni]
+\begin{itemize}
+  \item Bloccare main thread con operazioni lunghe
+  \item Mescolare pack e grid nello stesso parent
+  \item Non gestire eccezioni in callbacks
+  \item Usare eval() senza validazione (security!)
+  \item Dimenticare mainloop()
+  \item Creare troppe istanze Tk() (una basta)
+  \item Non configurare grid weights (resize issues)
+  \item Non usare ttk (look old-school)
+  \item Update UI da thread secondari (crash!)
+  \item Memory leak: non cleanup widgets rimossi
+\end{itemize}
 \end{tcolorbox}
 
 \section{Esercizi}
+
+\subsection{Livello Base}
 \begin{enumerate}
-  \item Crea una calcolatrice semplice.
-  \item Implementa un form con validazione.
-  \item Aggiungi un menù e scorciatoie da tastiera.
-  \item Usa \texttt{grid} per un layout tabellare.
-  \item Mostra un dialog di file e stampa il percorso scelto.
+  \item Crea form login (username, password, button)
+  \item Implementa converter temperatura (Celsius ↔ Fahrenheit)
+  \item Todo list (add, display, clear)
 \end{enumerate}
 
-\section{Riepilogo}
-Hai costruito GUI di base con Tkinter.
+\subsection{Livello Intermedio}
+\begin{enumerate}
+  \item Text editor con menu (New, Open, Save, Exit)
+  \item Calculator completa con history
+  \item Image viewer con file dialog
+\end{enumerate}
 
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-- Utility desktop per gestione batch e file.
-- Prototipi didattici interattivi.
-- Pannelli controllo per script e servizi locali.
-- Piccole app form-based con validazioni.
-\end{tcolorbox}
+\subsection{Livello Avanzato}
+\begin{enumerate}
+  \item Drawing app con Canvas (brush, colors, clear)
+  \item Database browser (SQLite) con CRUD operations
+  \item File manager con tree view e operations
+\end{enumerate}
 
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\section{Riferimenti}
 \begin{itemize}
-  \item \textbf{Event loop}: Tk gestisce eventi e callback; evitare blocchi lunghi nel main thread.
-  \item \textbf{Geometry managers}: \verb|pack|, \verb|grid| e \verb|place|; scegliere coerentemente e non mescolarli sullo stesso container.
-  \item \textbf{Callback}: funzioni o metodi legati ai widget; gestire stato con oggetti per coesione.
-  \item \textbf{Threading}: operazioni I/O fuori dal thread GUI; comunicare con code o eventi pianificati.
+  \item Tkinter Documentation: \url{https://docs.python.org/3/library/tk.html}
+  \item Tkinter Tutorial: \url{https://realpython.com/python-gui-tkinter/}
+  \item ttk widgets: \url{https://docs.python.org/3/library/tkinter.ttk.html}
 \end{itemize}
-\end{tcolorbox}
-
-\paragraph{Qualità} Separare logica della UI dalla logica applicativa; testare componenti in isolamento quando possibile.
-Consulta: \url{https://docs.python.org/3/library/tk.html}.

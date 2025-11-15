@@ -1,0 +1,973 @@
+\chapter{Monitoring e Logging}\label{cap:monitoring_logging}
+
+\section{Introduzione}
+Il monitoring e logging di container Docker è essenziale per production environments. Questo capitolo esplora strategie di observability, centralized logging, metrics collection, distributed tracing, e alerting systems per garantire reliability e troubleshooting efficace.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Docker logs management, Centralized logging (ELK, Loki), Prometheus metrics, Grafana dashboards, Distributed tracing, Health checks avanzati, Alerting con Alertmanager, Performance monitoring, Log aggregation patterns.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Implementare centralized logging con ELK Stack e Grafana Loki
+    \item Configurare Prometheus per metrics collection da containers
+    \item Creare Grafana dashboards per visualizzazione real-time
+    \item Implementare distributed tracing con Jaeger
+    \item Configurare alerting rules e notification channels
+    \item Applicare structured logging best practices
+\end{itemize}
+
+\section{Docker Logs Fundamentals}
+
+\subsection{Docker Logging Drivers}
+\begin{lstlisting}[language=yaml, caption={Docker Compose - Logging Configuration}]
+# docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    image: myapp:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "production,app"
+        env: "ENV,VERSION"
+
+  nginx:
+    image: nginx:alpine
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://localhost:514"
+        tag: "nginx-{{.Name}}"
+
+  database:
+    image: postgres:15
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "docker.{{.Name}}"
+        fluentd-async: "true"
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Docker Logs Commands}]
+# Visualizza logs in real-time
+docker logs -f container_name
+
+# Logs con timestamp
+docker logs -t container_name
+
+# Ultimi N logs
+docker logs --tail 100 container_name
+
+# Logs in range temporale
+docker logs --since 2024-01-01T10:00:00 \
+            --until 2024-01-01T11:00:00 \
+            container_name
+
+# Follow logs di tutti i container in compose
+docker-compose logs -f
+
+# Logs di specifico service
+docker-compose logs -f app
+
+# Logs con grep
+docker logs container_name 2>&1 | grep ERROR
+\end{lstlisting}
+
+\section{Centralized Logging con ELK Stack}
+
+\subsection{ELK Stack Setup Completo}
+\begin{lstlisting}[language=yaml, caption={ELK Stack - Docker Compose}]
+# docker-compose-elk.yml
+version: '3.8'
+
+services:
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elk
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - elk
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Filebeat per raccogliere logs da containers
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: filebeat -e -strict.perms=false
+    networks:
+      - elk
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # Application con structured logging
+  app:
+    image: myapp:latest
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "app,production"
+    labels:
+      - "logging=enabled"
+    networks:
+      - elk
+
+networks:
+  elk:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+    driver: local
+\end{lstlisting}
+
+\subsection{Logstash Pipeline Configuration}
+\begin{lstlisting}[caption={logstash/pipeline/logstash.conf}]
+# Logstash pipeline for Docker logs
+input {
+  beats {
+    port => 5044
+  }
+
+  tcp {
+    port => 5000
+    codec => json
+  }
+
+  # HTTP input per custom logs
+  http {
+    port => 8080
+    codec => json
+  }
+}
+
+filter {
+  # Parse Docker JSON logs
+  if [docker][container][name] {
+    mutate {
+      add_field => {
+        "container_name" => "%{[docker][container][name]}"
+        "container_id" => "%{[docker][container][id]}"
+      }
+    }
+  }
+
+  # Parse application logs (JSON format)
+  if [message] =~ /^\{.*\}$/ {
+    json {
+      source => "message"
+      target => "app"
+    }
+  }
+
+  # Parse nginx access logs
+  if [container_name] =~ /nginx/ {
+    grok {
+      match => {
+        "message" => '%{IPORHOST:client_ip} - %{USER:user} \[%{HTTPDATE:timestamp}\] "%{WORD:method} %{URIPATHPARAM:request} HTTP/%{NUMBER:http_version}" %{INT:status_code} %{INT:bytes} "%{DATA:referrer}" "%{DATA:user_agent}"'
+      }
+    }
+    date {
+      match => ["timestamp", "dd/MMM/yyyy:HH:mm:ss Z"]
+    }
+  }
+
+  # Extract error severity
+  if [message] =~ /ERROR|FATAL/ {
+    mutate {
+      add_field => { "severity" => "error" }
+    }
+  } else if [message] =~ /WARN/ {
+    mutate {
+      add_field => { "severity" => "warning" }
+    }
+  } else {
+    mutate {
+      add_field => { "severity" => "info" }
+    }
+  }
+
+  # Add geo-location per IP
+  if [client_ip] {
+    geoip {
+      source => "client_ip"
+      target => "geoip"
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    index => "docker-logs-%{+YYYY.MM.dd}"
+  }
+
+  # Debug output
+  if [severity] == "error" {
+    stdout {
+      codec => rubydebug
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{Filebeat Configuration}
+\begin{lstlisting}[language=yaml, caption={filebeat/filebeat.yml}]
+filebeat.inputs:
+- type: container
+  paths:
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+    - decode_json_fields:
+        fields: ["message"]
+        target: "json"
+        overwrite_keys: true
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            contains:
+              docker.container.labels.logging: "enabled"
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+output.logstash:
+  hosts: ["logstash:5044"]
+  loadbalance: true
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+\end{lstlisting}
+
+\section{Grafana Loki - Lightweight Logging}
+
+\subsection{Loki Stack Setup}
+\begin{lstlisting}[language=yaml, caption={Grafana Loki Stack}]
+# docker-compose-loki.yml
+version: '3.8'
+
+services:
+  loki:
+    image: grafana/loki:2.9.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    networks:
+      - monitoring
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring
+    depends_on:
+      - loki
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  loki-data:
+  grafana-data:
+\end{lstlisting}
+
+\subsection{Promtail Configuration}
+\begin{lstlisting}[language=yaml, caption={promtail/promtail-config.yaml}]
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Docker containers
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - source_labels: ['__meta_docker_container_log_stream']
+        target_label: 'stream'
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+    pipeline_stages:
+      - docker: {}
+      - json:
+          expressions:
+            level: level
+            message: message
+            timestamp: timestamp
+      - labels:
+          level:
+          stream:
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*.log
+\end{lstlisting}
+
+\section{Prometheus Metrics Collection}
+
+\subsection{Prometheus Stack}
+\begin{lstlisting}[language=yaml, caption={Prometheus + Exporters}]
+# docker-compose-prometheus.yml
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus-data:/prometheus
+    networks:
+      - monitoring
+
+  # Node Exporter per metrics di sistema
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
+
+  # cAdvisor per metrics containers
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/config.yml:/etc/alertmanager/config.yml
+      - alertmanager-data:/alertmanager
+    networks:
+      - monitoring
+
+  # Application con Prometheus metrics
+  app:
+    image: myapp:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - PROMETHEUS_METRICS_PORT=9091
+    labels:
+      - "prometheus.io/scrape=true"
+      - "prometheus.io/port=9091"
+      - "prometheus.io/path=/metrics"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  alertmanager-data:
+\end{lstlisting}
+
+\subsection{Prometheus Configuration}
+\begin{lstlisting}[language=yaml, caption={prometheus/prometheus.yml}]
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'docker-cluster'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+# Load rules
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Docker daemon metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+
+  # Docker Swarm service discovery
+  - job_name: 'docker-swarm'
+    dockerswarm_sd_configs:
+      - host: unix:///var/run/docker.sock
+        role: tasks
+    relabel_configs:
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_dockerswarm_service_label_prometheus_io_port]
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?
+        replacement: $1:${1}
+
+  # Kubernetes pods (if running in K8s)
+  - job_name: 'kubernetes-pods'
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+\end{lstlisting}
+
+\subsection{Application Metrics in Go}
+\begin{lstlisting}[language=go, caption={Prometheus Metrics Instrumentation}]
+// metrics.go
+package main
+
+import (
+    "net/http"
+    "time"
+
+    "github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/promauto"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+var (
+    // Counter: incrementa sempre
+    httpRequestsTotal = promauto.NewCounterVec(
+        prometheus.CounterOpts{
+            Name: "http_requests_total",
+            Help: "Total number of HTTP requests",
+        },
+        []string{"method", "endpoint", "status"},
+    )
+
+    // Histogram: distribuzione valori (latency, sizes)
+    httpRequestDuration = promauto.NewHistogramVec(
+        prometheus.HistogramOpts{
+            Name:    "http_request_duration_seconds",
+            Help:    "HTTP request latency distribution",
+            Buckets: prometheus.DefBuckets,
+        },
+        []string{"method", "endpoint"},
+    )
+
+    // Gauge: valore che può salire/scendere
+    activeConnections = promauto.NewGauge(
+        prometheus.GaugeOpts{
+            Name: "active_connections",
+            Help: "Number of active connections",
+        },
+    )
+
+    // Summary: come histogram ma con quantili
+    requestSize = promauto.NewSummaryVec(
+        prometheus.SummaryOpts{
+            Name:       "http_request_size_bytes",
+            Help:       "HTTP request size in bytes",
+            Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+        },
+        []string{"method"},
+    )
+)
+
+// Middleware per tracking automatico
+func prometheusMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+
+        // Track active connections
+        activeConnections.Inc()
+        defer activeConnections.Dec()
+
+        // Track request size
+        requestSize.WithLabelValues(r.Method).Observe(float64(r.ContentLength))
+
+        // Wrap ResponseWriter per catturare status code
+        wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+        next.ServeHTTP(wrapped, r)
+
+        duration := time.Since(start).Seconds()
+
+        // Record metrics
+        httpRequestsTotal.WithLabelValues(
+            r.Method,
+            r.URL.Path,
+            http.StatusText(wrapped.statusCode),
+        ).Inc()
+
+        httpRequestDuration.WithLabelValues(
+            r.Method,
+            r.URL.Path,
+        ).Observe(duration)
+    })
+}
+
+func main() {
+    // Application handlers
+    mux := http.NewServeMux()
+    mux.HandleFunc("/api/users", handleUsers)
+    mux.HandleFunc("/health", handleHealth)
+
+    // Prometheus metrics endpoint
+    mux.Handle("/metrics", promhttp.Handler())
+
+    // Apply middleware
+    handler := prometheusMiddleware(mux)
+
+    http.ListenAndServe(":8000", handler)
+}
+\end{lstlisting}
+
+\section{Alert Rules}
+
+\subsection{Prometheus Alert Rules}
+\begin{lstlisting}[language=yaml, caption={prometheus/alerts.yml}]
+groups:
+  - name: container_alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% (current: {{ $value }}%)"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 90% (current: {{ $value }}%)"
+
+      # Container down
+      - alert: ContainerDown
+        expr: |
+          up{job="docker"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.instance }} is down"
+          description: "Container has been down for more than 1 minute"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP error rate on {{ $labels.instance }}"
+          description: "Error rate is above 5% (current: {{ $value }}%)"
+
+      # Slow requests
+      - alert: SlowRequests
+        expr: |
+          histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow requests detected on {{ $labels.instance }}"
+          description: "99th percentile latency is above 1s (current: {{ $value }}s)"
+
+      # Disk space
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: "Disk space is below 10% (current: {{ $value }}%)"
+
+  - name: docker_alerts
+    interval: 30s
+    rules:
+      # Too many containers
+      - alert: TooManyContainers
+        expr: |
+          count(container_last_seen) > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many containers running"
+          description: "More than 50 containers are running (current: {{ $value }})"
+
+      # Container restart loop
+      - alert: ContainerRestartLoop
+        expr: |
+          rate(container_last_seen{name!~"POD"}[5m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.name }} is restarting"
+          description: "Container has restarted multiple times in the last 5 minutes"
+\end{lstlisting}
+
+\subsection{Alertmanager Configuration}
+\begin{lstlisting}[language=yaml, caption={alertmanager/config.yml}]
+global:
+  resolve_timeout: 5m
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+
+# Templates
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Routing tree
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+
+  routes:
+    # Critical alerts -> PagerDuty + Slack
+    - match:
+        severity: critical
+      receiver: 'pagerduty-critical'
+      continue: true
+
+    - match:
+        severity: critical
+      receiver: 'slack-critical'
+
+    # Warning alerts -> Slack only
+    - match:
+        severity: warning
+      receiver: 'slack-warnings'
+
+    # Database alerts
+    - match_re:
+        service: ^(postgres|mysql|redis)$
+      receiver: 'database-team'
+
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: 'alerts@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.example.com:587'
+        auth_username: 'alertmanager@example.com'
+        auth_password: 'password'
+
+  - name: 'slack-critical'
+    slack_configs:
+      - channel: '#alerts-critical'
+        title: 'CRITICAL: {{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'danger'
+        send_resolved: true
+
+  - name: 'slack-warnings'
+    slack_configs:
+      - channel: '#alerts-warnings'
+        title: 'Warning: {{ .CommonAnnotations.summary }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+        color: 'warning'
+
+  - name: 'pagerduty-critical'
+    pagerduty_configs:
+      - service_key: 'YOUR_PAGERDUTY_KEY'
+        description: '{{ .CommonAnnotations.summary }}'
+
+  - name: 'database-team'
+    webhook_configs:
+      - url: 'http://internal-alerts-api/webhook'
+        send_resolved: true
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+\end{lstlisting}
+
+\section{Distributed Tracing}
+
+\subsection{Jaeger Tracing Setup}
+\begin{lstlisting}[language=yaml, caption={Jaeger All-in-One}]
+# docker-compose-tracing.yml
+version: '3.8'
+
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.51
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "5775:5775/udp"   # accept zipkin.thrift compact
+      - "6831:6831/udp"   # accept jaeger.thrift compact
+      - "6832:6832/udp"   # accept jaeger.thrift binary
+      - "5778:5778"       # serve configs
+      - "16686:16686"     # serve frontend
+      - "14250:14250"     # accept gRPC
+      - "14268:14268"     # accept jaeger.thrift
+      - "14269:14269"     # admin port
+      - "9411:9411"       # Zipkin compatible
+      - "4317:4317"       # OTLP gRPC
+      - "4318:4318"       # OTLP HTTP
+    networks:
+      - tracing
+
+  app:
+    image: myapp:latest
+    environment:
+      - JAEGER_AGENT_HOST=jaeger
+      - JAEGER_AGENT_PORT=6831
+      - JAEGER_SAMPLER_TYPE=const
+      - JAEGER_SAMPLER_PARAM=1
+    networks:
+      - tracing
+
+networks:
+  tracing:
+    driver: bridge
+\end{lstlisting}
+
+\section{Structured Logging Best Practices}
+
+\subsection{Structured Logging Example}
+\begin{lstlisting}[language=go, caption={Structured Logging with Zap}]
+// logger.go
+package main
+
+import (
+    "go.uber.org/zap"
+    "go.uber.org/zap/zapcore"
+)
+
+func NewLogger() (*zap.Logger, error) {
+    config := zap.NewProductionConfig()
+
+    config.EncoderConfig.TimeKey = "timestamp"
+    config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+
+    config.OutputPaths = []string{"stdout"}
+    config.ErrorOutputPaths = []string{"stderr"}
+
+    return config.Build()
+}
+
+func main() {
+    logger, _ := NewLogger()
+    defer logger.Sync()
+
+    // Structured fields
+    logger.Info("User login",
+        zap.String("user_id", "12345"),
+        zap.String("ip", "192.168.1.100"),
+        zap.Duration("latency", 150*time.Millisecond),
+    )
+
+    // Error with stack trace
+    logger.Error("Database connection failed",
+        zap.Error(err),
+        zap.String("database", "postgres"),
+        zap.Int("retry_count", 3),
+    )
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Monitoring/Logging Checklist]
+\begin{enumerate}
+\item \textbf{Structured Logging}: JSON format per parsing automatico
+\item \textbf{Log Levels}: DEBUG, INFO, WARN, ERROR, FATAL
+\item \textbf{Correlation IDs}: Trace requests attraverso microservices
+\item \textbf{Retention Policy}: 30-90 giorni per compliance
+\item \textbf{Sampling}: Non loggare ogni richiesta in high-traffic
+\item \textbf{Alerting}: Alert su anomalie, non su soglie fisse
+\item \textbf{Dashboards}: Grafana boards per business metrics
+\item \textbf{Security}: No credentials/PII nei logs
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+Monitoring e logging efficaci richiedono centralized logging (ELK/Loki), metrics collection (Prometheus), visualization (Grafana), e distributed tracing (Jaeger). Structured logging, alerting rules, e retention policies garantiscono observability completa per production environments.
+
+\section{Riferimenti}
+\begin{itemize}
+\item Prometheus: \url{https://prometheus.io/docs/}
+\item Grafana Loki: \url{https://grafana.com/docs/loki/}
+\item ELK Stack: \url{https://www.elastic.co/elastic-stack}
+\item Jaeger: \url{https://www.jaegertracing.io/docs/}
+\end{itemize}

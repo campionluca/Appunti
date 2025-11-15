@@ -1,0 +1,975 @@
+\chapter{Introduzione alla Web Security}
+
+\section{Fondamenti della sicurezza informatica}
+
+La sicurezza informatica si basa su principi fondamentali che guidano la progettazione, l'implementazione e la manutenzione di sistemi sicuri. In questo capitolo esploreremo i concetti chiave che formano la base della web security.
+
+\section{La CIA Triad}
+
+La CIA Triad rappresenta i tre pilastri fondamentali della sicurezza informatica: Confidentiality (Riservatezza), Integrity (Integrità) e Availability (Disponibilità).
+
+\subsection{Confidentiality - Riservatezza}
+
+La riservatezza garantisce che le informazioni siano accessibili solo a chi è autorizzato.
+
+\subsubsection{Principi della Riservatezza}
+
+\begin{itemize}
+    \item \textbf{Need to know:} Gli utenti accedono solo alle informazioni necessarie
+    \item \textbf{Least privilege:} Privilegi minimi necessari per svolgere un compito
+    \item \textbf{Data classification:} Classificare i dati per sensibilità (pubblico, interno, confidenziale, segreto)
+\end{itemize}
+
+\subsubsection{Minacce alla Riservatezza}
+
+\begin{enumerate}
+    \item \textbf{Data Breach:} Accesso non autorizzato a dati sensibili
+    \item \textbf{Man-in-the-Middle:} Intercettazione di comunicazioni
+    \item \textbf{Shoulder Surfing:} Osservazione fisica di informazioni sensibili
+    \item \textbf{Social Engineering:} Manipolazione psicologica per ottenere informazioni
+    \item \textbf{Insider Threats:} Abuso di accesso da parte di utenti autorizzati
+\end{enumerate}
+
+\subsubsection{Protezione della Riservatezza}
+
+\textbf{Esempio: Crittografia dei dati sensibili}
+
+\begin{lstlisting}[language=Python, caption=Crittografia con Fernet (Python)]
+from cryptography.fernet import Fernet
+
+# Generazione chiave
+key = Fernet.generate_key()
+cipher = Fernet(key)
+
+# Dati sensibili da proteggere
+sensitive_data = "Numero carta: 1234-5678-9012-3456"
+
+# Cifratura
+encrypted = cipher.encrypt(sensitive_data.encode())
+print(f"Encrypted: {encrypted}")
+
+# Decifratura (solo con la chiave corretta)
+decrypted = cipher.decrypt(encrypted).decode()
+print(f"Decrypted: {decrypted}")
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=Crittografia con OpenSSL (PHP)]
+<?php
+// Dati da cifrare
+$data = "Informazioni confidenziali";
+
+// Chiave e metodo di cifratura
+$key = openssl_random_pseudo_bytes(32);
+$iv = openssl_random_pseudo_bytes(16);
+$method = 'AES-256-CBC';
+
+// Cifratura
+$encrypted = openssl_encrypt($data, $method, $key, 0, $iv);
+
+// Decifratura
+$decrypted = openssl_decrypt($encrypted, $method, $key, 0, $iv);
+
+echo "Original: $data\n";
+echo "Encrypted: $encrypted\n";
+echo "Decrypted: $decrypted\n";
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=Crittografia con AES (Java)]
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.util.Base64;
+
+public class EncryptionExample {
+    public static void main(String[] args) throws Exception {
+        // Genera chiave AES
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        SecretKey secretKey = keyGen.generateKey();
+
+        // Dati da cifrare
+        String originalData = "Dati confidenziali";
+
+        // Cifratura
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] encrypted = cipher.doFinal(originalData.getBytes());
+
+        // Decifratura
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        byte[] decrypted = cipher.doFinal(encrypted);
+
+        System.out.println("Original: " + originalData);
+        System.out.println("Encrypted: " + Base64.getEncoder().encodeToString(encrypted));
+        System.out.println("Decrypted: " + new String(decrypted));
+    }
+}
+\end{lstlisting}
+
+\subsection{Integrity - Integrità}
+
+L'integrità assicura che i dati non siano stati modificati in modo non autorizzato.
+
+\subsubsection{Aspetti dell'Integrità}
+
+\begin{itemize}
+    \item \textbf{Data Integrity:} I dati rimangono accurati e completi
+    \item \textbf{System Integrity:} Il sistema funziona come previsto
+    \item \textbf{Non-repudiation:} Impossibilità di negare un'azione compiuta
+\end{itemize}
+
+\subsubsection{Minacce all'Integrità}
+
+\begin{enumerate}
+    \item \textbf{SQL Injection:} Modifica non autorizzata del database
+    \item \textbf{Man-in-the-Middle:} Alterazione dei dati in transito
+    \item \textbf{Malware:} Modifica di file di sistema
+    \item \textbf{Unauthorized Changes:} Modifiche da parte di utenti non autorizzati
+\end{enumerate}
+
+\subsubsection{Protezione dell'Integrità}
+
+\textbf{Esempio: Hash e verifica dell'integrità}
+
+\begin{lstlisting}[language=Python, caption=Hashing con SHA-256 (Python)]
+import hashlib
+
+# Documento originale
+document = "Questo documento non deve essere modificato"
+
+# Calcola hash
+original_hash = hashlib.sha256(document.encode()).hexdigest()
+print(f"Hash originale: {original_hash}")
+
+# Simula modifica
+tampered_document = "Questo documento E' STATO modificato"
+tampered_hash = hashlib.sha256(tampered_document.encode()).hexdigest()
+
+# Verifica integrità
+if original_hash == tampered_hash:
+    print("Documento integro")
+else:
+    print("ATTENZIONE: Documento modificato!")
+    print(f"Hash corrotto: {tampered_hash}")
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=HMAC per integrità (PHP)]
+<?php
+// Messaggio da proteggere
+$message = "Transazione: 1000 EUR a beneficiario X";
+$secret_key = "chiave_segreta_condivisa";
+
+// Genera HMAC
+$hmac = hash_hmac('sha256', $message, $secret_key);
+
+echo "Messaggio: $message\n";
+echo "HMAC: $hmac\n";
+
+// Verifica integrità
+function verify_integrity($message, $received_hmac, $key) {
+    $calculated_hmac = hash_hmac('sha256', $message, $key);
+    return hash_equals($calculated_hmac, $received_hmac);
+}
+
+// Test con messaggio corretto
+if (verify_integrity($message, $hmac, $secret_key)) {
+    echo "Messaggio integro\n";
+} else {
+    echo "Messaggio compromesso!\n";
+}
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=Digital Signature (Java)]
+import java.security.*;
+import java.util.Base64;
+
+public class DigitalSignatureExample {
+    public static void main(String[] args) throws Exception {
+        // Genera coppia chiavi RSA
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        keyGen.initialize(2048);
+        KeyPair pair = keyGen.generateKeyPair();
+
+        // Messaggio da firmare
+        String message = "Contratto importante";
+
+        // Firma digitale
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(pair.getPrivate());
+        signature.update(message.getBytes());
+        byte[] digitalSignature = signature.sign();
+
+        // Verifica firma
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(pair.getPublic());
+        verifier.update(message.getBytes());
+        boolean isValid = verifier.verify(digitalSignature);
+
+        System.out.println("Messaggio: " + message);
+        System.out.println("Firma valida: " + isValid);
+    }
+}
+\end{lstlisting}
+
+\subsection{Availability - Disponibilità}
+
+La disponibilità garantisce che i sistemi e i dati siano accessibili quando necessario.
+
+\subsubsection{Metriche di Disponibilità}
+
+\begin{itemize}
+    \item \textbf{Uptime:} Percentuale di tempo in cui il servizio è disponibile
+    \item \textbf{MTBF (Mean Time Between Failures):} Tempo medio tra guasti
+    \item \textbf{MTTR (Mean Time To Repair):} Tempo medio di ripristino
+    \item \textbf{RTO (Recovery Time Objective):} Tempo massimo di downtime accettabile
+    \item \textbf{RPO (Recovery Point Objective):} Massima perdita di dati accettabile
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Uptime \%} & \textbf{Downtime/anno} & \textbf{Livello} \\
+\hline
+99\% & 3.65 giorni & Base \\
+99.9\% & 8.76 ore & Three nines \\
+99.99\% & 52.56 minuti & Four nines \\
+99.999\% & 5.26 minuti & Five nines \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Minacce alla Disponibilità}
+
+\begin{enumerate}
+    \item \textbf{DDoS (Distributed Denial of Service):} Saturazione delle risorse
+    \item \textbf{Ransomware:} Cifratura dei dati con richiesta di riscatto
+    \item \textbf{Hardware Failures:} Guasti fisici dell'infrastruttura
+    \item \textbf{Natural Disasters:} Eventi naturali che danneggiano i datacenter
+    \item \textbf{Resource Exhaustion:} Esaurimento di CPU, memoria, banda
+\end{enumerate}
+
+\subsubsection{Protezione della Disponibilità}
+
+\textbf{Esempio: Rate Limiting per prevenire abusi}
+
+\begin{lstlisting}[language=Python, caption=Rate Limiting con Flask-Limiter (Python)]
+from flask import Flask, jsonify
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+app = Flask(__name__)
+
+# Configurazione rate limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+@app.route("/api/data")
+@limiter.limit("10 per minute")
+def get_data():
+    return jsonify({"data": "sensitive information"})
+
+@app.route("/api/login")
+@limiter.limit("5 per minute")
+def login():
+    # Previene brute force attacks
+    return jsonify({"message": "Login endpoint"})
+
+if __name__ == "__main__":
+    app.run()
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=Simple Rate Limiting (PHP)]
+<?php
+session_start();
+
+function rate_limit($max_requests, $time_window) {
+    $current_time = time();
+
+    if (!isset($_SESSION['rate_limit'])) {
+        $_SESSION['rate_limit'] = [
+            'count' => 1,
+            'start_time' => $current_time
+        ];
+        return true;
+    }
+
+    $elapsed = $current_time - $_SESSION['rate_limit']['start_time'];
+
+    if ($elapsed > $time_window) {
+        // Reset counter
+        $_SESSION['rate_limit'] = [
+            'count' => 1,
+            'start_time' => $current_time
+        ];
+        return true;
+    }
+
+    if ($_SESSION['rate_limit']['count'] < $max_requests) {
+        $_SESSION['rate_limit']['count']++;
+        return true;
+    }
+
+    return false; // Rate limit exceeded
+}
+
+// Uso: massimo 10 richieste in 60 secondi
+if (!rate_limit(10, 60)) {
+    http_response_code(429);
+    die("Rate limit exceeded. Try again later.");
+}
+
+echo "Request processed successfully";
+?>
+\end{lstlisting}
+
+\subsection{Il triangolo CIA esteso}
+
+Alcuni modelli estendono la CIA Triad con concetti aggiuntivi:
+
+\begin{itemize}
+    \item \textbf{Authenticity:} Garanzia che le entità sono chi dichiarano di essere
+    \item \textbf{Accountability:} Tracciabilità delle azioni agli utenti specifici
+    \item \textbf{Non-repudiation:} Impossibilità di negare un'azione
+\end{itemize}
+
+\section{Threat Modeling}
+
+Il threat modeling è il processo sistematico di identificazione, analisi e mitigazione delle minacce a un sistema.
+
+\subsection{Perché fare Threat Modeling}
+
+\begin{itemize}
+    \item Identificare vulnerabilità in fase di design
+    \item Prioritizzare gli sforzi di sicurezza
+    \item Comunicare i rischi agli stakeholder
+    \item Ridurre i costi di remediation
+\end{itemize}
+
+\subsection{Metodologie di Threat Modeling}
+
+\subsubsection{1. STRIDE (Microsoft)}
+
+STRIDE è un acronimo per sei categorie di minacce:
+
+\begin{description}
+    \item[Spoofing] Impersonare un altro utente o sistema
+    \item[Tampering] Modificare dati o codice
+    \item[Repudiation] Negare un'azione compiuta
+    \item[Information Disclosure] Esposizione di informazioni sensibili
+    \item[Denial of Service] Rendere un servizio non disponibile
+    \item[Elevation of Privilege] Ottenere privilegi non autorizzati
+\end{description}
+
+\textbf{Esempio di applicazione STRIDE:}
+
+\begin{verbatim}
+Sistema: Login web application
+
+[S] Spoofing
+- Minaccia: Attaccante usa credenziali rubate
+- Mitigazione: MFA, CAPTCHA, monitoraggio anomalie
+
+[T] Tampering
+- Minaccia: Modifica del cookie di sessione
+- Mitigazione: Cookie firmati, HTTPS only, Secure flag
+
+[R] Repudiation
+- Minaccia: Utente nega di aver effettuato login
+- Mitigazione: Logging dettagliato, timestamp, IP tracking
+
+[I] Information Disclosure
+- Minaccia: Password in chiaro nei log
+- Mitigazione: Hash delle password, log sanitization
+
+[D] Denial of Service
+- Minaccia: Brute force attack sul login
+- Mitigazione: Rate limiting, account lockout, CAPTCHA
+
+[E] Elevation of Privilege
+- Minaccia: SQL injection per accesso admin
+- Mitigazione: Prepared statements, input validation
+\end{verbatim}
+
+\subsubsection{2. PASTA (Process for Attack Simulation and Threat Analysis)}
+
+PASTA è un processo in 7 fasi:
+
+\begin{enumerate}
+    \item \textbf{Define Objectives:} Obiettivi di business e security
+    \item \textbf{Define Technical Scope:} Architettura e componenti
+    \item \textbf{Decomposition:} Scomposizione del sistema
+    \item \textbf{Threat Analysis:} Identificazione delle minacce
+    \item \textbf{Vulnerability Analysis:} Ricerca di vulnerabilità
+    \item \textbf{Attack Modeling:} Simulazione degli attacchi
+    \item \textbf{Risk Analysis:} Valutazione e prioritizzazione dei rischi
+\end{enumerate}
+
+\subsubsection{3. DREAD (Deprecato ma utile per scoring)}
+
+DREAD valuta il rischio su 5 dimensioni (scala 1-10):
+
+\begin{itemize}
+    \item \textbf{Damage:} Quanto danno può causare?
+    \item \textbf{Reproducibility:} Quanto è facile riprodurre l'attacco?
+    \item \textbf{Exploitability:} Quanto è facile sfruttare la vulnerabilità?
+    \item \textbf{Affected Users:} Quanti utenti sono impattati?
+    \item \textbf{Discoverability:} Quanto è facile scoprire la vulnerabilità?
+\end{itemize}
+
+\textbf{Risk Score = (D + R + E + A + D) / 5}
+
+\subsection{Esempio pratico: Threat Model di un'applicazione e-commerce}
+
+\subsubsection{Step 1: Architettura del sistema}
+
+\begin{verbatim}
+[Client Browser] <--> [Load Balancer] <--> [Web Servers]
+                                               |
+                                               v
+                                        [Application Server]
+                                               |
+                            +------------------+------------------+
+                            |                  |                  |
+                        [Database]    [Payment Gateway]    [File Storage]
+\end{verbatim}
+
+\subsubsection{Step 2: Data Flow Diagram}
+
+\begin{verbatim}
+1. User --> Web Server: Login credentials
+2. Web Server --> Database: Query user data
+3. Database --> Web Server: User record
+4. Web Server --> Client: Session token
+5. Client --> Web Server: Add to cart (with token)
+6. Client --> Web Server: Checkout
+7. Web Server --> Payment Gateway: Payment info
+8. Payment Gateway --> Web Server: Transaction result
+9. Web Server --> Database: Update order status
+\end{verbatim}
+
+\subsubsection{Step 3: Identificazione delle minacce}
+
+\begin{center}
+\begin{tabular}{|p{3cm}|p{5cm}|p{6cm}|}
+\hline
+\textbf{Componente} & \textbf{Minaccia} & \textbf{Mitigazione} \\
+\hline
+Login Form & Brute force, Credential stuffing & Rate limiting, CAPTCHA, MFA \\
+\hline
+Session Token & Session hijacking, XSS & HttpOnly, Secure, SameSite cookies \\
+\hline
+Database & SQL Injection & Prepared statements, ORM \\
+\hline
+Payment Gateway & MITM, data leakage & HTTPS, PCI DSS compliance \\
+\hline
+File Upload & Malware upload, path traversal & File type validation, sandboxing \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Attack Surface}
+
+L'attack surface è la somma di tutti i punti di accesso che un attaccante può sfruttare.
+
+\subsection{Tipologie di Attack Surface}
+
+\subsubsection{1. Network Attack Surface}
+
+\begin{itemize}
+    \item Porte aperte
+    \item Servizi esposti
+    \item API pubbliche
+    \item Protocolli di rete
+\end{itemize}
+
+\textbf{Esempio: Riduzione della network attack surface}
+
+\begin{lstlisting}[language=bash, caption=Firewall con iptables]
+#!/bin/bash
+# Blocca tutto il traffico in ingresso di default
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+# Permetti loopback
+iptables -A INPUT -i lo -j ACCEPT
+
+# Permetti connessioni stabilite
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Permetti solo HTTP e HTTPS
+iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Permetti SSH solo da IP specifici
+iptables -A INPUT -p tcp -s 192.168.1.100 --dport 22 -j ACCEPT
+
+# Log e drop tutto il resto
+iptables -A INPUT -j LOG --log-prefix "DROPPED: "
+iptables -A INPUT -j DROP
+\end{lstlisting}
+
+\subsubsection{2. Software Attack Surface}
+
+\begin{itemize}
+    \item Codice dell'applicazione
+    \item Librerie e dipendenze
+    \item Configurazioni
+    \item Input dell'utente
+\end{itemize}
+
+\textbf{Esempio: Input validation per ridurre attack surface}
+
+\begin{lstlisting}[language=Python, caption=Input Validation (Python)]
+import re
+from typing import Optional
+
+class InputValidator:
+    @staticmethod
+    def validate_email(email: str) -> bool:
+        """Valida formato email"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def validate_username(username: str) -> bool:
+        """Valida username (solo alfanumerici e underscore)"""
+        return bool(re.match(r'^[a-zA-Z0-9_]{3,20}$', username))
+
+    @staticmethod
+    def sanitize_filename(filename: str) -> Optional[str]:
+        """Sanitizza filename per prevenire path traversal"""
+        # Rimuovi caratteri pericolosi
+        filename = re.sub(r'[^\w\s.-]', '', filename)
+
+        # Previeni path traversal
+        if '..' in filename or filename.startswith('/'):
+            return None
+
+        return filename
+
+    @staticmethod
+    def validate_integer_range(value: str, min_val: int, max_val: int) -> bool:
+        """Valida che un valore sia un intero nel range specificato"""
+        try:
+            num = int(value)
+            return min_val <= num <= max_val
+        except ValueError:
+            return False
+
+# Uso
+validator = InputValidator()
+
+# Email validation
+email = "user@example.com"
+if validator.validate_email(email):
+    print("Email valida")
+else:
+    print("Email non valida")
+
+# Filename sanitization
+unsafe_file = "../../etc/passwd"
+safe_file = validator.sanitize_filename(unsafe_file)
+if safe_file is None:
+    print("Filename pericoloso bloccato!")
+\end{lstlisting}
+
+\subsubsection{3. Physical Attack Surface}
+
+\begin{itemize}
+    \item Accesso fisico ai server
+    \item Dispositivi USB
+    \item Social engineering
+    \item Dumpster diving
+\end{itemize}
+
+\subsection{Principi per ridurre l'Attack Surface}
+
+\begin{enumerate}
+    \item \textbf{Minimize code:} Meno codice = meno bug
+    \item \textbf{Disable unused features:} Disattiva funzionalità non necessarie
+    \item \textbf{Least privilege:} Privilegi minimi necessari
+    \item \textbf{Segmentation:} Isola componenti critici
+    \item \textbf{Input validation:} Valida e sanitizza tutti gli input
+\end{enumerate}
+
+\section{Defense in Depth}
+
+Defense in Depth è una strategia di sicurezza che utilizza multiple linee di difesa.
+
+\subsection{Livelli di difesa}
+
+\begin{verbatim}
+Layer 7: [Policies, Procedures, Awareness]
+Layer 6: [Data: Encryption, DLP, Backups]
+Layer 5: [Application: WAF, Input Validation, Secure Coding]
+Layer 4: [Host: Antivirus, HIDS, Patching]
+Layer 3: [Internal Network: Segmentation, IDS/IPS]
+Layer 2: [Perimeter: Firewall, VPN, DMZ]
+Layer 1: [Physical: Guards, Locks, CCTV]
+\end{verbatim}
+
+\subsection{Esempio pratico: Defense in Depth per un web server}
+
+\subsubsection{Livello 1: Physical Security}
+
+\begin{itemize}
+    \item Datacenter con accesso controllato
+    \item Videosorveglianza
+    \item Controllo ambientale (temperatura, umidità)
+\end{itemize}
+
+\subsubsection{Livello 2: Network Perimeter}
+
+\begin{lstlisting}[language=bash, caption=Configurazione Firewall]
+# DMZ configuration
+# Internet --> Firewall --> DMZ (Web Server)
+#                       --> Internal Network (Database)
+
+# Permetti solo HTTPS dal web al web server
+allow tcp from any to DMZ_WEB_SERVER port 443
+
+# Permetti web server a database solo porta 3306
+allow tcp from DMZ_WEB_SERVER to DB_SERVER port 3306
+
+# Blocca tutto il resto
+deny all
+\end{lstlisting}
+
+\subsubsection{Livello 3: Host Security}
+
+\begin{lstlisting}[language=bash, caption=Hardening del web server]
+#!/bin/bash
+# Aggiorna il sistema
+apt update && apt upgrade -y
+
+# Installa fail2ban per prevenire brute force
+apt install fail2ban -y
+
+# Configura automatic security updates
+apt install unattended-upgrades -y
+
+# Disabilita servizi non necessari
+systemctl disable bluetooth
+systemctl disable cups
+
+# Configura firewall locale
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 443/tcp
+ufw enable
+\end{lstlisting}
+
+\subsubsection{Livello 4: Application Security}
+
+\begin{lstlisting}[language=PHP, caption=Sicurezza applicativa (PHP)]
+<?php
+// 1. Input Validation
+function validate_user_input($input) {
+    // Whitelist approach
+    if (!preg_match('/^[a-zA-Z0-9_]{3,20}$/', $input)) {
+        throw new InvalidArgumentException("Input non valido");
+    }
+    return $input;
+}
+
+// 2. Output Encoding
+function safe_echo($data) {
+    echo htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+}
+
+// 3. Prepared Statements
+function get_user_by_id($pdo, $user_id) {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id");
+    $stmt->execute(['id' => $user_id]);
+    return $stmt->fetch();
+}
+
+// 4. CSRF Protection
+session_start();
+function generate_csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verify_csrf_token($token) {
+    return isset($_SESSION['csrf_token']) &&
+           hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// 5. Security Headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains");
+header("Content-Security-Policy: default-src 'self'");
+?>
+\end{lstlisting}
+
+\subsubsection{Livello 5: Data Security}
+
+\begin{lstlisting}[language=Python, caption=Crittografia dei dati sensibili]
+from cryptography.fernet import Fernet
+import hashlib
+import os
+
+class DataProtection:
+    def __init__(self):
+        # Carica o genera chiave di cifratura
+        self.key = self._load_or_generate_key()
+        self.cipher = Fernet(self.key)
+
+    def _load_or_generate_key(self):
+        key_file = 'encryption.key'
+        if os.path.exists(key_file):
+            with open(key_file, 'rb') as f:
+                return f.read()
+        else:
+            key = Fernet.generate_key()
+            with open(key_file, 'wb') as f:
+                f.write(key)
+            os.chmod(key_file, 0o600)  # Solo owner può leggere
+            return key
+
+    def encrypt_pii(self, data: str) -> bytes:
+        """Cifra dati personali (PII)"""
+        return self.cipher.encrypt(data.encode())
+
+    def decrypt_pii(self, encrypted_data: bytes) -> str:
+        """Decifra dati personali"""
+        return self.cipher.decrypt(encrypted_data).decode()
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash password con salt"""
+        import bcrypt
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+    @staticmethod
+    def verify_password(password: str, hashed: str) -> bool:
+        """Verifica password"""
+        import bcrypt
+        return bcrypt.checkpw(password.encode(), hashed.encode())
+
+# Uso
+dp = DataProtection()
+
+# Cifra dati sensibili prima del salvataggio
+credit_card = "1234-5678-9012-3456"
+encrypted_cc = dp.encrypt_pii(credit_card)
+
+# Hash password
+password = "SecureP@ssw0rd"
+hashed_pwd = dp.hash_password(password)
+\end{lstlisting}
+
+\subsubsection{Livello 6: Monitoring e Logging}
+
+\begin{lstlisting}[language=Python, caption=Security Logging (Python)]
+import logging
+import json
+from datetime import datetime
+
+class SecurityLogger:
+    def __init__(self, log_file='security.log'):
+        self.logger = logging.getLogger('SecurityLogger')
+        self.logger.setLevel(logging.INFO)
+
+        # File handler
+        fh = logging.FileHandler(log_file)
+        fh.setLevel(logging.INFO)
+
+        # Formato JSON per facilità di parsing
+        formatter = logging.Formatter('%(message)s')
+        fh.setFormatter(formatter)
+
+        self.logger.addHandler(fh)
+
+    def log_event(self, event_type, user_id, ip_address, details):
+        log_entry = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'event_type': event_type,
+            'user_id': user_id,
+            'ip_address': ip_address,
+            'details': details
+        }
+        self.logger.info(json.dumps(log_entry))
+
+    def log_login_attempt(self, user_id, ip, success):
+        self.log_event(
+            event_type='LOGIN_ATTEMPT',
+            user_id=user_id,
+            ip_address=ip,
+            details={'success': success}
+        )
+
+    def log_suspicious_activity(self, user_id, ip, activity):
+        self.log_event(
+            event_type='SUSPICIOUS_ACTIVITY',
+            user_id=user_id,
+            ip_address=ip,
+            details={'activity': activity}
+        )
+
+# Uso
+sec_log = SecurityLogger()
+sec_log.log_login_attempt(user_id=123, ip='192.168.1.100', success=True)
+sec_log.log_suspicious_activity(
+    user_id=456,
+    ip='10.0.0.50',
+    activity='Multiple failed SQL queries detected'
+)
+\end{lstlisting}
+
+\subsubsection{Livello 7: Policies e Awareness}
+
+\begin{itemize}
+    \item Security awareness training per dipendenti
+    \item Incident response plan
+    \item Security policies e procedure
+    \item Regular security audits
+\end{itemize}
+
+\section{Esercizi CTF-Style}
+
+\subsection{Esercizio 1: Identificare violazioni della CIA Triad}
+
+Analizza i seguenti scenari e identifica quale aspetto della CIA Triad è violato:
+
+\begin{enumerate}
+    \item Un database viene cifrato da ransomware
+    \item Le password in chiaro sono visibili nei log
+    \item Un attacco DDoS rende il sito irraggiungibile
+    \item Un attaccante modifica i prezzi nel database
+    \item Le email degli utenti vengono rubate
+\end{enumerate}
+
+\textbf{Soluzioni:}
+\begin{enumerate}
+    \item Availability (dati cifrati = non disponibili)
+    \item Confidentiality (informazioni sensibili esposte)
+    \item Availability (servizio non disponibile)
+    \item Integrity (dati modificati senza autorizzazione)
+    \item Confidentiality (dati riservati rubati)
+\end{enumerate}
+
+\subsection{Esercizio 2: Threat Modeling con STRIDE}
+
+Applica STRIDE al seguente scenario:
+
+\textit{Un sistema di gestione documenti permette agli utenti di caricare, visualizzare e condividere file PDF.}
+
+\textbf{Soluzione:}
+\begin{itemize}
+    \item \textbf{Spoofing:} Utente si autentica con credenziali rubate
+    \item \textbf{Tampering:} Modifica del PDF caricato da altro utente
+    \item \textbf{Repudiation:} Utente nega di aver condiviso un documento
+    \item \textbf{Information Disclosure:} Accesso a documenti confidenziali
+    \item \textbf{Denial of Service:} Upload di file enormi che saturano lo storage
+    \item \textbf{Elevation of Privilege:} User normale accede a funzioni admin
+\end{itemize}
+
+\subsection{Esercizio 3: Riduzione Attack Surface}
+
+Dato il seguente codice vulnerabile, riduci l'attack surface:
+
+\begin{lstlisting}[language=PHP]
+<?php
+// VULNERABILE
+$filename = $_GET['file'];
+include("/var/www/files/" . $filename);
+?>
+\end{lstlisting}
+
+\textbf{Soluzione:}
+
+\begin{lstlisting}[language=PHP]
+<?php
+// SICURO
+$allowed_files = ['home.php', 'about.php', 'contact.php'];
+$filename = $_GET['file'] ?? 'home.php';
+
+// Whitelist approach
+if (!in_array($filename, $allowed_files)) {
+    http_response_code(400);
+    die("File non permesso");
+}
+
+// Previeni path traversal
+$filepath = realpath("/var/www/files/" . $filename);
+if ($filepath === false || strpos($filepath, '/var/www/files/') !== 0) {
+    http_response_code(403);
+    die("Accesso negato");
+}
+
+include($filepath);
+?>
+\end{lstlisting}
+
+\subsection{Esercizio 4: Defense in Depth}
+
+Progetta una strategia defense in depth per proteggere un API endpoint che gestisce transazioni finanziarie.
+
+\textbf{Soluzione proposta:}
+
+\begin{enumerate}
+    \item \textbf{Network:} Firewall, rate limiting, geo-blocking
+    \item \textbf{Transport:} TLS 1.3, certificate pinning
+    \item \textbf{Authentication:} OAuth2 + JWT, API keys, MFA
+    \item \textbf{Authorization:} RBAC, scope-based access
+    \item \textbf{Input Validation:} Schema validation, type checking
+    \item \textbf{Business Logic:} Transaction limits, fraud detection
+    \item \textbf{Data:} Encryption at rest, tokenization
+    \item \textbf{Monitoring:} Real-time anomaly detection, alerting
+    \item \textbf{Audit:} Immutable audit logs, compliance reporting
+\end{enumerate}
+
+\section{Best Practices}
+
+\subsection{Checklist per sviluppatori}
+
+\begin{itemize}
+    \item[$\square$] Implementare tutte e tre le componenti della CIA Triad
+    \item[$\square$] Eseguire threat modeling in fase di design
+    \item[$\square$] Minimizzare l'attack surface
+    \item[$\square$] Applicare defense in depth
+    \item[$\square$] Validare e sanitizzare tutti gli input
+    \item[$\square$] Usare prepared statements per query SQL
+    \item[$\square$] Implementare logging e monitoring
+    \item[$\square$] Applicare il principio del minimo privilegio
+    \item[$\square$] Cifrare dati sensibili (at rest e in transit)
+    \item[$\square$] Mantenere aggiornate le dipendenze
+\end{itemize}
+
+\subsection{Risorse aggiuntive}
+
+\begin{itemize}
+    \item OWASP Threat Modeling Cheat Sheet
+    \item Microsoft SDL Threat Modeling Tool
+    \item NIST Cybersecurity Framework
+    \item CIS Controls
+\end{itemize}
+
+\section{Conclusioni}
+
+In questo capitolo abbiamo esplorato i fondamenti della web security: la CIA Triad come base teorica, il threat modeling per identificare le minacce, l'attack surface come target da minimizzare, e defense in depth come strategia complessiva.
+
+Questi concetti formano le fondamenta su cui costruiremo nei prossimi capitoli, quando analizzeremo specifiche vulnerabilità e tecniche di attacco.
+
+\textbf{Key Takeaways:}
+\begin{itemize}
+    \item La sicurezza è multi-dimensionale (CIA)
+    \item Il threat modeling previene vulnerabilità
+    \item Meno attack surface = più sicurezza
+    \item Una singola difesa non basta (defense in depth)
+    \item La security è un processo, non un prodotto
+\end{itemize}
+
+Nel prossimo capitolo approfondiremo l'OWASP Top 10, analizzando le vulnerabilità più critiche delle applicazioni web moderne.

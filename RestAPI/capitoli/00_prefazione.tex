@@ -1,0 +1,229 @@
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{A chi si rivolge questo manuale}
+
+Questi appunti sono stati pensati per sviluppatori, studenti e professionisti IT che desiderano approfondire la progettazione e implementazione di REST API moderne e scalabili. Il manuale copre dai principi fondamentali del REST alle best practices professionali per la costruzione di API robuste, sicure e ben documentate.
+
+\section*{Struttura del corso}
+
+Il corso è organizzato in 12 capitoli che coprono l'intero ciclo di progettazione e sviluppo di REST API:
+
+\textbf{Parte I - Fondamenti REST} (Capitoli 1-3)
+\begin{itemize}
+    \item Principi architetturali REST e Richardson Maturity Model
+    \item Confronto REST vs SOAP vs GraphQL
+    \item Metodi HTTP: GET, POST, PUT, PATCH, DELETE
+    \item Proprietà di idempotenza e safety
+    \item Status codes HTTP completi (1xx-5xx) e loro utilizzo appropriato
+\end{itemize}
+
+\textbf{Parte II - Design e Struttura} (Capitoli 4-6)
+\begin{itemize}
+    \item Resource design: URI patterns, naming conventions
+    \item Nesting, filtering, sorting e searching
+    \item Formati dati: JSON, HAL, JSON:API
+    \item Content negotiation e hypermedia
+    \item Strategie di versioning: URI, header, semantic versioning
+\end{itemize}
+
+\textbf{Parte III - Sicurezza e Performance} (Capitoli 7-9)
+\begin{itemize}
+    \item Autenticazione: Basic Auth, API Keys, OAuth 2.0, JWT
+    \item Rate limiting e throttling
+    \item Pagination, filtering avanzato, caching
+    \item CORS e security headers
+\end{itemize}
+
+\textbf{Parte IV - Professionalizzazione} (Capitoli 10-12)
+\begin{itemize}
+    \item Error handling standardizzato (Problem Details RFC 7807)
+    \item Documentazione con OpenAPI/Swagger
+    \item Best practices: HATEOAS, testing, monitoring
+    \item Casi di studio reali
+\end{itemize}
+
+\section*{Prerequisiti}
+
+Per affrontare questo corso è consigliabile avere:
+\begin{itemize}
+    \item Conoscenza di base del protocollo HTTP
+    \item Familiarità con JSON e formati di dati strutturati
+    \item Esperienza con almeno un linguaggio di programmazione (Python, Java, JavaScript, PHP)
+    \item Comprensione dei concetti di client-server e web services
+    \item (Opzionale) Nozioni di database relazionali
+\end{itemize}
+
+\section*{Strumenti necessari}
+
+\textbf{Tool per testing e sviluppo}:
+\begin{itemize}
+    \item \textbf{Postman}: Client API completo per testing e documentazione
+    \item \textbf{Insomnia}: Alternative a Postman, focus su GraphQL e REST
+    \item \textbf{curl}: Command-line tool per richieste HTTP
+    \item \textbf{HTTPie}: CLI user-friendly per API testing
+    \item \textbf{jq}: Processore JSON da command line
+\end{itemize}
+
+\textbf{Framework e runtime}:
+\begin{itemize}
+    \item \textbf{Node.js + Express}: Framework JavaScript/TypeScript
+    \item \textbf{Python + FastAPI/Flask}: Framework Python moderni
+    \item \textbf{Java + Spring Boot}: Enterprise Java framework
+    \item \textbf{PHP + Laravel/Symfony}: Framework PHP per API
+    \item \textbf{ASP.NET Core}: Framework Microsoft .NET
+\end{itemize}
+
+\textbf{Documentazione e design}:
+\begin{itemize}
+    \item \textbf{Swagger Editor}: Editor OpenAPI online
+    \item \textbf{Swagger UI}: Interfaccia interattiva per API docs
+    \item \textbf{Stoplight Studio}: Design-first API development
+    \item \textbf{Redoc}: Generatore documentazione da OpenAPI
+\end{itemize}
+
+\textbf{Testing e monitoring}:
+\begin{itemize}
+    \item \textbf{Newman}: Test runner per Postman collections
+    \item \textbf{REST Assured}: Testing library Java
+    \item \textbf{Gatling/K6}: Load testing e performance
+    \item \textbf{Datadog/New Relic}: APM e monitoring
+\end{itemize}
+
+\section*{Come studiare}
+
+Per ottenere il massimo da questi appunti:
+
+\begin{enumerate}
+    \item \textbf{Comprendi i principi}: Il REST è prima di tutto un'architettura
+    \item \textbf{Testa ogni esempio}: Usa Postman/curl per provare le richieste
+    \item \textbf{Analizza gli status codes}: Impara quando usare 200 vs 201 vs 204
+    \item \textbf{Progetta prima di implementare}: Disegna la struttura delle risorse
+    \item \textbf{Leggi le specifiche}: RFC HTTP, OpenAPI spec, JSON:API
+    \item \textbf{Studia API reali}: GitHub, Stripe, Twitter API come reference
+    \item \textbf{Implementa progetti}: Crea una API completa end-to-end
+    \item \textbf{Documenta sempre}: API senza documentazione è API inutilizzabile
+\end{enumerate}
+
+\begin{tcolorbox}[title=Nota importante]
+Questo manuale segue gli standard \textbf{HTTP/1.1 RFC 7231-7235}, \textbf{REST RFC 6570}, \textbf{OpenAPI 3.1}, e \textbf{JSON:API 1.1}. Gli esempi sono language-agnostic ma includono snippet in Python, JavaScript e PHP quando necessario per chiarezza.
+\end{tcolorbox}
+
+\section*{Convenzioni tipografiche}
+
+Nel testo vengono utilizzate le seguenti convenzioni:
+
+\begin{itemize}
+    \item \texttt{Codice HTTP/JSON}: Request, response e payload in monospace
+    \item \textbf{Metodi HTTP}: In grassetto (GET, POST, PUT, DELETE)
+    \item \textit{Header HTTP}: In corsivo (Content-Type, Authorization)
+    \item \verb|/api/resources|: URI endpoints e path parameters
+    \item Box colorati: Best practices, Errori comuni, Attenzioni, Esempi
+\end{itemize}
+
+\textbf{Format esempio HTTP request/response}:
+\begin{lstlisting}
+GET /api/v1/users/123 HTTP/1.1
+Host: api.example.com
+Accept: application/json
+Authorization: Bearer eyJhbGc...
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+\end{lstlisting}
+
+\section*{API di riferimento studiate}
+
+Vengono analizzate come case study le seguenti API pubbliche:
+
+\begin{itemize}
+    \item \textbf{GitHub REST API v3}: Design classico e maturo
+    \item \textbf{Stripe API}: Eccellente developer experience
+    \item \textbf{Twitter API v2}: Filtering e pagination avanzata
+    \item \textbf{OpenWeatherMap API}: Esempio di API semplice e chiara
+    \item \textbf{JSONPlaceholder}: Mock API per testing e prototyping
+    \item \textbf{REST Countries}: Dataset geografici RESTful
+\end{itemize}
+
+\section*{Sito web e risorse}
+
+Materiale aggiuntivo disponibile su:
+\begin{itemize}
+    \item Repository GitHub: \url{https://github.com/campionluca/Appunti}
+    \item Collezioni Postman scaricabili
+    \item Specifica OpenAPI 3.1 completa
+    \item Mock server per testing
+    \item Esempi di implementazione in vari linguaggi
+\end{itemize}
+
+\textbf{Risorse online consigliate}:
+\begin{itemize}
+    \item \url{https://restfulapi.net/} - Tutorial e best practices
+    \item \url{https://www.ietf.org/rfc/rfc7231.txt} - HTTP/1.1 Specification
+    \item \url{https://jsonapi.org/} - JSON:API specification
+    \item \url{https://swagger.io/specification/} - OpenAPI Specification
+    \item \url{https://developer.mozilla.org/en-US/docs/Web/HTTP} - MDN HTTP docs
+\end{itemize}
+
+\section*{Ringraziamenti}
+
+Si ringrazia l'Istituto Tecnico Antonio Scarpa per il supporto nella realizzazione di questo materiale didattico. Un ringraziamento speciale alla community open source e agli autori delle specifiche REST, HTTP e OpenAPI.
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Prof. Luca Campion}\\
+Novembre 2025
+\end{flushright}
+
+\section*{Note sulla versione}
+
+\textbf{Versione 1.0} - Novembre 2025
+\begin{itemize}
+    \item Prima release completa
+    \item 12 capitoli + 2 appendici
+    \item Coverage: REST principles, HTTP methods, status codes, resource design
+    \item Versioning, authentication, rate limiting, pagination
+    \item Error handling, OpenAPI documentation, best practices
+    \item Esempi completi con JSON request/response
+    \item Diagrammi HTTP flow con TikZ
+    \item Case study: GitHub, Stripe, Twitter API
+\end{itemize}
+
+\textbf{Aggiornamenti previsti}:
+\begin{itemize}
+    \item GraphQL comparison approfondita
+    \item WebSocket integration pattern
+    \item gRPC e HTTP/2 considerations
+    \item API Gateway patterns
+    \item Microservices e distributed tracing
+\end{itemize}
+
+\section*{Feedback e contributi}
+
+Questo è un documento in evoluzione. Segnalazioni di errori, suggerimenti e contributi sono benvenuti:
+\begin{itemize}
+    \item Issue tracker GitHub: \url{https://github.com/campionluca/Appunti/issues}
+    \item Email: \texttt{luca.campion@example.com}
+    \item Pull requests per correzioni e miglioramenti
+\end{itemize}
+
+\section*{Licenza}
+
+Questo materiale è rilasciato sotto licenza \textbf{Creative Commons BY-NC-SA 4.0}:
+\begin{itemize}
+    \item Attribuzione: citare l'autore originale
+    \item Non commerciale: uso libero per didattica e studio
+    \item Condividi allo stesso modo: derivati con stessa licenza
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{center}
+\textit{Buono studio e buon design di API RESTful!}
+\end{center}

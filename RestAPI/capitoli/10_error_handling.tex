@@ -1,0 +1,1215 @@
+% 10_error_handling.tex
+\chapter{Gestione degli Errori}
+
+Una gestione degli errori chiara e consistente è fondamentale per l'esperienza degli sviluppatori che utilizzano la tua API. Questo capitolo esplora best practices, standard e implementazioni.
+
+\section{Principi Fondamentali}
+
+\subsection{Caratteristiche di un Buon Error Response}
+
+\begin{tcolorbox}[title=Requisiti Error Response]
+\begin{itemize}
+\item \textbf{Status HTTP corretto}: Usa il codice di stato appropriato
+\item \textbf{Messaggio chiaro}: Spiega cosa è andato storto
+\item \textbf{Codice errore}: Identificatore machine-readable
+\item \textbf{Dettagli}: Informazioni aggiuntive per il debugging
+\item \textbf{Azioni suggerite}: Come risolvere il problema
+\item \textbf{Consistenza}: Stessa struttura per tutti gli errori
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Cosa NON Fare}
+
+\begin{tcolorbox}[title=Anti-pattern da Evitare, colframe=red!60]
+\begin{itemize}
+\item Ritornare sempre 200 OK (anche per errori)
+\item Esporre stack trace in produzione
+\item Messaggi generici tipo "Error" o "Something went wrong"
+\item Includere informazioni sensibili (password, token)
+\item Cambiare struttura errori tra endpoint
+\item Usare HTML invece di JSON per errori
+\end{itemize}
+\end{tcolorbox}
+
+\section{Struttura Error Response}
+
+\subsection{Formato Base}
+
+\begin{lstlisting}[caption=Struttura Error Response Standard]
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Validation failed for one or more fields",
+    "details": [
+      {
+        "field": "email",
+        "message": "Invalid email format",
+        "code": "invalid_format"
+      },
+      {
+        "field": "age",
+        "message": "Must be at least 18",
+        "code": "min_value"
+      }
+    ],
+    "request_id": "req_abc123xyz",
+    "timestamp": "2023-11-13T12:34:56Z",
+    "documentation_url": "https://docs.example.com/errors/validation_error"
+  }
+}
+\end{lstlisting}
+
+\subsection{Campi Principali}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{7cm}|}
+\hline
+\textbf{Campo} & \textbf{Tipo} & \textbf{Descrizione} \\ \hline
+\texttt{code} & string & Codice errore machine-readable \\ \hline
+\texttt{message} & string & Descrizione human-readable \\ \hline
+\texttt{details} & array & Dettagli specifici (es. campi validazione) \\ \hline
+\texttt{request\_id} & string & ID per tracciamento e debugging \\ \hline
+\texttt{timestamp} & string & Quando è avvenuto l'errore \\ \hline
+\texttt{documentation\_url} & string & Link alla documentazione \\ \hline
+\end{tabular}
+\caption{Campi Error Response}
+\end{table}
+
+\section{RFC 7807 Problem Details}
+
+\subsection{Introduzione}
+
+RFC 7807 definisce uno standard per error responses in API HTTP.
+
+\begin{lstlisting}[caption=RFC 7807 Problem Details Format]
+HTTP/1.1 403 Forbidden
+Content-Type: application/problem+json
+Content-Language: it
+
+{
+  "type": "https://example.com/probs/insufficient-credit",
+  "title": "Credito insufficiente",
+  "status": 403,
+  "detail": "Il tuo account corrente ha solo 30 crediti, ma questa operazione richiede 50 crediti.",
+  "instance": "/account/12345/transactions/abc",
+  "balance": 30,
+  "required": 50,
+  "accounts": [
+    "/account/12345",
+    "/account/67890"
+  ]
+}
+\end{lstlisting}
+
+\subsection{Campi RFC 7807}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{3cm}|p{7cm}|}
+\hline
+\textbf{Campo} & \textbf{Obbligatorio} & \textbf{Descrizione} \\ \hline
+\texttt{type} & No (default: about:blank) & URI che identifica il tipo di problema \\ \hline
+\texttt{title} & No & Breve descrizione human-readable \\ \hline
+\texttt{status} & No & HTTP status code (ridondante ma utile) \\ \hline
+\texttt{detail} & No & Spiegazione specifica dell'occorrenza \\ \hline
+\texttt{instance} & No & URI che identifica questa specifica occorrenza \\ \hline
+\end{tabular}
+\caption{Campi Standard RFC 7807}
+\end{table}
+
+\subsection{Campi Extension}
+
+RFC 7807 permette campi personalizzati:
+
+\begin{lstlisting}[caption=Problem Details con Extension Fields]
+{
+  "type": "https://api.example.com/errors/rate-limit",
+  "title": "Rate limit exceeded",
+  "status": 429,
+  "detail": "You have exceeded the rate limit of 100 requests per hour",
+  "instance": "/api/users?page=5",
+
+  "limit": 100,
+  "remaining": 0,
+  "reset_at": "2023-11-13T13:00:00Z",
+  "retry_after": 1847
+}
+\end{lstlisting}
+
+\subsection{Implementazione RFC 7807}
+
+\begin{lstlisting}[language=Python, caption=Problem Details Class]
+from flask import jsonify, make_response
+from datetime import datetime
+
+class ProblemDetails:
+    """RFC 7807 Problem Details implementation"""
+
+    def __init__(self, status, title=None, detail=None,
+                 problem_type=None, instance=None, **extensions):
+        self.status = status
+        self.title = title
+        self.detail = detail
+        self.type = problem_type or "about:blank"
+        self.instance = instance
+        self.extensions = extensions
+
+    def to_dict(self):
+        """Converti in dizionario"""
+        problem = {
+            "type": self.type,
+            "status": self.status
+        }
+
+        if self.title:
+            problem["title"] = self.title
+        if self.detail:
+            problem["detail"] = self.detail
+        if self.instance:
+            problem["instance"] = self.instance
+
+        # Aggiungi extension fields
+        problem.update(self.extensions)
+
+        return problem
+
+    def to_response(self):
+        """Crea Flask response"""
+        response = make_response(
+            jsonify(self.to_dict()),
+            self.status
+        )
+        response.headers['Content-Type'] = 'application/problem+json'
+        return response
+
+# Utilizzo
+@app.errorhandler(429)
+def rate_limit_exceeded(error):
+    problem = ProblemDetails(
+        status=429,
+        title="Rate limit exceeded",
+        detail="You have exceeded your rate limit",
+        problem_type="https://api.example.com/errors/rate-limit",
+        instance=request.path,
+        limit=100,
+        remaining=0,
+        reset_at=datetime.utcnow().isoformat()
+    )
+    return problem.to_response()
+\end{lstlisting}
+
+\section{Codici di Errore}
+
+\subsection{Struttura Codici Errore}
+
+\begin{lstlisting}[caption=Convenzione Codici Errore]
+# Formato: categoria_tipo
+validation_error
+authentication_failed
+authorization_denied
+resource_not_found
+rate_limit_exceeded
+server_error
+
+# Con sotto-categorie
+validation_email_invalid
+validation_password_weak
+validation_required_field
+authentication_token_expired
+authentication_invalid_credentials
+\end{lstlisting}
+
+\subsection{Catalogo Errori}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{HTTP Status} & \textbf{Code} & \textbf{Descrizione} \\ \hline
+400 & \texttt{bad\_request} & Request malformata \\ \hline
+400 & \texttt{validation\_error} & Errori di validazione \\ \hline
+400 & \texttt{invalid\_json} & JSON non valido \\ \hline
+401 & \texttt{unauthorized} & Autenticazione mancante \\ \hline
+401 & \texttt{invalid\_token} & Token non valido \\ \hline
+401 & \texttt{token\_expired} & Token scaduto \\ \hline
+403 & \texttt{forbidden} & Accesso negato \\ \hline
+403 & \texttt{insufficient\_permissions} & Permessi insufficienti \\ \hline
+404 & \texttt{not\_found} & Risorsa non trovata \\ \hline
+409 & \texttt{conflict} & Conflitto (es. duplicato) \\ \hline
+422 & \texttt{unprocessable\_entity} & Semantica non valida \\ \hline
+429 & \texttt{rate\_limit\_exceeded} & Troppi richieste \\ \hline
+500 & \texttt{internal\_server\_error} & Errore server generico \\ \hline
+503 & \texttt{service\_unavailable} & Servizio non disponibile \\ \hline
+\end{tabular}
+\caption{Codici Errore Comuni}
+\end{table}
+
+\section{Errori di Validazione}
+
+\subsection{Formato Dettagliato}
+
+\begin{lstlisting}[caption=Validation Error Response]
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Request validation failed",
+    "errors": [
+      {
+        "field": "email",
+        "value": "not-an-email",
+        "code": "invalid_format",
+        "message": "Must be a valid email address"
+      },
+      {
+        "field": "password",
+        "code": "too_short",
+        "message": "Password must be at least 8 characters",
+        "constraint": {
+          "min_length": 8,
+          "actual_length": 5
+        }
+      },
+      {
+        "field": "age",
+        "value": 15,
+        "code": "out_of_range",
+        "message": "Age must be between 18 and 120",
+        "constraint": {
+          "min": 18,
+          "max": 120
+        }
+      },
+      {
+        "field": "terms_accepted",
+        "code": "required",
+        "message": "This field is required"
+      }
+    ]
+  }
+}
+\end{lstlisting}
+
+\subsection{Implementazione Validation}
+
+\begin{lstlisting}[language=Python, caption=Validation Error Handler]
+from marshmallow import Schema, fields, validate, ValidationError
+
+class UserSchema(Schema):
+    email = fields.Email(required=True)
+    password = fields.Str(
+        required=True,
+        validate=validate.Length(min=8, max=128)
+    )
+    age = fields.Int(
+        validate=validate.Range(min=18, max=120)
+    )
+    terms_accepted = fields.Bool(required=True)
+
+def validate_request(schema_class, data):
+    """Valida dati con Marshmallow schema"""
+    schema = schema_class()
+
+    try:
+        validated = schema.load(data)
+        return validated, None
+
+    except ValidationError as err:
+        # Converti errori Marshmallow in formato API
+        errors = []
+
+        for field, messages in err.messages.items():
+            for message in messages if isinstance(messages, list) else [messages]:
+                error_detail = {
+                    "field": field,
+                    "message": message,
+                    "code": determine_error_code(message)
+                }
+
+                # Aggiungi valore se presente
+                if field in data:
+                    error_detail["value"] = data[field]
+
+                errors.append(error_detail)
+
+        return None, {
+            "error": {
+                "code": "validation_error",
+                "message": "Request validation failed",
+                "errors": errors
+            }
+        }
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+
+    # Valida
+    validated_data, error = validate_request(UserSchema, data)
+
+    if error:
+        return jsonify(error), 400
+
+    # Processa dati validati
+    user = User(**validated_data)
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify(user.to_dict()), 201
+\end{lstlisting}
+
+\section{Errori di Autenticazione e Autorizzazione}
+
+\subsection{401 Unauthorized}
+
+\begin{lstlisting}[caption=401 Unauthorized Response]
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="example.com", error="invalid_token",
+  error_description="The access token expired"
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "token_expired",
+    "message": "Your authentication token has expired",
+    "expired_at": "2023-11-13T12:00:00Z",
+    "actions": [
+      "Refresh your token using the refresh endpoint",
+      "Re-authenticate to obtain a new token"
+    ],
+    "links": {
+      "refresh": "https://api.example.com/auth/refresh",
+      "login": "https://api.example.com/auth/login"
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{403 Forbidden}
+
+\begin{lstlisting}[caption=403 Forbidden Response]
+HTTP/1.1 403 Forbidden
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "insufficient_permissions",
+    "message": "You don't have permission to access this resource",
+    "required_permissions": ["admin:write"],
+    "current_permissions": ["user:read", "user:write"],
+    "resource": "/api/admin/users",
+    "actions": [
+      "Contact your administrator to request elevated permissions",
+      "Use an account with appropriate permissions"
+    ]
+  }
+}
+\end{lstlisting>
+
+\subsection{Implementazione}
+
+\begin{lstlisting}[language=Python, caption=Auth Error Handlers]
+from functools import wraps
+from flask import request, jsonify
+import jwt
+
+def require_auth(required_permissions=None):
+    """Decorator per richiedere autenticazione"""
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # Estrai token
+            auth_header = request.headers.get('Authorization')
+
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({
+                    "error": {
+                        "code": "unauthorized",
+                        "message": "Missing or invalid Authorization header",
+                        "expected_format": "Authorization: Bearer <token>"
+                    }
+                }), 401
+
+            token = auth_header[7:]
+
+            # Verifica token
+            try:
+                payload = jwt.decode(
+                    token,
+                    app.config['SECRET_KEY'],
+                    algorithms=['HS256']
+                )
+            except jwt.ExpiredSignatureError:
+                return jsonify({
+                    "error": {
+                        "code": "token_expired",
+                        "message": "Authentication token has expired",
+                        "links": {
+                            "refresh": "/auth/refresh",
+                            "login": "/auth/login"
+                        }
+                    }
+                }), 401
+            except jwt.InvalidTokenError:
+                return jsonify({
+                    "error": {
+                        "code": "invalid_token",
+                        "message": "Authentication token is invalid"
+                    }
+                }), 401
+
+            # Verifica permessi
+            if required_permissions:
+                user_permissions = payload.get('permissions', [])
+
+                missing = set(required_permissions) - set(user_permissions)
+                if missing:
+                    return jsonify({
+                        "error": {
+                            "code": "insufficient_permissions",
+                            "message": "Insufficient permissions",
+                            "required": list(required_permissions),
+                            "missing": list(missing),
+                            "current": user_permissions
+                        }
+                    }), 403
+
+            # Aggiungi user al context
+            request.current_user = payload
+            return f(*args, **kwargs)
+
+        return wrapped
+    return decorator
+
+# Utilizzo
+@app.route('/api/admin/users', methods=['DELETE'])
+@require_auth(required_permissions=['admin:delete'])
+def delete_user():
+    # Solo accessibile con permesso admin:delete
+    pass
+\end{lstlisting}
+
+\section{Errori 404 Not Found}
+
+\subsection{Resource Not Found}
+
+\begin{lstlisting}[caption=404 Not Found Response]
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "resource_not_found",
+    "message": "User with ID 12345 not found",
+    "resource_type": "User",
+    "resource_id": "12345",
+    "suggestions": [
+      "Verify the user ID is correct",
+      "The user may have been deleted",
+      "Check if you have access to this user"
+    ],
+    "links": {
+      "list_users": "https://api.example.com/users",
+      "search": "https://api.example.com/users/search"
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{Endpoint Not Found}
+
+\begin{lstlisting}[caption=404 Endpoint Not Found]
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "endpoint_not_found",
+    "message": "The requested endpoint does not exist",
+    "path": "/api/v1/userz",
+    "method": "GET",
+    "suggestions": [
+      "Check the URL spelling",
+      "Verify you are using the correct API version",
+      "Consult the API documentation"
+    ],
+    "similar_endpoints": [
+      "/api/v1/users",
+      "/api/v1/user/{id}"
+    ],
+    "documentation_url": "https://docs.example.com/api/v1"
+  }
+}
+\end{lstlisting}
+
+\section{Errori 409 Conflict}
+
+\subsection{Duplicate Resource}
+
+\begin{lstlisting}[caption=409 Conflict - Duplicato]
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "duplicate_resource",
+    "message": "A user with this email already exists",
+    "conflicting_field": "email",
+    "conflicting_value": "user@example.com",
+    "existing_resource": {
+      "id": 789,
+      "url": "https://api.example.com/users/789"
+    },
+    "actions": [
+      "Use a different email address",
+      "Update the existing user instead of creating a new one",
+      "Use the login endpoint if you already have an account"
+    ]
+  }
+}
+\end{lstlisting}
+
+\subsection{Concurrent Modification}
+
+\begin{lstlisting}[caption=409 Conflict - Versione]
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "concurrent_modification",
+    "message": "The resource has been modified by another request",
+    "resource_type": "Document",
+    "resource_id": "doc_123",
+    "expected_version": 5,
+    "current_version": 7,
+    "last_modified_by": "user@example.com",
+    "last_modified_at": "2023-11-13T12:30:00Z",
+    "actions": [
+      "Fetch the latest version of the resource",
+      "Merge your changes with the current version",
+      "Use optimistic locking with the correct version"
+    ],
+    "links": {
+      "fetch_latest": "https://api.example.com/documents/doc_123"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Errori 429 Rate Limit}
+
+\begin{lstlisting}[caption=429 Too Many Requests]
+HTTP/1.1 429 Too Many Requests
+Retry-After: 3600
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1699876543
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "rate_limit_exceeded",
+    "message": "API rate limit exceeded",
+    "limit": 100,
+    "window": "1 hour",
+    "reset_at": "2023-11-13T13:00:00Z",
+    "retry_after_seconds": 3600,
+    "current_usage": {
+      "hourly": 100,
+      "daily": 850
+    },
+    "limits": {
+      "hourly": 100,
+      "daily": 1000
+    },
+    "suggestions": [
+      "Wait 1 hour before making more requests",
+      "Implement exponential backoff in your client",
+      "Consider upgrading to a higher tier plan"
+    ],
+    "upgrade_url": "https://example.com/pricing"
+  }
+}
+\end{lstlisting}
+
+\section{Errori 500 Server}
+
+\subsection{Internal Server Error}
+
+\begin{lstlisting}[caption=500 Internal Server Error (Production)]
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "internal_server_error",
+    "message": "An unexpected error occurred",
+    "request_id": "req_abc123xyz789",
+    "timestamp": "2023-11-13T12:34:56.789Z",
+    "actions": [
+      "Try your request again",
+      "If the problem persists, contact support with the request ID",
+      "Check the API status page for known issues"
+    ],
+    "links": {
+      "status": "https://status.example.com",
+      "support": "https://support.example.com",
+      "documentation": "https://docs.example.com"
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Importante: Sicurezza, colframe=red!60]
+\textbf{MAI} esporre stack trace, query SQL, o dettagli interni in produzione!
+Logga i dettagli server-side e fornisci solo un request\_id al client.
+\end{tcolorbox}
+
+\subsection{Error Logging}
+
+\begin{lstlisting}[language=Python, caption=Logging Errori Server]
+import logging
+import traceback
+import uuid
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    """Gestisce errori non previsti"""
+
+    # Genera request ID univoco
+    request_id = f"req_{uuid.uuid4().hex}"
+
+    # Log completo server-side
+    logger.error(
+        f"Unexpected error [{request_id}]: {str(error)}",
+        extra={
+            'request_id': request_id,
+            'path': request.path,
+            'method': request.method,
+            'user': getattr(request, 'current_user', None),
+            'timestamp': datetime.utcnow().isoformat(),
+            'stacktrace': traceback.format_exc()
+        }
+    )
+
+    # Response minimale al client
+    return jsonify({
+        "error": {
+            "code": "internal_server_error",
+            "message": "An unexpected error occurred",
+            "request_id": request_id,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    }), 500
+\end{lstlisting}
+
+\section{Errori 503 Service Unavailable}
+
+\begin{lstlisting}[caption=503 Service Unavailable]
+HTTP/1.1 503 Service Unavailable
+Retry-After: 300
+Content-Type: application/json
+
+{
+  "error": {
+    "code": "service_unavailable",
+    "message": "The API is temporarily unavailable",
+    "reason": "scheduled_maintenance",
+    "retry_after_seconds": 300,
+    "estimated_restore": "2023-11-13T14:00:00Z",
+    "status_page": "https://status.example.com",
+    "details": {
+      "maintenance_window": {
+        "start": "2023-11-13T13:00:00Z",
+        "end": "2023-11-13T14:00:00Z",
+        "duration_minutes": 60
+      },
+      "affected_services": ["API", "OAuth"]
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Global Error Handler}
+
+\subsection{Middleware Centralizzato}
+
+\begin{lstlisting}[language=Python, caption=Centralized Error Handler]
+from flask import Flask, jsonify, request
+from werkzeug.exceptions import HTTPException
+import logging
+
+app = Flask(__name__)
+logger = logging.getLogger(__name__)
+
+class APIError(Exception):
+    """Base class per errori API"""
+
+    def __init__(self, message, status_code=400,
+                 code=None, details=None, **kwargs):
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code
+        self.code = code or self.__class__.__name__
+        self.details = details or {}
+        self.extensions = kwargs
+
+    def to_dict(self):
+        error = {
+            "code": self.code,
+            "message": self.message
+        }
+
+        if self.details:
+            error["details"] = self.details
+
+        error.update(self.extensions)
+
+        return {"error": error}
+
+# Errori specifici
+class ValidationError(APIError):
+    def __init__(self, message, errors, **kwargs):
+        super().__init__(
+            message,
+            status_code=400,
+            code="validation_error",
+            errors=errors,
+            **kwargs
+        )
+
+class NotFoundError(APIError):
+    def __init__(self, resource_type, resource_id, **kwargs):
+        super().__init__(
+            f"{resource_type} with ID {resource_id} not found",
+            status_code=404,
+            code="resource_not_found",
+            resource_type=resource_type,
+            resource_id=resource_id,
+            **kwargs
+        )
+
+class UnauthorizedError(APIError):
+    def __init__(self, message="Unauthorized", **kwargs):
+        super().__init__(
+            message,
+            status_code=401,
+            code="unauthorized",
+            **kwargs
+        )
+
+# Global error handlers
+@app.errorhandler(APIError)
+def handle_api_error(error):
+    """Gestisce APIError custom"""
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+@app.errorhandler(HTTPException)
+def handle_http_exception(error):
+    """Gestisce eccezioni HTTP Werkzeug"""
+    return jsonify({
+        "error": {
+            "code": error.name.lower().replace(" ", "_"),
+            "message": error.description,
+            "status": error.code
+        }
+    }), error.code
+
+@app.errorhandler(404)
+def handle_not_found(error):
+    """404 personalizzato"""
+    return jsonify({
+        "error": {
+            "code": "endpoint_not_found",
+            "message": "The requested endpoint does not exist",
+            "path": request.path,
+            "method": request.method
+        }
+    }), 404
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    """Catch-all per errori non previsti"""
+    logger.exception("Unexpected error")
+
+    return jsonify({
+        "error": {
+            "code": "internal_server_error",
+            "message": "An unexpected error occurred"
+        }
+    }), 500
+
+# Utilizzo negli endpoint
+@app.route('/api/users/<int:user_id>')
+def get_user(user_id):
+    user = User.query.get(user_id)
+
+    if not user:
+        raise NotFoundError("User", user_id)
+
+    return jsonify(user.to_dict())
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+
+    # Validazione
+    errors = validate_user_data(data)
+    if errors:
+        raise ValidationError(
+            "Validation failed",
+            errors=errors
+        )
+
+    # ...
+\end{lstlisting}
+
+\section{Client Error Handling}
+
+\subsection{JavaScript Example}
+
+\begin{lstlisting}[language=JavaScript, caption=Client Error Handling]
+class APIClient {
+  async request(endpoint, options = {}) {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}${endpoint}`,
+        {
+          ...options,
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            ...options.headers
+          }
+        }
+      );
+
+      // Parse JSON (anche per errori)
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new APIError(data.error, response.status);
+      }
+
+      return data;
+
+    } catch (error) {
+      if (error instanceof APIError) {
+        throw error;
+      }
+
+      // Network error o altro
+      throw new APIError({
+        code: 'network_error',
+        message: 'Failed to connect to API'
+      }, 0);
+    }
+  }
+
+  async retryWithBackoff(fn, maxRetries = 3) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (error instanceof APIError) {
+          // Retry su errori temporanei
+          if ([429, 503].includes(error.status)) {
+            if (attempt < maxRetries) {
+              const delay = error.retryAfter ||
+                Math.min(1000 * Math.pow(2, attempt), 10000);
+
+              console.log(`Retrying in ${delay}ms...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+          }
+
+          // Non fare retry su errori client
+          if (error.status >= 400 && error.status < 500) {
+            throw error;
+          }
+        }
+
+        // Ultimo tentativo
+        if (attempt === maxRetries) {
+          throw error;
+        }
+
+        // Exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+}
+
+class APIError extends Error {
+  constructor(errorData, status) {
+    super(errorData.message);
+    this.name = 'APIError';
+    this.code = errorData.code;
+    this.status = status;
+    this.details = errorData.details;
+    this.retryAfter = errorData.retry_after_seconds;
+  }
+
+  isValidationError() {
+    return this.code === 'validation_error';
+  }
+
+  isAuthError() {
+    return [401, 403].includes(this.status);
+  }
+
+  isRetryable() {
+    return [429, 503].includes(this.status) || this.status >= 500;
+  }
+}
+
+// Utilizzo
+const api = new APIClient('https://api.example.com', token);
+
+try {
+  const user = await api.retryWithBackoff(
+    () => api.request('/users/123')
+  );
+
+  console.log('User:', user);
+
+} catch (error) {
+  if (error instanceof APIError) {
+    if (error.isValidationError()) {
+      // Mostra errori validazione
+      error.details.errors.forEach(err => {
+        console.error(`${err.field}: ${err.message}`);
+      });
+    } else if (error.isAuthError()) {
+      // Redirect a login
+      window.location.href = '/login';
+    } else {
+      // Errore generico
+      console.error(`API Error: ${error.message}`);
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Testing Errors}
+
+\subsection{Unit Tests}
+
+\begin{lstlisting}[language=Python, caption=Testing Error Responses]
+import unittest
+from app import app, db
+from app.models import User
+
+class TestErrorHandling(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
+
+    def test_404_not_found(self):
+        """Test 404 per risorsa inesistente"""
+        response = self.app.get('/api/users/99999')
+
+        self.assertEqual(response.status_code, 404)
+
+        data = response.get_json()
+        self.assertIn('error', data)
+        self.assertEqual(data['error']['code'], 'resource_not_found')
+
+    def test_validation_error(self):
+        """Test errore validazione"""
+        response = self.app.post(
+            '/api/users',
+            json={'email': 'invalid-email'}
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        data = response.get_json()
+        self.assertEqual(data['error']['code'], 'validation_error')
+        self.assertIn('errors', data['error'])
+
+    def test_unauthorized(self):
+        """Test accesso senza token"""
+        response = self.app.get('/api/protected')
+
+        self.assertEqual(response.status_code, 401)
+
+        data = response.get_json()
+        self.assertEqual(data['error']['code'], 'unauthorized')
+
+    def test_rate_limit(self):
+        """Test rate limiting"""
+        # Supera il limite
+        for i in range(105):
+            response = self.app.get('/api/data')
+
+        self.assertEqual(response.status_code, 429)
+
+        data = response.get_json()
+        self.assertEqual(data['error']['code'], 'rate_limit_exceeded')
+        self.assertIn('Retry-After', response.headers)
+
+if __name__ == '__main__':
+    unittest.main()
+\end{lstlisting}
+
+\section{OpenAPI Specification}
+
+\begin{lstlisting}[caption=Error Schemas in OpenAPI]
+openapi: 3.0.0
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: validation_error
+            message:
+              type: string
+              example: Validation failed
+            details:
+              type: object
+            request_id:
+              type: string
+              example: req_abc123
+            timestamp:
+              type: string
+              format: date-time
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      code:
+                        type: string
+                      message:
+                        type: string
+
+paths:
+  /users/{id}:
+    get:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: unauthorized
+                  message: Missing or invalid authentication
+
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: resource_not_found
+                  message: User with ID 123 not found
+                  resource_type: User
+                  resource_id: "123"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Checklist Error Handling]
+\begin{itemize}
+\item[$\square$] Usa HTTP status code appropriati
+\item[$\square$] Fornisci messaggi chiari e actionable
+\item[$\square$] Includi codici errore machine-readable
+\item[$\square$] Mantieni struttura consistente
+\item[$\square$] Aggiungi request\_id per debugging
+\item[$\square$] Non esporre dettagli interni in production
+\item[$\square$] Logga errori server-side con context
+\item[$\square$] Documenta tutti gli errori possibili
+\item[$\square$] Testa scenari di errore
+\item[$\square$] Fornisci suggerimenti per risolvere
+\item[$\square$] Considera localizzazione messaggi
+\item[$\square$] Implementa retry logic lato client
+\end{itemize}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Status} & \textbf{Quando Usare} & \textbf{Esempio} \\ \hline
+400 & Errore client generico & Request malformata, JSON invalido \\ \hline
+401 & Autenticazione fallita & Token mancante/scaduto \\ \hline
+403 & Autorizzazione negata & Permessi insufficienti \\ \hline
+404 & Risorsa non trovata & User ID inesistente \\ \hline
+409 & Conflitto & Email già esistente, versione obsoleta \\ \hline
+422 & Validazione semantica & Dati sintatticamente validi ma semanticamente no \\ \hline
+429 & Rate limit & Troppe richieste \\ \hline
+500 & Errore server & Eccezione non gestita \\ \hline
+503 & Servizio non disponibile & Manutenzione, sovraccarico \\ \hline
+\end{tabular}
+\caption{Guida Status Codes per Errori}
+\end{table}

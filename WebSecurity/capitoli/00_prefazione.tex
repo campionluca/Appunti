@@ -1,0 +1,414 @@
+\chapter{Prefazione}
+
+\section{L'importanza della Web Security}
+
+La sicurezza delle applicazioni web è diventata una delle competenze più critiche nel panorama tecnologico moderno. Con miliardi di utenti che accedono quotidianamente a servizi online, la protezione dei dati e dei sistemi è passata dall'essere un aspetto opzionale a una necessità imprescindibile.
+
+\subsection{Il contesto attuale}
+
+Viviamo in un'era in cui le violazioni dei dati fanno costantemente notizia. Aziende di ogni dimensione, dalle startup alle multinazionali, hanno subito attacchi informatici che hanno compromesso informazioni sensibili di milioni di utenti. Il costo medio di una violazione dei dati nel 2023 è stimato intorno ai 4.45 milioni di dollari, senza considerare il danno reputazionale a lungo termine.
+
+\begin{itemize}
+    \item \textbf{Volume degli attacchi:} Ogni giorno vengono rilevati oltre 300.000 nuovi malware
+    \item \textbf{Tempo di rilevamento:} In media occorrono 277 giorni per identificare e contenere una violazione
+    \item \textbf{Superficie d'attacco:} L'adozione del cloud e del lavoro remoto ha ampliato le superfici d'attacco
+    \item \textbf{Sofisticazione:} Gli attacchi sono sempre più automatizzati e mirati
+\end{itemize}
+
+\subsection{Perché questo libro}
+
+Questo libro nasce dall'esigenza di fornire una guida pratica e completa alla sicurezza web, rivolta a sviluppatori, sistemisti, penetration tester e chiunque sia coinvolto nella creazione e gestione di applicazioni web.
+
+\subsubsection{Obiettivi del libro}
+
+\begin{enumerate}
+    \item \textbf{Formazione pratica:} Non solo teoria, ma esempi concreti di codice vulnerabile e sicuro
+    \item \textbf{Approccio hands-on:} Esercizi in stile CTF (Capture The Flag) per applicare le conoscenze
+    \item \textbf{Copertura completa:} Dalle basi dell'OWASP Top 10 alle tecniche avanzate
+    \item \textbf{Multi-linguaggio:} Esempi in PHP, Python e Java per adattarsi a diversi contesti
+    \item \textbf{Aggiornamento continuo:} Focus sulle minacce attuali e le best practice moderne
+\end{enumerate}
+
+\subsection{A chi si rivolge}
+
+\textbf{Sviluppatori Web:} Se scrivete codice che viene eseguito su server o browser, questo libro vi aiuterà a identificare e prevenire vulnerabilità comuni.
+
+\textbf{Security Engineers:} Per chi si occupa di sicurezza applicativa, trovate qui una base solida per audit e penetration testing.
+
+\textbf{DevOps e SRE:} La sicurezza fa parte del ciclo di vita del software; comprendere le vulnerabilità vi permetterà di configurare ambienti più sicuri.
+
+\textbf{Studenti e autodidatti:} Se state studiando cybersecurity, questo libro offre un percorso strutturato con esercizi pratici.
+
+\subsection{Il costo dell'insicurezza}
+
+Ignorare la sicurezza non è più un'opzione. Vediamo alcuni casi reali che illustrano le conseguenze di vulnerabilità non risolte.
+
+\subsubsection{Caso 1: Equifax (2017)}
+
+Una vulnerabilità in Apache Struts non patchata ha portato al furto di dati personali di 147 milioni di persone. Il costo totale: oltre 1.4 miliardi di dollari in risarcimenti e multe.
+
+\textbf{Vulnerabilità:} Remote Code Execution (CVE-2017-5638)
+
+\textbf{Lezione:} Il patch management è critico. La patch era disponibile da 2 mesi.
+
+\subsubsection{Caso 2: Yahoo (2013-2014)}
+
+Attacchi multipli hanno compromesso 3 miliardi di account utente. La violazione ha ridotto il valore di vendita dell'azienda di 350 milioni di dollari.
+
+\textbf{Vulnerabilità:} Autenticazione debole, mancanza di crittografia
+
+\textbf{Lezione:} La security by design deve essere prioritaria fin dall'inizio.
+
+\subsubsection{Caso 3: British Airways (2018)}
+
+Un attacco Magecart (card skimming) ha rubato dati di 380.000 transazioni. Multa GDPR: 20 milioni di sterline.
+
+\textbf{Vulnerabilità:} Cross-Site Scripting (XSS) con iniezione di codice malevolo
+
+\textbf{Lezione:} Anche le dipendenze di terze parti devono essere monitorate.
+
+\subsubsection{Caso 4: SolarWinds (2020)}
+
+Supply chain attack che ha compromesso migliaia di organizzazioni governative e private.
+
+\textbf{Vulnerabilità:} Compromissione della build pipeline
+
+\textbf{Lezione:} La sicurezza della supply chain è fondamentale.
+
+\subsection{Il panorama delle minacce}
+
+\subsubsection{Tipologie di attaccanti}
+
+\begin{description}
+    \item[Script Kiddies] Utilizzano tool preconfezionati senza conoscenze approfondite. Pericolosi per la quantità e l'automazione.
+
+    \item[Cybercriminali] Motivati dal profitto: ransomware, furto di carte di credito, cryptojacking.
+
+    \item[Hacktivisti] Motivati da ideali politici o sociali. Attacchi DDoS, defacement.
+
+    \item[Insider Threats] Dipendenti o ex-dipendenti con accesso privilegiato.
+
+    \item[APT (Advanced Persistent Threats)] Gruppi sponsorizzati da stati nazionali con risorse illimitate.
+
+    \item[Competitor] Spionaggio industriale per ottenere vantaggi competitivi.
+\end{description}
+
+\subsubsection{Vettori di attacco comuni}
+
+\begin{itemize}
+    \item \textbf{Web Application Attacks:} SQL Injection, XSS, CSRF (focus di questo libro)
+    \item \textbf{Phishing:} Ingegneria sociale per ottenere credenziali
+    \item \textbf{Malware:} Trojan, ransomware, spyware
+    \item \textbf{DDoS:} Saturazione delle risorse per rendere indisponibile un servizio
+    \item \textbf{Man-in-the-Middle:} Intercettazione delle comunicazioni
+    \item \textbf{Zero-Day Exploits:} Sfruttamento di vulnerabilità sconosciute
+\end{itemize}
+
+\subsection{La mentalità del security mindset}
+
+Sviluppare con un "security mindset" significa:
+
+\subsubsection{1. Pensare come un attaccante}
+
+Non basta scrivere codice funzionante; bisogna chiedersi: "Come potrebbe essere abusato?"
+
+\begin{lstlisting}[language=PHP, caption=Esempio di codice apparentemente innocuo]
+<?php
+// Recupera il nome utente dalla query string
+$username = $_GET['user'];
+
+// Mostra un messaggio di benvenuto
+echo "Benvenuto, " . $username . "!";
+?>
+\end{lstlisting}
+
+\textbf{Domande da porsi:}
+\begin{itemize}
+    \item Cosa succede se \texttt{\$\_GET['user']} contiene codice JavaScript?
+    \item E se contiene tag HTML malevoli?
+    \item Potrebbe essere usato per XSS?
+\end{itemize}
+
+\subsubsection{2. Assumere che l'input sia malevolo}
+
+\textbf{Regola d'oro:} Never trust user input.
+
+Ogni dato proveniente dall'esterno (form, query string, header HTTP, cookie, API) deve essere validato e sanitizzato.
+
+\subsubsection{3. Defense in Depth}
+
+Non affidarsi a un'unica linea di difesa. Esempio:
+
+\begin{itemize}
+    \item \textbf{Livello 1:} Validazione input lato client (JavaScript)
+    \item \textbf{Livello 2:} Validazione input lato server
+    \item \textbf{Livello 3:} Prepared statements per query SQL
+    \item \textbf{Livello 4:} Principio del minimo privilegio per l'utente database
+    \item \textbf{Livello 5:} Web Application Firewall (WAF)
+    \item \textbf{Livello 6:} Monitoring e alerting
+\end{itemize}
+
+\subsubsection{4. Security by Design}
+
+La sicurezza non può essere "aggiunta" alla fine dello sviluppo. Deve essere integrata fin dalle fasi di progettazione.
+
+\textbf{Shift Left Security:} Spostare la sicurezza nelle prime fasi del ciclo di sviluppo.
+
+\begin{verbatim}
+Requisiti → Design → Sviluppo → Testing → Deploy → Monitoring
+   [SEC]     [SEC]     [SEC]      [SEC]    [SEC]     [SEC]
+\end{verbatim}
+
+\subsubsection{5. Fail Securely}
+
+Quando un sistema fallisce, deve farlo in modo sicuro:
+
+\begin{lstlisting}[language=Python, caption=Gestione sicura degli errori]
+def process_payment(user_id, amount):
+    try:
+        # Processa il pagamento
+        transaction = payment_gateway.charge(user_id, amount)
+        return {"success": True, "transaction_id": transaction.id}
+    except Exception as e:
+        # NON esporre dettagli interni
+        log_error(f"Payment failed for user {user_id}: {str(e)}")
+        return {"success": False, "message": "Payment failed"}
+        # Non: "Database connection failed at line 42"
+\end{lstlisting}
+
+\subsection{Il framework di riferimento: OWASP}
+
+L'OWASP (Open Web Application Security Project) è un'organizzazione no-profit dedicata al miglioramento della sicurezza del software. Il loro progetto più noto è l'OWASP Top 10, una lista delle 10 vulnerabilità più critiche per le applicazioni web.
+
+\subsubsection{OWASP Top 10 - 2021}
+
+\begin{enumerate}
+    \item \textbf{A01:2021 - Broken Access Control}
+    \item \textbf{A02:2021 - Cryptographic Failures}
+    \item \textbf{A03:2021 - Injection}
+    \item \textbf{A04:2021 - Insecure Design}
+    \item \textbf{A05:2021 - Security Misconfiguration}
+    \item \textbf{A06:2021 - Vulnerable and Outdated Components}
+    \item \textbf{A07:2021 - Identification and Authentication Failures}
+    \item \textbf{A08:2021 - Software and Data Integrity Failures}
+    \item \textbf{A09:2021 - Security Logging and Monitoring Failures}
+    \item \textbf{A10:2021 - Server-Side Request Forgery (SSRF)}
+\end{enumerate}
+
+Dedicheremo capitoli specifici alle vulnerabilità più comuni e pericolose.
+
+\subsection{Struttura del libro}
+
+\subsubsection{Capitolo 1: Introduzione alla Web Security}
+
+Concetti fondamentali: CIA Triad, threat modeling, attack surface, defense in depth.
+
+\subsubsection{Capitolo 2: OWASP Top 10}
+
+Analisi completa delle 10 vulnerabilità più critiche secondo OWASP 2021, con esempi pratici.
+
+\subsubsection{Capitolo 3: SQL Injection}
+
+Approfondimento su SQL injection: in-band, blind, time-based. Prepared statements e ORM sicuri.
+
+\subsubsection{Capitolo 4: Cross-Site Scripting (XSS)}
+
+XSS reflected, stored e DOM-based. Tecniche di sanitization e Content Security Policy.
+
+\subsubsection{Capitolo 5: Cross-Site Request Forgery (CSRF)}
+
+Attacchi CSRF, token anti-CSRF, SameSite cookies, validazione del referer.
+
+\subsubsection{Capitolo 6: Autenticazione e Gestione delle Sessioni}
+
+Password hashing (bcrypt, argon2), Multi-Factor Authentication, OAuth2, JWT.
+
+\subsection{Come usare questo libro}
+
+\subsubsection{Per sviluppatori}
+
+\begin{enumerate}
+    \item Leggete ogni capitolo in sequenza
+    \item Studiate gli esempi di codice vulnerabile
+    \item Analizzate le soluzioni sicure
+    \item Applicate i concetti ai vostri progetti
+    \item Completate gli esercizi CTF
+\end{enumerate}
+
+\subsubsection{Per security testers}
+
+\begin{enumerate}
+    \item Utilizzate il libro come riferimento per audit
+    \item Praticate con gli scenari d'attacco proposti
+    \item Studiate i vettori di attacco in ogni capitolo
+    \item Utilizzate gli esercizi per affinare le tecniche
+\end{enumerate}
+
+\subsubsection{Per studenti}
+
+\begin{enumerate}
+    \item Seguite il percorso proposto
+    \item Create un ambiente lab personale
+    \item Completate tutti gli esercizi
+    \item Partecipate a CTF online per praticare
+    \item Contribuite a progetti open source sicuri
+\end{enumerate}
+
+\subsection{Setup dell'ambiente di laboratorio}
+
+Per sfruttare al meglio questo libro, è consigliato creare un ambiente di test isolato.
+
+\subsubsection{Opzione 1: Macchina Virtuale}
+
+\begin{lstlisting}[language=bash, caption=Setup con Docker]
+# Crea un ambiente isolato per test
+docker run -d --name websec-lab \
+  -p 8080:80 \
+  vulnerables/web-dvwa
+\end{lstlisting}
+
+\subsubsection{Opzione 2: Piattaforme Online}
+
+\begin{itemize}
+    \item \textbf{DVWA} (Damn Vulnerable Web Application)
+    \item \textbf{WebGoat} (OWASP)
+    \item \textbf{HackTheBox}
+    \item \textbf{PortSwigger Web Security Academy}
+    \item \textbf{TryHackMe}
+\end{itemize}
+
+\subsection{Note legali ed etiche}
+
+\subsubsection{Disclaimer Importante}
+
+Le tecniche e gli strumenti descritti in questo libro sono forniti esclusivamente a scopo educativo. L'uso di queste conoscenze per attaccare sistemi senza autorizzazione è illegale e può portare a conseguenze penali gravi.
+
+\subsubsection{Ethical Hacking}
+
+Se volete praticare l'hacking etico:
+
+\begin{itemize}
+    \item Utilizzate solo ambienti di test personali o autorizzati
+    \item Partecipate a programmi di bug bounty legittimi (HackerOne, Bugcrowd)
+    \item Ottenete certificazioni riconosciute (CEH, OSCP, GWAPT)
+    \item Rispettate sempre le regole di engagement
+\end{itemize}
+
+\subsubsection{Responsabilità}
+
+Come professionisti della sicurezza informatica, abbiamo la responsabilità di:
+
+\begin{enumerate}
+    \item \textbf{Proteggere gli utenti:} I dati che gestiamo appartengono a persone reali
+    \item \textbf{Disclosure responsabile:} Se trovate vulnerabilità, segnalatele in modo responsabile
+    \item \textbf{Educazione continua:} La sicurezza è un campo in continua evoluzione
+    \item \textbf{Contribuire alla community:} Condividete conoscenze, scrivete blog, partecipate a conferenze
+\end{enumerate}
+
+\subsection{Risorse aggiuntive}
+
+\subsubsection{Siti web e blog}
+
+\begin{itemize}
+    \item \textbf{OWASP.org} - Open Web Application Security Project
+    \item \textbf{PortSwigger Blog} - Research su web security
+    \item \textbf{Krebs on Security} - News su cybersecurity
+    \item \textbf{The Hacker News} - Notizie quotidiane
+    \item \textbf{SANS Internet Storm Center} - Threat intelligence
+\end{itemize}
+
+\subsubsection{Podcast}
+
+\begin{itemize}
+    \item Darknet Diaries
+    \item Security Now
+    \item The CyberWire
+    \item Risky Business
+\end{itemize}
+
+\subsubsection{Certificazioni consigliate}
+
+\begin{itemize}
+    \item \textbf{CEH} (Certified Ethical Hacker) - Entry level
+    \item \textbf{OSCP} (Offensive Security Certified Professional) - Pratico, molto rispettato
+    \item \textbf{GWAPT} (GIAC Web Application Penetration Tester) - Focus su web app
+    \item \textbf{CISSP} (Certified Information Systems Security Professional) - Management level
+\end{itemize}
+
+\subsection{Conclusione della prefazione}
+
+La sicurezza web non è una destinazione, ma un viaggio continuo. Le minacce evolvono, le tecnologie cambiano, ma i principi fondamentali rimangono costanti: validare l'input, crittografare i dati sensibili, applicare il principio del minimo privilegio, difendersi in profondità.
+
+Questo libro vi fornirà le fondamenta solide per costruire e mantenere applicazioni web sicure. Ma ricordate: la conoscenza senza pratica è inutile. Sperimentate, sbagliate (in ambienti sicuri!), imparate e migliorate continuamente.
+
+\subsubsection{Un invito}
+
+La sicurezza è responsabilità di tutti. Non serve essere un esperto per fare la differenza:
+
+\begin{itemize}
+    \item Uno sviluppatore che sanitizza l'input protegge migliaia di utenti
+    \item Un security engineer che trova una vulnerabilità previene potenziali violazioni
+    \item Un manager che investe in formazione crea una cultura della sicurezza
+    \item Un utente consapevole che usa password forti e 2FA protegge se stesso
+\end{itemize}
+
+Siete pronti a iniziare questo viaggio nella web security? Iniziamo dai fondamentali.
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Buono studio e happy hacking (etico)!}
+\end{flushright}
+
+\subsection{Convenzioni usate nel libro}
+
+\subsubsection{Codice sorgente}
+
+Gli esempi di codice sono presentati con highlight della sintassi:
+
+\begin{lstlisting}[language=PHP, caption=Codice vulnerabile (da NON usare)]
+// VULNERABILE: Non usare in produzione!
+$id = $_GET['id'];
+$query = "SELECT * FROM users WHERE id = $id";
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=Codice sicuro (best practice)]
+// SICURO: Usa prepared statements
+$id = $_GET['id'];
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$id]);
+\end{lstlisting}
+
+\subsubsection{Box informativi}
+
+\begin{itemize}
+    \item \textbf{[IMPORTANTE]} - Concetti critici da non perdere
+    \item \textbf{[NOTA]} - Informazioni aggiuntive utili
+    \item \textbf{[ATTENZIONE]} - Errori comuni da evitare
+    \item \textbf{[BEST PRACTICE]} - Raccomandazioni da seguire
+    \item \textbf{[CTF]} - Esercizi pratici in stile Capture The Flag
+\end{itemize}
+
+\subsubsection{Diagrammi}
+
+Ogni tipo di attacco sarà accompagnato da diagrammi che illustrano il flusso dell'attacco e le contromisure.
+
+\subsection{Ringraziamenti}
+
+Questo libro non sarebbe stato possibile senza il contributo della community open source della sicurezza informatica. Un ringraziamento particolare a:
+
+\begin{itemize}
+    \item La community OWASP per le risorse inestimabili
+    \item I ricercatori di sicurezza che condividono le loro scoperte
+    \item Gli sviluppatori di tool open source per security testing
+    \item Le piattaforme CTF che permettono di imparare praticando
+    \item Tutti coloro che credono in un web più sicuro
+\end{itemize}
+
+\subsection{Feedback e contributi}
+
+La sicurezza è un campo collaborativo. Se trovate errori, avete suggerimenti o volete contribuire con nuovi esempi, il vostro feedback è benvenuto.
+
+\vspace{2cm}
+
+Ora, iniziamo il nostro viaggio nella Web Security!

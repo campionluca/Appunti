@@ -1,0 +1,975 @@
+\chapter{JSON e Formati Dati}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+JSON fundamentals, Response structure, Envelope vs no-envelope, HAL (Hypertext Application Language), JSON:API specification, Siren, Collection+JSON, Content negotiation, Media types, Accept header, Esempi pratici completi, Best practices.
+\end{tcolorbox}
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Strutturare JSON response consistenti e leggibili
+  \item Comprendere HAL per hypermedia
+  \item Applicare JSON:API specification
+  \item Implementare content negotiation
+  \item Scegliere formato appropriato per use case
+  \item Costruire API auto-documentanti con hypermedia
+\end{itemize}
+
+\section{JSON Fundamentals}
+
+\subsection{Perché JSON}
+
+\textbf{JSON} (JavaScript Object Notation) è formato standard per REST API moderne.
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item \textbf{Leggibile}: Human-readable
+    \item \textbf{Compatto}: Meno verbose di XML
+    \item \textbf{Type-safe}: String, number, boolean, null, array, object
+    \item \textbf{Universale}: Supporto nativo in tutti linguaggi
+    \item \textbf{Parsing veloce}: Performance migliori di XML
+\end{itemize}
+
+\textbf{Tipi JSON}:
+\begin{lstlisting}[caption=JSON data types]
+{
+  "string": "Hello World",
+  "number": 42,
+  "float": 3.14159,
+  "boolean": true,
+  "null_value": null,
+  "array": [1, 2, 3],
+  "object": {
+    "nested": "value"
+  }
+}
+\end{lstlisting}
+
+\subsection{JSON vs XML}
+
+\begin{lstlisting}[caption=Same data: JSON vs XML]
+# JSON (conciso)
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+
+# XML (verbose)
+<?xml version="1.0"?>
+<user>
+  <id>123</id>
+  <name>Mario Rossi</name>
+  <email>mario@example.com</email>
+</user>
+\end{lstlisting}
+
+\textbf{JSON}: 87 bytes, \textbf{XML}: 135 bytes (55\% più grande)
+
+\section{Response Structure}
+
+\subsection{Envelope Pattern}
+
+\textbf{Envelope}: Wrapping data in container object.
+
+\begin{lstlisting}[caption=Envelope pattern]
+GET /api/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": "success",
+  "data": {
+    "id": 123,
+    "name": "Mario Rossi",
+    "email": "mario@example.com"
+  },
+  "meta": {
+    "timestamp": "2025-11-15T15:00:00Z",
+    "version": "1.0"
+  }
+}
+\end{lstlisting}
+
+\textbf{Pro envelope}:
+\begin{itemize}
+    \item Metadata separato da data
+    \item Consistenza structure anche per errori
+    \item Extensibility
+\end{itemize}
+
+\textbf{Contro envelope}:
+\begin{itemize}
+    \item Overhead extra nesting
+    \item Ridondanza (status già in HTTP status code)
+\end{itemize}
+
+\subsection{No Envelope (Naked Response)}
+
+\textbf{No envelope}: Data direttamente nel root.
+
+\begin{lstlisting}[caption=No envelope - naked response]
+GET /api/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+\end{lstlisting}
+
+\textbf{Pro no-envelope}:
+\begin{itemize}
+    \item Più conciso
+    \item HTTP headers per metadata
+    \item Meno parsing client-side
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Raccomandazione]
+\textbf{Modern REST API}: Preferire \textbf{no envelope} per singole risorse, \textbf{envelope leggero} per collections.
+
+\textbf{Singola risorsa}: Data in root
+
+\textbf{Collection}: Wrapper minimo per metadata pagination
+\end{tcolorbox}
+
+\subsection{Collection Response Structure}
+
+\begin{lstlisting}[caption=Collection con metadata]
+GET /api/users?page=1&limit=10 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Total-Count: 150
+
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Mario Rossi",
+      "email": "mario@example.com"
+    },
+    {
+      "id": 2,
+      "name": "Luigi Verdi",
+      "email": "luigi@example.com"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total": 150,
+    "total_pages": 15
+  },
+  "links": {
+    "self": "/api/users?page=1&limit=10",
+    "first": "/api/users?page=1&limit=10",
+    "last": "/api/users?page=15&limit=10",
+    "next": "/api/users?page=2&limit=10"
+  }
+}
+\end{lstlisting}
+
+\section{HAL - Hypertext Application Language}
+
+\subsection{Cos'è HAL}
+
+\textbf{HAL} (RFC 8288) è formato hypermedia che aggiunge link navigabili a JSON/XML.
+
+\textbf{Media type}: \texttt{application/hal+json}
+
+\textbf{Elementi chiave}:
+\begin{itemize}
+    \item \texttt{\_links}: Collegamenti ipertestuali ad altre risorse
+    \item \texttt{\_embedded}: Risorse correlate embedded nella response
+    \item Resource properties: Dati effettivi risorsa
+\end{itemize}
+
+\subsection{HAL Structure}
+
+\begin{lstlisting}[caption=HAL - Single resource]
+GET /api/users/123 HTTP/1.1
+Accept: application/hal+json
+
+HTTP/1.1 200 OK
+Content-Type: application/hal+json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "role": "admin",
+  "_links": {
+    "self": {
+      "href": "/api/users/123"
+    },
+    "orders": {
+      "href": "/api/users/123/orders"
+    },
+    "profile": {
+      "href": "/api/users/123/profile"
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{HAL Embedded Resources}
+
+\begin{lstlisting}[caption=HAL - Embedded resources]
+GET /api/orders/456 HTTP/1.1
+Accept: application/hal+json
+
+HTTP/1.1 200 OK
+Content-Type: application/hal+json
+
+{
+  "id": 456,
+  "status": "shipped",
+  "total": 99.99,
+  "_links": {
+    "self": {
+      "href": "/api/orders/456"
+    },
+    "customer": {
+      "href": "/api/customers/789"
+    },
+    "invoice": {
+      "href": "/api/orders/456/invoice"
+    }
+  },
+  "_embedded": {
+    "customer": {
+      "id": 789,
+      "name": "Mario Rossi",
+      "email": "mario@example.com",
+      "_links": {
+        "self": {
+          "href": "/api/customers/789"
+        }
+      }
+    },
+    "items": [
+      {
+        "id": 1,
+        "product_id": 100,
+        "quantity": 2,
+        "price": 49.99,
+        "_links": {
+          "self": {
+            "href": "/api/order-items/1"
+          },
+          "product": {
+            "href": "/api/products/100"
+          }
+        }
+      }
+    ]
+  }
+}
+\end{lstlisting}
+
+\subsection{HAL Collection}
+
+\begin{lstlisting}[caption=HAL - Collection]
+GET /api/users HTTP/1.1
+Accept: application/hal+json
+
+HTTP/1.1 200 OK
+Content-Type: application/hal+json
+
+{
+  "_links": {
+    "self": {
+      "href": "/api/users?page=1"
+    },
+    "first": {
+      "href": "/api/users?page=1"
+    },
+    "last": {
+      "href": "/api/users?page=10"
+    },
+    "next": {
+      "href": "/api/users?page=2"
+    }
+  },
+  "_embedded": {
+    "users": [
+      {
+        "id": 1,
+        "name": "Mario Rossi",
+        "_links": {
+          "self": {
+            "href": "/api/users/1"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "name": "Luigi Verdi",
+        "_links": {
+          "self": {
+            "href": "/api/users/2"
+          }
+        }
+      }
+    ]
+  },
+  "page": 1,
+  "total": 100
+}
+\end{lstlisting}
+
+\subsection{HAL Link Relations}
+
+\textbf{Standard IANA link relations}:
+
+\begin{itemize}
+    \item \texttt{self}: URI della risorsa corrente
+    \item \texttt{first/last/next/prev}: Pagination
+    \item \texttt{up}: Parent resource
+    \item \texttt{related}: Risorsa correlata
+    \item \texttt{alternate}: Rappresentazione alternativa
+    \item \texttt{edit}: URI per modificare risorsa
+    \item \texttt{delete}: URI per eliminare
+\end{itemize}
+
+\begin{lstlisting}[caption=HAL - Rich link relations]
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "_links": {
+    "self": {
+      "href": "/api/users/123"
+    },
+    "edit": {
+      "href": "/api/users/123",
+      "title": "Edit this user"
+    },
+    "delete": {
+      "href": "/api/users/123",
+      "title": "Delete this user",
+      "method": "DELETE"
+    },
+    "avatar": {
+      "href": "/api/users/123/avatar",
+      "type": "image/jpeg"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{JSON:API Specification}
+
+\subsection{Cos'è JSON:API}
+
+\textbf{JSON:API} è specification completa per costruire API JSON consistenti.
+
+\textbf{Media type}: \texttt{application/vnd.api+json}
+
+\textbf{Obiettivi}:
+\begin{itemize}
+    \item Struttura standardizzata
+    \item Ridurre roundtrips (compound documents)
+    \item Sparse fieldsets
+    \item Filtering, sorting, pagination built-in
+\end{itemize}
+
+\subsection{JSON:API Document Structure}
+
+\begin{lstlisting}[caption=JSON:API - Single resource]
+GET /api/users/123 HTTP/1.1
+Accept: application/vnd.api+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "users",
+    "id": "123",
+    "attributes": {
+      "name": "Mario Rossi",
+      "email": "mario@example.com",
+      "role": "admin"
+    },
+    "relationships": {
+      "orders": {
+        "links": {
+          "self": "/api/users/123/relationships/orders",
+          "related": "/api/users/123/orders"
+        }
+      },
+      "company": {
+        "data": {
+          "type": "companies",
+          "id": "456"
+        }
+      }
+    },
+    "links": {
+      "self": "/api/users/123"
+    }
+  }
+}
+\end{lstlisting}
+
+\textbf{Componenti}:
+\begin{itemize}
+    \item \texttt{data}: Resource object principale
+    \item \texttt{type}: Tipo risorsa (required)
+    \item \texttt{id}: Identificatore (required per existing resources)
+    \item \texttt{attributes}: Attributi risorsa
+    \item \texttt{relationships}: Relazioni con altre risorse
+    \item \texttt{links}: Hypermedia links
+\end{itemize}
+
+\subsection{JSON:API Collection}
+
+\begin{lstlisting}[caption=JSON:API - Collection]
+GET /api/users HTTP/1.1
+Accept: application/vnd.api+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "data": [
+    {
+      "type": "users",
+      "id": "1",
+      "attributes": {
+        "name": "Mario Rossi",
+        "email": "mario@example.com"
+      },
+      "links": {
+        "self": "/api/users/1"
+      }
+    },
+    {
+      "type": "users",
+      "id": "2",
+      "attributes": {
+        "name": "Luigi Verdi",
+        "email": "luigi@example.com"
+      },
+      "links": {
+        "self": "/api/users/2"
+      }
+    }
+  ],
+  "links": {
+    "self": "/api/users?page[number]=1",
+    "first": "/api/users?page[number]=1",
+    "last": "/api/users?page[number]=10",
+    "next": "/api/users?page[number]=2"
+  },
+  "meta": {
+    "total": 100
+  }
+}
+\end{lstlisting}
+
+\subsection{JSON:API Compound Documents (Included)}
+
+\textbf{Riduce N+1 queries}: Include risorse correlate.
+
+\begin{lstlisting}[caption=JSON:API - Compound document]
+GET /api/orders/456?include=customer,items HTTP/1.1
+Accept: application/vnd.api+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "orders",
+    "id": "456",
+    "attributes": {
+      "status": "shipped",
+      "total": 99.99
+    },
+    "relationships": {
+      "customer": {
+        "data": {
+          "type": "customers",
+          "id": "789"
+        }
+      },
+      "items": {
+        "data": [
+          {
+            "type": "order-items",
+            "id": "1"
+          },
+          {
+            "type": "order-items",
+            "id": "2"
+          }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "customers",
+      "id": "789",
+      "attributes": {
+        "name": "Mario Rossi",
+        "email": "mario@example.com"
+      }
+    },
+    {
+      "type": "order-items",
+      "id": "1",
+      "attributes": {
+        "product_id": 100,
+        "quantity": 2,
+        "price": 49.99
+      }
+    },
+    {
+      "type": "order-items",
+      "id": "2",
+      "attributes": {
+        "product_id": 200,
+        "quantity": 1,
+        "price": 49.99
+      }
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{JSON:API Sparse Fieldsets}
+
+\begin{lstlisting}[caption=JSON:API - Sparse fieldsets]
+GET /api/users?fields[users]=name,email HTTP/1.1
+Accept: application/vnd.api+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "data": [
+    {
+      "type": "users",
+      "id": "1",
+      "attributes": {
+        "name": "Mario Rossi",
+        "email": "mario@example.com"
+      }
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{JSON:API Errors}
+
+\begin{lstlisting}[caption=JSON:API - Error format]
+POST /api/users HTTP/1.1
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "users",
+    "attributes": {
+      "name": "",
+      "email": "invalid-email"
+    }
+  }
+}
+
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/vnd.api+json
+
+{
+  "errors": [
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/name"
+      },
+      "title": "Invalid Attribute",
+      "detail": "Name cannot be blank"
+    },
+    {
+      "status": "422",
+      "source": {
+        "pointer": "/data/attributes/email"
+      },
+      "title": "Invalid Attribute",
+      "detail": "Email is not a valid email address"
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Altri Formati Hypermedia}
+
+\subsection{Siren}
+
+\textbf{Siren}: Hypermedia specification con focus su actions.
+
+\begin{lstlisting}[caption=Siren format]
+GET /api/orders/456 HTTP/1.1
+Accept: application/vnd.siren+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.siren+json
+
+{
+  "class": ["order"],
+  "properties": {
+    "orderNumber": 456,
+    "status": "pending",
+    "total": 99.99
+  },
+  "entities": [
+    {
+      "class": ["customer"],
+      "rel": ["customer"],
+      "properties": {
+        "customerId": 789,
+        "name": "Mario Rossi"
+      },
+      "links": [
+        {
+          "rel": ["self"],
+          "href": "/api/customers/789"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "cancel-order",
+      "title": "Cancel Order",
+      "method": "POST",
+      "href": "/api/orders/456/cancel"
+    },
+    {
+      "name": "update-order",
+      "title": "Update Order",
+      "method": "PUT",
+      "href": "/api/orders/456",
+      "type": "application/json",
+      "fields": [
+        {
+          "name": "status",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "rel": ["self"],
+      "href": "/api/orders/456"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{Collection+JSON}
+
+\textbf{Collection+JSON}: Focus su collections e forms.
+
+\begin{lstlisting}[caption=Collection+JSON format]
+GET /api/users HTTP/1.1
+Accept: application/vnd.collection+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.collection+json
+
+{
+  "collection": {
+    "version": "1.0",
+    "href": "/api/users",
+    "items": [
+      {
+        "href": "/api/users/1",
+        "data": [
+          {
+            "name": "name",
+            "value": "Mario Rossi"
+          },
+          {
+            "name": "email",
+            "value": "mario@example.com"
+          }
+        ]
+      }
+    ],
+    "template": {
+      "data": [
+        {
+          "name": "name",
+          "value": "",
+          "prompt": "Full name"
+        },
+        {
+          "name": "email",
+          "value": "",
+          "prompt": "Email address"
+        }
+      ]
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Content Negotiation}
+
+\subsection{Accept Header}
+
+\textbf{Client specifica formato desiderato via Accept header}.
+
+\begin{lstlisting}[caption=Content negotiation - Accept header]
+# Request JSON
+GET /api/users/123 HTTP/1.1
+Accept: application/json
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id": 123, "name": "Mario"}
+
+# Request HAL
+GET /api/users/123 HTTP/1.1
+Accept: application/hal+json
+
+HTTP/1.1 200 OK
+Content-Type: application/hal+json
+
+{
+  "id": 123,
+  "name": "Mario",
+  "_links": {...}
+}
+
+# Request JSON:API
+GET /api/users/123 HTTP/1.1
+Accept: application/vnd.api+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.api+json
+
+{
+  "data": {
+    "type": "users",
+    "id": "123",
+    "attributes": {...}
+  }
+}
+\end{lstlisting}
+
+\subsection{Multiple Accept Types}
+
+\textbf{Client può specificare preferenze con quality values}:
+
+\begin{lstlisting}[caption=Accept with quality values]
+GET /api/users/123 HTTP/1.1
+Accept: application/hal+json;q=1.0, application/json;q=0.8, */*;q=0.5
+
+# Server sceglie in ordine di preferenza:
+# 1. application/hal+json (q=1.0)
+# 2. application/json (q=0.8)
+# 3. Qualsiasi altro formato (q=0.5)
+
+HTTP/1.1 200 OK
+Content-Type: application/hal+json
+
+{...}
+\end{lstlisting}
+
+\subsection{406 Not Acceptable}
+
+\textbf{Server non supporta formato richiesto}:
+
+\begin{lstlisting}[caption=406 quando formato non supportato]
+GET /api/users/123 HTTP/1.1
+Accept: application/xml
+
+HTTP/1.1 406 Not Acceptable
+Content-Type: application/json
+
+{
+  "error": "not_acceptable",
+  "message": "Requested format not supported",
+  "supported_formats": [
+    "application/json",
+    "application/hal+json"
+  ]
+}
+\end{lstlisting}
+
+\subsection{Content-Type Header}
+
+\textbf{Client specifica formato payload in POST/PUT}:
+
+\begin{lstlisting}[caption=Content-Type in POST]
+POST /api/users HTTP/1.1
+Content-Type: application/json
+Accept: application/hal+json
+
+{
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+
+HTTP/1.1 201 Created
+Location: /api/users/123
+Content-Type: application/hal+json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "_links": {...}
+}
+\end{lstlisting}
+
+\section{Confronto Formati}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Aspetto} & \textbf{Plain JSON} & \textbf{HAL} & \textbf{JSON:API} & \textbf{Siren} \\ \hline
+\textbf{Semplicità} & ★★★★★ & ★★★★☆ & ★★★☆☆ & ★★★☆☆ \\ \hline
+\textbf{Hypermedia} & ☆☆☆☆☆ & ★★★★★ & ★★★★☆ & ★★★★★ \\ \hline
+\textbf{Spec rigida} & ☆☆☆☆☆ & ★★☆☆☆ & ★★★★★ & ★★★☆☆ \\ \hline
+\textbf{Tooling} & ★★★★★ & ★★★☆☆ & ★★★★☆ & ★★☆☆☆ \\ \hline
+\textbf{Learning curve} & ★★★★★ & ★★★★☆ & ★★☆☆☆ & ★★★☆☆ \\ \hline
+\textbf{Compattezza} & ★★★★★ & ★★★☆☆ & ★★☆☆☆ & ★★☆☆☆ \\ \hline
+\textbf{Adoption} & ★★★★★ & ★★★☆☆ & ★★★☆☆ & ★☆☆☆☆ \\ \hline
+\end{tabular}
+\caption{Confronto formati JSON}
+\end{table}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Best Practices JSON e Formati]
+\begin{enumerate}
+    \item \textbf{Plain JSON per default}: Semplicità prima di tutto
+    \item \textbf{HAL per hypermedia}: Se serve navigabilità
+    \item \textbf{JSON:API per complex API}: Spec completa, ecosystem
+    \item \textbf{Consistenza naming}: camelCase o snake\_case (scegliere uno)
+    \item \textbf{ISO 8601 per date}: \texttt{2025-11-15T15:00:00Z}
+    \item \textbf{null vs omissione}: Null per valore assente, ometti per non applicabile
+    \item \textbf{Array sempre array}: Anche singolo elemento \texttt{[item]}
+    \item \textbf{Evita deep nesting}: Max 2-3 livelli
+    \item \textbf{Pagination metadata}: In response body o headers
+    \item \textbf{Content negotiation}: Accept e Content-Type corretti
+    \item \textbf{Pretty print in dev}: Readability, minify in prod
+    \item \textbf{UTF-8 encoding}: \texttt{Content-Type: application/json; charset=utf-8}
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Anti-patterns]
+\begin{itemize}
+    \item \textbf{Stringified JSON}: \texttt{\{"data": "\{\textbackslash"id\textbackslash": 123\}"\}}
+    \item \textbf{Inconsistent naming}: Mix camelCase/snake\_case
+    \item \textbf{String numbers}: \texttt{\{"age": "25"\}} invece di \texttt{\{"age": 25\}}
+    \item \textbf{Date as string non-ISO}: \texttt{"15/11/2025"} invece di \texttt{"2025-11-15"}
+    \item \textbf{Array singolo come object}: \texttt{\{"user": \{...\}\}} quando potrebbe essere \texttt{[\{...\}]}
+    \item \textbf{Envelope inutile}: Wrapping quando HTTP headers sufficienti
+    \item \textbf{BOM in UTF-8}: Causa parsing errors
+    \item \textbf{Trailing commas}: Non valido in JSON strict
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+
+\subsection{E-commerce API - Multiple Formats}
+
+\begin{lstlisting}[caption=Plain JSON]
+GET /api/products/123 HTTP/1.1
+Accept: application/json
+
+{
+  "id": 123,
+  "name": "Laptop XYZ",
+  "price": 999.99,
+  "category": "electronics",
+  "in_stock": true
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=HAL]
+GET /api/products/123 HTTP/1.1
+Accept: application/hal+json
+
+{
+  "id": 123,
+  "name": "Laptop XYZ",
+  "price": 999.99,
+  "_links": {
+    "self": {"href": "/api/products/123"},
+    "category": {"href": "/api/categories/electronics"},
+    "reviews": {"href": "/api/products/123/reviews"},
+    "add-to-cart": {"href": "/api/cart/items", "method": "POST"}
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=JSON:API]
+GET /api/products/123 HTTP/1.1
+Accept: application/vnd.api+json
+
+{
+  "data": {
+    "type": "products",
+    "id": "123",
+    "attributes": {
+      "name": "Laptop XYZ",
+      "price": 999.99,
+      "in_stock": true
+    },
+    "relationships": {
+      "category": {
+        "data": {"type": "categories", "id": "electronics"},
+        "links": {"related": "/api/categories/electronics"}
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item JSON è standard de facto per REST API moderne
+    \item Plain JSON: semplice, universale, ottimo default
+    \item HAL: aggiunge hypermedia con \texttt{\_links} e \texttt{\_embedded}
+    \item JSON:API: spec completa con compound documents, sparse fields
+    \item Siren: focus su actions e forms
+    \item Content negotiation via Accept e Content-Type headers
+    \item Consistenza naming e structure fondamentale
+    \item ISO 8601 per date/time
+\end{itemize}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Implementa HAL per API blog (posts, comments, authors)
+    \item Converti API esistente a JSON:API spec
+    \item Implementa content negotiation: JSON, HAL, JSON:API
+    \item Progetta error response standardizzato RFC 7807
+    \item Benchmark: Plain JSON vs HAL vs JSON:API (payload size)
+    \item Crea client che consuma HAL hypermedia links
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item JSON Specification: \url{https://www.json.org/}
+    \item HAL Specification: \url{http://stateless.co/hal_specification.html}
+    \item JSON:API Specification: \url{https://jsonapi.org/}
+    \item Siren Specification: \url{https://github.com/kevinswiber/siren}
+    \item RFC 7159 - JSON: \url{https://tools.ietf.org/html/rfc7159}
+    \item RFC 8288 - Web Linking: \url{https://tools.ietf.org/html/rfc8288}
+\end{itemize}

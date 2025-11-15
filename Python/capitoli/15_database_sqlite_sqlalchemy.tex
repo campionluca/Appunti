@@ -1,108 +1,847 @@
 % Modulo 15 — Database con SQLite e SQLAlchemy
 \chapter{Database con SQLite e SQLAlchemy}
 
-\section{Introduzione}
-Persistenza dati con SQLite e ORM SQLAlchemy.
-
-Questa descrizione spiega come modellare entità e relazioni, eseguire operazioni CRUD in modo sicuro e sfruttare transazioni per consistenza dei dati. Accenniamo a migrazioni e gestione dello schema, separando responsabilità tra layer di accesso e logica applicativa.
-
-Integrare un database consente applicazioni stateful, archiviazione affidabile e analisi su dati strutturati, dal prototipo alla produzione.
-
-\section{Obiettivi di Apprendimento}
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
 \begin{itemize}
-  \item Usare \texttt{sqlite3} per query semplici.
-  \item Definire modelli con SQLAlchemy.
-  \item Eseguire CRUD di base.
+  \item Comprendere database relazionali e SQL
+  \item Usare SQLite3 per query e operazioni CRUD
+  \item Definire modelli con SQLAlchemy ORM
+  \item Gestire relationships (One-to-Many, Many-to-Many)
+  \item Eseguire query complesse con SQLAlchemy
+  \item Implementare transazioni e gestione errori
+  \item Usare Alembic per migrazioni schema
+  \item Evitare problemi comuni (N+1, SQL injection)
+  \item Applicare best practices per performance e sicurezza
+\end{itemize}
+\end{tcolorbox}
+
+\section{Introduzione}
+
+I database sono fondamentali per applicazioni moderne. Permettono di:
+\begin{itemize}
+  \item \textbf{Persistenza}: Salvare dati permanentemente
+  \item \textbf{Query}: Cercare e filtrare dati efficientemente
+  \item \textbf{Integrità}: Garantire consistenza con constraints
+  \item \textbf{Concorrenza}: Gestire accessi multipli simultanei
+  \item \textbf{Scalabilità}: Gestire milioni di record
 \end{itemize}
 
-\section{Concetti Fondamentali}
-\begin{tcolorbox}[title={Schema, transazioni e ORM}]
-- Progetta schema con chiavi, vincoli e indici per integrità.
-- Usa transazioni per coerenza (commit/rollback).
-- Ciclo di vita della sessione e lazy loading (N+1 da prevenire).
-- Migrazioni per evolvere lo schema in sicurezza.
-\end{tcolorbox}
+\subsection{SQLite vs altri database}
 
-\section{Esempi Pratici}
-\subsection{sqlite3}
+\textbf{SQLite}:
+\begin{itemize}
+  \item File-based (un file \texttt{.db})
+  \item Nessun server da configurare
+  \item Ideale per: prototipi, app desktop, testing, embedded systems
+  \item Limiti: concorrenza limitata, no clustering
+\end{itemize}
+
+\textbf{PostgreSQL/MySQL}:
+\begin{itemize}
+  \item Client-server architecture
+  \item Alta concorrenza e performance
+  \item Ideale per: produzione, web apps, alta scalabilità
+  \item Richiede: installazione server, configurazione
+\end{itemize}
+
+\subsection{SQL vs ORM}
+
+\textbf{Raw SQL} (sqlite3):
+\begin{itemize}
+  \item Pro: Controllo completo, massima performance
+  \item Contro: Verboso, ripetitivo, SQL injection se non attento
+\end{itemize}
+
+\textbf{ORM} (SQLAlchemy):
+\begin{itemize}
+  \item Pro: Pythonic, type safety, meno boilerplate
+  \item Contro: Curva apprendimento, overhead performance minimo
+\end{itemize}
+
+\section{SQLite3: Database di Base}
+
+\subsection{Connessione e creazione database}
+
 \begin{lstlisting}
 import sqlite3
+
+# Database in memoria (temporaneo)
 conn = sqlite3.connect(":memory:")
-c = conn.cursor()
-c.execute("CREATE TABLE users(name TEXT)")
-c.execute("INSERT INTO users VALUES ('Ada')")
-print(list(c.execute("SELECT * FROM users")))
+
+# Database su file (persistente)
+conn = sqlite3.connect("mydatabase.db")
+
+# Row factory per dict invece di tuple
+conn.row_factory = sqlite3.Row
+
+cursor = conn.cursor()
+
+# SEMPRE chiudere connessione
+try:
+    # ... operazioni database ...
+    pass
+finally:
+    conn.close()
+
+# Oppure usa context manager (raccomandato)
+with sqlite3.connect("mydatabase.db") as conn:
+    cursor = conn.cursor()
+    # Operazioni qui
+    # Commit automatico se no eccezioni
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{sqlite3} offre un DB leggero; usare connessione e cursore per eseguire query.
-- Gestire transazioni con commit/rollback; validare input per evitare SQL injection.
-- Separare accesso dati dalla logica; testare query critiche.
-\end{tcolorbox}
+\subsection{CREATE TABLE}
 
-\subsection{SQLAlchemy}
 \begin{lstlisting}
-from sqlalchemy import Column, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+import sqlite3
+
+conn = sqlite3.connect("blog.db")
+cursor = conn.cursor()
+
+# Crea tabella users
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
+
+# Crea tabella posts con foreign key
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS posts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+            ON DELETE CASCADE
+    )
+""")
+
+# Crea indici per performance
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_username ON users(username)")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON posts(user_id)")
+
+conn.commit()
+conn.close()
+\end{lstlisting}
+
+\subsection{INSERT: Prepared Statements}
+
+\begin{lstlisting}
+import sqlite3
+
+conn = sqlite3.connect("blog.db")
+cursor = conn.cursor()
+
+# INSICURO - SQL Injection vulnerability!
+# username = input("Username: ")  # Se utente inserisce: ' OR '1'='1
+# cursor.execute(f"INSERT INTO users (username) VALUES ('{username}')")
+
+# SICURO - Prepared statements con ? placeholder
+username = "alice"
+email = "alice@example.com"
+password_hash = "hashed_password"
+
+cursor.execute(
+    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+    (username, email, password_hash)
+)
+
+# Ottieni ID auto-incrementato
+user_id = cursor.lastrowid
+print(f"Inserted user with ID: {user_id}")
+
+# INSERT multipli (più efficiente)
+users = [
+    ("bob", "bob@example.com", "hash1"),
+    ("charlie", "charlie@example.com", "hash2"),
+    ("diana", "diana@example.com", "hash3")
+]
+
+cursor.executemany(
+    "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+    users
+)
+
+conn.commit()
+conn.close()
+\end{lstlisting}
+
+\subsection{SELECT: Query dati}
+
+\begin{lstlisting}
+import sqlite3
+
+conn = sqlite3.connect("blog.db")
+conn.row_factory = sqlite3.Row  # Row invece di tuple
+cursor = conn.cursor()
+
+# SELECT singolo
+cursor.execute("SELECT * FROM users WHERE username = ?", ("alice",))
+user = cursor.fetchone()
+
+if user:
+    print(f"ID: {user['id']}, Username: {user['username']}, Email: {user['email']}")
+else:
+    print("User not found")
+
+# SELECT multipli
+cursor.execute("SELECT * FROM users ORDER BY created_at DESC")
+users = cursor.fetchall()
+
+for user in users:
+    print(f"{user['username']} - {user['email']}")
+
+# SELECT con JOIN
+cursor.execute("""
+    SELECT users.username, posts.title, posts.created_at
+    FROM posts
+    JOIN users ON posts.user_id = users.id
+    WHERE users.username = ?
+    ORDER BY posts.created_at DESC
+""", ("alice",))
+
+posts = cursor.fetchall()
+for post in posts:
+    print(f"{post['username']}: {post['title']}")
+
+# SELECT con aggregazione
+cursor.execute("""
+    SELECT users.username, COUNT(posts.id) as post_count
+    FROM users
+    LEFT JOIN posts ON users.id = posts.user_id
+    GROUP BY users.id
+    HAVING post_count > 0
+""")
+
+stats = cursor.fetchall()
+for stat in stats:
+    print(f"{stat['username']}: {stat['post_count']} posts")
+
+conn.close()
+\end{lstlisting}
+
+\subsection{UPDATE e DELETE}
+
+\begin{lstlisting}
+import sqlite3
+
+conn = sqlite3.connect("blog.db")
+cursor = conn.cursor()
+
+# UPDATE
+cursor.execute(
+    "UPDATE users SET email = ? WHERE username = ?",
+    ("newemail@example.com", "alice")
+)
+
+affected_rows = cursor.rowcount
+print(f"Updated {affected_rows} row(s)")
+
+# DELETE
+cursor.execute("DELETE FROM posts WHERE id = ?", (5,))
+
+if cursor.rowcount > 0:
+    print("Post deleted")
+else:
+    print("Post not found")
+
+conn.commit()
+conn.close()
+\end{lstlisting}
+
+\subsection{Transazioni}
+
+\begin{lstlisting}
+import sqlite3
+
+conn = sqlite3.connect("blog.db")
+cursor = conn.cursor()
+
+try:
+    # BEGIN TRANSACTION (implicito)
+    cursor.execute(
+        "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+        ("eve", "eve@example.com", "hash")
+    )
+
+    user_id = cursor.lastrowid
+
+    cursor.execute(
+        "INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)",
+        (user_id, "First Post", "Hello World!")
+    )
+
+    # Simula errore
+    # raise ValueError("Something went wrong")
+
+    # COMMIT se tutto OK
+    conn.commit()
+    print("Transaction committed successfully")
+
+except Exception as e:
+    # ROLLBACK se errore
+    conn.rollback()
+    print(f"Transaction rolled back: {e}")
+
+finally:
+    conn.close()
+\end{lstlisting}
+
+\section{SQLAlchemy: ORM Potente}
+
+\subsection{Installazione e setup}
+
+\begin{lstlisting}[language=bash]
+pip install sqlalchemy
+\end{lstlisting}
+
+\subsection{Definizione modelli}
+
+\begin{lstlisting}
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, create_engine
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from datetime import datetime
 
 Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
 
-engine = create_engine("sqlite:///:memory:")
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship (One-to-Many)
+    posts = relationship("Post", back_populates="author", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username='{self.username}')>"
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship (Many-to-One)
+    author = relationship("User", back_populates="posts")
+
+    def __repr__(self):
+        return f"<Post(id={self.id}, title='{self.title}')>"
+
+# Crea engine e tabelle
+engine = create_engine("sqlite:///blog.db", echo=True)  # echo=True mostra SQL
 Base.metadata.create_all(engine)
+
+# Crea Session factory
 Session = sessionmaker(bind=engine)
-sess = Session()
-sess.add(User(name="Ada")); sess.commit()
-print(sess.query(User).all())
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- L'ORM mappa classi a tabelle; \texttt{declarative\_base} definisce il modello.
-- La sessione gestisce transazioni e lifecycle; attenzione a lazy loading/N+1.
-- Migrazioni (Alembic) per evolvere schema; definire vincoli e indici per integrità.
-\end{tcolorbox}
+\subsection{CRUD Operations con SQLAlchemy}
 
-\begin{tcolorbox}[title=Casi d'uso]
-- CRUD per applicazioni di gestione utenti/dati.
-- Report e analisi su tabelle con vincoli chiari.
-- Servizi stateful con persistenza affidabile.
-- Prototipi con SQLite e migrazione successiva.
-\end{tcolorbox}
+\begin{lstlisting}
+from sqlalchemy.orm import sessionmaker
 
-\section{Esercizi}
-\begin{enumerate}
-  \item Crea una tabella e inserisci dati da input.
-  \item Implementa CRUD completo con SQLAlchemy.
-  \item Aggiungi vincoli e indici.
-  \item Usa transazioni e gestisci rollback.
-  \item Migra schema con Alembic (concettuale).
-\end{enumerate}
+Session = sessionmaker(bind=engine)
+session = Session()
 
-\section{Riepilogo}
-Hai gestito dati con SQLite e modellato entità con SQLAlchemy.
+# CREATE
+alice = User(
+    username="alice",
+    email="alice@example.com",
+    password_hash="hashed_password"
+)
 
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-- Applicazioni CRUD e gestione anagrafiche.
-- Reportistica e analisi dati strutturati.
-- Servizi stateful con persistenza locale.
-- Prototipi con SQLite e migrazione a DB esterni.
-\end{tcolorbox}
+session.add(alice)
+session.commit()
 
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
+print(f"Created user: {alice.id}")
+
+# CREATE con relationship
+post = Post(
+    title="My First Post",
+    content="Hello World!",
+    author=alice  # Imposta relationship automaticamente
+)
+
+session.add(post)
+session.commit()
+
+# READ - query singolo
+user = session.query(User).filter_by(username="alice").first()
+print(user)
+
+# READ - query multipli
+users = session.query(User).all()
+for user in users:
+    print(f"{user.username} - {user.email}")
+
+# READ con WHERE
+recent_posts = session.query(Post).filter(
+    Post.created_at > datetime(2024, 1, 1)
+).order_by(Post.created_at.desc()).all()
+
+# READ con JOIN (automatico via relationship)
+user = session.query(User).filter_by(username="alice").first()
+for post in user.posts:  # Lazy loading
+    print(f"Post: {post.title}")
+
+# UPDATE
+user = session.query(User).filter_by(username="alice").first()
+user.email = "newemail@example.com"
+session.commit()
+
+# DELETE
+post = session.query(Post).filter_by(id=1).first()
+if post:
+    session.delete(post)
+    session.commit()
+
+session.close()
+\end{lstlisting}
+
+\subsection{Query avanzate}
+
+\begin{lstlisting}
+from sqlalchemy import func, and_, or_
+
+session = Session()
+
+# COUNT
+user_count = session.query(func.count(User.id)).scalar()
+print(f"Total users: {user_count}")
+
+# JOIN esplicito
+results = session.query(User, Post).join(Post).filter(
+    User.username == "alice"
+).all()
+
+for user, post in results:
+    print(f"{user.username}: {post.title}")
+
+# AND / OR
+users = session.query(User).filter(
+    and_(
+        User.username.like("a%"),
+        User.created_at > datetime(2024, 1, 1)
+    )
+).all()
+
+# IN
+usernames = ["alice", "bob", "charlie"]
+users = session.query(User).filter(User.username.in_(usernames)).all()
+
+# ORDER BY e LIMIT
+top_posts = session.query(Post).order_by(
+    Post.created_at.desc()
+).limit(10).all()
+
+# GROUP BY e HAVING
+from sqlalchemy import func
+
+stats = session.query(
+    User.username,
+    func.count(Post.id).label("post_count")
+).join(Post).group_by(User.id).having(
+    func.count(Post.id) > 5
+).all()
+
+for username, count in stats:
+    print(f"{username}: {count} posts")
+
+session.close()
+\end{lstlisting}
+
+\subsection{Relationships: Many-to-Many}
+
+\begin{lstlisting}
+from sqlalchemy import Table
+
+# Association table per Many-to-Many
+post_tags = Table(
+    "post_tags",
+    Base.metadata,
+    Column("post_id", Integer, ForeignKey("posts.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True)
+)
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), unique=True, nullable=False)
+
+    # Many-to-Many relationship
+    posts = relationship("Post", secondary=post_tags, back_populates="tags")
+
+    def __repr__(self):
+        return f"<Tag(name='{self.name}')>"
+
+# Modifica Post model per aggiungere tags
+class Post(Base):
+    # ... (campi esistenti) ...
+
+    tags = relationship("Tag", secondary=post_tags, back_populates="posts")
+
+# Uso
+session = Session()
+
+# Crea tags
+python_tag = Tag(name="python")
+database_tag = Tag(name="database")
+
+session.add_all([python_tag, database_tag])
+
+# Crea post con tags
+post = Post(
+    title="SQLAlchemy Tutorial",
+    content="Learn SQLAlchemy...",
+    author=alice,
+    tags=[python_tag, database_tag]  # Many-to-Many
+)
+
+session.add(post)
+session.commit()
+
+# Query posts by tag
+posts_with_python = session.query(Post).join(Post.tags).filter(
+    Tag.name == "python"
+).all()
+
+session.close()
+\end{lstlisting}
+
+\subsection{Evitare N+1 Query Problem}
+
+\begin{lstlisting}
+from sqlalchemy.orm import joinedload, selectinload
+
+session = Session()
+
+# PROBLEMA: N+1 queries (inefficiente!)
+users = session.query(User).all()
+for user in users:  # 1 query
+    for post in user.posts:  # N queries (una per user!)
+        print(post.title)
+
+# SOLUZIONE 1: joinedload (INNER JOIN, 1 query)
+users = session.query(User).options(
+    joinedload(User.posts)
+).all()
+
+for user in users:
+    for post in user.posts:  # Nessuna query aggiuntiva!
+        print(post.title)
+
+# SOLUZIONE 2: selectinload (2 queries totali)
+users = session.query(User).options(
+    selectinload(User.posts)
+).all()
+
+# Con nested relationships
+users = session.query(User).options(
+    joinedload(User.posts).joinedload(Post.tags)
+).all()
+
+session.close()
+\end{lstlisting}
+
+\subsection{Transazioni e gestione errori}
+
+\begin{lstlisting}
+from sqlalchemy.exc import IntegrityError
+
+session = Session()
+
+try:
+    # Transazione complessa
+    user = User(username="frank", email="frank@example.com", password_hash="hash")
+    session.add(user)
+    session.flush()  # Esegue INSERT ma non commit
+
+    post = Post(title="Test", content="Content", author=user)
+    session.add(post)
+
+    # Simula errore
+    # raise ValueError("Something went wrong")
+
+    session.commit()  # Commit tutto
+    print("Transaction successful")
+
+except IntegrityError as e:
+    session.rollback()
+    print(f"Integrity error (es. UNIQUE constraint): {e}")
+
+except Exception as e:
+    session.rollback()
+    print(f"Transaction failed: {e}")
+
+finally:
+    session.close()
+
+# Context manager (raccomandato)
+with Session() as session:
+    with session.begin():
+        user = User(username="grace", email="grace@example.com", password_hash="hash")
+        session.add(user)
+        # Auto-commit se no eccezioni, auto-rollback se errore
+\end{lstlisting}
+
+\section{Migrazioni con Alembic}
+
+\subsection{Setup Alembic}
+
+\begin{lstlisting}[language=bash]
+pip install alembic
+
+# Inizializza Alembic
+alembic init alembic
+
+# Modifica alembic.ini: imposta sqlalchemy.url
+# sqlalchemy.url = sqlite:///blog.db
+
+# Modifica alembic/env.py: importa Base
+# from myapp.models import Base
+# target_metadata = Base.metadata
+\end{lstlisting}
+
+\subsection{Creazione migration}
+
+\begin{lstlisting}[language=bash]
+# Crea migration automatica (da differenza modelli)
+alembic revision --autogenerate -m "Add users and posts tables"
+
+# Applica migration
+alembic upgrade head
+
+# Rollback migration
+alembic downgrade -1
+
+# Storia migrazioni
+alembic history
+\end{lstlisting}
+
+\subsection{Migration manuale}
+
+\begin{lstlisting}
+# File: alembic/versions/xxxx_add_bio_to_users.py
+
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    # Aggiungi colonna
+    op.add_column("users", sa.Column("bio", sa.Text, nullable=True))
+
+    # Crea indice
+    op.create_index("idx_email", "users", ["email"])
+
+def downgrade():
+    # Rimuovi indice
+    op.drop_index("idx_email", table_name="users")
+
+    # Rimuovi colonna
+    op.drop_column("users", "bio")
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best Practices]
 \begin{itemize}
-  \item \textbf{Modellazione}: definire entità, relazioni e vincoli; normalizzare dove appropriato.
-  \item \textbf{Sessione e transazioni}: gestire lifecycle; commit/rollback e gestione degli errori.
-  \item \textbf{Lazy vs eager}: scegliere strategie di caricamento; evitare \emph{N+1} query.
-  \item \textbf{Migrazioni}: usare strumenti dedicati (Alembic) per evoluzioni dello schema.
-  \item \textbf{Integrità}: vincoli, indici, e tipi corretti; prevenire inconsistenze e injection.
+  \item Usa prepared statements (sempre!) per evitare SQL injection
+  \item Chiudi sempre connessioni/sessioni (usa context manager)
+  \item Usa transazioni per operazioni multi-step
+  \item Evita N+1 queries con joinedload/selectinload
+  \item Indicizza colonne usate in WHERE, JOIN, ORDER BY
+  \item Usa Alembic per migrazioni (no ALTER TABLE manuale)
+  \item Gestisci eccezioni (IntegrityError, OperationalError)
+  \item Testa query complesse con EXPLAIN QUERY PLAN
+  \item Usa connection pooling in produzione
+  \item Backup database regolarmente
 \end{itemize}
 \end{tcolorbox}
 
-\paragraph{Pratiche} Isolare accesso ai dati, testare query critiche, e tracciare performance; documentare decisioni di schema e mapping.
-Consulta: \url{https://docs.sqlalchemy.org/}, \url{https://docs.python.org/3/library/sqlite3.html}.
+\begin{tcolorbox}[title=Errori Comuni]
+\begin{itemize}
+  \item SQL injection con f-strings invece di ? placeholders
+  \item Dimenticare commit() dopo INSERT/UPDATE/DELETE
+  \item Non chiudere sessioni (resource leak)
+  \item N+1 queries con lazy loading
+  \item Non gestire IntegrityError (UNIQUE, FK violations)
+  \item Usare \texttt{session.query(User).all()} per grandi dataset (usa limit/offset)
+  \item Non usare indici (query lente)
+  \item Modificare schema senza migration (inconsistenze)
+  \item Non usare transazioni per operazioni critiche
+  \item Esporre oggetti SQLAlchemy direttamente in API (usa DTO/serializer)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Pattern e Best Practices}
+
+\subsection{Repository Pattern}
+
+\begin{lstlisting}
+from typing import Optional, List
+from sqlalchemy.orm import Session
+
+class UserRepository:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def get_by_id(self, user_id: int) -> Optional[User]:
+        return self.session.query(User).filter_by(id=user_id).first()
+
+    def get_by_username(self, username: str) -> Optional[User]:
+        return self.session.query(User).filter_by(username=username).first()
+
+    def get_all(self, limit: int = 100, offset: int = 0) -> List[User]:
+        return self.session.query(User).limit(limit).offset(offset).all()
+
+    def create(self, username: str, email: str, password_hash: str) -> User:
+        user = User(username=username, email=email, password_hash=password_hash)
+        self.session.add(user)
+        self.session.commit()
+        return user
+
+    def update(self, user: User) -> User:
+        self.session.commit()
+        return user
+
+    def delete(self, user: User) -> None:
+        self.session.delete(user)
+        self.session.commit()
+
+# Uso
+with Session() as session:
+    repo = UserRepository(session)
+
+    user = repo.create("henry", "henry@example.com", "hash")
+    print(f"Created: {user.id}")
+
+    found = repo.get_by_username("henry")
+    print(f"Found: {found.email}")
+\end{lstlisting}
+
+\subsection{Database seeding}
+
+\begin{lstlisting}
+def seed_database():
+    """Popola database con dati iniziali"""
+    with Session() as session:
+        # Verifica se già popolato
+        if session.query(User).count() > 0:
+            print("Database already seeded")
+            return
+
+        # Crea utenti
+        users = [
+            User(username="admin", email="admin@blog.com", password_hash="hash1"),
+            User(username="alice", email="alice@blog.com", password_hash="hash2"),
+            User(username="bob", email="bob@blog.com", password_hash="hash3"),
+        ]
+
+        session.add_all(users)
+        session.commit()
+
+        # Crea tags
+        tags = [
+            Tag(name="python"),
+            Tag(name="database"),
+            Tag(name="web"),
+        ]
+
+        session.add_all(tags)
+        session.commit()
+
+        # Crea posts
+        posts = [
+            Post(title="Python Tutorial", content="...", author=users[0], tags=[tags[0]]),
+            Post(title="Database Guide", content="...", author=users[1], tags=[tags[1]]),
+            Post(title="Web Development", content="...", author=users[2], tags=[tags[2]]),
+        ]
+
+        session.add_all(posts)
+        session.commit()
+
+        print("Database seeded successfully")
+
+if __name__ == "__main__":
+    seed_database()
+\end{lstlisting}
+
+\section{Troubleshooting}
+
+\textbf{Problema}: IntegrityError: UNIQUE constraint failed
+\begin{lstlisting}
+# Gestisci duplicati
+try:
+    user = User(username="alice", email="alice@example.com", password_hash="hash")
+    session.add(user)
+    session.commit()
+except IntegrityError:
+    session.rollback()
+    print("User already exists")
+\end{lstlisting}
+
+\textbf{Problema}: DetachedInstanceError (oggetto non in sessione)
+\begin{lstlisting}
+# Riattacca oggetto
+session.add(user)  # Merge oggetto nella sessione
+
+# Oppure usa expire_on_commit=False
+Session = sessionmaker(bind=engine, expire_on_commit=False)
+\end{lstlisting}
+
+\textbf{Problema}: Query lente
+\begin{lstlisting}[language=bash]
+# Analizza query con EXPLAIN
+# In SQLite
+EXPLAIN QUERY PLAN SELECT * FROM posts WHERE user_id = 5;
+
+# Aggiungi indici
+CREATE INDEX idx_user_id ON posts(user_id);
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+\begin{enumerate}
+  \item Crea database SQLite con tabella \texttt{books} (id, title, author, year)
+  \item Inserisci 10 libri e query tutti con \texttt{SELECT *}
+  \item Trova libri pubblicati dopo 2000 con prepared statement
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+\begin{enumerate}
+  \item Definisci modelli SQLAlchemy per \texttt{Author} e \texttt{Book} (One-to-Many)
+  \item Implementa CRUD completo con Repository pattern
+  \item Aggiungi relationship Many-to-Many per \texttt{Book} e \texttt{Category}
+  \item Query libri con \texttt{joinedload} per evitare N+1
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+\begin{enumerate}
+  \item Implementa sistema blog completo (User, Post, Comment, Tag)
+  \item Usa Alembic per creare migrations
+  \item Implementa pagination per lista posts
+  \item Aggiungi full-text search con FTS5 (SQLite)
+  \item Crea seed script per popolare database di test
+\end{enumerate}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item SQLite Documentation: \url{https://docs.python.org/3/library/sqlite3.html}
+  \item SQLAlchemy Documentation: \url{https://docs.sqlalchemy.org/}
+  \item Alembic Tutorial: \url{https://alembic.sqlalchemy.org/}
+  \item SQL Tutorial: \url{https://www.w3schools.com/sql/}
+\end{itemize}

@@ -1,0 +1,1342 @@
+% 09_state_management.tex - Context API, Redux Toolkit, Zustand, State Management
+
+\chapter{State Management Avanzato}
+\label{ch:state_management}
+
+\section{Introduzione allo State Management}
+
+Man mano che le applicazioni React crescono, gestire lo stato diventa più complesso. Passare props attraverso molti livelli (prop drilling) diventa ingombrante e difficile da mantenere. Le soluzioni di state management risolvono questo problema.
+
+\subsection{Problemi dello State Locale}
+
+\begin{lstlisting}[caption={Problema: Prop Drilling}]
+// Componente Root
+function App() {
+  const [user, setUser] = useState(null);
+
+  return (
+    <Layout user={user} setUser={setUser}>
+      <Dashboard user={user} setUser={setUser} />
+    </Layout>
+  );
+}
+
+// Layout deve passare props anche se non le usa
+function Layout({ user, setUser, children }) {
+  return (
+    <div>
+      <Header user={user} setUser={setUser} />
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// Header finalmente usa le props
+function Header({ user, setUser }) {
+  return (
+    <header>
+      {user ? (
+        <UserMenu user={user} onLogout={() => setUser(null)} />
+      ) : (
+        <LoginButton />
+      )}
+    </header>
+  );
+}
+
+// Problema: Layout passa props che non usa (prop drilling)
+\end{lstlisting}
+
+\subsection{Quando Usare State Management Globale}
+
+\begin{tcolorbox}[title=Quando NON serve state management globale]
+\begin{itemize}
+\item Stato usato solo da un componente
+\item Stato condiviso tra pochi componenti vicini
+\item Form state locale
+\item UI state temporaneo (modals, tooltips)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Quando serve state management globale]
+\begin{itemize}
+\item Autenticazione utente (user, token, permissions)
+\item Temi e preferenze UI
+\item Carrello e-commerce
+\item Notifiche e toast messages
+\item Dati condivisi da molti componenti
+\item Cache di dati API
+\end{itemize}
+\end{tcolorbox}
+
+\section{Context API}
+
+Context API è la soluzione built-in di React per condividere stato senza prop drilling.
+
+\subsection{Creazione di un Context}
+
+\begin{lstlisting}[caption={Context base per tema}]
+import { createContext, useContext, useState } from 'react';
+
+// 1. Crea il Context
+const ThemeContext = createContext(null);
+
+// 2. Provider Component
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const value = {
+    theme,
+    toggleTheme
+  };
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// 3. Custom Hook per usare il context
+export function useTheme() {
+  const context = useContext(ThemeContext);
+
+  if (context === null) {
+    throw new Error('useTheme deve essere usato dentro ThemeProvider');
+  }
+
+  return context;
+}
+\end{lstlisting}
+
+\subsection{Utilizzo del Context}
+
+\begin{lstlisting}[caption={Usare il context nell'app}]
+// main.jsx
+import { ThemeProvider } from './context/ThemeContext';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>
+);
+
+// Componente che usa il tema
+function Header() {
+  const { theme, toggleTheme } = useTheme();
+
+  return (
+    <header className={theme}>
+      <h1>My App</h1>
+      <button onClick={toggleTheme}>
+        Toggle Theme (Current: {theme})
+      </button>
+    </header>
+  );
+}
+
+// Altro componente che usa il tema
+function Card({ children }) {
+  const { theme } = useTheme();
+
+  return (
+    <div className={`card card-${theme}`}>
+      {children}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Context per Autenticazione}
+
+\begin{lstlisting}[caption={Auth Context completo}]
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Controlla auth al mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+
+      if (token) {
+        try {
+          const response = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('authToken');
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const { user, token } = await response.json();
+      localStorage.setItem('authToken', token);
+      setUser(user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setUser(null);
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      const { user, token } = await response.json();
+      localStorage.setItem('authToken', token);
+      setUser(user);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    login,
+    logout,
+    register
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+
+  if (context === null) {
+    throw new Error('useAuth deve essere usato dentro AuthProvider');
+  }
+
+  return context;
+}
+\end{lstlisting}
+
+\subsection{Context con Reducer}
+
+Per logica complessa, combina Context con useReducer.
+
+\begin{lstlisting}[caption={Context con useReducer per carrello}]
+import { createContext, useContext, useReducer } from 'react';
+
+const CartContext = createContext(null);
+
+// Reducer
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'ADD_ITEM':
+      const existingIndex = state.items.findIndex(
+        item => item.id === action.payload.id
+      );
+
+      if (existingIndex >= 0) {
+        const newItems = [...state.items];
+        newItems[existingIndex].quantity += 1;
+        return { ...state, items: newItems };
+      }
+
+      return {
+        ...state,
+        items: [...state.items, { ...action.payload, quantity: 1 }]
+      };
+
+    case 'REMOVE_ITEM':
+      return {
+        ...state,
+        items: state.items.filter(item => item.id !== action.payload)
+      };
+
+    case 'UPDATE_QUANTITY':
+      return {
+        ...state,
+        items: state.items.map(item =>
+          item.id === action.payload.id
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        )
+      };
+
+    case 'CLEAR_CART':
+      return { ...state, items: [] };
+
+    default:
+      return state;
+  }
+}
+
+// Provider
+export function CartProvider({ children }) {
+  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+
+  // Selectors
+  const totalItems = state.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
+  const totalPrice = state.items.reduce(
+    (sum, item) => sum + (item.price * item.quantity),
+    0
+  );
+
+  // Actions
+  const addItem = (item) => {
+    dispatch({ type: 'ADD_ITEM', payload: item });
+  };
+
+  const removeItem = (itemId) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: itemId });
+  };
+
+  const updateQuantity = (itemId, quantity) => {
+    if (quantity <= 0) {
+      removeItem(itemId);
+    } else {
+      dispatch({
+        type: 'UPDATE_QUANTITY',
+        payload: { id: itemId, quantity }
+      });
+    }
+  };
+
+  const clearCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+  };
+
+  const value = {
+    items: state.items,
+    totalItems,
+    totalPrice,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart
+  };
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+
+export function useCart() {
+  const context = useContext(CartContext);
+
+  if (context === null) {
+    throw new Error('useCart deve essere usato dentro CartProvider');
+  }
+
+  return context;
+}
+\end{lstlisting}
+
+\subsection{Utilizzo del Cart Context}
+
+\begin{lstlisting}[caption={Componenti che usano il carrello}]
+// Componente Product
+function ProductCard({ product }) {
+  const { addItem } = useCart();
+
+  return (
+    <div className="product-card">
+      <h3>{product.name}</h3>
+      <p>{product.price}€</p>
+      <button onClick={() => addItem(product)}>
+        Aggiungi al Carrello
+      </button>
+    </div>
+  );
+}
+
+// Componente CartIcon
+function CartIcon() {
+  const { totalItems, totalPrice } = useCart();
+
+  return (
+    <div className="cart-icon">
+      <ShoppingCartIcon />
+      <span className="badge">{totalItems}</span>
+      <span className="price">{totalPrice.toFixed(2)}€</span>
+    </div>
+  );
+}
+
+// Componente Cart
+function Cart() {
+  const { items, updateQuantity, removeItem, clearCart } = useCart();
+
+  return (
+    <div className="cart">
+      <h2>Carrello</h2>
+
+      {items.length === 0 ? (
+        <p>Il carrello è vuoto</p>
+      ) : (
+        <>
+          {items.map(item => (
+            <div key={item.id} className="cart-item">
+              <h4>{item.name}</h4>
+              <p>{item.price}€</p>
+
+              <div className="quantity-controls">
+                <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>
+                  -
+                </button>
+                <span>{item.quantity}</span>
+                <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                  +
+                </button>
+              </div>
+
+              <button onClick={() => removeItem(item.id)}>
+                Rimuovi
+              </button>
+            </div>
+          ))}
+
+          <button onClick={clearCart}>Svuota Carrello</button>
+        </>
+      )}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Performance: Splitting Context}
+
+Per evitare re-render inutili, separa context per tipo di dato.
+
+\begin{lstlisting}[caption={Separazione context per performance}]
+// SBAGLIATO: Un unico context con troppi dati
+const AppContext = createContext(null);
+
+function AppProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('light');
+  const [notifications, setNotifications] = useState([]);
+  const [settings, setSettings] = useState({});
+
+  // Ogni cambiamento ri-renderizza tutti i consumer!
+  return (
+    <AppContext.Provider value={{
+      user, setUser,
+      theme, setTheme,
+      notifications, setNotifications,
+      settings, setSettings
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+// CORRETTO: Context separati
+// UserContext.jsx
+const UserContext = createContext(null);
+export function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
+  return (
+    <UserContext.Provider value={{ user, setUser }}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+// ThemeContext.jsx
+const ThemeContext = createContext(null);
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// App.jsx - Composizione providers
+function App() {
+  return (
+    <UserProvider>
+      <ThemeProvider>
+        <NotificationProvider>
+          <SettingsProvider>
+            <AppContent />
+          </SettingsProvider>
+        </NotificationProvider>
+      </ThemeProvider>
+    </UserProvider>
+  );
+}
+\end{lstlisting}
+
+\section{Redux Toolkit}
+
+Redux Toolkit è la soluzione ufficiale per Redux, semplificando molto il boilerplate.
+
+\subsection{Installazione}
+
+\begin{lstlisting}[caption={Installazione Redux Toolkit}]
+npm install @reduxjs/toolkit react-redux
+
+# o con yarn
+yarn add @reduxjs/toolkit react-redux
+\end{lstlisting}
+
+\subsection{Setup Store}
+
+\begin{lstlisting}[caption={Configurazione base dello store}]
+// store/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import counterReducer from './slices/counterSlice';
+import authReducer from './slices/authSlice';
+import cartReducer from './slices/cartSlice';
+
+export const store = configureStore({
+  reducer: {
+    counter: counterReducer,
+    auth: authReducer,
+    cart: cartReducer
+  }
+});
+\end{lstlisting}
+
+\subsection{Provider Setup}
+
+\begin{lstlisting}[caption={Wrap app con Provider}]
+// main.jsx
+import { Provider } from 'react-redux';
+import { store } from './store/store';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+);
+\end{lstlisting}
+
+\subsection{Creazione di uno Slice}
+
+\begin{lstlisting}[caption={Counter slice esempio}]
+// store/slices/counterSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const counterSlice = createSlice({
+  name: 'counter',
+
+  initialState: {
+    value: 0
+  },
+
+  reducers: {
+    increment: (state) => {
+      state.value += 1; // Immer permette mutazioni dirette
+    },
+
+    decrement: (state) => {
+      state.value -= 1;
+    },
+
+    incrementByAmount: (state, action) => {
+      state.value += action.payload;
+    },
+
+    reset: (state) => {
+      state.value = 0;
+    }
+  }
+});
+
+// Export actions
+export const { increment, decrement, incrementByAmount, reset } =
+  counterSlice.actions;
+
+// Export reducer
+export default counterSlice.reducer;
+
+// Selectors
+export const selectCount = (state) => state.counter.value;
+\end{lstlisting}
+
+\subsection{Utilizzo in Componenti}
+
+\begin{lstlisting}[caption={Usare Redux in componenti}]
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  increment,
+  decrement,
+  incrementByAmount,
+  reset,
+  selectCount
+} from './store/slices/counterSlice';
+
+function Counter() {
+  const count = useSelector(selectCount);
+  const dispatch = useDispatch();
+
+  return (
+    <div>
+      <h2>Count: {count}</h2>
+
+      <button onClick={() => dispatch(increment())}>+</button>
+      <button onClick={() => dispatch(decrement())}>-</button>
+      <button onClick={() => dispatch(incrementByAmount(5))}>+5</button>
+      <button onClick={() => dispatch(reset())}>Reset</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Slice Complesso: Autenticazione}
+
+\begin{lstlisting}[caption={Auth slice con async thunks}]
+// store/slices/authSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+// Async thunk per login
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Async thunk per fetch user
+export const fetchUser = createAsyncThunk(
+  'auth/fetchUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('No token');
+      }
+
+      const response = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user');
+      }
+
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const authSlice = createSlice({
+  name: 'auth',
+
+  initialState: {
+    user: null,
+    token: localStorage.getItem('token'),
+    loading: false,
+    error: null
+  },
+
+  reducers: {
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.error = null;
+      localStorage.removeItem('token');
+    },
+
+    clearError: (state) => {
+      state.error = null;
+    }
+  },
+
+  extraReducers: (builder) => {
+    builder
+      // Login
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.error = null;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch User
+      .addCase(fetchUser.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        state.loading = false;
+        state.token = null;
+        state.error = action.payload;
+        localStorage.removeItem('token');
+      });
+  }
+});
+
+export const { logout, clearError } = authSlice.actions;
+export default authSlice.reducer;
+
+// Selectors
+export const selectUser = (state) => state.auth.user;
+export const selectIsAuthenticated = (state) => !!state.auth.user;
+export const selectAuthLoading = (state) => state.auth.loading;
+export const selectAuthError = (state) => state.auth.error;
+\end{lstlisting}
+
+\subsection{Utilizzo Auth Slice}
+
+\begin{lstlisting}[caption={Login component con Redux}]
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import {
+  loginUser,
+  selectAuthLoading,
+  selectAuthError,
+  clearError
+} from './store/slices/authSlice';
+
+function LoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const loading = useSelector(selectAuthLoading);
+  const error = useSelector(selectAuthError);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const result = await dispatch(loginUser({ email, password }));
+
+    if (loginUser.fulfilled.match(result)) {
+      navigate('/dashboard');
+    }
+  };
+
+  useEffect(() => {
+    // Pulisci errori quando il componente si smonta
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
+  return (
+    <div>
+      <h1>Login</h1>
+
+      {error && (
+        <div className="error">
+          {error}
+          <button onClick={() => dispatch(clearError())}>X</button>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
+
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          required
+        />
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Loading...' : 'Login'}
+        </button>
+      </form>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Cart Slice Completo}
+
+\begin{lstlisting}[caption={Carrello e-commerce con Redux}]
+// store/slices/cartSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const cartSlice = createSlice({
+  name: 'cart',
+
+  initialState: {
+    items: [],
+    isOpen: false
+  },
+
+  reducers: {
+    addItem: (state, action) => {
+      const existingItem = state.items.find(
+        item => item.id === action.payload.id
+      );
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        state.items.push({ ...action.payload, quantity: 1 });
+      }
+    },
+
+    removeItem: (state, action) => {
+      state.items = state.items.filter(
+        item => item.id !== action.payload
+      );
+    },
+
+    updateQuantity: (state, action) => {
+      const { id, quantity } = action.payload;
+      const item = state.items.find(item => item.id === id);
+
+      if (item) {
+        if (quantity <= 0) {
+          state.items = state.items.filter(item => item.id !== id);
+        } else {
+          item.quantity = quantity;
+        }
+      }
+    },
+
+    clearCart: (state) => {
+      state.items = [];
+    },
+
+    toggleCart: (state) => {
+      state.isOpen = !state.isOpen;
+    },
+
+    closeCart: (state) => {
+      state.isOpen = false;
+    }
+  }
+});
+
+export const {
+  addItem,
+  removeItem,
+  updateQuantity,
+  clearCart,
+  toggleCart,
+  closeCart
+} = cartSlice.actions;
+
+export default cartSlice.reducer;
+
+// Selectors con memoization
+export const selectCartItems = (state) => state.cart.items;
+export const selectIsCartOpen = (state) => state.cart.isOpen;
+
+export const selectTotalItems = (state) =>
+  state.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+export const selectTotalPrice = (state) =>
+  state.cart.items.reduce(
+    (sum, item) => sum + (item.price * item.quantity),
+    0
+  );
+\end{lstlisting}
+
+\subsection{RTK Query per API}
+
+RTK Query semplifica il fetching e caching di dati API.
+
+\begin{lstlisting}[caption={API slice con RTK Query}]
+// store/api/apiSlice.js
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const apiSlice = createApi({
+  reducerPath: 'api',
+
+  baseQuery: fetchBaseQuery({
+    baseUrl: '/api',
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState().auth.token;
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
+      }
+      return headers;
+    }
+  }),
+
+  tagTypes: ['User', 'Product', 'Order'],
+
+  endpoints: (builder) => ({
+    // Get all products
+    getProducts: builder.query({
+      query: () => '/products',
+      providesTags: ['Product']
+    }),
+
+    // Get single product
+    getProduct: builder.query({
+      query: (id) => `/products/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Product', id }]
+    }),
+
+    // Create product
+    createProduct: builder.mutation({
+      query: (newProduct) => ({
+        url: '/products',
+        method: 'POST',
+        body: newProduct
+      }),
+      invalidatesTags: ['Product']
+    }),
+
+    // Update product
+    updateProduct: builder.mutation({
+      query: ({ id, ...updates }) => ({
+        url: `/products/${id}`,
+        method: 'PUT',
+        body: updates
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Product', id }]
+    }),
+
+    // Delete product
+    deleteProduct: builder.mutation({
+      query: (id) => ({
+        url: `/products/${id}`,
+        method: 'DELETE'
+      }),
+      invalidatesTags: ['Product']
+    }),
+
+    // Get user orders
+    getUserOrders: builder.query({
+      query: () => '/orders',
+      providesTags: ['Order']
+    })
+  })
+});
+
+export const {
+  useGetProductsQuery,
+  useGetProductQuery,
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useDeleteProductMutation,
+  useGetUserOrdersQuery
+} = apiSlice;
+\end{lstlisting}
+
+\subsection{Store con RTK Query}
+
+\begin{lstlisting}[caption={Store configuration con RTK Query}]
+// store/store.js
+import { configureStore } from '@reduxjs/toolkit';
+import { apiSlice } from './api/apiSlice';
+import authReducer from './slices/authSlice';
+import cartReducer from './slices/cartSlice';
+
+export const store = configureStore({
+  reducer: {
+    [apiSlice.reducerPath]: apiSlice.reducer,
+    auth: authReducer,
+    cart: cartReducer
+  },
+
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware)
+});
+\end{lstlisting}
+
+\subsection{Utilizzo RTK Query}
+
+\begin{lstlisting}[caption={Componente con RTK Query}]
+import {
+  useGetProductsQuery,
+  useCreateProductMutation,
+  useDeleteProductMutation
+} from './store/api/apiSlice';
+
+function ProductList() {
+  const {
+    data: products,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useGetProductsQuery();
+
+  const [createProduct, { isLoading: isCreating }] =
+    useCreateProductMutation();
+
+  const [deleteProduct, { isLoading: isDeleting }] =
+    useDeleteProductMutation();
+
+  const handleCreate = async () => {
+    try {
+      await createProduct({
+        name: 'New Product',
+        price: 99.99
+      }).unwrap();
+      // Successo
+    } catch (error) {
+      console.error('Failed to create:', error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteProduct(id).unwrap();
+    } catch (error) {
+      console.error('Failed to delete:', error);
+    }
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error: {error.message}</div>;
+
+  return (
+    <div>
+      <h1>Products</h1>
+
+      <button onClick={handleCreate} disabled={isCreating}>
+        {isCreating ? 'Creating...' : 'Add Product'}
+      </button>
+
+      <button onClick={refetch}>Refresh</button>
+
+      <ul>
+        {products.map(product => (
+          <li key={product.id}>
+            {product.name} - {product.price}€
+            <button
+              onClick={() => handleDelete(product.id)}
+              disabled={isDeleting}
+            >
+              Delete
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Zustand}
+
+Zustand è una libreria di state management leggera e semplice, alternativa a Redux con meno boilerplate.
+
+\subsection{Installazione}
+
+\begin{lstlisting}[caption={Installazione Zustand}]
+npm install zustand
+
+# o con yarn
+yarn add zustand
+\end{lstlisting}
+
+\subsection{Store Base}
+
+\begin{lstlisting}[caption={Creazione di uno store Zustand}]
+// store/useCounterStore.js
+import { create } from 'zustand';
+
+const useCounterStore = create((set) => ({
+  // State
+  count: 0,
+
+  // Actions
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 })),
+  incrementByAmount: (amount) =>
+    set((state) => ({ count: state.count + amount })),
+  reset: () => set({ count: 0 })
+}));
+
+export default useCounterStore;
+\end{lstlisting}
+
+\subsection{Utilizzo in Componenti}
+
+\begin{lstlisting}[caption={Usare Zustand in componenti}]
+import useCounterStore from './store/useCounterStore';
+
+function Counter() {
+  // Seleziona solo ciò che serve
+  const count = useCounterStore((state) => state.count);
+  const increment = useCounterStore((state) => state.increment);
+  const decrement = useCounterStore((state) => state.decrement);
+  const reset = useCounterStore((state) => state.reset);
+
+  return (
+    <div>
+      <h2>Count: {count}</h2>
+      <button onClick={increment}>+</button>
+      <button onClick={decrement}>-</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Auth Store con Zustand}
+
+\begin{lstlisting}[caption={Store autenticazione completo}]
+// store/useAuthStore.js
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      // State
+      user: null,
+      token: null,
+      loading: false,
+      error: null,
+
+      // Actions
+      login: async (email, password) => {
+        set({ loading: true, error: null });
+
+        try {
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+
+          if (!response.ok) {
+            throw new Error('Login failed');
+          }
+
+          const data = await response.json();
+
+          set({
+            user: data.user,
+            token: data.token,
+            loading: false,
+            error: null
+          });
+
+          return { success: true };
+        } catch (error) {
+          set({
+            loading: false,
+            error: error.message
+          });
+          return { success: false, error: error.message };
+        }
+      },
+
+      logout: () => {
+        set({
+          user: null,
+          token: null,
+          error: null
+        });
+      },
+
+      clearError: () => set({ error: null })
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        token: state.token
+      })
+    }
+  )
+);
+
+export default useAuthStore;
+\end{lstlisting}
+
+\subsection{Middleware in Zustand}
+
+\begin{lstlisting}[caption={Uso di middleware: persist e devtools}]
+import { create } from 'zustand';
+import { persist, devtools } from 'zustand/middleware';
+
+const useStore = create(
+  devtools(
+    persist(
+      (set, get) => ({
+        bears: 0,
+        increasePopulation: () =>
+          set((state) => ({ bears: state.bears + 1 }))
+      }),
+      {
+        name: 'animals-storage',
+      }
+    ),
+    { name: 'AnimalStore' }
+  )
+);
+\end{lstlisting}
+
+\section{Confronto: Context vs Redux vs Zustand}
+
+\begin{tcolorbox}[title=Context API]
+\textbf{Vantaggi:}
+\begin{itemize}
+\item Built-in, nessuna dipendenza esterna
+\item Semplice da configurare
+\item Zero boilerplate
+\end{itemize}
+
+\textbf{Svantaggi:}
+\begin{itemize}
+\item Performance issues con molti consumer
+\item Nessun DevTools integrato
+\item Difficile testare
+\end{itemize}
+
+\textbf{Usa quando:} State semplice, piccole applicazioni
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Redux Toolkit]
+\textbf{Vantaggi:}
+\begin{itemize}
+\item Ecosystem maturo
+\item Ottimi DevTools
+\item Time-travel debugging
+\item RTK Query per data fetching
+\end{itemize}
+
+\textbf{Svantaggi:}
+\begin{itemize}
+\item Curva di apprendimento ripida
+\item Più boilerplate
+\end{itemize}
+
+\textbf{Usa quando:} Applicazioni grandi e complesse, team grandi
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Zustand]
+\textbf{Vantaggi:}
+\begin{itemize}
+\item Estremamente semplice
+\item Minimal boilerplate
+\item Ottima performance
+\item No Provider needed
+\item Bundle size piccolo
+\end{itemize}
+
+\textbf{Svantaggi:}
+\begin{itemize}
+\item Ecosystem più piccolo
+\item Community più piccola
+\end{itemize}
+
+\textbf{Usa quando:} Semplicità senza sacrificare features, app medie
+\end{tcolorbox}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Checklist State Management]
+\begin{itemize}
+\item Usa state locale quando possibile
+\item Normalizza i dati per evitare duplicazioni
+\item Separa UI state da server state
+\item Usa selectors memoizzati per performance
+\item Evita prop drilling con Context o state management
+\item Testa la logica di business separatamente
+\item Usa TypeScript per type safety
+\item Monitora performance con DevTools
+\item Implementa error handling robusto
+\item Documenta struttura dello state
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusioni}
+
+La scelta della soluzione di state management dipende dalle esigenze dell'applicazione:
+
+\begin{itemize}
+\item \textbf{Context API}: Per state semplice e piccole app
+\item \textbf{Redux Toolkit}: Per app enterprise con requisiti complessi
+\item \textbf{Zustand}: Per il miglior balance tra semplicità e features
+\end{itemize}
+
+Non esiste una soluzione universale: valuta complessità dell'app, dimensione del team, e requisiti di performance per scegliere la soluzione giusta.

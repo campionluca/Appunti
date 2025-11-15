@@ -1,0 +1,752 @@
+\chapter{API Versioning}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Perché versioning, Breaking changes vs backward compatible, Semantic versioning, URI versioning, Header versioning, Query parameter versioning, Content negotiation versioning, Deprecation strategy, Migration path, Best practices, Case studies.
+\end{tcolorbox}
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Comprendere necessità di versioning API
+  \item Distinguere breaking vs non-breaking changes
+  \item Applicare semantic versioning
+  \item Implementare URI versioning
+  \item Implementare header versioning
+  \item Pianificare deprecation strategy
+  \item Gestire multiple versioni simultanee
+  \item Comunicare changes a developers
+\end{itemize}
+
+\section{Perché Versioning}
+
+\subsection{Il Problema}
+
+API pubbliche hanno client multipli fuori dal tuo controllo:
+\begin{itemize}
+    \item Mobile apps (iOS, Android) con release cycles diversi
+    \item Third-party integrations
+    \item Partner commerciali
+    \item Legacy systems
+\end{itemize}
+
+\textbf{Senza versioning}:
+\begin{lstlisting}[caption=Breaking change rompe client]
+# API v1 (iniziale)
+GET /api/users/123
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+# Breaking change: rename field
+GET /api/users/123
+{
+  "id": 123,
+  "full_name": "Mario Rossi"  # Client che si aspetta "name" si rompe!
+}
+\end{lstlisting}
+
+Client esistenti crashano o malfunzionano.
+
+\subsection{Quando Serve Versioning}
+
+\textbf{Necessario per}:
+\begin{itemize}
+    \item Breaking changes inevitabili
+    \item Redesign architetturale
+    \item Security fixes che cambiano behavior
+    \item Performance optimization con side effects
+\end{itemize}
+
+\textbf{NON necessario per}:
+\begin{itemize}
+    \item Bug fixes senza cambio behavior
+    \item Nuovi endpoint (additive)
+    \item Nuovi optional fields (backward compatible)
+    \item Performance improvements trasparenti
+\end{itemize}
+
+\section{Breaking vs Non-Breaking Changes}
+
+\subsection{Breaking Changes}
+
+\textbf{Breaking}: Client esistenti smettono di funzionare.
+
+\textbf{Esempi breaking}:
+\begin{itemize}
+    \item Rimuovere campo da response
+    \item Rinominare campo
+    \item Cambiare tipo campo (\texttt{string} → \texttt{number})
+    \item Rimuovere endpoint
+    \item Cambiare semantica esistente
+    \item Rendere campo obbligatorio (era opzionale)
+    \item Cambiare status code default
+    \item Cambiare error structure
+\end{itemize}
+
+\begin{lstlisting}[caption=Breaking changes - Esempi]
+# BREAKING: Campo rimosso
+# Prima
+{"id": 123, "name": "Mario", "email": "mario@example.com"}
+# Dopo
+{"id": 123, "name": "Mario"}  # email rimosso!
+
+# BREAKING: Tipo cambiato
+# Prima
+{"price": "99.99"}  # string
+# Dopo
+{"price": 99.99}    # number
+
+# BREAKING: Semantica cambiata
+# Prima: GET /users ritorna tutti users
+# Dopo: GET /users ritorna solo active users
+\end{lstlisting}
+
+\subsection{Non-Breaking Changes}
+
+\textbf{Non-breaking}: Client esistenti continuano a funzionare.
+
+\textbf{Esempi non-breaking}:
+\begin{itemize}
+    \item Aggiungere nuovo campo (client ignora)
+    \item Aggiungere nuovo endpoint
+    \item Aggiungere optional parameter
+    \item Rendere campo opzionale (era obbligatorio)
+    \item Fix bug senza cambio semantica
+    \item Aggiungere valore a enum esistente
+\end{itemize}
+
+\begin{lstlisting}[caption=Non-breaking changes - OK]
+# NON-BREAKING: Nuovo campo aggiunto
+# Prima
+{"id": 123, "name": "Mario"}
+# Dopo
+{"id": 123, "name": "Mario", "avatar_url": "https://..."}
+# Client vecchio ignora avatar_url
+
+# NON-BREAKING: Nuovo endpoint
+POST /api/v1/users/bulk-import  # Nuovo, non impatta esistenti
+
+# NON-BREAKING: Optional parameter
+GET /api/users?include_deleted=true  # Default false, backward compatible
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Robustness Principle (Postel's Law)]
+\textit{Be conservative in what you send, be liberal in what you accept.}
+
+\textbf{API}: Mantieni response contract stabile
+
+\textbf{Client}: Ignora campi unknown, non assumere field order
+\end{tcolorbox}
+
+\section{Semantic Versioning}
+
+\subsection{SemVer Schema}
+
+\textbf{Semantic Versioning}: \texttt{MAJOR.MINOR.PATCH}
+
+\begin{itemize}
+    \item \textbf{MAJOR}: Breaking changes incompatibili
+    \item \textbf{MINOR}: Nuove feature backward compatible
+    \item \textbf{PATCH}: Bug fixes backward compatible
+\end{itemize}
+
+\textbf{Esempi}:
+\begin{itemize}
+    \item \texttt{1.0.0} → \texttt{1.0.1}: Bug fix (PATCH)
+    \item \texttt{1.0.1} → \texttt{1.1.0}: Nuova feature (MINOR)
+    \item \texttt{1.1.0} → \texttt{2.0.0}: Breaking change (MAJOR)
+\end{itemize}
+
+\begin{lstlisting}[caption=Semantic versioning changelog]
+# Version 1.0.0 - Initial release
+- GET /users
+- POST /users
+- GET /users/:id
+
+# Version 1.1.0 - Minor (additive)
+- GET /users/:id/orders (nuovo endpoint)
+- GET /users?role=admin (nuovo filter)
+
+# Version 1.1.1 - Patch (bug fix)
+- Fix: GET /users pagination count incorrect
+
+# Version 2.0.0 - Major (breaking)
+- BREAKING: "name" field renamed to "full_name"
+- BREAKING: DELETE /users/:id requires admin role
+- New: Support for filtering by multiple roles
+\end{lstlisting}
+
+\subsection{SemVer in API}
+
+\textbf{Strategia comune}: Solo MAJOR version in URI.
+
+\begin{lstlisting}[caption=SemVer in API URI]
+/api/v1/users     # Version 1.x.x
+/api/v2/users     # Version 2.x.x
+/api/v3/users     # Version 3.x.x
+
+# MINOR/PATCH changes dentro stesso MAJOR
+# v1.0.0 → v1.5.3 tutti su /api/v1/users
+# Breaking change → v2.0.0 → /api/v2/users
+\end{lstlisting}
+
+\section{URI Versioning}
+
+\subsection{Pattern}
+
+\textbf{Versione in URI path}: Approccio più comune.
+
+\begin{lstlisting}[caption=URI versioning]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+GET /api/v2/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+{
+  "id": 123,
+  "full_name": "Mario Rossi",  # Breaking: name → full_name
+  "avatar": "https://..."
+}
+\end{lstlisting}
+
+\subsection{Vantaggi URI Versioning}
+
+\begin{itemize}
+    \item \textbf{Esplicito}: Versione visibile in URL
+    \item \textbf{Semplice}: No header custom
+    \item \textbf{Cacheable}: Proxy/CDN vedono versione
+    \item \textbf{Browser-friendly}: Testabile direttamente
+    \item \textbf{Developer-friendly}: Intuitive
+\end{itemize}
+
+\subsection{Svantaggi URI Versioning}
+
+\begin{itemize}
+    \item Viola principio REST (risorsa = URI unico)
+    \item Duplicazione codice per multiple versioni
+    \item URI pollution
+\end{itemize}
+
+\subsection{Varianti URI Versioning}
+
+\begin{lstlisting}[caption=URI versioning - Varianti]
+# Version in path prefix (common)
+/api/v1/users
+/api/v2/users
+
+# Version in subdomain
+https://v1.api.example.com/users
+https://v2.api.example.com/users
+
+# Version in path segment
+/api/users/v1
+/api/users/v2
+\end{lstlisting}
+
+\textbf{Raccomandato}: \texttt{/api/v\{major\}/resource}
+
+\section{Header Versioning}
+
+\subsection{Custom Header}
+
+\textbf{Versione in custom HTTP header}:
+
+\begin{lstlisting}[caption=Custom header versioning]
+GET /api/users/123 HTTP/1.1
+API-Version: 1
+
+HTTP/1.1 200 OK
+API-Version: 1
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+GET /api/users/123 HTTP/1.1
+API-Version: 2
+
+HTTP/1.1 200 OK
+API-Version: 2
+{
+  "id": 123,
+  "full_name": "Mario Rossi"
+}
+\end{lstlisting}
+
+\subsection{Accept Header (Content Negotiation)}
+
+\textbf{Versione in Accept header via vendor media type}:
+
+\begin{lstlisting}[caption=Accept header versioning]
+GET /api/users/123 HTTP/1.1
+Accept: application/vnd.example.v1+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.example.v1+json
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+GET /api/users/123 HTTP/1.1
+Accept: application/vnd.example.v2+json
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.example.v2+json
+{
+  "id": 123,
+  "full_name": "Mario Rossi"
+}
+\end{lstlisting}
+
+\textbf{Esempi real-world}:
+\begin{itemize}
+    \item GitHub: \texttt{Accept: application/vnd.github.v3+json}
+    \item Twilio: \texttt{Accept: application/vnd.twilio.v1+json}
+\end{itemize}
+
+\subsection{Vantaggi Header Versioning}
+
+\begin{itemize}
+    \item \textbf{RESTful puro}: URI identifica risorsa, non versione
+    \item \textbf{Single URI}: \texttt{/api/users/123} per tutte versioni
+    \item \textbf{Content negotiation}: Allineato con HTTP standard
+\end{itemize}
+
+\subsection{Svantaggi Header Versioning}
+
+\begin{itemize}
+    \item \textbf{Meno intuitivo}: Developer deve conoscere header
+    \item \textbf{Caching complesso}: Proxy/CDN devono considerare header
+    \item \textbf{Testing difficile}: Non testabile direttamente in browser
+    \item \textbf{Debugging}: Versione nascosta, non in URL
+\end{itemize}
+
+\section{Query Parameter Versioning}
+
+\begin{lstlisting}[caption=Query parameter versioning]
+GET /api/users/123?version=1 HTTP/1.1
+
+HTTP/1.1 200 OK
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+GET /api/users/123?version=2 HTTP/1.1
+
+HTTP/1.1 200 OK
+{
+  "id": 123,
+  "full_name": "Mario Rossi"
+}
+\end{lstlisting}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Semplice da implementare
+    \item Visibile in URL
+    \item Default version possibile (\texttt{?version=1} default se omesso)
+\end{itemize}
+
+\textbf{Svantaggi}:
+\begin{itemize}
+    \item Mescola versioning con filtering
+    \item URL pollution
+    \item Poco usato in practice
+\end{itemize}
+
+\section{Confronto Strategie}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Aspetto} & \textbf{URI} & \textbf{Header} & \textbf{Accept} & \textbf{Query} \\ \hline
+\textbf{Semplicità} & ★★★★★ & ★★★☆☆ & ★★☆☆☆ & ★★★★☆ \\ \hline
+\textbf{RESTful} & ★★☆☆☆ & ★★★★★ & ★★★★★ & ★★☆☆☆ \\ \hline
+\textbf{Caching} & ★★★★★ & ★★★☆☆ & ★★☆☆☆ & ★★★★☆ \\ \hline
+\textbf{Testabilità} & ★★★★★ & ★★☆☆☆ & ★★☆☆☆ & ★★★★★ \\ \hline
+\textbf{Adoption} & ★★★★★ & ★★★☆☆ & ★★★☆☆ & ★★☆☆☆ \\ \hline
+\textbf{Documentation} & ★★★★★ & ★★★☆☆ & ★★★☆☆ & ★★★★☆ \\ \hline
+\end{tabular}
+\caption{Confronto strategie versioning}
+\end{table}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Raccomandazione]
+\textbf{Per API pubbliche}: \textbf{URI versioning} (\texttt{/api/v1/})
+
+\textbf{Motivi}:
+\begin{itemize}
+    \item Massima semplicità per developer
+    \item Testabile in browser
+    \item Documentazione chiara
+    \item Caching straightforward
+    \item Industry standard (Stripe, Twitter, GitHub v3)
+\end{itemize}
+
+\textbf{Per API interne o advanced}: Header/Accept versioning se team ha expertise REST.
+\end{tcolorbox}
+
+\section{Version Lifecycle}
+
+\subsection{Supportare Multiple Versioni}
+
+\textbf{Strategia common}: Supporta N versioni simultanee.
+
+\begin{lstlisting}[caption=Multiple versions deployment]
+# Production deployment
+/api/v1/users  → v1 codebase (maintenance mode)
+/api/v2/users  → v2 codebase (stable)
+/api/v3/users  → v3 codebase (current)
+
+# Client migration
+- Legacy apps: v1
+- Majority apps: v2
+- New apps: v3
+\end{lstlisting}
+
+\subsection{Deprecation Strategy}
+
+\textbf{Processo graduale}:
+
+\begin{enumerate}
+    \item \textbf{Announce}: Comunicare deprecation con anticipo (6-12 mesi)
+    \item \textbf{Sunset header}: Indicare data fine supporto
+    \item \textbf{Warning header}: Alert in response
+    \item \textbf{Migration guide}: Documentare breaking changes
+    \item \textbf{Grace period}: Overlap versioni
+    \item \textbf{Shutdown}: Disabilitare old version
+\end{enumerate}
+
+\begin{lstlisting}[caption=Deprecation headers]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Sunset: Sat, 31 Dec 2025 23:59:59 GMT
+Warning: 299 - "API v1 is deprecated. Migrate to v2 by 2025-12-31"
+Link: <https://docs.example.com/migration-v1-to-v2>; rel="deprecation"
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "_deprecation": {
+    "sunset": "2025-12-31T23:59:59Z",
+    "migration_guide": "https://docs.example.com/migration-v1-to-v2",
+    "current_version": "v2"
+  }
+}
+\end{lstlisting}
+
+\subsection{Shutdown Sequence}
+
+\begin{lstlisting}[caption=Graceful shutdown v1]
+# Phase 1: Announce (12 months before)
+- Blog post
+- Email to registered developers
+- In-app notifications
+
+# Phase 2: Warning (6 months before)
+- Sunset header in every response
+- Dashboard warning for API key holders
+- Deprecation notice in docs
+
+# Phase 3: Restricted (3 months before)
+- Rate limit reduced for deprecated version
+- 429 Too Many Requests con upgrade suggestion
+
+# Phase 4: Read-only (1 month before)
+- Only GET requests allowed
+- POST/PUT/DELETE → 410 Gone
+
+# Phase 5: Shutdown
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 410 Gone
+Content-Type: application/json
+
+{
+  "error": "version_sunset",
+  "message": "API v1 has been shut down",
+  "sunset_date": "2025-12-31",
+  "current_version": {
+    "version": "v2",
+    "endpoint": "/api/v2/users/123"
+  },
+  "migration_guide": "https://docs.example.com/migration"
+}
+\end{lstlisting}
+
+\section{Migration Best Practices}
+
+\subsection{Documentation}
+
+\textbf{Migration guide must include}:
+
+\begin{itemize}
+    \item \textbf{Breaking changes list}: Dettagliato con esempi
+    \item \textbf{Side-by-side comparison}: v1 vs v2 request/response
+    \item \textbf{Code examples}: Snippet in linguaggi popolari
+    \item \textbf{Timeline}: Date chiave (announce, sunset, shutdown)
+    \item \textbf{Support}: Canale per domande migration
+\end{itemize}
+
+\begin{lstlisting}[caption=Migration guide example]
+# Migration Guide: v1 → v2
+
+## Breaking Changes
+
+### 1. User name field renamed
+
+**v1**
+GET /api/v1/users/123
+{
+  "id": 123,
+  "name": "Mario Rossi"
+}
+
+**v2**
+GET /api/v2/users/123
+{
+  "id": 123,
+  "full_name": "Mario Rossi"
+}
+
+**Migration**: Update client code to use "full_name" instead of "name"
+
+### 2. Authentication changed
+
+**v1**: API key in query parameter
+GET /api/v1/users?api_key=abc123
+
+**v2**: Bearer token in Authorization header
+GET /api/v2/users
+Authorization: Bearer eyJhbGc...
+
+**Migration**: Upgrade to OAuth 2.0, obtain access token
+
+## Timeline
+
+- 2025-06-01: v2 released, v1 deprecated
+- 2025-09-01: v1 rate limits reduced
+- 2025-11-01: v1 read-only
+- 2025-12-31: v1 shutdown
+
+## Support
+
+- Migration questions: api-support@example.com
+- Slack channel: #api-v2-migration
+\end{lstlisting}
+
+\subsection{Versioning Client Libraries}
+
+\begin{lstlisting}[caption=SDK versioning]
+# Python SDK
+pip install example-api-client==1.x  # v1 API
+pip install example-api-client==2.x  # v2 API
+
+# JavaScript SDK
+npm install example-api@1.x
+npm install example-api@2.x
+
+# Code example
+# v1 SDK
+from example_api import Client
+client = Client(api_key="abc123")
+user = client.users.get(123)
+print(user.name)  # v1 field
+
+# v2 SDK
+from example_api import ClientV2
+client = ClientV2(access_token="Bearer ...")
+user = client.users.get(123)
+print(user.full_name)  # v2 field
+\end{lstlisting}
+
+\section{Case Studies}
+
+\subsection{Stripe API}
+
+\textbf{Strategia}: Date-based versioning in header
+
+\begin{lstlisting}[caption=Stripe versioning]
+GET /v1/customers/cus_123 HTTP/1.1
+Stripe-Version: 2025-01-15
+Authorization: Bearer sk_test_...
+
+# Breaking changes rilasciati con date version
+# Client può rimanere su old version indefinitamente
+\end{lstlisting}
+
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item Single URI per risorsa
+    \item Versione = date (YYYY-MM-DD)
+    \item Backward compatibility garantita
+    \item Client sceglie quando migrare
+\end{itemize}
+
+\subsection{GitHub API}
+
+\textbf{v3}: URI versioning + Accept header
+
+\begin{lstlisting}[caption=GitHub API v3]
+GET /repos/octocat/Hello-World HTTP/1.1
+Accept: application/vnd.github.v3+json
+
+# URI: /repos (no /v3/ prefix)
+# Version in Accept header
+\end{lstlisting}
+
+\textbf{v4}: GraphQL (breaking redesign)
+\begin{lstlisting}
+POST /graphql HTTP/1.1
+# Completamente diverso da v3 REST
+\end{lstlisting}
+
+\subsection{Twitter API}
+
+\textbf{Strategia}: URI versioning major rewrites
+
+\begin{lstlisting}[caption=Twitter API evolution]
+# v1.1 (deprecated 2013)
+GET /1.1/statuses/user_timeline.json
+
+# v2 (released 2020, redesign completo)
+GET /2/tweets
+GET /2/users/:id
+
+# Multiple versioni per transition period
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Best Practices Versioning]
+\begin{enumerate}
+    \item \textbf{Versiona da subito}: Include v1 anche per prima release
+    \item \textbf{Solo MAJOR in URI}: \texttt{/api/v1/}, \texttt{/api/v2/}
+    \item \textbf{Semantic versioning}: MAJOR.MINOR.PATCH internamente
+    \item \textbf{Default version}: Redirect \texttt{/api/} → \texttt{/api/v2/}
+    \item \textbf{Breaking changes solo in MAJOR}: v1 → v2
+    \item \textbf{Supporta N versioni}: Almeno current + previous
+    \item \textbf{Sunset header}: Comunica deprecation
+    \item \textbf{Migration guide}: Documentazione dettagliata
+    \item \textbf{Long sunset period}: 6-12 mesi minimo
+    \item \textbf{Monitor usage}: Analytics per versione
+    \item \textbf{Changelog pubblico}: Tutte le modifiche documentate
+    \item \textbf{Never break existing}: Se possibile, evita breaking changes
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Errori comuni]
+\begin{itemize}
+    \item \textbf{No versioning}: Rompere client esistenti
+    \item \textbf{Breaking in MINOR/PATCH}: Viola semantic versioning
+    \item \textbf{Too many versions}: Supportare v1-v10 contemporaneamente
+    \item \textbf{Sunset improvviso}: Shutdown senza preavviso
+    \item \textbf{Poor documentation}: Migration guide incompleto
+    \item \textbf{Versioning inconsistente}: Mix URI + header + query
+    \item \textbf{MINOR/PATCH in URI}: \texttt{/api/v1.2.3/} troppo granulare
+\end{itemize}
+\end{tcolorbox}
+
+\section{Evitare Breaking Changes}
+
+\subsection{Strategie per Backward Compatibility}
+
+\begin{lstlisting}[caption=Additive changes invece di breaking]
+# BREAKING: Rimuovere campo
+# BAD
+# v1: {"id": 123, "name": "Mario", "email": "mario@example.com"}
+# v2: {"id": 123, "name": "Mario"}  # email rimosso
+
+# GOOD: Deprecare ma mantenere
+# v2: {"id": 123, "name": "Mario", "email": "mario@example.com"}
+# Response header: Warning: 299 - "email field deprecated"
+
+# BREAKING: Rinominare campo
+# BAD
+# v1: {"name": "Mario"}
+# v2: {"full_name": "Mario"}
+
+# GOOD: Aggiungere nuovo, mantenere vecchio
+# v2: {"name": "Mario", "full_name": "Mario"}
+# Deprecare "name", clients migrano gradualmente
+
+# BREAKING: Cambiare tipo
+# BAD
+# v1: {"price": "99.99"}
+# v2: {"price": 99.99}
+
+# GOOD: Aggiungere campo nuovo tipo
+# v2: {"price": "99.99", "price_numeric": 99.99}
+\end{lstlisting}
+
+\subsection{Expand/Contract Pattern}
+
+\textbf{Three-phase migration}:
+
+\begin{enumerate}
+    \item \textbf{Expand}: Aggiungere nuovo campo/endpoint (backward compatible)
+    \item \textbf{Migrate}: Client migrano gradualmente
+    \item \textbf{Contract}: Rimuovere vecchio campo (new major version)
+\end{enumerate}
+
+\begin{lstlisting}[caption=Expand/Contract example]
+# Phase 1: Expand (v1.1.0 - backward compatible)
+{
+  "name": "Mario",        # Old field (deprecato)
+  "full_name": "Mario"    # New field (consigliato)
+}
+
+# Phase 2: Clients migrate over 6 months
+
+# Phase 3: Contract (v2.0.0 - breaking)
+{
+  "full_name": "Mario"    # Solo nuovo campo
+}
+\end{lstlisting}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item Versioning è essenziale per API pubbliche con client multipli
+    \item Breaking changes richiedono new major version
+    \item URI versioning: più semplice e comune (\texttt{/api/v1/})
+    \item Header versioning: più RESTful ma complesso
+    \item Semantic versioning: MAJOR.MINOR.PATCH
+    \item Supportare N versioni simultanee durante transition
+    \item Deprecation graduale con Sunset header
+    \item Migration guide dettagliato obbligatorio
+    \item Sunset period: 6-12 mesi minimo
+    \item Preferire additive changes quando possibile
+\end{itemize}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Progetta versioning strategy per API e-commerce
+    \item Implementa URI versioning con routing multiplo v1/v2
+    \item Implementa header versioning con content negotiation
+    \item Scrivi migration guide da v1 a v2 (almeno 5 breaking changes)
+    \item Implementa Sunset header e deprecation warnings
+    \item Analizza GitHub/Stripe versioning: pro/cons
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Semantic Versioning: \url{https://semver.org/}
+    \item RFC 8594 - Sunset Header: \url{https://tools.ietf.org/html/rfc8594}
+    \item Stripe API Versioning: \url{https://stripe.com/docs/api/versioning}
+    \item GitHub API Versioning: \url{https://docs.github.com/en/rest/overview/api-versions}
+    \item Roy Fielding on Versioning: \url{https://www.ics.uci.edu/~fielding/pubs/dissertation/evaluation.htm}
+\end{itemize}

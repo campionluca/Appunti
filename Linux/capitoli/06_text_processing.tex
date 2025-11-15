@@ -1,0 +1,937 @@
+% 06_text_processing.tex — Elaborazione Testi in Linux
+\chapter{Text Processing}
+
+\section{Introduzione}
+
+L'elaborazione di testi è una delle competenze più potenti in Linux. La filosofia Unix di usare file di testo per configurazioni e dati rende gli strumenti di text processing essenziali per amministratori e sviluppatori.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Filosofia Unix]
+\textit{"Everything is a text stream"} - I tool Unix sono progettati per lavorare insieme tramite pipe, processando flussi di testo. Questa composibilità è la chiave della potenza della command line.
+\end{tcolorbox}
+
+\section{Strumenti Base}
+
+\subsection{wc - Word Count}
+
+Conta righe, parole e caratteri:
+
+\begin{lstlisting}[style=bash]
+# Sintassi
+wc [options] file
+
+# Conta tutto (righe, parole, caratteri)
+wc file.txt
+# Output: 10  50  300 file.txt
+#         │   │   │
+#         │   │   └─> caratteri (bytes)
+#         │   └─> parole
+#         └─> righe
+
+# Solo righe
+wc -l file.txt
+
+# Solo parole
+wc -w file.txt
+
+# Solo caratteri
+wc -c file.txt
+wc -m file.txt    # Multi-byte characters
+
+# Multipli file
+wc *.txt
+# Mostra total alla fine
+
+# Da stdin
+cat file.txt | wc -l
+ls | wc -l        # Conta file in directory
+
+# Esempi pratici
+# Conta utenti nel sistema
+wc -l /etc/passwd
+
+# Conta file .txt
+find . -name "*.txt" | wc -l
+
+# Conta righe di codice
+find . -name "*.sh" -exec cat {} \; | wc -l
+\end{lstlisting}
+
+\subsection{cut - Estrai Colonne}
+
+Estrae porzioni di testo da ogni riga:
+
+\begin{lstlisting}[style=bash]
+# Estrai caratteri specifici
+echo "Hello World" | cut -c 1-5
+# Output: Hello
+
+# Estrai da carattere N fino alla fine
+echo "Hello World" | cut -c 7-
+# Output: World
+
+# Estrai campi (delimiter default: tab)
+echo -e "name\tage\tcity" | cut -f 2
+# Output: age
+
+# Specifica delimiter
+echo "Alice:25:Rome" | cut -d ':' -f 1
+# Output: Alice
+
+echo "Alice:25:Rome" | cut -d ':' -f 2
+# Output: 25
+
+# Multipli campi
+echo "Alice:25:Rome" | cut -d ':' -f 1,3
+# Output: Alice:Rome
+
+# Range di campi
+echo "a:b:c:d:e" | cut -d ':' -f 2-4
+# Output: b:c:d
+
+# Tutti i campi da N in poi
+echo "a:b:c:d:e" | cut -d ':' -f 3-
+# Output: c:d:e
+
+# Esempi pratici con /etc/passwd
+# Estrai solo usernames
+cut -d ':' -f 1 /etc/passwd
+
+# Estrai username e home directory
+cut -d ':' -f 1,6 /etc/passwd
+
+# Estrai solo shell
+cut -d ':' -f 7 /etc/passwd | sort | uniq
+
+# CSV processing
+cat users.csv
+# name,age,city
+# Alice,25,Rome
+# Bob,30,Milan
+
+cut -d ',' -f 1 users.csv
+# name
+# Alice
+# Bob
+\end{lstlisting}
+
+\subsection{sort - Ordina Righe}
+
+Ordina righe di testo:
+
+\begin{lstlisting}[style=bash]
+# Ordine alfabetico (default)
+sort file.txt
+
+# Ordine inverso
+sort -r file.txt
+
+# Ordine numerico
+sort -n numbers.txt
+
+# Esempio: differenza alfabetico vs numerico
+cat > numbers.txt << EOF
+100
+20
+3
+1000
+EOF
+
+sort numbers.txt
+# 100
+# 1000
+# 20
+# 3
+
+sort -n numbers.txt
+# 3
+# 20
+# 100
+# 1000
+
+# Ordina per colonna specifica
+# File: names.txt
+# Alice 25 Rome
+# Bob 30 Milan
+# Charlie 20 Naples
+
+sort -k 2 -n names.txt    # Ordina per seconda colonna (età), numerico
+sort -k 3 names.txt       # Ordina per terza colonna (città)
+
+# Delimiter personalizzato
+cat users.csv
+# Alice,25,Rome
+# Bob,30,Milan
+
+sort -t ',' -k 2 -n users.csv    # Ordina per età
+
+# Unique: rimuovi duplicati durante sort
+sort -u file.txt
+
+# Case-insensitive
+sort -f file.txt
+
+# Human-numeric sort (per dimensioni: 1K, 2M, 3G)
+du -h | sort -h
+
+# Month sort
+cat > months.txt << EOF
+Mar
+Jan
+Dec
+Feb
+EOF
+
+sort -M months.txt
+# Jan
+# Feb
+# Mar
+# Dec
+
+# Check se file è già ordinato
+sort -c file.txt
+# sort: file.txt:3: disorder: line3
+\end{lstlisting}
+
+\subsection{uniq - Rimuovi Duplicati}
+
+Rimuove righe duplicate adiacenti (richiede sort prima):
+
+\begin{lstlisting}[style=bash]
+# Rimuovi duplicati
+cat > file.txt << EOF
+apple
+banana
+apple
+banana
+banana
+orange
+EOF
+
+sort file.txt | uniq
+# apple
+# banana
+# orange
+
+# Conta occorrenze
+sort file.txt | uniq -c
+#   2 apple
+#   3 banana
+#   1 orange
+
+# Ordina per frequenza
+sort file.txt | uniq -c | sort -rn
+#   3 banana
+#   2 apple
+#   1 orange
+
+# Solo duplicati
+sort file.txt | uniq -d
+# apple
+# banana
+
+# Solo unique (no duplicati)
+sort file.txt | uniq -u
+# orange
+
+# Ignora primi N campi
+cat > data.txt << EOF
+1 apple
+2 apple
+3 banana
+4 banana
+EOF
+
+sort data.txt | uniq -f 1
+# 1 apple
+# 3 banana
+
+# Case-insensitive
+cat > words.txt << EOF
+Apple
+apple
+APPLE
+Banana
+EOF
+
+sort words.txt | uniq -i
+# Apple
+# Banana
+
+# Esempi pratici
+# Top 10 comandi più usati nella history
+history | awk '{print $2}' | sort | uniq -c | sort -rn | head -10
+
+# Trova IP duplicati in log
+cat access.log | cut -d ' ' -f 1 | sort | uniq -c | sort -rn
+\end{lstlisting}
+
+\section{sed - Stream Editor}
+
+\texttt{sed} è un editor di flusso per filtrare e trasformare testo.
+
+\subsection{Sostituzione Base}
+
+\begin{lstlisting}[style=bash]
+# Sintassi base: sed 's/pattern/replacement/'
+echo "Hello World" | sed 's/World/Universe/'
+# Output: Hello Universe
+
+# Solo prima occorrenza per riga
+echo "foo bar foo" | sed 's/foo/baz/'
+# Output: baz bar foo
+
+# Tutte le occorrenze (flag g = global)
+echo "foo bar foo" | sed 's/foo/baz/g'
+# Output: baz bar baz
+
+# Case-insensitive (flag i)
+echo "Hello WORLD" | sed 's/world/Universe/i'
+# Output: Hello Universe
+
+# N-esima occorrenza
+echo "foo foo foo" | sed 's/foo/bar/2'
+# Output: foo bar foo
+
+# Da file
+sed 's/old/new/g' input.txt
+
+# Modifica file in-place (ATTENZIONE!)
+sed -i 's/old/new/g' file.txt
+
+# Backup prima di modificare in-place
+sed -i.bak 's/old/new/g' file.txt
+# Crea file.txt.bak con originale
+
+# Delimiter alternativo (utile per path)
+sed 's|/home/user|/home/admin|g' file.txt
+sed 's#/old/path#/new/path#g' file.txt
+\end{lstlisting}
+
+\subsection{Indirizzi e Range}
+
+\begin{lstlisting}[style=bash]
+# Applica solo a riga specifica
+sed '3s/old/new/' file.txt           # Solo riga 3
+
+# Range di righe
+sed '2,5s/old/new/' file.txt         # Righe 2-5
+sed '2,$s/old/new/' file.txt         # Riga 2 fino alla fine
+
+# Pattern matching
+sed '/pattern/s/old/new/' file.txt   # Solo righe che contengono pattern
+
+# Range con pattern
+sed '/start/,/end/s/old/new/' file.txt
+
+# Negazione
+sed '/pattern/!s/old/new/' file.txt  # Solo righe che NON matchano
+\end{lstlisting}
+
+\subsection{Comandi sed}
+
+\begin{lstlisting}[style=bash]
+# d = delete
+sed '3d' file.txt                    # Cancella riga 3
+sed '2,5d' file.txt                  # Cancella righe 2-5
+sed '/pattern/d' file.txt            # Cancella righe che matchano
+
+# p = print (utile con -n)
+sed -n '3p' file.txt                 # Stampa solo riga 3
+sed -n '2,5p' file.txt               # Stampa righe 2-5
+sed -n '/pattern/p' file.txt         # Stampa righe che matchano (come grep)
+
+# a = append (dopo riga)
+sed '3a\New line after line 3' file.txt
+
+# i = insert (prima di riga)
+sed '3i\New line before line 3' file.txt
+
+# c = change (sostituisci intera riga)
+sed '3c\This replaces line 3' file.txt
+
+# Multipli comandi
+sed -e 's/foo/bar/g' -e 's/hello/world/g' file.txt
+sed 's/foo/bar/g; s/hello/world/g' file.txt
+
+# Script sed da file
+cat > script.sed << EOF
+s/foo/bar/g
+s/hello/world/g
+/^$/d
+EOF
+
+sed -f script.sed input.txt
+\end{lstlisting}
+
+\subsection{Esempi Pratici sed}
+
+\begin{lstlisting}[style=bash]
+# Rimuovi righe vuote
+sed '/^$/d' file.txt
+
+# Rimuovi righe che iniziano con #
+sed '/^#/d' file.txt
+
+# Rimuovi spazi iniziali e finali
+sed 's/^[ \t]*//; s/[ \t]*$//' file.txt
+
+# Sostituisci tab con spazi
+sed 's/\t/    /g' file.txt
+
+# Numera righe
+sed = file.txt | sed 'N; s/\n/\t/'
+
+# Estrai range di righe (come head/tail)
+sed -n '10,20p' file.txt
+
+# Sostituisci solo in righe specifiche
+sed '/pattern/s/foo/bar/g' file.txt
+
+# Converti Windows line endings (CRLF) a Unix (LF)
+sed 's/\r$//' file.txt
+
+# Aggiungi testo all'inizio di ogni riga
+sed 's/^/PREFIX: /' file.txt
+
+# Aggiungi testo alla fine di ogni riga
+sed 's/$/ SUFFIX/' file.txt
+
+# Rimuovi tag HTML (semplice)
+sed 's/<[^>]*>//g' file.html
+
+# Estrai email da testo
+sed -n 's/.*\([a-zA-Z0-9._%+-]\+@[a-zA-Z0-9.-]\+\.[a-zA-Z]\{2,\}\).*/\1/p' file.txt
+\end{lstlisting}
+
+\section{awk - Pattern Scanning and Processing}
+
+\texttt{awk} è un linguaggio completo per processare testi strutturati.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[style=bash]
+# Sintassi: awk 'pattern { action }' file
+
+# Stampa intera riga
+awk '{print}' file.txt
+awk '{print $0}' file.txt    # Equivalente
+
+# Stampa colonna specifica
+awk '{print $1}' file.txt    # Prima colonna
+awk '{print $2}' file.txt    # Seconda colonna
+awk '{print $NF}' file.txt   # Ultima colonna
+
+# Multipli campi
+awk '{print $1, $3}' file.txt
+
+# Con separatore personalizzato
+awk '{print $1 " -> " $3}' file.txt
+
+# Esempio con /etc/passwd
+awk -F ':' '{print $1}' /etc/passwd              # Usernames
+awk -F ':' '{print $1, $6}' /etc/passwd          # Username e home
+awk -F ':' '{print $1 " -> " $7}' /etc/passwd    # Username -> shell
+\end{lstlisting}
+
+\subsection{Field Separator}
+
+\begin{lstlisting}[style=bash]
+# Default: whitespace (space e tab)
+echo "one two three" | awk '{print $2}'
+# Output: two
+
+# Delimiter personalizzato (-F)
+echo "one:two:three" | awk -F ':' '{print $2}'
+# Output: two
+
+# Multipli delimiter possibili
+awk -F '[,:]' '{print $2}' file.txt
+
+# Regex come delimiter
+awk -F '[,;:|]' '{print $2}' file.txt
+
+# Cambia field separator durante esecuzione
+awk 'BEGIN {FS=":"} {print $1}' /etc/passwd
+
+# Output field separator
+awk 'BEGIN {OFS=" | "} {print $1, $2}' file.txt
+\end{lstlisting}
+
+\subsection{Pattern Matching}
+
+\begin{lstlisting}[style=bash]
+# Stampa righe che matchano pattern
+awk '/pattern/' file.txt
+awk '/pattern/ {print}' file.txt    # Equivalente
+
+# Pattern in colonna specifica
+awk '$1 == "value"' file.txt
+awk '$2 ~ /pattern/' file.txt       # Regex match
+awk '$2 !~ /pattern/' file.txt      # NOT match
+
+# Condizioni numeriche
+awk '$3 > 100' file.txt             # Terza colonna > 100
+awk '$2 >= 50 && $2 <= 100' file.txt
+
+# Condizioni logiche
+awk '$1 == "Alice" || $1 == "Bob"' file.txt
+awk '$3 > 50 && $4 < 100' file.txt
+
+# Esempi con /etc/passwd
+# Utenti con UID > 1000
+awk -F ':' '$3 > 1000 {print $1}' /etc/passwd
+
+# Utenti con bash come shell
+awk -F ':' '$7 ~ /bash/ {print $1}' /etc/passwd
+\end{lstlisting}
+
+\subsection{BEGIN e END}
+
+\begin{lstlisting}[style=bash]
+# BEGIN: eseguito prima di processare file
+awk 'BEGIN {print "Starting..."} {print} END {print "Done"}' file.txt
+
+# Esempio: header e footer
+awk 'BEGIN {print "Name\tAge"} {print $1, $2} END {print "Total:", NR}' file.txt
+
+# Calcola somma
+cat > numbers.txt << EOF
+10
+20
+30
+40
+EOF
+
+awk '{sum += $1} END {print "Total:", sum}' numbers.txt
+# Output: Total: 100
+
+# Media
+awk '{sum += $1; count++} END {print "Average:", sum/count}' numbers.txt
+# Output: Average: 25
+\end{lstlisting}
+
+\subsection{Variabili Built-in}
+
+\begin{lstlisting}[style=bash]
+# NR = Number of Records (numero riga totale)
+awk '{print NR, $0}' file.txt
+
+# NF = Number of Fields (numero campi nella riga)
+awk '{print NF, $0}' file.txt
+
+# FNR = File Number of Records (numero riga nel file corrente)
+awk '{print FNR, $0}' file1.txt file2.txt
+
+# FS = Field Separator
+awk 'BEGIN {FS=":"} {print $1}' /etc/passwd
+
+# OFS = Output Field Separator
+awk 'BEGIN {OFS=" | "} {print $1, $2}' file.txt
+
+# RS = Record Separator (default: newline)
+awk 'BEGIN {RS=";"} {print}' file.txt
+
+# ORS = Output Record Separator
+awk 'BEGIN {ORS="\n---\n"} {print}' file.txt
+
+# FILENAME = nome file corrente
+awk '{print FILENAME, $0}' file1.txt file2.txt
+\end{lstlisting}
+
+\subsection{Operazioni Avanzate}
+
+\begin{lstlisting}[style=bash]
+# Aritmetica
+awk '{print $1 * $2}' file.txt
+awk '{print ($1 + $2) / 2}' file.txt
+
+# Funzioni matematiche
+awk '{print sqrt($1)}' numbers.txt
+awk '{print int($1)}' floats.txt
+
+# Concatenazione stringhe
+awk '{print $1 $2}' file.txt           # Senza spazio
+awk '{print $1 " " $2}' file.txt       # Con spazio
+
+# Length
+awk '{print length($1)}' file.txt
+
+# Substring
+awk '{print substr($1, 1, 5)}' file.txt
+
+# toupper/tolower
+awk '{print toupper($1)}' file.txt
+awk '{print tolower($1)}' file.txt
+
+# Condizionale ternario
+awk '{print ($1 > 50) ? "High" : "Low"}' numbers.txt
+
+# If-else in awk
+awk '{if ($1 > 50) print "High"; else print "Low"}' numbers.txt
+
+# For loop
+awk '{for (i=1; i<=NF; i++) print $i}' file.txt
+\end{lstlisting}
+
+\subsection{Esempi Pratici awk}
+
+\begin{lstlisting}[style=bash]
+# 1. Analisi log Apache
+cat access.log | awk '{print $1}' | sort | uniq -c | sort -rn | head -10
+# Top 10 IP più frequenti
+
+# 2. Calcola dimensioni totali
+ls -l | awk '{sum += $5} END {print "Total:", sum, "bytes"}'
+
+# 3. Filtra e trasforma CSV
+awk -F ',' '$3 > 1000 {print $1, $2}' sales.csv
+
+# 4. Pretty print /etc/passwd
+awk -F ':' '{printf "%-15s %-30s %s\n", $1, $6, $7}' /etc/passwd
+
+# 5. Conta parole per lunghezza
+cat text.txt | tr ' ' '\n' | awk '{len[length($0)]++} END {for (i in len) print i, len[i]}'
+
+# 6. Statistiche file di log
+awk '
+    {total++}
+    /ERROR/ {errors++}
+    /WARNING/ {warnings++}
+    END {
+        print "Total:", total
+        print "Errors:", errors
+        print "Warnings:", warnings
+    }
+' logfile.txt
+
+# 7. Converti CSV in JSON
+awk -F ',' '
+    NR == 1 {for (i=1; i<=NF; i++) header[i]=$i; next}
+    {
+        print "{"
+        for (i=1; i<=NF; i++)
+            printf "  \"%s\": \"%s\"%s\n", header[i], $i, (i<NF ? "," : "")
+        print "}"
+    }
+' data.csv
+
+# 8. Report formattato
+awk '
+    BEGIN {
+        print "========================================="
+        print "          SALES REPORT"
+        print "========================================="
+        printf "%-15s %-15s %10s\n", "Product", "Quantity", "Revenue"
+        print "-----------------------------------------"
+    }
+    {
+        printf "%-15s %-15d $%9.2f\n", $1, $2, $3
+        total += $3
+    }
+    END {
+        print "========================================="
+        printf "%-30s $%9.2f\n", "TOTAL", total
+    }
+' sales.txt
+\end{lstlisting}
+
+\section{Combinare Strumenti}
+
+La vera potenza emerge combinando strumenti via pipe:
+
+\begin{lstlisting}[style=bash]
+# 1. Top 10 comandi più usati
+history | awk '{print $2}' | sort | uniq -c | sort -rn | head -10
+
+# 2. Trova file grandi e ordina per dimensione
+find /var/log -type f -exec du -h {} \; | sort -hr | head -20
+
+# 3. Analisi access log
+cat access.log \
+    | awk '{print $1}' \
+    | sort \
+    | uniq -c \
+    | sort -rn \
+    | head -10 \
+    | awk '{print $2, $1}'
+
+# 4. Estrai email uniche da file
+grep -Eo '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' file.txt \
+    | sort -u
+
+# 5. Statistiche codice
+find . -name "*.sh" -type f \
+    | xargs cat \
+    | sed '/^$/d; /^#/d' \
+    | wc -l
+
+# 6. Report processi per utente
+ps aux \
+    | tail -n +2 \
+    | awk '{user[$1]++; cpu[$1]+=$3; mem[$1]+=$4} END {
+        for (u in user)
+            printf "%-15s %5d processes, CPU: %6.2f%%, MEM: %6.2f%%\n",
+                u, user[u], cpu[u], mem[u]
+    }' \
+    | sort -k3 -rn
+
+# 7. Cleanup log files
+find /var/log -name "*.log" -mtime +30 \
+    | xargs gzip \
+    | tee -a cleanup.log
+
+# 8. Monitor in tempo reale
+tail -f /var/log/syslog \
+    | grep --line-buffered "ERROR" \
+    | awk '{print strftime("%Y-%m-%d %H:%M:%S"), $0}'
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 6.1: Analisi File di Testo}
+
+\begin{lstlisting}[style=bash]
+# Create file di test
+cat > books.txt << EOF
+1984,George Orwell,1949,328
+To Kill a Mockingbird,Harper Lee,1960,281
+The Great Gatsby,F. Scott Fitzgerald,1925,180
+Pride and Prejudice,Jane Austen,1813,432
+Animal Farm,George Orwell,1945,112
+EOF
+
+# 1. Estrai solo titoli
+cut -d ',' -f 1 books.txt
+
+# 2. Ordina per anno
+sort -t ',' -k 3 -n books.txt
+
+# 3. Trova libri di Orwell
+grep "Orwell" books.txt
+
+# 4. Media pagine
+awk -F ',' '{sum += $4; count++} END {print "Average:", sum/count}' books.txt
+
+# 5. Libri prima del 1950
+awk -F ',' '$3 < 1950 {print $1}' books.txt
+
+# 6. Formatta output
+awk -F ',' '{printf "%-30s by %-20s (%d)\n", $1, $2, $3}' books.txt
+\end{lstlisting}
+
+\subsection{Esercizio 6.2: Log Analysis}
+
+\begin{lstlisting}[style=bash]
+# Create log di esempio
+cat > server.log << EOF
+2024-11-15 10:00:00 INFO User alice logged in
+2024-11-15 10:05:00 ERROR Failed to connect to database
+2024-11-15 10:10:00 WARNING High memory usage: 85%
+2024-11-15 10:15:00 INFO User bob logged in
+2024-11-15 10:20:00 ERROR Disk space critical
+2024-11-15 10:25:00 INFO User alice logged out
+2024-11-15 10:30:00 ERROR Failed to connect to database
+EOF
+
+# 1. Conta livelli di log
+awk '{print $3}' server.log | sort | uniq -c
+
+# 2. Solo errori
+grep "ERROR" server.log
+
+# 3. Conta errori per ora
+awk '/ERROR/ {print substr($2, 1, 2)}' server.log | sort | uniq -c
+
+# 4. Utenti unici
+grep "logged in" server.log | awk '{print $5}' | sort -u
+
+# 5. Report formattato
+awk '
+    BEGIN {print "Log Level Summary\n-----------------"}
+    {levels[$3]++}
+    END {for (l in levels) print l ":", levels[l]}
+' server.log
+\end{lstlisting}
+
+\subsection{Esercizio 6.3: CSV Processing}
+
+\begin{lstlisting}[style=bash]
+# Create CSV
+cat > sales.csv << EOF
+Product,Quantity,Price,Date
+Laptop,5,1200,2024-11-01
+Mouse,50,25,2024-11-02
+Keyboard,30,75,2024-11-02
+Monitor,10,300,2024-11-03
+Laptop,3,1200,2024-11-04
+EOF
+
+# 1. Calcola revenue per prodotto
+awk -F ',' 'NR > 1 {revenue[$1] += $2 * $3}
+    END {for (p in revenue) print p ":", revenue[p]}' sales.csv
+
+# 2. Total revenue
+awk -F ',' 'NR > 1 {sum += $2 * $3} END {print "Total:", sum}' sales.csv
+
+# 3. Prodotto più venduto
+awk -F ',' 'NR > 1 {qty[$1] += $2}
+    END {for (p in qty) print qty[p], p}' sales.csv \
+    | sort -rn | head -1
+
+# 4. Sales per data
+awk -F ',' 'NR > 1 {date[$4] += $2 * $3}
+    END {for (d in date) print d ":", date[d]}' sales.csv | sort
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Text Processing Best Practices]
+\begin{enumerate}
+    \item \textbf{Usa tool giusto per il task}
+    \begin{lstlisting}[style=bash]
+# Semplice estrazione colonne: cut
+cut -d ',' -f 1 file.csv
+
+# Pattern matching semplice: grep
+grep "ERROR" logfile.txt
+
+# Trasformazioni complesse: awk
+awk '{complex logic}' file.txt
+
+# Sostituzioni: sed
+sed 's/old/new/g' file.txt
+    \end{lstlisting}
+
+    \item \textbf{Test su sample prima di file grandi}
+    \begin{lstlisting}[style=bash]
+# Test su prime 10 righe
+head -10 bigfile.txt | sed 's/old/new/g'
+
+# Poi applica a tutto il file
+sed 's/old/new/g' bigfile.txt > output.txt
+    \end{lstlisting}
+
+    \item \textbf{Backup prima di modifiche in-place}
+    \begin{lstlisting}[style=bash]
+# SEMPRE crea backup
+sed -i.bak 's/old/new/g' important.txt
+    \end{lstlisting}
+
+    \item \textbf{Quote correttamente}
+    \begin{lstlisting}[style=bash]
+# Usa single quote per literal
+awk '{print $1}' file.txt
+
+# Use double quote se serve espansione variabile
+awk "{print \$1, \"$VAR\"}" file.txt
+    \end{lstlisting}
+
+    \item \textbf{Commenta regex complesse}
+    \begin{lstlisting}[style=bash]
+# Email regex (explained)
+# [a-zA-Z0-9._%+-]+  : local part
+# @                  : literal @
+# [a-zA-Z0-9.-]+     : domain
+# \.                 : literal dot
+# [a-zA-Z]{2,}       : TLD (2+ letters)
+grep -E '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' file.txt
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Performance Tips]
+\begin{enumerate}
+    \item Evita parsing ripetuto: salva risultati intermedi
+    \begin{lstlisting}[style=bash]
+# MALE - parse /etc/passwd 3 volte
+cat /etc/passwd | grep bash
+cat /etc/passwd | grep nologin
+cat /etc/passwd | wc -l
+
+# BENE - parse una volta, salva risultato
+PASSWD_DATA=$(cat /etc/passwd)
+echo "$PASSWD_DATA" | grep bash
+echo "$PASSWD_DATA" | grep nologin
+echo "$PASSWD_DATA" | wc -l
+    \end{lstlisting}
+
+    \item awk è più veloce di multipli pipe per operazioni complesse
+    \begin{lstlisting}[style=bash]
+# Meno efficiente
+cat file.txt | cut -d ',' -f 1 | sort | uniq -c | sort -rn
+
+# Più efficiente
+awk -F ',' '{count[$1]++} END {for (i in count) print count[i], i}' file.txt | sort -rn
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item \textbf{Strumenti base}: wc, cut, sort, uniq per operazioni semplici
+    \item \textbf{sed}: editing stream, sostituzioni, trasformazioni
+    \item \textbf{awk}: linguaggio completo per text processing
+    \item \textbf{Combinazioni}: pipe per operazioni complesse
+    \item \textbf{Pattern pratici}: analisi log, CSV processing, reporting
+\end{itemize}
+
+La padronanza del text processing è essenziale per lavorare efficacemente in Linux, permettendo di analizzare log, processare dati, generare report e automatizzare task complessi.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimi Passi]
+Con le competenze acquisite fino a qui, siete in grado di:
+\begin{itemize}
+    \item Navigare e gestire il filesystem
+    \item Controllare permessi e ownership
+    \item Gestire processi e risorse
+    \item Scrivere script Bash complessi
+    \item Processare e analizzare file di testo
+\end{itemize}
+
+Nei capitoli successivi esplorerete networking, amministrazione sistema, sicurezza e automazione avanzata.
+\end{tcolorbox}
+
+\section{Cheatsheet Rapido}
+
+\begin{lstlisting}[style=bash]
+# === CUT ===
+cut -d ':' -f 1 /etc/passwd              # Estrai username
+cut -c 1-10 file.txt                     # Primi 10 caratteri
+
+# === SORT ===
+sort file.txt                            # Alfabetico
+sort -n numbers.txt                      # Numerico
+sort -r file.txt                         # Reverse
+sort -k 2 -n file.txt                    # Per colonna 2, numerico
+sort -u file.txt                         # Unique (rimuovi duplicati)
+
+# === UNIQ ===
+sort file.txt | uniq                     # Rimuovi duplicati adiacenti
+sort file.txt | uniq -c                  # Conta occorrenze
+sort file.txt | uniq -d                  # Solo duplicati
+
+# === SED ===
+sed 's/old/new/' file.txt                # Sostituisci (prima occorrenza)
+sed 's/old/new/g' file.txt               # Sostituisci (tutte)
+sed -i 's/old/new/g' file.txt            # Modifica in-place
+sed '/pattern/d' file.txt                # Cancella righe che matchano
+sed -n '10,20p' file.txt                 # Stampa righe 10-20
+
+# === AWK ===
+awk '{print $1}' file.txt                # Prima colonna
+awk -F ':' '{print $1}' /etc/passwd      # Con delimiter :
+awk '$3 > 100' file.txt                  # Filtra: colonna 3 > 100
+awk '{sum += $1} END {print sum}' num.txt # Somma colonna 1
+
+# === COMBINAZIONI ===
+# Top 10 IP in log
+cat access.log | cut -d ' ' -f 1 | sort | uniq -c | sort -rn | head -10
+
+# Conta righe codice (no commenti/vuote)
+find . -name "*.sh" -exec cat {} \; | sed '/^#/d; /^$/d' | wc -l
+
+# Converti CSV in TSV
+sed 's/,/\t/g' input.csv > output.tsv
+\end{lstlisting}

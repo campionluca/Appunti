@@ -1,0 +1,269 @@
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{A chi si rivolge questo manuale}
+
+Questi appunti sono dedicati a studenti, sviluppatori e chiunque voglia comprendere a fondo Git e il controllo di versione. Il percorso è strutturato per accompagnare progressivamente dalle basi teoriche del version control alla gestione avanzata di repository collaborativi, workflow moderni e best practices professionali.
+
+\section*{Perché Git è fondamentale}
+
+Git è lo standard de facto per il controllo di versione nel mondo dello sviluppo software. Non si tratta solo di un tool tecnico, ma di una competenza professionale essenziale che:
+
+\begin{itemize}
+    \item Permette di tracciare ogni modifica al codice nel tempo
+    \item Facilita la collaborazione tra team distribuiti geograficamente
+    \item Abilita workflow complessi di sviluppo (feature branches, hotfix, release)
+    \item Fornisce sicurezza contro perdite di dati e regressioni
+    \item È richiesto praticamente da ogni azienda tech nel mondo
+\end{itemize}
+
+\section*{Struttura del corso}
+
+Il corso è organizzato in 10 capitoli che coprono l'intero ecosistema Git:
+
+\textbf{Parte I - Fondamenti} (Capitoli 1-2)
+\begin{itemize}
+    \item Storia e filosofia del version control
+    \item Differenze tra VCS centralizzati e distribuiti
+    \item Concetti fondamentali: repository, commit, staging area
+    \item Primi comandi Git: init, add, commit, status, log
+    \item File .gitignore e gestione file da escludere
+\end{itemize}
+
+\textbf{Parte II - Branching e Merging} (Capitolo 3)
+\begin{itemize}
+    \item Creazione e gestione branch
+    \item Switching tra branch con checkout/switch
+    \item Merge: fast-forward e three-way merge
+    \item Rebase per linearizzare la storia
+    \item Risoluzione conflitti
+\end{itemize}
+
+\textbf{Parte III - Repository Remoti} (Capitolo 4)
+\begin{itemize}
+    \item Configurazione remote
+    \item Clone di repository esistenti
+    \item Fetch, pull e push
+    \item Tracking branches
+    \item Best practices per sincronizzazione
+\end{itemize}
+
+\textbf{Parte IV - Workflow Collaborativi} (Capitolo 5)
+\begin{itemize}
+    \item Git Flow: workflow strutturato per release
+    \item GitHub Flow: workflow semplificato per CI/CD
+    \item Trunk-Based Development
+    \item Fork e Pull Request
+    \item Code review e collaborazione
+\end{itemize}
+
+\textbf{Parte V - Argomenti Avanzati} (Capitoli 6-10)
+\begin{itemize}
+    \item Git avanzato: stash, cherry-pick, bisect, reflog
+    \item GitHub e GitLab: piattaforme collaborative
+    \item Best practices professionali
+    \item Troubleshooting e recovery
+    \item Introduzione a CI/CD con Git
+\end{itemize}
+
+\section*{Prerequisiti}
+
+Per affrontare questo corso è consigliabile avere:
+\begin{itemize}
+    \item Familiarità con la riga di comando (terminal/bash/cmd)
+    \item Conoscenza base di un linguaggio di programmazione
+    \item Comprensione dei concetti di file e directory
+    \item (Opzionale) Esperienza con sviluppo software collaborativo
+\end{itemize}
+
+\section*{Strumenti necessari}
+
+\textbf{Software indispensabile}:
+\begin{itemize}
+    \item \textbf{Git}: Sistema di controllo versione (2.30+)
+    \item \textbf{Terminal/Bash}: Shell per eseguire comandi Git
+    \item \textbf{Editor di testo}: VS Code, Vim, Nano, Sublime Text
+\end{itemize}
+
+\textbf{Piattaforme Git (consigliato)}:
+\begin{itemize}
+    \item \textbf{GitHub}: Piattaforma leader per hosting repository
+    \item \textbf{GitLab}: Alternativa completa con CI/CD integrato
+    \item \textbf{Bitbucket}: Soluzione Atlassian per team enterprise
+\end{itemize}
+
+\textbf{GUI Git (opzionale)}:
+\begin{itemize}
+    \item \textbf{GitKraken}: Client grafico potente e intuitivo
+    \item \textbf{SourceTree}: GUI gratuita di Atlassian
+    \item \textbf{GitHub Desktop}: Integrazione nativa GitHub
+    \item \textbf{VS Code Git}: Integrazione Git in VS Code
+\end{itemize}
+
+\section*{Come installare Git}
+
+\textbf{Linux (Ubuntu/Debian)}:
+\begin{verbatim}
+sudo apt update
+sudo apt install git
+\end{verbatim}
+
+\textbf{macOS}:
+\begin{verbatim}
+brew install git
+\end{verbatim}
+
+\textbf{Windows}:
+Scarica Git for Windows da \url{https://git-scm.com/download/win}
+
+\textbf{Verifica installazione}:
+\begin{verbatim}
+git --version
+# Output: git version 2.39.0 (o superiore)
+\end{verbatim}
+
+\section*{Come studiare}
+
+Per ottenere il massimo da questi appunti:
+
+\begin{enumerate}
+    \item \textbf{Leggi attentamente la teoria}: Ogni concetto è spiegato con diagrammi e esempi
+    \item \textbf{Pratica ogni comando}: Crea repository di prova e sperimenta
+    \item \textbf{Disegna i diagrammi}: Visualizza branch, merge e workflow su carta
+    \item \textbf{Commetti errori}: Sbagliare è parte dell'apprendimento (usa repository di test!)
+    \item \textbf{Risolvi gli esercizi}: Prova autonomamente prima di vedere le soluzioni
+    \item \textbf{Collabora}: Trova un partner e praticate workflow collaborativi
+    \item \textbf{Leggi i log}: Analizza la storia dei commit per capire il flusso
+\end{enumerate}
+
+\begin{tcolorbox}[colback=orange!10, colframe=orange!60, title=Nota Importante]
+Git ha una curva di apprendimento ripida inizialmente. \textbf{Non scoraggiarti!} La maggior parte degli sviluppatori usa quotidianamente solo 10-15 comandi. Questo manuale copre tutto lo spettro, ma inizierai con i comandi base e acquisirai padronanza gradualmente.
+\end{tcolorbox}
+
+\section*{Convenzioni tipografiche}
+
+Nel testo vengono utilizzate le seguenti convenzioni:
+
+\begin{itemize}
+    \item \texttt{Comandi Git}: In carattere monospace (\texttt{git commit})
+    \item \textbf{Concetti chiave}: In grassetto (repository, branch, commit)
+    \item \textit{Parametri/opzioni}: In corsivo (-m, --amend)
+    \item Box colorati: Best Practices, Attenzioni, Errori Comuni, Esempi
+\end{itemize}
+
+\textbf{Struttura comandi}:
+\begin{verbatim}
+$ git comando [opzioni] <argomenti>
+# Commento esplicativo
+\end{verbatim}
+
+Il simbolo \texttt{\$} indica il prompt della shell (non va digitato).
+
+\section*{Filosofia di Git}
+
+Git è stato creato da Linus Torvalds nel 2005 per gestire lo sviluppo del kernel Linux. I principi fondamentali sono:
+
+\begin{description}
+    \item[\textbf{Distribuito}] Ogni sviluppatore ha una copia completa della storia
+    \item[\textbf{Veloce}] Operazioni locali senza latenza di rete
+    \item[\textbf{Integrità}] Checksum SHA-1 garantisce integrità dei dati
+    \item[\textbf{Immutabilità}] La storia non viene riscritta (salvo operazioni esplicite)
+    \item[\textbf{Branching leggero}] Creare branch è veloce e incoraggiato
+\end{description}
+
+\section*{Sito web e risorse}
+
+Materiale aggiuntivo disponibile su:
+\begin{itemize}
+    \item Repository GitHub: \url{https://github.com/campionluca/Appunti}
+    \item Documentazione ufficiale Git: \url{https://git-scm.com/doc}
+    \item Pro Git Book (gratuito): \url{https://git-scm.com/book/it/v2}
+    \item GitHub Learning Lab: \url{https://lab.github.com}
+    \item Visualizing Git: \url{https://git-school.github.io/visualizing-git/}
+\end{itemize}
+
+\section*{Ringraziamenti}
+
+Si ringrazia:
+\begin{itemize}
+    \item Linus Torvalds e la community Git per aver creato questo straordinario tool
+    \item La community open source per innumerevoli tutorial e risorse
+    \item L'Istituto Tecnico Antonio Scarpa per il supporto nella realizzazione
+    \item Tutti gli studenti che con domande e feedback hanno migliorato questo materiale
+\end{itemize}
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Prof. Luca Campion}\\
+Novembre 2025
+\end{flushright}
+
+\section*{Note sulla versione}
+
+\textbf{Versione 1.0} - Novembre 2025
+\begin{itemize}
+    \item Prima release completa
+    \item 10 capitoli + 2 appendici
+    \item Coverage: Git base, branching, remote, workflow, advanced
+    \item Esempi pratici con Git 2.30+
+    \item Diagrammi TikZ per visualizzare branch e merge
+    \item Esercizi progressivi per ogni capitolo
+    \item Best practices professionali aggiornate
+\end{itemize}
+
+\section*{Convenzioni usate negli esempi}
+
+\textbf{Repository di esempio}: Useremo repository di prova chiamati:
+\begin{itemize}
+    \item \texttt{mio-progetto}: Repository locale base
+    \item \texttt{website}: Progetto web di esempio
+    \item \texttt{app}: Applicazione esempio per branching
+\end{itemize}
+
+\textbf{Utenti di esempio}:
+\begin{itemize}
+    \item Alice: Sviluppatrice senior
+    \item Bob: Sviluppatore junior
+    \item Charlie: DevOps engineer
+\end{itemize}
+
+\textbf{Branch comuni}:
+\begin{itemize}
+    \item \texttt{main/master}: Branch principale di produzione
+    \item \texttt{develop}: Branch di sviluppo
+    \item \texttt{feature/nome}: Branch per nuove funzionalità
+    \item \texttt{hotfix/nome}: Branch per fix urgenti
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Prima di iniziare]
+Configura Git con il tuo nome e email (richiesto per commit):
+
+\begin{verbatim}
+$ git config --global user.name "Tuo Nome"
+$ git config --global user.email "tua.email@example.com"
+\end{verbatim}
+
+Verifica la configurazione:
+\begin{verbatim}
+$ git config --list
+\end{verbatim}
+\end{tcolorbox}
+
+\section*{Licenza e utilizzo}
+
+Questo materiale è rilasciato con licenza Creative Commons BY-SA 4.0. Sei libero di:
+\begin{itemize}
+    \item Condividere e distribuire il materiale
+    \item Adattare e modificare per scopi didattici
+    \item Utilizzare anche per scopi commerciali
+\end{itemize}
+
+A patto di:
+\begin{itemize}
+    \item Attribuire la paternità originale
+    \item Condividere derivati con la stessa licenza
+    \item Indicare eventuali modifiche apportate
+\end{itemize}
+
+Buono studio e buon Git!

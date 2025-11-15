@@ -1,0 +1,886 @@
+\chapter{Resource Design}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+URI design principles, Naming conventions, Resource modeling, Collection vs singular, Nesting resources, Filtering, Sorting, Searching, Pagination, Query parameters, Path parameters, Best practices, Anti-patterns, Esempi pratici completi.
+\end{tcolorbox}
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Progettare URI structure chiara e consistente
+  \item Applicare naming conventions REST standard
+  \item Modellare risorse e relazioni
+  \item Implementare filtering, sorting, pagination
+  \item Scegliere tra nesting e flat structure
+  \item Evitare anti-pattern comuni
+  \item Costruire API navigabile e intuitiva
+\end{itemize}
+
+\section{Principi URI Design}
+
+\subsection{Cosa è una Risorsa}
+
+In REST, tutto è una \textbf{risorsa}: qualsiasi cosa identificabile e accessibile via URI.
+
+\textbf{Esempi di risorse}:
+\begin{itemize}
+    \item \textbf{Entity}: \texttt{/users/123}, \texttt{/products/456}
+    \item \textbf{Collection}: \texttt{/users}, \texttt{/products}
+    \item \textbf{Relationship}: \texttt{/users/123/orders}
+    \item \textbf{Action result}: \texttt{/search}, \texttt{/reports}
+    \item \textbf{Virtual resource}: \texttt{/users/current}, \texttt{/users/me}
+\end{itemize}
+
+\subsection{Caratteristiche URI RESTful}
+
+\textbf{URI ben progettato deve essere}:
+\begin{itemize}
+    \item \textbf{Intuitivo}: Developer capisce cosa rappresenta
+    \item \textbf{Leggibile}: Human-readable, lowercase
+    \item \textbf{Consistente}: Pattern uniforme in tutta API
+    \item \textbf{Stable}: Non cambia (versioning per breaking changes)
+    \item \textbf{Hierarchical}: Riflette relazioni tra risorse
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=URI non è implementazione]
+URI deve riflettere \textbf{modello logico} risorse, NON implementazione tecnica.
+
+\textbf{Cattivo}: \texttt{/api/get\_users.php?id=123}
+
+\textbf{Buono}: \texttt{/api/users/123}
+
+URI nasconde:
+\begin{itemize}
+    \item Linguaggio backend (PHP, Java, Python)
+    \item Struttura database (tabelle, query)
+    \item File system structure
+\end{itemize}
+\end{tcolorbox}
+
+\section{Naming Conventions}
+
+\subsection{Regola 1: Nouns, Not Verbs}
+
+URI identifica \textbf{risorsa} (noun), non azione (verb). Azione è metodo HTTP.
+
+\begin{lstlisting}[caption=BAD: Verbs in URI]
+GET /api/getUsers
+GET /api/users/getUserById/123
+POST /api/createUser
+DELETE /api/deleteUser/123
+\end{lstlisting}
+
+\begin{lstlisting}[caption=GOOD: Nouns + HTTP methods]
+GET /api/users
+GET /api/users/123
+POST /api/users
+DELETE /api/users/123
+\end{lstlisting}
+
+\textbf{Mapping azione → metodo HTTP}:
+\begin{itemize}
+    \item \texttt{getUsers} → \texttt{GET /users}
+    \item \texttt{createUser} → \texttt{POST /users}
+    \item \texttt{updateUser} → \texttt{PUT /users/123}
+    \item \texttt{deleteUser} → \texttt{DELETE /users/123}
+\end{itemize}
+
+\subsection{Regola 2: Plural Names per Collections}
+
+\textbf{Usa plural per collections}:
+
+\begin{lstlisting}[caption=Plural names consistency]
+GET /api/users          # Collection di users
+GET /api/users/123      # Singolo user dalla collection
+
+GET /api/products       # Collection di products
+GET /api/products/456   # Singolo product
+\end{lstlisting}
+
+\textbf{NON mixare singular/plural}:
+\begin{lstlisting}[caption=BAD: Mixed singular/plural]
+GET /api/user          # ❌ Inconsistente
+GET /api/user/123
+
+GET /api/users         # ✓ Consistente
+GET /api/users/123
+\end{lstlisting}
+
+\subsection{Regola 3: Lowercase con Hyphens}
+
+\textbf{Standard}: lowercase con hyphens (\texttt{-}) per multi-word.
+
+\begin{lstlisting}[caption=Lowercase + hyphens]
+# GOOD
+GET /api/order-items
+GET /api/user-profiles
+GET /api/shipping-addresses
+
+# BAD
+GET /api/OrderItems          # PascalCase
+GET /api/order_items         # snake_case (usato in query params)
+GET /api/orderItems          # camelCase
+\end{lstlisting}
+
+\textbf{Nota}: Query parameters usano snake\_case per convenzione:
+\begin{lstlisting}
+GET /api/users?created_after=2025-01-01&sort_by=name
+\end{lstlisting}
+
+\subsection{Regola 4: Forward Slash per Gerarchia}
+
+\texttt{/} indica relazione gerarchica:
+
+\begin{lstlisting}[caption=Hierarchical structure]
+/organizations/123                    # Organization 123
+/organizations/123/departments        # Departments of org 123
+/organizations/123/departments/456    # Department 456 of org 123
+/organizations/123/departments/456/employees  # Employees di dept 456
+\end{lstlisting}
+
+\textbf{NO trailing slash}:
+\begin{lstlisting}
+GET /api/users/    # ❌ BAD
+GET /api/users     # ✓ GOOD
+\end{lstlisting}
+
+\subsection{Regola 5: File Extensions NOT Needed}
+
+Content negotiation via headers, NON extension:
+
+\begin{lstlisting}[caption=Content negotiation]
+# BAD
+GET /api/users/123.json
+GET /api/users/123.xml
+
+# GOOD
+GET /api/users/123
+Accept: application/json
+
+GET /api/users/123
+Accept: application/xml
+\end{lstlisting}
+
+\section{Resource Modeling}
+
+\subsection{Collection Resource}
+
+\textbf{Collection}: Insieme di risorse dello stesso tipo.
+
+\begin{lstlisting}[caption=Collection resource]
+GET /api/v1/users HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Mario Rossi",
+      "email": "mario@example.com"
+    },
+    {
+      "id": 2,
+      "name": "Luigi Verdi",
+      "email": "luigi@example.com"
+    }
+  ],
+  "total": 2
+}
+\end{lstlisting}
+
+\textbf{Operazioni tipiche}:
+\begin{itemize}
+    \item \texttt{GET /users}: Lista tutti users
+    \item \texttt{POST /users}: Crea nuovo user
+\end{itemize}
+
+\subsection{Singular Resource}
+
+\textbf{Singular}: Risorsa singola identificata da ID.
+
+\begin{lstlisting}[caption=Singular resource]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "role": "admin",
+  "created_at": "2025-01-15T10:00:00Z"
+}
+\end{lstlisting}
+
+\textbf{Operazioni tipiche}:
+\begin{itemize}
+    \item \texttt{GET /users/123}: Recupera user
+    \item \texttt{PUT /users/123}: Aggiorna user
+    \item \texttt{PATCH /users/123}: Modifica parziale
+    \item \texttt{DELETE /users/123}: Elimina user
+\end{itemize}
+
+\subsection{Singleton Resource}
+
+\textbf{Singleton}: Risorsa unica, senza collection.
+
+\begin{lstlisting}[caption=Singleton resource - current user]
+GET /api/v1/me HTTP/1.1
+Authorization: Bearer token123
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+\end{lstlisting}
+
+\textbf{Altri esempi singleton}:
+\begin{itemize}
+    \item \texttt{/api/status}: API health status
+    \item \texttt{/api/config}: Configurazione corrente
+    \item \texttt{/api/users/me}: Current authenticated user
+\end{itemize}
+
+\section{Nested Resources}
+
+\subsection{Quando Usare Nesting}
+
+\textbf{Nesting} modella relazione parent-child.
+
+\textbf{Usa nesting quando}:
+\begin{itemize}
+    \item Child esiste solo in contesto parent
+    \item Child dipende logicamente da parent
+    \item Operazioni su child necessitano parent context
+\end{itemize}
+
+\begin{lstlisting}[caption=Nested resource - Comments di un Post]
+# Get all comments di post 123
+GET /api/posts/123/comments HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    {
+      "id": 1,
+      "post_id": 123,
+      "author": "Mario",
+      "text": "Great post!",
+      "created_at": "2025-11-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "post_id": 123,
+      "author": "Luigi",
+      "text": "Thanks for sharing",
+      "created_at": "2025-11-15T10:05:00Z"
+    }
+  ]
+}
+
+# Create comment su post 123
+POST /api/posts/123/comments HTTP/1.1
+Content-Type: application/json
+
+{
+  "author": "Anna",
+  "text": "Nice article!"
+}
+
+HTTP/1.1 201 Created
+Location: /api/posts/123/comments/3
+\end{lstlisting}
+
+\subsection{Quando Evitare Nesting}
+
+\textbf{NON usare nesting quando}:
+\begin{itemize}
+    \item Child esiste indipendentemente (es: users → orders)
+    \item Nesting diventa troppo profondo (\textgreater 2 livelli)
+    \item Operazioni su child non necessitano parent
+\end{itemize}
+
+\begin{lstlisting}[caption=Nesting vs Flat - Orders]
+# BAD: Troppo nested
+GET /api/users/123/orders/456/items/789/reviews/12
+
+# GOOD: Flat con filtering
+GET /api/orders?user_id=123
+GET /api/order-items?order_id=456
+GET /api/reviews?item_id=789
+\end{lstlisting}
+
+\subsection{Pattern Ibrido}
+
+Supporta sia nested che flat:
+
+\begin{lstlisting}[caption=Hybrid approach]
+# Nested: comments di post specifico
+GET /api/posts/123/comments
+
+# Flat: tutti comments con filtering
+GET /api/comments?post_id=123
+
+# Direct access: comment specifico
+GET /api/comments/789
+\end{lstlisting}
+
+\section{Filtering}
+
+\subsection{Query Parameters per Filtering}
+
+\textbf{Filtering via query string}:
+
+\begin{lstlisting}[caption=Basic filtering]
+# Single filter
+GET /api/users?role=admin
+
+# Multiple filters (AND logic)
+GET /api/users?role=admin&status=active
+
+# Exact match
+GET /api/products?category=electronics
+
+# Multiple values (OR logic)
+GET /api/products?category=electronics,books,toys
+\end{lstlisting}
+
+\subsection{Advanced Filtering Operators}
+
+\begin{lstlisting}[caption=Filter operators]
+# Comparisons
+GET /api/products?price_gt=100         # price > 100
+GET /api/products?price_gte=100        # price >= 100
+GET /api/products?price_lt=500         # price < 500
+GET /api/products?price_lte=500        # price <= 500
+
+# Range
+GET /api/products?price_min=100&price_max=500
+
+# Date filtering
+GET /api/orders?created_after=2025-01-01
+GET /api/orders?created_before=2025-12-31
+GET /api/orders?created_between=2025-01-01,2025-12-31
+
+# Text search
+GET /api/users?name_contains=mario
+GET /api/users?email_starts_with=admin
+GET /api/products?name_like=%laptop%
+
+# Negation
+GET /api/users?status_not=deleted
+GET /api/products?category_not_in=adult,gambling
+\end{lstlisting}
+
+\subsection{Complex Filtering}
+
+\textbf{Filtering con JSON in POST body} per query complesse:
+
+\begin{lstlisting}[caption=Complex filter con POST]
+POST /api/users/search HTTP/1.1
+Content-Type: application/json
+
+{
+  "filters": {
+    "and": [
+      {
+        "field": "age",
+        "operator": "gte",
+        "value": 18
+      },
+      {
+        "or": [
+          {
+            "field": "role",
+            "operator": "eq",
+            "value": "admin"
+          },
+          {
+            "field": "role",
+            "operator": "eq",
+            "value": "moderator"
+          }
+        ]
+      },
+      {
+        "field": "status",
+        "operator": "in",
+        "value": ["active", "pending"]
+      }
+    ]
+  }
+}
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [...],
+  "total": 42
+}
+\end{lstlisting}
+
+\section{Sorting}
+
+\subsection{Basic Sorting}
+
+\begin{lstlisting}[caption=Sorting con query parameter]
+# Sort ascending (default)
+GET /api/users?sort=name
+
+# Sort descending (prefix -)
+GET /api/users?sort=-created_at
+
+# Multiple sort fields
+GET /api/users?sort=role,-created_at,name
+# Ordina per: 1) role ASC, 2) created_at DESC, 3) name ASC
+\end{lstlisting}
+
+\subsection{Alternative Syntax}
+
+\begin{lstlisting}[caption=Alternative sorting syntax]
+# Explicit direction
+GET /api/users?sort_by=name&order=asc
+GET /api/users?sort_by=created_at&order=desc
+
+# Array notation
+GET /api/users?sort[]=name:asc&sort[]=age:desc
+\end{lstlisting}
+
+\subsection{Response Metadata}
+
+\begin{lstlisting}[caption=Sorting in response metadata]
+GET /api/users?sort=-created_at HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [...],
+  "meta": {
+    "sort": {
+      "field": "created_at",
+      "direction": "desc"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Pagination}
+
+\subsection{Offset-based Pagination}
+
+\textbf{Pattern più comune}: offset + limit
+
+\begin{lstlisting}[caption=Offset pagination]
+# Page 1: primi 20 items
+GET /api/users?offset=0&limit=20
+
+# Page 2: items 21-40
+GET /api/users?offset=20&limit=20
+
+# Page 3: items 41-60
+GET /api/users?offset=40&limit=20
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Total-Count: 150
+Link: </api/users?offset=20&limit=20>; rel="next",
+      </api/users?offset=0&limit=20>; rel="first",
+      </api/users?offset=140&limit=20>; rel="last"
+
+{
+  "data": [
+    {"id": 1, "name": "User 1"},
+    {"id": 2, "name": "User 2"}
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 20,
+    "total": 150
+  }
+}
+\end{lstlisting}
+
+\subsection{Page-based Pagination}
+
+\textbf{Alternative}: page number + page size
+
+\begin{lstlisting}[caption=Page-based pagination]
+# Page 1
+GET /api/users?page=1&per_page=20
+
+# Page 2
+GET /api/users?page=2&per_page=20
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [...],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 20,
+    "total_pages": 8,
+    "total_items": 150
+  },
+  "links": {
+    "first": "/api/users?page=1&per_page=20",
+    "last": "/api/users?page=8&per_page=20",
+    "prev": null,
+    "next": "/api/users?page=2&per_page=20"
+  }
+}
+\end{lstlisting}
+
+\subsection{Cursor-based Pagination}
+
+\textbf{Migliore per large datasets}: cursor opaco
+
+\begin{lstlisting}[caption=Cursor pagination]
+# Prima richiesta
+GET /api/users?limit=20 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "data": [
+    {"id": 1, "name": "User 1"},
+    {"id": 2, "name": "User 2"}
+  ],
+  "pagination": {
+    "next_cursor": "eyJpZCI6MjAsImNyZWF0ZWRfYXQiOiIyMDI1LTExLTE1In0=",
+    "has_more": true
+  }
+}
+
+# Richiesta successiva con cursor
+GET /api/users?cursor=eyJpZCI6MjAsImNyZWF0ZWRfYXQiOiIyMDI1LTExLTE1In0=&limit=20
+
+HTTP/1.1 200 OK
+{
+  "data": [...],
+  "pagination": {
+    "next_cursor": "eyJpZCI6NDAsImNyZWF0ZWRfYXQiOiIyMDI1LTExLTE0In0=",
+    "prev_cursor": "eyJpZCI6MjAsImNyZWF0ZWRfYXQiOiIyMDI1LTExLTE1In0=",
+    "has_more": true
+  }
+}
+\end{lstlisting}
+
+\textbf{Vantaggi cursor pagination}:
+\begin{itemize}
+    \item Consistent results (anche se data cambia durante pagination)
+    \item Performance migliore su large datasets
+    \item No "page drift" problem
+\end{itemize}
+
+\subsection{Link Header (RFC 5988)}
+
+\textbf{Standard per pagination links}:
+
+\begin{lstlisting}[caption=RFC 5988 Link header]
+GET /api/users?page=3 HTTP/1.1
+
+HTTP/1.1 200 OK
+Link: </api/users?page=1>; rel="first",
+      </api/users?page=2>; rel="prev",
+      </api/users?page=4>; rel="next",
+      </api/users?page=10>; rel="last"
+Content-Type: application/json
+
+{
+  "data": [...]
+}
+\end{lstlisting}
+
+\section{Searching}
+
+\subsection{Simple Search}
+
+\begin{lstlisting}[caption=Simple text search]
+# Search in default fields
+GET /api/users?q=mario
+
+# Search in specific field
+GET /api/users?search=mario&search_fields=name,email
+
+HTTP/1.1 200 OK
+{
+  "data": [
+    {"id": 1, "name": "Mario Rossi", "email": "mario@example.com"},
+    {"id": 2, "name": "Mario Bianchi", "email": "mario.b@example.com"}
+  ],
+  "meta": {
+    "query": "mario",
+    "total_results": 2
+  }
+}
+\end{lstlisting}
+
+\subsection{Full-Text Search}
+
+\begin{lstlisting}[caption=Full-text search endpoint]
+GET /api/search?q=REST+API+design&type=posts,articles HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "results": {
+    "posts": [
+      {
+        "id": 123,
+        "title": "REST API Design Best Practices",
+        "excerpt": "Learn how to design RESTful APIs...",
+        "score": 0.95
+      }
+    ],
+    "articles": [
+      {
+        "id": 456,
+        "title": "API Design Patterns",
+        "excerpt": "REST and GraphQL comparison...",
+        "score": 0.78
+      }
+    ]
+  },
+  "meta": {
+    "query": "REST API design",
+    "total": 2,
+    "execution_time_ms": 45
+  }
+}
+\end{lstlisting}
+
+\section{Field Selection (Sparse Fieldsets)}
+
+\textbf{Client seleziona solo campi necessari}:
+
+\begin{lstlisting}[caption=Field selection]
+# Default: tutti campi
+GET /api/users/123 HTTP/1.1
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "phone": "+39 123 456",
+  "address": {...},
+  "created_at": "2025-01-15T10:00:00Z",
+  "updated_at": "2025-11-15T10:00:00Z"
+}
+
+# Sparse: solo campi specificati
+GET /api/users/123?fields=id,name,email HTTP/1.1
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+
+# Multiple resources
+GET /api/users?fields=id,name&limit=100
+{
+  "data": [
+    {"id": 1, "name": "Mario"},
+    {"id": 2, "name": "Luigi"}
+  ]
+}
+\end{lstlisting}
+
+\textbf{Benefici}:
+\begin{itemize}
+    \item Bandwidth optimization (mobile)
+    \item Faster response
+    \item Privacy (escludere campi sensibili)
+\end{itemize}
+
+\section{Actions on Resources}
+
+\subsection{Quando URI con Verbs è Accettabile}
+
+\textbf{Operazioni NON mappabili a CRUD} possono usare verbs:
+
+\begin{lstlisting}[caption=Actions - verbs accettabili]
+# Actions su risorsa specifica
+POST /api/orders/123/cancel
+POST /api/orders/123/refund
+POST /api/orders/123/ship
+
+POST /api/users/123/activate
+POST /api/users/123/deactivate
+POST /api/users/123/reset-password
+
+# Operazioni globali
+POST /api/search
+POST /api/export
+POST /api/import
+\end{lstlisting}
+
+\textbf{Alternative RESTful}:
+
+\begin{lstlisting}[caption=Alternative: State as resource]
+# Invece di POST /orders/123/cancel
+PATCH /api/orders/123 HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "cancelled",
+  "cancelled_reason": "Customer request"
+}
+
+# Invece di POST /users/123/activate
+PATCH /api/users/123 HTTP/1.1
+{
+  "active": true
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Best Practices Resource Design]
+\begin{enumerate}
+    \item \textbf{Nouns not verbs}: \texttt{/users} non \texttt{/getUsers}
+    \item \textbf{Plural collections}: \texttt{/users} consistente
+    \item \textbf{Lowercase + hyphens}: \texttt{/order-items}
+    \item \textbf{No trailing slash}: \texttt{/users} non \texttt{/users/}
+    \item \textbf{Versioning in URI}: \texttt{/api/v1/users}
+    \item \textbf{Nesting max 2 livelli}: Evitare \texttt{/a/b/c/d/e}
+    \item \textbf{Filtering via query}: \texttt{?status=active\&role=admin}
+    \item \textbf{Sorting standard}: \texttt{?sort=-created\_at}
+    \item \textbf{Pagination}: Offset, page, o cursor
+    \item \textbf{Sparse fields}: \texttt{?fields=id,name}
+    \item \textbf{Search endpoint}: \texttt{/search?q=term}
+    \item \textbf{Link header}: RFC 5988 per pagination
+    \item \textbf{Metadata in response}: total, pagination info
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Anti-patterns]
+\begin{itemize}
+    \item \textbf{Verbs everywhere}: \texttt{/createUser}, \texttt{/deletePost}
+    \item \textbf{Mixed singular/plural}: \texttt{/user} vs \texttt{/products}
+    \item \textbf{Implementation leak}: \texttt{/api/users.php}, \texttt{/db/table}
+    \item \textbf{Over-nesting}: \texttt{/users/123/posts/456/comments/789/likes}
+    \item \textbf{CamelCase URIs}: \texttt{/orderItems}
+    \item \textbf{Extensions}: \texttt{/users/123.json}
+    \item \textbf{Filtering in path}: \texttt{/users/active} (usare \texttt{?status=active})
+    \item \textbf{Actions as resources}: \texttt{/users/123/delete} (usare DELETE method)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esempi Pratici}
+
+\subsection{E-commerce API}
+
+\begin{lstlisting}[caption=E-commerce resource structure]
+# Products
+GET    /api/v1/products
+POST   /api/v1/products
+GET    /api/v1/products/123
+PUT    /api/v1/products/123
+DELETE /api/v1/products/123
+
+# Product categories
+GET /api/v1/categories
+GET /api/v1/products?category_id=5
+
+# Cart
+GET    /api/v1/cart
+POST   /api/v1/cart/items
+DELETE /api/v1/cart/items/789
+
+# Orders
+GET  /api/v1/orders
+POST /api/v1/orders
+GET  /api/v1/orders/456
+GET  /api/v1/orders?status=pending
+
+# Order actions
+POST /api/v1/orders/456/cancel
+POST /api/v1/orders/456/refund
+
+# Reviews
+GET  /api/v1/products/123/reviews
+POST /api/v1/products/123/reviews
+GET  /api/v1/reviews/789
+
+# Search
+GET /api/v1/search?q=laptop&category=electronics&price_max=1000
+\end{lstlisting}
+
+\subsection{Social Media API}
+
+\begin{lstlisting}[caption=Social media resource structure]
+# Users
+GET /api/v1/users/me
+GET /api/v1/users/123
+GET /api/v1/users?search=mario
+
+# Posts
+GET  /api/v1/posts
+POST /api/v1/posts
+GET  /api/v1/posts/456
+GET  /api/v1/users/123/posts
+
+# Comments
+GET  /api/v1/posts/456/comments
+POST /api/v1/posts/456/comments
+GET  /api/v1/comments/789
+
+# Likes
+POST   /api/v1/posts/456/likes
+DELETE /api/v1/posts/456/likes
+
+# Following
+POST   /api/v1/users/123/follow
+DELETE /api/v1/users/123/follow
+GET    /api/v1/users/123/followers
+GET    /api/v1/users/123/following
+
+# Feed
+GET /api/v1/feed?cursor=xyz&limit=20
+\end{lstlisting}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item URI identifica risorsa (noun), metodo HTTP è azione (verb)
+    \item Naming: plural, lowercase, hyphens
+    \item Nesting per relazioni parent-child (max 2 livelli)
+    \item Filtering, sorting, pagination via query parameters
+    \item Cursor pagination per large datasets
+    \item Sparse fieldsets per bandwidth optimization
+    \item Actions eccezionalmente accettabili se non mappabili a CRUD
+    \item Consistency è fondamentale: pattern uniforme in tutta API
+\end{itemize}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Progetta URI structure per sistema biblioteca (books, authors, loans)
+    \item Implementa filtering avanzato con operatori (gt, lt, contains, in)
+    \item Implementa cursor-based pagination con encoding opaco
+    \item Progetta search endpoint con multi-type results
+    \item Confronta offset vs cursor pagination: pro/cons, performance
+    \item Refactoring: trasforma API con verbs in nouns RESTful
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item RFC 3986 - URI Generic Syntax: \url{https://tools.ietf.org/html/rfc3986}
+    \item RFC 5988 - Web Linking: \url{https://tools.ietf.org/html/rfc5988}
+    \item REST API Tutorial: \url{https://restfulapi.net/resource-naming/}
+    \item GitHub API Docs: \url{https://docs.github.com/en/rest}
+    \item Stripe API Design: \url{https://stripe.com/docs/api}
+\end{itemize}

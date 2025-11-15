@@ -123,6 +123,85 @@ Esecuzione sequenziale vs concorrente:
 \end{itemize}
 \end{nota}
 
+\subsection{Stati del Thread: Lifecycle}
+
+Un thread in Java attraversa diversi stati durante il suo ciclo di vita. Comprendere questi stati è fondamentale per gestire correttamente la concorrenza.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=2.5cm and 3cm,
+    state/.style={
+        rectangle,
+        rounded corners,
+        draw,
+        very thick,
+        minimum width=2.5cm,
+        minimum height=1.2cm,
+        align=center,
+        font=\small\bfseries
+    },
+    new/.style={state, fill=blue!20, draw=blue!60},
+    runnable/.style={state, fill=green!20, draw=green!60},
+    waiting/.style={state, fill=orange!20, draw=orange!60},
+    terminated/.style={state, fill=red!20, draw=red!60},
+    arrow/.style={->, >=stealth, very thick},
+    label/.style={font=\footnotesize, align=center}
+]
+
+% Stati principali
+\node[new] (new) {NEW};
+\node[runnable, right=of new] (runnable) {RUNNABLE\\\footnotesize (Ready/Running)};
+\node[terminated, right=of runnable] (terminated) {TERMINATED};
+
+% Stati di attesa (sotto)
+\node[waiting, below=1.5cm of runnable] (blocked) {BLOCKED\\\footnotesize (wait for lock)};
+\node[waiting, left=1.5cm of blocked] (waiting) {WAITING\\\footnotesize (wait indefinitely)};
+\node[waiting, right=1.5cm of blocked] (timed) {TIMED\_WAITING\\\footnotesize (wait with timeout)};
+
+% Transizioni principali
+\draw[arrow, blue!70] (new) -- node[above, label] {start()} (runnable);
+\draw[arrow, red!70] (runnable) -- node[above, label] {run()\\completes} (terminated);
+
+% Transizioni verso stati di attesa
+\draw[arrow, orange!70] (runnable) to[bend right=20] node[left, label] {synchronized\\block} (blocked);
+\draw[arrow, orange!70] (runnable) to[bend left=30] node[above left, label] {wait()\\join()} (waiting);
+\draw[arrow, orange!70] (runnable) to[bend left=20] node[right, label] {sleep()\\wait(timeout)} (timed);
+
+% Ritorno da stati di attesa
+\draw[arrow, green!70] (blocked) to[bend right=20] node[right, label] {lock\\acquired} (runnable);
+\draw[arrow, green!70] (waiting) to[bend left=30] node[below left, label] {notify()\\thread ends} (runnable);
+\draw[arrow, green!70] (timed) to[bend left=20] node[left, label] {timeout\\expires} (runnable);
+
+% Legenda
+\node[below=3.5cm of blocked, font=\footnotesize, align=left] {
+    \textbf{Legenda degli stati:}\\
+    \textcolor{blue!80}{NEW}: thread creato ma non ancora avviato (\texttt{new Thread()})\\
+    \textcolor{green!80}{RUNNABLE}: pronto per esecuzione o in esecuzione\\
+    \textcolor{orange!80}{BLOCKED}: in attesa di acquisire un monitor lock\\
+    \textcolor{orange!80}{WAITING}: in attesa indefinita (wait(), join())\\
+    \textcolor{orange!80}{TIMED\_WAITING}: in attesa con timeout (sleep(), wait(timeout))\\
+    \textcolor{red!80}{TERMINATED}: esecuzione completata (run() terminato)
+};
+
+\end{tikzpicture}
+\caption{Ciclo di vita di un Thread in Java: stati e transizioni}
+\label{fig:thread_lifecycle}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{NEW}: Thread creato (\texttt{new Thread()}) ma non ancora avviato
+    \item \textbf{RUNNABLE}: Thread pronto per esecuzione o in esecuzione (schedulato dalla JVM)
+    \item \textbf{BLOCKED}: Thread in attesa di acquisire un lock per entrare in un blocco synchronized
+    \item \textbf{WAITING}: Thread in attesa indefinita (\texttt{wait()}, \texttt{join()})
+    \item \textbf{TIMED\_WAITING}: Thread in attesa con timeout (\texttt{sleep()}, \texttt{wait(timeout)})
+    \item \textbf{TERMINATED}: Thread completato (metodo \texttt{run()} terminato)
+\end{itemize}
+
+\begin{nota}
+In Java, gli stati READY e RUNNING sono unificati in RUNNABLE. Lo scheduler della JVM decide quando un thread RUNNABLE viene effettivamente eseguito dalla CPU. Un thread può passare da RUNNABLE a uno stato di attesa (BLOCKED, WAITING, TIMED\_WAITING) e viceversa multiple volte durante il suo ciclo di vita.
+\end{nota}
+
 \section{Sincronizzazione: accesso a risorse condivise}
 
 Quando più thread accedono alla stessa risorsa (variabile, oggetto), occorre \textbf{sincronizzare} per evitare \textbf{race conditions} (comportamenti imprevedibili).

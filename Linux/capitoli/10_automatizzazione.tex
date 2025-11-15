@@ -1,0 +1,1370 @@
+% Capitolo 10 — Automazione e Scripting Avanzato
+\chapter{Automazione e Scripting Avanzato}
+
+\section{Introduzione}
+L'automazione è il cuore dell'amministrazione di sistema efficiente. Script ben progettati eliminano task ripetitivi, riducono errori umani e permettono monitoraggio proattivo dell'infrastruttura.
+
+In questo capitolo esploreremo tecniche avanzate di Bash scripting, pattern comuni di automazione, gestione errori robusta, logging professionale, e integrazione con sistemi di monitoring e alerting.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Bash scripting avanzato, Gestione errori, Logging, Parsing output, Automazione deployment, Monitoring e alerting, Backup automation, Task scheduling avanzato, Best practice.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Scrivere script Bash robusti e manutenibili.
+    \item Implementare gestione errori professionale.
+    \item Creare sistemi di logging strutturato.
+    \item Automatizzare deployment e configurazioni.
+    \item Implementare monitoring e alerting automatici.
+    \item Creare pipeline di backup affidabili.
+    \item Applicare best practice DevOps.
+\end{itemize}
+
+\section{Bash Scripting Avanzato}
+
+\subsection{Template Script Professionale}
+\begin{lstlisting}
+#!/bin/bash
+#
+# Script: system_backup.sh
+# Description: Automated system backup with error handling and logging
+# Author: Admin Team
+# Version: 1.2.0
+# Last Modified: 2025-01-15
+#
+# Usage: ./system_backup.sh [options]
+# Options:
+#   -d, --dir DIR       Backup directory (default: /backup)
+#   -v, --verbose       Verbose output
+#   -h, --help          Show this help
+#
+
+# Strict mode
+set -euo pipefail
+IFS=$'\n\t'
+
+# Constants
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRIPT_NAME="$(basename "$0")"
+readonly LOG_FILE="/var/log/${SCRIPT_NAME%.sh}.log"
+readonly PID_FILE="/var/run/${SCRIPT_NAME%.sh}.pid"
+
+# Default values
+BACKUP_DIR="/backup"
+VERBOSE=false
+
+# Colors for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m' # No Color
+
+# Logging functions
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+log_info() {
+    log "INFO: $*"
+    [ "$VERBOSE" = true ] && echo -e "${GREEN}[INFO]${NC} $*"
+}
+
+log_warn() {
+    log "WARN: $*"
+    echo -e "${YELLOW}[WARN]${NC} $*" >&2
+}
+
+log_error() {
+    log "ERROR: $*"
+    echo -e "${RED}[ERROR]${NC} $*" >&2
+}
+
+# Error handling
+error_exit() {
+    log_error "$1"
+    cleanup
+    exit "${2:-1}"
+}
+
+# Cleanup function
+cleanup() {
+    log_info "Cleaning up..."
+    [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+}
+
+# Trap signals
+trap cleanup EXIT
+trap 'error_exit "Script interrupted" 130' INT TERM
+
+# Usage function
+usage() {
+    cat << EOF
+Usage: $SCRIPT_NAME [OPTIONS]
+
+Automated system backup script.
+
+OPTIONS:
+    -d, --dir DIR       Backup directory (default: /backup)
+    -v, --verbose       Verbose output
+    -h, --help          Show this help message
+
+EXAMPLES:
+    $SCRIPT_NAME -d /mnt/backup -v
+    $SCRIPT_NAME --dir /backup
+
+EOF
+    exit 0
+}
+
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -d|--dir)
+                BACKUP_DIR="$2"
+                shift 2
+                ;;
+            -v|--verbose)
+                VERBOSE=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                ;;
+            *)
+                error_exit "Unknown option: $1" 1
+                ;;
+        esac
+    done
+}
+
+# Check if script is already running
+check_running() {
+    if [ -f "$PID_FILE" ]; then
+        local pid
+        pid=$(cat "$PID_FILE")
+        if ps -p "$pid" > /dev/null 2>&1; then
+            error_exit "Script already running with PID $pid" 1
+        fi
+    fi
+    echo $$ > "$PID_FILE"
+}
+
+# Main function
+main() {
+    log_info "=== Starting backup process ==="
+
+    # Your main logic here
+    log_info "Backup directory: $BACKUP_DIR"
+
+    # Example operations...
+
+    log_info "=== Backup completed successfully ==="
+}
+
+# Entry point
+parse_args "$@"
+check_running
+main
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Bash Strict Mode Explained]
+\texttt{set -euo pipefail}
+\begin{itemize}
+\item \textbf{-e}: exit on error (comando fallisce → script termina)
+\item \textbf{-u}: error su variabili non definite
+\item \textbf{-o pipefail}: pipe fallisce se qualsiasi comando fallisce
+\end{itemize}
+
+\texttt{IFS=\$'\textbackslash{}n\textbackslash{}t'}: previene word splitting su spazi
+\end{tcolorbox}
+
+\subsection{Gestione Argomenti Avanzata: getopts}
+\begin{lstlisting}
+#!/bin/bash
+# Advanced argument parsing with getopts
+
+usage() {
+    cat << EOF
+Usage: $0 [-h] [-v] [-f FILE] [-o OUTPUT] [-n NUM] COMMAND
+
+OPTIONS:
+    -h          Show help
+    -v          Verbose mode
+    -f FILE     Input file
+    -o OUTPUT   Output file
+    -n NUM      Number of iterations
+
+COMMANDS:
+    backup      Perform backup
+    restore     Restore from backup
+    check       Check integrity
+
+EOF
+    exit 1
+}
+
+# Default values
+VERBOSE=false
+INPUT_FILE=""
+OUTPUT_FILE=""
+ITERATIONS=1
+
+# Parse options
+while getopts ":hvf:o:n:" opt; do
+    case $opt in
+        h)
+            usage
+            ;;
+        v)
+            VERBOSE=true
+            ;;
+        f)
+            INPUT_FILE="$OPTARG"
+            ;;
+        o)
+            OUTPUT_FILE="$OPTARG"
+            ;;
+        n)
+            ITERATIONS="$OPTARG"
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            usage
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument" >&2
+            usage
+            ;;
+    esac
+done
+
+# Shift processed options
+shift $((OPTIND-1))
+
+# Get command (remaining argument)
+COMMAND="${1:-}"
+
+if [ -z "$COMMAND" ]; then
+    echo "Error: Command required" >&2
+    usage
+fi
+
+# Validate required options
+if [ -z "$INPUT_FILE" ]; then
+    echo "Error: Input file required (-f)" >&2
+    usage
+fi
+
+echo "Command: $COMMAND"
+echo "Input: $INPUT_FILE"
+echo "Output: $OUTPUT_FILE"
+echo "Iterations: $ITERATIONS"
+echo "Verbose: $VERBOSE"
+\end{lstlisting}
+
+\subsection{Array e Associative Array}
+\begin{lstlisting}
+#!/bin/bash
+# Advanced array usage
+
+# Indexed arrays
+servers=("web1" "web2" "db1" "cache1")
+
+# Add element
+servers+=("web3")
+
+# Iterate
+for server in "${servers[@]}"; do
+    echo "Processing $server"
+done
+
+# Iterate with index
+for i in "${!servers[@]}"; do
+    echo "Server $i: ${servers[$i]}"
+done
+
+# Array length
+echo "Total servers: ${#servers[@]}"
+
+# Slice array
+echo "First two: ${servers[@]:0:2}"
+
+# Associative arrays (hash/dict)
+declare -A config
+config[host]="localhost"
+config[port]="5432"
+config[db]="mydb"
+config[user]="admin"
+
+# Access
+echo "Host: ${config[host]}"
+
+# Iterate keys
+for key in "${!config[@]}"; do
+    echo "$key = ${config[$key]}"
+done
+
+# Check if key exists
+if [ -v config[host] ]; then
+    echo "Host configured"
+fi
+
+# Example: Server configuration
+declare -A servers_config
+servers_config[web1]="192.168.1.10:80"
+servers_config[web2]="192.168.1.11:80"
+servers_config[db1]="192.168.1.20:5432"
+
+for server in "${!servers_config[@]}"; do
+    IFS=':' read -r ip port <<< "${servers_config[$server]}"
+    echo "Server: $server, IP: $ip, Port: $port"
+done
+\end{lstlisting}
+
+\subsection{Funzioni Avanzate}
+\begin{lstlisting}
+#!/bin/bash
+# Advanced function patterns
+
+# Function with return value via echo
+get_timestamp() {
+    echo "$(date +%Y%m%d_%H%M%S)"
+}
+
+# Function with return code
+check_port() {
+    local host=$1
+    local port=$2
+
+    if nc -z -w 2 "$host" "$port" 2>/dev/null; then
+        return 0  # success
+    else
+        return 1  # failure
+    fi
+}
+
+# Function with multiple return values (array)
+get_system_info() {
+    local -n result=$1  # nameref (pass by reference)
+
+    result[hostname]=$(hostname)
+    result[kernel]=$(uname -r)
+    result[uptime]=$(uptime -p)
+    result[load]=$(uptime | awk -F'load average:' '{print $2}')
+}
+
+# Function with error handling
+backup_file() {
+    local src=$1
+    local dest=$2
+
+    # Validate input
+    if [ ! -f "$src" ]; then
+        echo "Error: Source file not found: $src" >&2
+        return 1
+    fi
+
+    # Create destination directory
+    local dest_dir
+    dest_dir=$(dirname "$dest")
+    mkdir -p "$dest_dir" || {
+        echo "Error: Cannot create directory: $dest_dir" >&2
+        return 1
+    }
+
+    # Perform backup
+    if cp -p "$src" "$dest"; then
+        echo "Backup successful: $src -> $dest"
+        return 0
+    else
+        echo "Error: Backup failed" >&2
+        return 1
+    fi
+}
+
+# Usage examples
+timestamp=$(get_timestamp)
+echo "Timestamp: $timestamp"
+
+if check_port "localhost" 22; then
+    echo "SSH port is open"
+else
+    echo "SSH port is closed"
+fi
+
+declare -A sysinfo
+get_system_info sysinfo
+for key in "${!sysinfo[@]}"; do
+    echo "$key: ${sysinfo[$key]}"
+done
+
+if backup_file "/etc/hosts" "/backup/hosts.$timestamp"; then
+    echo "File backed up successfully"
+fi
+\end{lstlisting}
+
+\section{Pattern Processing e Parsing}
+
+\subsection{Text Processing con awk}
+\begin{lstlisting}
+#!/bin/bash
+# Advanced awk patterns
+
+# Log analysis: count HTTP status codes
+awk '{print $9}' /var/log/nginx/access.log | \
+    sort | uniq -c | sort -rn
+
+# Calculate average response time
+awk '{sum+=$NF; count++} END {print sum/count}' response_times.log
+
+# Filter and format
+awk '$9 == 500 {print $1, $7, $9}' /var/log/nginx/access.log
+
+# Complex parsing
+awk -F',' '
+    BEGIN { total=0; count=0 }
+    NR > 1 {  # skip header
+        total += $3
+        count++
+        if ($3 > max) max = $3
+        if (NR == 2 || $3 < min) min = $3
+    }
+    END {
+        print "Count:", count
+        print "Total:", total
+        print "Average:", total/count
+        print "Min:", min
+        print "Max:", max
+    }
+' data.csv
+
+# Process JSON with awk
+curl -s https://api.example.com/data | \
+    awk -F'"' '/"id":/ {print $4}'
+
+# Process multiple files
+awk '{sum+=$1} END {print FILENAME, sum}' file1 file2 file3
+\end{lstlisting}
+
+\subsection{JSON Processing con jq}
+\begin{lstlisting}
+#!/bin/bash
+# JSON processing with jq
+
+# Parse JSON response
+response=$(curl -s https://api.github.com/users/octocat)
+
+# Extract field
+name=$(echo "$response" | jq -r '.name')
+echo "Name: $name"
+
+# Extract multiple fields
+echo "$response" | jq -r '.name, .company, .location'
+
+# Array processing
+repos=$(curl -s https://api.github.com/users/octocat/repos)
+
+# Get all repository names
+echo "$repos" | jq -r '.[].name'
+
+# Filter and format
+echo "$repos" | jq -r '.[] | select(.fork == false) | .name'
+
+# Complex query
+echo "$repos" | jq -r '.[] |
+    select(.stargazers_count > 100) |
+    "\(.name): \(.stargazers_count) stars"'
+
+# Create JSON
+jq -n \
+    --arg name "John" \
+    --arg email "john@example.com" \
+    --argjson age 30 \
+    '{name: $name, email: $email, age: $age}'
+
+# Modify JSON
+echo '{"name":"John","age":30}' | \
+    jq '.age = 31 | .city = "NYC"'
+
+# Practical example: Monitor API
+#!/bin/bash
+check_api() {
+    local url=$1
+    local response
+
+    response=$(curl -s -w "\n%{http_code}" "$url")
+    local body=$(echo "$response" | head -n -1)
+    local code=$(echo "$response" | tail -n 1)
+
+    if [ "$code" -ne 200 ]; then
+        echo "API error: HTTP $code"
+        return 1
+    fi
+
+    local status=$(echo "$body" | jq -r '.status')
+    local message=$(echo "$body" | jq -r '.message')
+
+    echo "Status: $status"
+    echo "Message: $message"
+
+    if [ "$status" != "ok" ]; then
+        return 1
+    fi
+
+    return 0
+}
+
+check_api "https://api.example.com/health"
+\end{lstlisting}
+
+\subsection{Parsing XML con xmllint}
+\begin{lstlisting}
+#!/bin/bash
+# XML parsing with xmllint
+
+xml_file="data.xml"
+
+# Extract specific element
+xmllint --xpath "//user/name/text()" "$xml_file"
+
+# With namespace
+xmllint --xpath "//*[local-name()='name']/text()" "$xml_file"
+
+# Format XML
+xmllint --format unformatted.xml
+
+# Validate against schema
+xmllint --schema schema.xsd data.xml --noout
+
+# Example: Parse RSS feed
+curl -s "https://example.com/rss" | \
+    xmllint --xpath "//item/title/text()" -
+\end{lstlisting}
+
+\section{Automation Patterns}
+
+\subsection{Deployment Automation}
+\begin{lstlisting}
+#!/bin/bash
+# deploy.sh - Application deployment automation
+
+set -euo pipefail
+
+# Configuration
+readonly APP_NAME="myapp"
+readonly DEPLOY_USER="deployer"
+readonly DEPLOY_DIR="/opt/$APP_NAME"
+readonly BACKUP_DIR="/backup/$APP_NAME"
+readonly SERVICE_NAME="$APP_NAME.service"
+
+# Colors
+readonly GREEN='\033[0;32m'
+readonly RED='\033[0;31m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m'
+
+log_info() { echo -e "${GREEN}[INFO]${NC} $*"; }
+log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+
+# Pre-deployment checks
+pre_deploy_check() {
+    log_info "Running pre-deployment checks..."
+
+    # Check user
+    if [ "$(whoami)" != "$DEPLOY_USER" ]; then
+        log_error "Must run as $DEPLOY_USER"
+        return 1
+    fi
+
+    # Check directory
+    if [ ! -d "$DEPLOY_DIR" ]; then
+        log_error "Deploy directory not found: $DEPLOY_DIR"
+        return 1
+    fi
+
+    # Check service
+    if ! systemctl list-unit-files | grep -q "$SERVICE_NAME"; then
+        log_error "Service not found: $SERVICE_NAME"
+        return 1
+    fi
+
+    # Check disk space (need at least 1GB)
+    local available
+    available=$(df "$DEPLOY_DIR" | awk 'NR==2 {print $4}')
+    if [ "$available" -lt 1048576 ]; then
+        log_error "Insufficient disk space"
+        return 1
+    fi
+
+    log_info "Pre-deployment checks passed"
+    return 0
+}
+
+# Backup current version
+backup_current() {
+    log_info "Backing up current version..."
+
+    local backup_name="$APP_NAME-$(date +%Y%m%d_%H%M%S)"
+    local backup_path="$BACKUP_DIR/$backup_name"
+
+    mkdir -p "$BACKUP_DIR"
+
+    if tar -czf "$backup_path.tar.gz" -C "$DEPLOY_DIR" . ; then
+        log_info "Backup created: $backup_path.tar.gz"
+        echo "$backup_path.tar.gz"
+        return 0
+    else
+        log_error "Backup failed"
+        return 1
+    fi
+}
+
+# Deploy new version
+deploy() {
+    local artifact=$1
+
+    log_info "Deploying $artifact..."
+
+    # Extract artifact
+    if ! tar -xzf "$artifact" -C "$DEPLOY_DIR"; then
+        log_error "Extraction failed"
+        return 1
+    fi
+
+    # Set permissions
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_DIR"
+
+    # Run migrations if needed
+    if [ -f "$DEPLOY_DIR/migrate.sh" ]; then
+        log_info "Running migrations..."
+        bash "$DEPLOY_DIR/migrate.sh"
+    fi
+
+    log_info "Deployment completed"
+    return 0
+}
+
+# Restart service
+restart_service() {
+    log_info "Restarting service..."
+
+    if sudo systemctl restart "$SERVICE_NAME"; then
+        sleep 5
+        if sudo systemctl is-active --quiet "$SERVICE_NAME"; then
+            log_info "Service restarted successfully"
+            return 0
+        else
+            log_error "Service failed to start"
+            return 1
+        fi
+    else
+        log_error "Failed to restart service"
+        return 1
+    fi
+}
+
+# Health check
+health_check() {
+    log_info "Performing health check..."
+
+    local max_attempts=10
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if curl -sf http://localhost:8080/health > /dev/null; then
+            log_info "Health check passed"
+            return 0
+        fi
+
+        log_warn "Health check attempt $attempt/$max_attempts failed"
+        sleep 5
+        ((attempt++))
+    done
+
+    log_error "Health check failed after $max_attempts attempts"
+    return 1
+}
+
+# Rollback to previous version
+rollback() {
+    local backup_file=$1
+
+    log_warn "Rolling back to $backup_file..."
+
+    # Stop service
+    sudo systemctl stop "$SERVICE_NAME"
+
+    # Remove current deployment
+    rm -rf "${DEPLOY_DIR:?}"/*
+
+    # Restore backup
+    if tar -xzf "$backup_file" -C "$DEPLOY_DIR"; then
+        log_info "Backup restored"
+
+        # Restart service
+        if restart_service && health_check; then
+            log_info "Rollback successful"
+            return 0
+        fi
+    fi
+
+    log_error "Rollback failed"
+    return 1
+}
+
+# Main deployment flow
+main() {
+    local artifact=${1:-}
+
+    if [ -z "$artifact" ] || [ ! -f "$artifact" ]; then
+        log_error "Usage: $0 <artifact.tar.gz>"
+        exit 1
+    fi
+
+    log_info "=== Starting deployment of $APP_NAME ==="
+
+    # Pre-checks
+    if ! pre_deploy_check; then
+        log_error "Pre-deployment checks failed"
+        exit 1
+    fi
+
+    # Backup
+    backup_file=$(backup_current) || {
+        log_error "Backup failed, aborting"
+        exit 1
+    }
+
+    # Stop service
+    sudo systemctl stop "$SERVICE_NAME"
+
+    # Deploy
+    if deploy "$artifact"; then
+        # Restart and verify
+        if restart_service && health_check; then
+            log_info "=== Deployment successful ==="
+            exit 0
+        else
+            log_error "Deployment verification failed"
+            rollback "$backup_file"
+            exit 1
+        fi
+    else
+        log_error "Deployment failed"
+        rollback "$backup_file"
+        exit 1
+    fi
+}
+
+main "$@"
+\end{lstlisting}
+
+\subsection{Multi-Server Deployment}
+\begin{lstlisting}
+#!/bin/bash
+# multi_deploy.sh - Deploy to multiple servers
+
+set -euo pipefail
+
+readonly SERVERS=(
+    "web1.example.com"
+    "web2.example.com"
+    "web3.example.com"
+)
+
+readonly DEPLOY_SCRIPT="/usr/local/bin/deploy.sh"
+readonly ARTIFACT="app-v1.2.3.tar.gz"
+readonly SSH_USER="deployer"
+
+log_info() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] INFO: $*"
+}
+
+log_error() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $*" >&2
+}
+
+# Deploy to single server
+deploy_to_server() {
+    local server=$1
+
+    log_info "Deploying to $server..."
+
+    # Copy artifact
+    if ! scp "$ARTIFACT" "$SSH_USER@$server:/tmp/"; then
+        log_error "Failed to copy artifact to $server"
+        return 1
+    fi
+
+    # Run deployment
+    if ssh "$SSH_USER@$server" "$DEPLOY_SCRIPT /tmp/$ARTIFACT"; then
+        log_info "Deployment to $server successful"
+        return 0
+    else
+        log_error "Deployment to $server failed"
+        return 1
+    fi
+}
+
+# Sequential deployment
+deploy_sequential() {
+    local failed_servers=()
+
+    for server in "${SERVERS[@]}"; do
+        if ! deploy_to_server "$server"; then
+            failed_servers+=("$server")
+        fi
+        sleep 10  # delay between deployments
+    done
+
+    if [ ${#failed_servers[@]} -eq 0 ]; then
+        log_info "All deployments successful"
+        return 0
+    else
+        log_error "Failed servers: ${failed_servers[*]}"
+        return 1
+    fi
+}
+
+# Parallel deployment
+deploy_parallel() {
+    local pids=()
+    local failed_servers=()
+
+    # Start deployments in background
+    for server in "${SERVERS[@]}"; do
+        deploy_to_server "$server" &
+        pids+=($!)
+    done
+
+    # Wait for all to complete
+    for i in "${!pids[@]}"; do
+        if ! wait "${pids[$i]}"; then
+            failed_servers+=("${SERVERS[$i]}")
+        fi
+    done
+
+    if [ ${#failed_servers[@]} -eq 0 ]; then
+        log_info "All deployments successful"
+        return 0
+    else
+        log_error "Failed servers: ${failed_servers[*]}"
+        return 1
+    fi
+}
+
+# Blue-green deployment
+deploy_blue_green() {
+    local blue_servers=("web1.example.com" "web2.example.com")
+    local green_servers=("web3.example.com" "web4.example.com")
+
+    log_info "Deploying to green servers..."
+
+    # Deploy to green (inactive)
+    for server in "${green_servers[@]}"; do
+        deploy_to_server "$server" || return 1
+    done
+
+    log_info "Switching traffic to green servers..."
+    # Update load balancer configuration here
+    # update_load_balancer "green"
+
+    sleep 30  # monitor green
+
+    log_info "Deploying to blue servers..."
+
+    # Deploy to blue
+    for server in "${blue_servers[@]}"; do
+        deploy_to_server "$server" || return 1
+    done
+
+    log_info "Blue-green deployment completed"
+}
+
+# Main
+main() {
+    local strategy=${1:-sequential}
+
+    case $strategy in
+        sequential)
+            deploy_sequential
+            ;;
+        parallel)
+            deploy_parallel
+            ;;
+        blue-green)
+            deploy_blue_green
+            ;;
+        *)
+            echo "Usage: $0 {sequential|parallel|blue-green}"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
+\end{lstlisting}
+
+\section{Monitoring e Alerting}
+
+\subsection{System Monitor}
+\begin{lstlisting}
+#!/bin/bash
+# system_monitor.sh - Comprehensive system monitoring
+
+set -euo pipefail
+
+readonly LOG_FILE="/var/log/system_monitor.log"
+readonly ALERT_EMAIL="admin@example.com"
+readonly METRICS_FILE="/var/lib/system_monitor/metrics.json"
+
+# Thresholds
+readonly CPU_THRESHOLD=80
+readonly MEM_THRESHOLD=85
+readonly DISK_THRESHOLD=90
+readonly LOAD_THRESHOLD=4.0
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+# Collect CPU usage
+get_cpu_usage() {
+    local cpu
+    cpu=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | cut -d'%' -f1)
+    echo "${cpu%.*}"  # round to integer
+}
+
+# Collect memory usage
+get_memory_usage() {
+    free | grep Mem | awk '{printf("%.0f", $3/$2 * 100.0)}'
+}
+
+# Collect disk usage
+get_disk_usage() {
+    df -h / | awk 'NR==2 {print $5}' | sed 's/%//'
+}
+
+# Collect load average
+get_load_average() {
+    uptime | awk -F'load average:' '{print $2}' | awk '{print $1}' | sed 's/,//'
+}
+
+# Check thresholds
+check_thresholds() {
+    local alerts=()
+
+    # CPU
+    local cpu=$(get_cpu_usage)
+    if [ "$cpu" -gt "$CPU_THRESHOLD" ]; then
+        alerts+=("CPU: ${cpu}% (threshold: ${CPU_THRESHOLD}%)")
+    fi
+
+    # Memory
+    local mem=$(get_memory_usage)
+    if [ "$mem" -gt "$MEM_THRESHOLD" ]; then
+        alerts+=("Memory: ${mem}% (threshold: ${MEM_THRESHOLD}%)")
+    fi
+
+    # Disk
+    local disk=$(get_disk_usage)
+    if [ "$disk" -gt "$DISK_THRESHOLD" ]; then
+        alerts+=("Disk: ${disk}% (threshold: ${DISK_THRESHOLD}%)")
+    fi
+
+    # Load
+    local load=$(get_load_average)
+    if (( $(echo "$load > $LOAD_THRESHOLD" | bc -l) )); then
+        alerts+=("Load: $load (threshold: $LOAD_THRESHOLD)")
+    fi
+
+    # Send alerts if any
+    if [ ${#alerts[@]} -gt 0 ]; then
+        local message="System Alert:\n\n"
+        for alert in "${alerts[@]}"; do
+            message+="- $alert\n"
+            log "ALERT: $alert"
+        done
+
+        echo -e "$message" | mail -s "System Alert: $(hostname)" "$ALERT_EMAIL"
+    fi
+}
+
+# Collect and store metrics
+collect_metrics() {
+    local timestamp=$(date +%s)
+    local cpu=$(get_cpu_usage)
+    local mem=$(get_memory_usage)
+    local disk=$(get_disk_usage)
+    local load=$(get_load_average)
+
+    # Create JSON
+    local metrics
+    metrics=$(jq -n \
+        --arg ts "$timestamp" \
+        --arg cpu "$cpu" \
+        --arg mem "$mem" \
+        --arg disk "$disk" \
+        --arg load "$load" \
+        '{
+            timestamp: $ts,
+            cpu_usage: $cpu,
+            memory_usage: $mem,
+            disk_usage: $disk,
+            load_average: $load
+        }')
+
+    # Append to metrics file
+    mkdir -p "$(dirname "$METRICS_FILE")"
+    echo "$metrics" >> "$METRICS_FILE"
+
+    # Keep only last 1000 entries
+    tail -n 1000 "$METRICS_FILE" > "${METRICS_FILE}.tmp"
+    mv "${METRICS_FILE}.tmp" "$METRICS_FILE"
+
+    log "Metrics: CPU=$cpu% MEM=$mem% DISK=$disk% LOAD=$load"
+}
+
+# Generate report
+generate_report() {
+    log "Generating system report..."
+
+    cat << EOF
+=== System Health Report ===
+Generated: $(date)
+Hostname: $(hostname)
+
+CPU Usage: $(get_cpu_usage)%
+Memory Usage: $(get_memory_usage)%
+Disk Usage: $(get_disk_usage)%
+Load Average: $(get_load_average)
+
+Top 5 CPU Processes:
+$(ps aux --sort=-%cpu | head -6)
+
+Top 5 Memory Processes:
+$(ps aux --sort=-%mem | head -6)
+
+Disk Usage by Directory:
+$(du -sh /* 2>/dev/null | sort -rh | head -10)
+
+Active Connections:
+$(ss -s)
+
+Recent System Errors:
+$(journalctl -p err --since "1 hour ago" --no-pager | tail -10)
+
+EOF
+}
+
+# Main
+main() {
+    collect_metrics
+    check_thresholds
+
+    # Generate daily report
+    local hour=$(date +%H)
+    if [ "$hour" == "00" ]; then
+        generate_report | mail -s "Daily System Report: $(hostname)" "$ALERT_EMAIL"
+    fi
+}
+
+main "$@"
+\end{lstlisting}
+
+\section{Backup Automation}
+
+\subsection{Comprehensive Backup Script}
+\begin{lstlisting}
+#!/bin/bash
+# backup_system.sh - Comprehensive backup with rotation and verification
+
+set -euo pipefail
+
+# Configuration
+readonly BACKUP_ROOT="/backup"
+readonly RETENTION_DAYS=30
+readonly RETENTION_WEEKLY=8
+readonly RETENTION_MONTHLY=12
+
+# Sources to backup
+declare -A BACKUP_SOURCES=(
+    [home]="/home"
+    [etc]="/etc"
+    [var_www]="/var/www"
+    [databases]="/var/lib/mysql"
+)
+
+readonly LOG_FILE="/var/log/backup_system.log"
+readonly DATE=$(date +%Y%m%d)
+readonly TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+# Create backup directory structure
+init_backup_dirs() {
+    mkdir -p "$BACKUP_ROOT"/{daily,weekly,monthly}
+}
+
+# Backup MySQL databases
+backup_databases() {
+    log "Backing up databases..."
+
+    local backup_dir="$BACKUP_ROOT/daily/databases_$DATE"
+    mkdir -p "$backup_dir"
+
+    # Get list of databases
+    local databases
+    databases=$(mysql -e "SHOW DATABASES;" | grep -Ev "Database|information_schema|performance_schema|mysql|sys")
+
+    for db in $databases; do
+        log "Backing up database: $db"
+        mysqldump --single-transaction --routines --triggers "$db" | \
+            gzip > "$backup_dir/${db}_${TIMESTAMP}.sql.gz"
+    done
+
+    # Create tar archive
+    tar -czf "$BACKUP_ROOT/daily/databases_${DATE}.tar.gz" -C "$BACKUP_ROOT/daily" "databases_$DATE"
+    rm -rf "$backup_dir"
+
+    log "Database backup completed"
+}
+
+# Backup filesystem
+backup_filesystem() {
+    local name=$1
+    local source=$2
+
+    log "Backing up $name from $source..."
+
+    local backup_file="$BACKUP_ROOT/daily/${name}_${DATE}.tar.gz"
+
+    tar -czf "$backup_file" \
+        --exclude='*.log' \
+        --exclude='*.tmp' \
+        --exclude='cache/*' \
+        -C "$(dirname "$source")" \
+        "$(basename "$source")"
+
+    log "Filesystem backup completed: $backup_file"
+}
+
+# Verify backup
+verify_backup() {
+    local backup_file=$1
+
+    log "Verifying backup: $backup_file"
+
+    if [ ! -f "$backup_file" ]; then
+        log "ERROR: Backup file not found: $backup_file"
+        return 1
+    fi
+
+    # Check file integrity
+    if tar -tzf "$backup_file" > /dev/null 2>&1; then
+        local size
+        size=$(du -sh "$backup_file" | awk '{print $1}')
+        log "Backup verified OK: $backup_file ($size)"
+        return 0
+    else
+        log "ERROR: Backup verification failed: $backup_file"
+        return 1
+    fi
+}
+
+# Rotate daily backups to weekly
+rotate_to_weekly() {
+    local day_of_week=$(date +%u)  # 1=Monday, 7=Sunday
+
+    if [ "$day_of_week" -eq 7 ]; then  # Sunday
+        log "Rotating daily backup to weekly..."
+
+        for file in "$BACKUP_ROOT/daily"/*_"$DATE".tar.gz; do
+            if [ -f "$file" ]; then
+                cp "$file" "$BACKUP_ROOT/weekly/"
+            fi
+        done
+    fi
+}
+
+# Rotate weekly backups to monthly
+rotate_to_monthly() {
+    local day_of_month=$(date +%d)
+
+    if [ "$day_of_month" -eq "01" ]; then  # First day of month
+        log "Rotating weekly backup to monthly..."
+
+        local last_week=$(date -d "7 days ago" +%Y%m%d)
+
+        for file in "$BACKUP_ROOT/weekly"/*_"$last_week".tar.gz; do
+            if [ -f "$file" ]; then
+                cp "$file" "$BACKUP_ROOT/monthly/"
+            fi
+        done
+    fi
+}
+
+# Cleanup old backups
+cleanup_old_backups() {
+    log "Cleaning up old backups..."
+
+    # Daily backups
+    find "$BACKUP_ROOT/daily" -type f -mtime +$RETENTION_DAYS -delete
+
+    # Weekly backups (keep 8 weeks)
+    local count
+    count=$(find "$BACKUP_ROOT/weekly" -type f | wc -l)
+    if [ "$count" -gt "$RETENTION_WEEKLY" ]; then
+        find "$BACKUP_ROOT/weekly" -type f | \
+            sort | \
+            head -n -"$RETENTION_WEEKLY" | \
+            xargs rm -f
+    fi
+
+    # Monthly backups (keep 12 months)
+    count=$(find "$BACKUP_ROOT/monthly" -type f | wc -l)
+    if [ "$count" -gt "$RETENTION_MONTHLY" ]; then
+        find "$BACKUP_ROOT/monthly" -type f | \
+            sort | \
+            head -n -"$RETENTION_MONTHLY" | \
+            xargs rm -f
+    fi
+
+    log "Cleanup completed"
+}
+
+# Send backup report
+send_report() {
+    local status=$1
+
+    local subject
+    if [ "$status" -eq 0 ]; then
+        subject="Backup SUCCESS: $(hostname)"
+    else
+        subject="Backup FAILED: $(hostname)"
+    fi
+
+    local report
+    report=$(cat << EOF
+Backup Report for $(hostname)
+Date: $(date)
+Status: $([ "$status" -eq 0 ] && echo "SUCCESS" || echo "FAILED")
+
+Backup Summary:
+$(ls -lh "$BACKUP_ROOT/daily"/*_"$DATE".tar.gz 2>/dev/null || echo "No backups found")
+
+Disk Usage:
+$(df -h "$BACKUP_ROOT")
+
+Recent Log:
+$(tail -20 "$LOG_FILE")
+EOF
+)
+
+    echo "$report" | mail -s "$subject" admin@example.com
+}
+
+# Main
+main() {
+    log "=== Starting backup process ==="
+
+    local exit_code=0
+
+    # Initialize
+    init_backup_dirs
+
+    # Backup databases
+    if ! backup_databases; then
+        exit_code=1
+    fi
+
+    # Backup filesystems
+    for name in "${!BACKUP_SOURCES[@]}"; do
+        if ! backup_filesystem "$name" "${BACKUP_SOURCES[$name]}"; then
+            exit_code=1
+        fi
+    done
+
+    # Verify backups
+    for file in "$BACKUP_ROOT/daily"/*_"$DATE".tar.gz; do
+        if [ -f "$file" ]; then
+            verify_backup "$file" || exit_code=1
+        fi
+    done
+
+    # Rotate backups
+    rotate_to_weekly
+    rotate_to_monthly
+
+    # Cleanup
+    cleanup_old_backups
+
+    # Report
+    send_report $exit_code
+
+    log "=== Backup process completed (exit code: $exit_code) ==="
+
+    exit $exit_code
+}
+
+main "$@"
+\end{lstlisting}
+
+\section{Best Practice Automation}
+
+\begin{tcolorbox}[title=Scripting Best Practice]
+\begin{enumerate}
+\item \textbf{Strict mode}: sempre usare \texttt{set -euo pipefail}
+\item \textbf{Shebang}: sempre iniziare con \texttt{#!/bin/bash}
+\item \textbf{Documentation}: header con description, usage, examples
+\item \textbf{Error handling}: trap errors e cleanup
+\item \textbf{Logging}: structured logging con timestamp
+\item \textbf{Idempotency}: script rieseguibile senza effetti collaterali
+\item \textbf{Dry-run mode}: opzione per simulare senza modifiche
+\item \textbf{Validation}: validare input e precondizioni
+\item \textbf{Constants}: usare \texttt{readonly} per costanti
+\item \textbf{Quotes}: sempre quote variabili (\texttt{"\$var"})
+\item \textbf{Functions}: modularizzare codice in funzioni
+\item \textbf{Testing}: testare script in ambiente safe prima produzione
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Esercizi Pratici}
+
+\begin{enumerate}
+\item Creare script deployment completo con pre-checks, backup, rollback.
+\item Implementare system monitor con threshold alerts via email.
+\item Creare backup automation con daily/weekly/monthly rotation.
+\item Scrivere script parsing log Apache/Nginx per statistiche traffico.
+\item Implementare health check multi-servizio con retry logic.
+\item Creare script provisioning server che installa stack completo.
+\item Implementare log aggregation da server multipli.
+\item Scrivere script database backup con encryption.
+\item Creare monitoring dashboard che genera report HTML.
+\item Implementare CI/CD pipeline script con test e deployment.
+\end{enumerate}
+
+\section{Riepilogo}
+Hai imparato:
+\begin{itemize}
+\item Tecniche avanzate Bash scripting
+\item Pattern processing con awk, jq, xmllint
+\item Automation deployment e configuration management
+\item System monitoring e alerting
+\item Backup automation con rotation
+\item Best practice scripting e error handling
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+\item \url{https://www.gnu.org/software/bash/manual/}
+\item \url{https://stedolan.github.io/jq/manual/}
+\item \url{https://www.shellcheck.net/} - Shell script linter
+\item Google Shell Style Guide
+\item \url{https://explainshell.com/} - Explain shell commands
+\end{itemize}

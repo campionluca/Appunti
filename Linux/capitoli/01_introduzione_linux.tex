@@ -1,0 +1,702 @@
+% 01_introduzione_linux.tex — Storia, Distribuzioni, Kernel, Shell
+\chapter{Introduzione a Linux}
+
+\section{Storia di Linux e Unix}
+
+\subsection{Le Origini: Unix}
+
+La storia di Linux inizia con Unix. Nel 1969, presso i Bell Labs di AT\&T, Ken Thompson e Dennis Ritchie svilupparono Unix, un sistema operativo rivoluzionario che avrebbe cambiato per sempre il panorama informatico.
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Curiosità Storica]
+Unix nacque inizialmente come progetto personale di Ken Thompson, che voleva continuare a giocare al videogioco "Space Travel" dopo la cancellazione del progetto Multics. Per farlo, riscrisse il gioco per un computer PDP-7 inutilizzato, e insieme creò un sistema operativo minimale. Il nome "Unix" è un gioco di parole su "Multics" (Multiplexed Information and Computing Service).
+\end{tcolorbox}
+
+\textbf{Caratteristiche innovative di Unix:}
+
+\begin{itemize}
+    \item Sistema multitasking e multiutente
+    \item Filesystem gerarchico
+    \item File di testo per configurazione
+    \item Shell come interfaccia utente programmabile
+    \item Pipe per concatenare comandi
+    \item Portabilità (dopo la riscrittura in C nel 1973)
+\end{itemize}
+
+\subsection{La Nascita di Linux}
+
+Nel 1991, uno studente finlandese di nome \textbf{Linus Torvalds} iniziò a sviluppare un kernel Unix-like come hobby:
+
+\begin{lstlisting}[style=bash]
+# Messaggio originale di Linus Torvalds su comp.os.minix
+# 25 agosto 1991
+
+From: torvalds@klaava.Helsinki.FI (Linus Benedict Torvalds)
+Newsgroups: comp.os.minix
+Subject: What would you like to see most in minix?
+Date: 25 Aug 91 20:57:08 GMT
+
+Hello everybody out there using minix -
+
+I'm doing a (free) operating system (just a hobby, won't be
+big and professional like gnu) for 386(486) AT clones. This
+has been brewing since april, and is starting to get ready.
+I'd like any feedback on things people like/dislike in minix,
+as my OS resembles it somewhat...
+\end{lstlisting}
+
+\textbf{Timeline evolutiva:}
+
+\begin{itemize}
+    \item \textbf{1991}: Prima release (0.01) - solo 10.239 righe di codice
+    \item \textbf{1992}: Linux adotta licenza GPL
+    \item \textbf{1994}: Versione 1.0 con pieno supporto networking
+    \item \textbf{1996}: Tux (il pinguino) diventa la mascotte ufficiale
+    \item \textbf{1999}: Kernel 2.2 - supporto per sistemi enterprise
+    \item \textbf{2001}: Kernel 2.4 - supporto per 64 CPU
+    \item \textbf{2011}: Versione 3.0 per il 20° anniversario
+    \item \textbf{2019}: Kernel 5.0 con oltre 27 milioni di righe di codice
+    \item \textbf{2024}: Kernel 6.x - supporto per hardware moderno
+\end{itemize}
+
+\subsection{Il Progetto GNU}
+
+Linux da solo è solo un kernel. Il sistema completo include migliaia di tool sviluppati dal \textbf{Progetto GNU} (GNU's Not Unix), fondato da Richard Stallman nel 1983.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=GNU/Linux]
+Tecnicamente, il sistema operativo completo dovrebbe essere chiamato "GNU/Linux":
+\begin{itemize}
+    \item \textbf{Linux}: il kernel
+    \item \textbf{GNU}: compiler (gcc), librerie (glibc), shell (bash), coreutils (ls, cp, mv...)
+    \item Insieme formano un sistema operativo completo e funzionale
+\end{itemize}
+\end{tcolorbox}
+
+\section{Architettura del Sistema Linux}
+
+\subsection{Struttura a Livelli}
+
+Linux è organizzato in livelli gerarchici:
+
+\begin{lstlisting}[style=bash]
+# Visualizzazione schematica dell'architettura
+
++----------------------------------+
+|    Applicazioni Utente           |  <- Browser, editor, games
++----------------------------------+
+|    Shell e Utility GNU           |  <- bash, ls, grep, sed
++----------------------------------+
+|    Librerie di Sistema           |  <- glibc, libssl, libcurl
++----------------------------------+
+|    System Call Interface         |  <- open(), read(), fork()
++----------------------------------+
+|    KERNEL LINUX                  |
+|  +----------------------------+  |
+|  | Process Scheduler          |  |  <- Gestione processi
+|  | Memory Management          |  |  <- Gestione memoria
+|  | Virtual File System        |  |  <- Astrazione filesystem
+|  | Network Stack              |  |  <- TCP/IP, routing
+|  | Device Drivers             |  |  <- Hardware support
+|  +----------------------------+  |
++----------------------------------+
+|    Hardware                      |  <- CPU, RAM, disk, network
++----------------------------------+
+\end{lstlisting}
+
+\subsection{Il Kernel}
+
+Il \textbf{kernel} è il cuore del sistema operativo. Responsabilità principali:
+
+\begin{enumerate}
+    \item \textbf{Gestione Processi}
+    \begin{itemize}
+        \item Scheduling: quale processo eseguire e quando
+        \item Context switching tra processi
+        \item Creazione e terminazione processi
+        \item Comunicazione inter-processo (IPC)
+    \end{itemize}
+
+    \item \textbf{Gestione Memoria}
+    \begin{itemize}
+        \item Allocazione e deallocazione memoria
+        \item Memoria virtuale e paginazione
+        \item Protezione memoria tra processi
+        \item Caching e buffering
+    \end{itemize}
+
+    \item \textbf{Gestione File System}
+    \begin{itemize}
+        \item Astrazione dei filesystem (VFS)
+        \item Supporto multi-filesystem (ext4, XFS, Btrfs, NFS...)
+        \item Caching dei metadati
+        \item Gestione permessi e ownership
+    \end{itemize}
+
+    \item \textbf{Gestione Dispositivi}
+    \begin{itemize}
+        \item Driver per hardware
+        \item Interfaccia unificata via /dev/
+        \item Gestione interrupt
+        \item Direct Memory Access (DMA)
+    \end{itemize}
+
+    \item \textbf{Networking}
+    \begin{itemize}
+        \item Stack TCP/IP completo
+        \item Routing e firewall (netfilter/iptables)
+        \item Socket API
+        \item Supporto protocolli multipli
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Kernel Space vs User Space}
+
+\begin{lstlisting}[style=bash]
+# Verifica versione kernel
+uname -r
+# Output: 6.5.0-28-generic
+
+# Visualizza informazioni dettagliate
+uname -a
+# Output: Linux hostname 6.5.0-28-generic #29-Ubuntu SMP x86_64 GNU/Linux
+
+# Visualizza messaggi del kernel
+dmesg | head -20
+# Output: log di boot e eventi hardware
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Kernel vs User Space]
+\textbf{Kernel Space}:
+\begin{itemize}
+    \item Esecuzione privilegiata (ring 0)
+    \item Accesso diretto all'hardware
+    \item Memoria protetta
+    \item Bug possono causare kernel panic
+\end{itemize}
+
+\textbf{User Space}:
+\begin{itemize}
+    \item Esecuzione non privilegiata (ring 3)
+    \item Accesso hardware via system call
+    \item Isolamento tra processi
+    \item Crash di un processo non affetta il sistema
+\end{itemize}
+\end{tcolorbox}
+
+\section{Distribuzioni Linux}
+
+Una \textbf{distribuzione} (o "distro") è un sistema operativo completo basato sul kernel Linux, che include:
+
+\begin{itemize}
+    \item Kernel Linux
+    \item Software GNU e altre utility
+    \item Package manager
+    \item Desktop environment (opzionale)
+    \item Applicazioni preinstallate
+    \item Installer e configurazione
+\end{itemize}
+
+\subsection{Famiglie di Distribuzioni}
+
+\subsubsection{Debian-based}
+
+\textbf{Debian}: una delle distro più antiche e stabili
+
+\begin{lstlisting}[style=bash]
+# Package manager: APT (Advanced Package Tool)
+sudo apt update                    # Aggiorna lista pacchetti
+sudo apt upgrade                   # Aggiorna pacchetti installati
+sudo apt install nome-pacchetto    # Installa pacchetto
+sudo apt remove nome-pacchetto     # Rimuove pacchetto
+sudo apt search termine            # Cerca pacchetti
+
+# File di configurazione repository
+cat /etc/apt/sources.list
+\end{lstlisting}
+
+\textbf{Ubuntu}: basata su Debian, focus su usabilità
+
+\begin{itemize}
+    \item Release regolari ogni 6 mesi (YY.MM: es. 24.04)
+    \item LTS (Long Term Support) ogni 2 anni con 5 anni di supporto
+    \item Varianti: Ubuntu Desktop, Server, Cloud
+    \item Derivate: Kubuntu (KDE), Xubuntu (XFCE), Lubuntu (LXQt)
+\end{itemize}
+
+\textbf{Linux Mint}: basata su Ubuntu, ancora più user-friendly
+
+\subsubsection{Red Hat-based}
+
+\textbf{Red Hat Enterprise Linux (RHEL)}: orientata al mondo enterprise
+
+\begin{lstlisting}[style=bash]
+# Package manager: DNF/YUM (Yellowdog Updater Modified)
+sudo dnf update                    # Aggiorna sistema
+sudo dnf install nome-pacchetto    # Installa pacchetto
+sudo dnf remove nome-pacchetto     # Rimuove pacchetto
+sudo dnf search termine            # Cerca pacchetti
+sudo dnf list installed            # Lista pacchetti installati
+\end{lstlisting}
+
+\textbf{Fedora}: versione community, tecnologie all'avanguardia
+
+\textbf{CentOS}: clone gratuito di RHEL (ora CentOS Stream)
+
+\textbf{Rocky Linux / AlmaLinux}: alternative a CentOS
+
+\subsubsection{Arch-based}
+
+\textbf{Arch Linux}: rolling release, massima personalizzazione
+
+\begin{lstlisting}[style=bash]
+# Package manager: pacman
+sudo pacman -Syu                   # Aggiorna sistema
+sudo pacman -S nome-pacchetto      # Installa pacchetto
+sudo pacman -R nome-pacchetto      # Rimuove pacchetto
+sudo pacman -Ss termine            # Cerca pacchetti
+
+# AUR (Arch User Repository) con helper yay
+yay -S nome-pacchetto-aur          # Installa da AUR
+\end{lstlisting}
+
+\textbf{Manjaro}: basata su Arch ma più accessibile
+
+\subsubsection{Altre Distribuzioni Notevoli}
+
+\begin{itemize}
+    \item \textbf{openSUSE}: distro europea, ottimi tool amministrazione (YaST)
+    \item \textbf{Gentoo}: compilazione source, massima ottimizzazione
+    \item \textbf{Slackware}: una delle più antiche, filosofia KISS
+    \item \textbf{Alpine Linux}: minimale, usata in container Docker
+    \item \textbf{Kali Linux}: penetration testing e sicurezza
+    \item \textbf{Raspberry Pi OS}: per dispositivi Raspberry Pi
+\end{itemize}
+
+\subsection{Come Scegliere una Distribuzione}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Guida alla Scelta]
+\textbf{Per Principianti}:
+\begin{itemize}
+    \item Ubuntu / Linux Mint: massima compatibilità, vasta documentazione
+    \item Fedora: se preferite software più recente
+\end{itemize}
+
+\textbf{Per Server}:
+\begin{itemize}
+    \item Ubuntu Server LTS: supporto lungo, ampia community
+    \item RHEL / Rocky Linux: ambiente enterprise, certificazioni
+    \item Debian: massima stabilità
+\end{itemize}
+
+\textbf{Per Utenti Avanzati}:
+\begin{itemize}
+    \item Arch Linux: controllo totale, sempre aggiornato
+    \item Gentoo: ottimizzazione massima
+\end{itemize}
+
+\textbf{Per Container/Cloud}:
+\begin{itemize}
+    \item Alpine Linux: footprint minimo
+    \item Ubuntu Cloud: supporto cloud integrato
+\end{itemize}
+\end{tcolorbox}
+
+\section{La Shell}
+
+La \textbf{shell} è l'interfaccia a riga di comando che permette di interagire con il sistema operativo.
+
+\subsection{Tipi di Shell}
+
+\begin{itemize}
+    \item \textbf{sh} (Bourne Shell): shell originale Unix
+    \item \textbf{bash} (Bourne Again Shell): shell standard su Linux
+    \item \textbf{zsh} (Z Shell): estensioni avanzate, popolare su macOS
+    \item \textbf{fish} (Friendly Interactive Shell): syntax highlighting, autosuggestions
+    \item \textbf{dash} (Debian Almquist Shell): leggera, usata per script di sistema
+\end{itemize}
+
+\subsection{Bash: La Shell Standard}
+
+Bash è la shell più diffusa su Linux. Caratteristiche principali:
+
+\begin{lstlisting}[style=bash]
+# Verifica shell corrente
+echo $SHELL
+# Output: /bin/bash
+
+# Verifica versione bash
+bash --version
+# Output: GNU bash, version 5.2.15(1)-release
+
+# Lista shell disponibili
+cat /etc/shells
+# Output:
+# /bin/sh
+# /bin/bash
+# /bin/zsh
+# /bin/dash
+\end{lstlisting}
+
+\subsubsection{Anatomia del Prompt}
+
+Il prompt della shell fornisce informazioni utili:
+
+\begin{lstlisting}[style=bash]
+# Prompt tipico
+user@hostname:~/directory$
+
+# Dove:
+# user      = nome utente
+# hostname  = nome del computer
+# ~         = home directory (abbreviazione di /home/user)
+# $         = utente normale (# se root)
+
+# Personalizzare il prompt (variabile PS1)
+echo $PS1
+# Output: \u@\h:\w\$
+
+# Prompt personalizzato con colori
+PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+\end{lstlisting}
+
+\subsection{Funzionalità Avanzate della Shell}
+
+\subsubsection{History dei Comandi}
+
+\begin{lstlisting}[style=bash]
+# Visualizza history comandi
+history
+
+# Esegui comando dalla history
+!numero         # Esegui comando numero N
+!!              # Ripeti ultimo comando
+!stringa        # Esegui ultimo comando che inizia con stringa
+
+# Ricerca nella history
+Ctrl+R          # Ricerca incrementale all'indietro
+Ctrl+S          # Ricerca incrementale in avanti
+
+# Gestione history
+history -c      # Pulisci history sessione corrente
+history -w      # Salva history su file
+
+# Configurazione history
+export HISTSIZE=10000        # Numero comandi in memoria
+export HISTFILESIZE=20000    # Numero comandi nel file
+export HISTCONTROL=ignoredups:ignorespace  # Non salvare duplicati
+\end{lstlisting}
+
+\subsubsection{Tab Completion}
+
+\begin{lstlisting}[style=bash]
+# Autocompletamento con Tab
+cd /ho[Tab]              # Completa a /home/
+ls /etc/sys[Tab]         # Completa a /etc/systemd/
+sudo apt install fir[Tab][Tab]  # Mostra tutte le opzioni che iniziano con fir
+
+# Double-Tab per mostrare tutte le opzioni
+git [Tab][Tab]           # Mostra tutti i sottocomandi git
+\end{lstlisting}
+
+\subsubsection{Job Control}
+
+\begin{lstlisting}[style=bash]
+# Esegui comando in background
+comando &
+
+# Sospendi processo in foreground
+Ctrl+Z
+
+# Riprendi processo in background
+bg
+
+# Porta processo in foreground
+fg
+
+# Lista job correnti
+jobs
+
+# Esempio pratico
+sleep 100 &              # Avvia in background
+# [1] 12345
+
+jobs                     # Visualizza job
+# [1]+  Running    sleep 100 &
+
+fg 1                     # Porta in foreground
+Ctrl+Z                   # Sospendi
+bg 1                     # Riprendi in background
+\end{lstlisting}
+
+\subsection{Variabili d'Ambiente}
+
+\begin{lstlisting}[style=bash]
+# Visualizza tutte le variabili d'ambiente
+env
+printenv
+
+# Visualizza variabile specifica
+echo $HOME              # Home directory utente
+echo $USER              # Nome utente
+echo $PATH              # Percorsi per eseguibili
+echo $PWD               # Directory corrente
+echo $SHELL             # Shell corrente
+
+# Definire variabili d'ambiente
+export VARIABILE=valore
+
+# Variabile solo per sessione corrente
+TEMP_VAR="valore temporaneo"
+
+# Variabile permanente (aggiungi a ~/.bashrc)
+echo 'export MY_VAR="valore"' >> ~/.bashrc
+source ~/.bashrc        # Ricarica configurazione
+
+# PATH: dove bash cerca gli eseguibili
+echo $PATH
+# /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Aggiungere directory al PATH
+export PATH=$PATH:/nuova/directory
+\end{lstlisting}
+
+\subsection{File di Configurazione}
+
+Bash legge diversi file all'avvio:
+
+\begin{lstlisting}[style=bash]
+# File di configurazione globali (per tutti gli utenti)
+/etc/profile            # Eseguito al login
+/etc/bash.bashrc        # Eseguito per shell interattive
+
+# File di configurazione utente
+~/.bash_profile         # Login shell (alternativa: ~/.profile)
+~/.bashrc               # Shell interattiva non-login
+~/.bash_logout          # Eseguito al logout
+~/.bash_history         # History comandi
+
+# Esempio ~/.bashrc
+cat ~/.bashrc
+\end{lstlisting}
+
+Contenuto tipico di \texttt{\textasciitilde/.bashrc}:
+
+\begin{lstlisting}[style=bash]
+# ~/.bashrc
+
+# Alias utili
+alias ll='ls -lh'
+alias la='ls -lAh'
+alias l='ls -CF'
+alias grep='grep --color=auto'
+alias ..='cd ..'
+alias ...='cd ../..'
+
+# Prompt personalizzato
+PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+
+# History
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTCONTROL=ignoreboth
+
+# Editor predefinito
+export EDITOR=vim
+export VISUAL=vim
+
+# PATH personalizzato
+export PATH=$PATH:$HOME/bin:$HOME/.local/bin
+
+# Funzioni personalizzate
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Source completamento personalizzato
+if [ -f ~/.bash_completion ]; then
+    . ~/.bash_completion
+fi
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 1.1: Esplorazione Sistema}
+
+Eseguite i seguenti comandi e annotate i risultati:
+
+\begin{lstlisting}[style=bash]
+# 1. Identificate la vostra distribuzione
+cat /etc/os-release
+
+# 2. Verificate la versione del kernel
+uname -r
+uname -a
+
+# 3. Verificate la shell corrente
+echo $SHELL
+bash --version
+
+# 4. Controllate variabili d'ambiente importanti
+echo "Home: $HOME"
+echo "User: $USER"
+echo "Path: $PATH"
+
+# 5. Visualizzate informazioni hardware
+lscpu                   # Informazioni CPU
+free -h                 # Memoria RAM
+df -h                   # Spazio disco
+\end{lstlisting}
+
+\subsection{Esercizio 1.2: Personalizzazione Bash}
+
+Create un file \texttt{\textasciitilde/.bash\_aliases} con alias utili:
+
+\begin{lstlisting}[style=bash]
+# 1. Create il file
+touch ~/.bash_aliases
+
+# 2. Aggiungete alcuni alias
+cat >> ~/.bash_aliases << 'EOF'
+# Navigazione
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Listing migliorato
+alias ll='ls -lh'
+alias la='ls -lAh'
+alias lt='ls -lht'      # Ordinato per tempo
+
+# Sicurezza
+alias rm='rm -i'        # Chiedi conferma
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Utilità
+alias h='history'
+alias c='clear'
+alias ports='netstat -tulanp'
+EOF
+
+# 3. Source il file in ~/.bashrc
+echo '[ -f ~/.bash_aliases ] && source ~/.bash_aliases' >> ~/.bashrc
+
+# 4. Ricaricate la configurazione
+source ~/.bashrc
+
+# 5. Testate gli alias
+ll
+..
+\end{lstlisting}
+
+\subsection{Esercizio 1.3: History e Ricerca}
+
+Praticate con la history dei comandi:
+
+\begin{lstlisting}[style=bash]
+# 1. Eseguite alcuni comandi
+pwd
+ls -l
+date
+whoami
+uname -a
+
+# 2. Visualizzate la history
+history
+
+# 3. Ripetete l'ultimo comando
+!!
+
+# 4. Eseguite un comando specifico dalla history
+!numero
+
+# 5. Ricerca interattiva (Ctrl+R, poi digitate parte del comando)
+# Provate a cercare "ls" premendo Ctrl+R e digitando "ls"
+
+# 6. Eseguite ultimo comando che inizia con "d"
+!d
+\end{lstlisting}
+
+\subsection{Esercizio 1.4: Variabili d'Ambiente}
+
+Lavorate con variabili d'ambiente:
+
+\begin{lstlisting}[style=bash]
+# 1. Create variabile temporanea
+MY_VAR="Hello Linux"
+echo $MY_VAR
+
+# 2. Create variabile d'ambiente
+export MY_ENV_VAR="Environment Variable"
+echo $MY_ENV_VAR
+
+# 3. Visualizzate tutte le variabili
+env | grep MY
+
+# 4. Modificate il PATH temporaneamente
+export PATH=$PATH:$HOME/scripts
+echo $PATH
+
+# 5. Create funzione personalizzata
+sayHello() {
+    echo "Hello, $USER! Today is $(date +%A)"
+}
+sayHello
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Gestione Shell]
+\begin{enumerate}
+    \item \textbf{Mantenete pulito ~/.bashrc}
+    \begin{itemize}
+        \item Separate alias, funzioni e configurazioni in file diversi
+        \item Commentate ogni personalizzazione non ovvia
+        \item Fate backup prima di modifiche importanti
+    \end{itemize}
+
+    \item \textbf{Usate alias con cautela}
+    \begin{itemize}
+        \item Non fate override di comandi standard (es: non alias ls='rm -rf')
+        \item Preferite alias espliciti (ll invece di ridefinire ls)
+        \item Documentate alias complessi
+    \end{itemize}
+
+    \item \textbf{Gestite la history intelligentemente}
+    \begin{itemize}
+        \item Aumentate HISTSIZE per conservare più comandi
+        \item Usate ignoredups per evitare duplicati
+        \item Non salvate comandi con password: iniziate con spazio
+    \end{itemize}
+
+    \item \textbf{Proteggete i file di configurazione}
+    \begin{itemize}
+        \item Usate git per versionare dotfiles
+        \item Non includete informazioni sensibili
+        \item Controllate permessi: chmod 600 ~/.bashrc
+    \end{itemize}
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Attenzione!]
+\textbf{Non modificate mai /etc/profile o /etc/bash.bashrc} a meno che non siate sicuri di cosa state facendo. Questi file affettano tutti gli utenti del sistema. Usate invece i file nella vostra home directory.
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item La storia di Unix e Linux: dalle origini ai giorni nostri
+    \item L'architettura a livelli del sistema Linux
+    \item Il ruolo del kernel e le sue responsabilità
+    \item Le principali famiglie di distribuzioni e come scegliere
+    \item La shell Bash: prompt, history, job control
+    \item Variabili d'ambiente e PATH
+    \item File di configurazione e personalizzazione
+\end{itemize}
+
+Avete ora una solida comprensione teorica del sistema Linux. Nel prossimo capitolo inizieremo a sporcarci le mani con i comandi fondamentali per navigare e manipolare il filesystem.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
+Nel Capitolo 2 impareremo i comandi base di Linux: come navigare nel filesystem, creare e manipolare file e directory, cercare file e ottenere aiuto dalla documentazione.
+\end{tcolorbox}

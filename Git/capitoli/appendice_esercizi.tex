@@ -1,0 +1,995 @@
+\chapter{Appendice: Esercizi e Soluzioni}
+
+\section*{Introduzione}
+Questa appendice contiene esercizi pratici completi per consolidare le competenze Git. Ogni esercizio include obiettivi, istruzioni dettagliate e soluzione completa. Gli esercizi sono organizzati per difficoltà crescente.
+
+\section{Livello Base}
+
+\subsection{Esercizio 1.1: Primo Repository}
+
+\textbf{Obiettivo}: Creare repository, fare commit, visualizzare cronologia.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea directory \texttt{my-first-repo}
+    \item Inizializza repository Git
+    \item Crea file \texttt{README.md} con contenuto "# My Project"
+    \item Aggiungi e committa il file
+    \item Crea file \texttt{app.js} con \texttt{console.log("Hello")}
+    \item Committa \texttt{app.js}
+    \item Visualizza cronologia commit
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1-2. Crea directory e inizializza
+mkdir my-first-repo
+cd my-first-repo
+git init
+
+# 3-4. Crea e committa README
+echo "# My Project" > README.md
+git add README.md
+git commit -m "Add README"
+
+# 5-6. Crea e committa app.js
+echo 'console.log("Hello");' > app.js
+git add app.js
+git commit -m "Add app.js with hello message"
+
+# 7. Visualizza cronologia
+git log
+git log --oneline
+\end{lstlisting}
+
+\subsection{Esercizio 1.2: Modifiche e Staging}
+
+\textbf{Obiettivo}: Gestire modifiche, staging, e undo.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Modifica \texttt{app.js} aggiungendo altra console.log
+    \item Aggiungi a staging
+    \item Visualizza status
+    \item Rimuovi da staging
+    \item Verifica che modifiche siano ancora presenti
+    \item Scarta le modifiche
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1. Modifica file
+echo 'console.log("World");' >> app.js
+
+# 2. Aggiungi a staging
+git add app.js
+
+# 3. Verifica status
+git status
+# Changes to be committed:
+#   modified: app.js
+
+# 4. Rimuovi da staging
+git restore --staged app.js
+# oppure: git reset HEAD app.js
+
+# 5. Verifica modifiche ancora presenti
+git status
+# Changes not staged for commit:
+#   modified: app.js
+
+cat app.js  # le modifiche ci sono ancora
+
+# 6. Scarta modifiche
+git restore app.js
+# oppure: git checkout -- app.js
+
+# Verifica
+cat app.js  # torna a versione committata
+\end{lstlisting}
+
+\subsection{Esercizio 1.3: Branch Base}
+
+\textbf{Obiettivo}: Creare branch, switchare, fare merge.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea branch \texttt{feature-greeting}
+    \item Cambia a quel branch
+    \item Modifica \texttt{app.js} cambiando "Hello" in "Hi"
+    \item Committa modifiche
+    \item Torna a \texttt{main}
+    \item Merge \texttt{feature-greeting}
+    \item Cancella branch feature
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1-2. Crea e cambia branch
+git checkout -b feature-greeting
+# oppure: git switch -c feature-greeting
+
+# 3. Modifica file
+echo 'console.log("Hi");' > app.js
+
+# 4. Committa
+git add app.js
+git commit -m "Change greeting to Hi"
+
+# 5. Torna a main
+git checkout main
+
+# Verifica: app.js ancora con "Hello"
+cat app.js
+
+# 6. Merge
+git merge feature-greeting
+
+# Verifica merge
+cat app.js  # ora ha "Hi"
+git log --oneline --graph --all
+
+# 7. Cancella branch
+git branch -d feature-greeting
+\end{lstlisting}
+
+\section{Livello Intermedio}
+
+\subsection{Esercizio 2.1: Merge Conflicts}
+
+\textbf{Obiettivo}: Creare e risolvere merge conflict.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Su \texttt{main}, modifica \texttt{app.js}: "console.log('Main branch')"
+    \item Committa
+    \item Crea branch \texttt{feature-A}
+    \item Su \texttt{feature-A}, modifica stessa riga: "console.log('Feature A')"
+    \item Committa
+    \item Torna a \texttt{main}
+    \item Tenta merge di \texttt{feature-A}
+    \item Risolvi conflitto mantenendo entrambi i messaggi
+    \item Completa merge
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1-2. Modifica su main
+echo "console.log('Main branch');" > app.js
+git add app.js
+git commit -m "Update message on main"
+
+# 3-5. Branch e modifica
+git checkout -b feature-A
+echo "console.log('Feature A');" > app.js
+git add app.js
+git commit -m "Update message on feature-A"
+
+# 6. Torna a main
+git checkout main
+
+# 7. Tenta merge (CONFLICT!)
+git merge feature-A
+# Auto-merging app.js
+# CONFLICT (content): Merge conflict in app.js
+
+# 8. Visualizza conflitto
+cat app.js
+# <<<<<<< HEAD
+# console.log('Main branch');
+# =======
+# console.log('Feature A');
+# >>>>>>> feature-A
+
+# Risolvi manualmente
+cat > app.js << 'EOF'
+console.log('Main branch');
+console.log('Feature A');
+EOF
+
+# 9. Completa merge
+git add app.js
+git commit -m "Merge feature-A, keep both messages"
+
+# Verifica
+git log --oneline --graph --all
+\end{lstlisting}
+
+\subsection{Esercizio 2.2: Remote Repository}
+
+\textbf{Obiettivo}: Simulare collaborazione con remote.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea repository "bare" come remote simulato
+    \item Configura come remote \texttt{origin}
+    \item Push branch \texttt{main}
+    \item Crea branch \texttt{feature-B}, committa modifiche
+    \item Push \texttt{feature-B}
+    \item Simula clone in altra directory
+    \item Nel clone, modifica e push
+    \item Nel repo originale, pull modifiche
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1. Crea bare repository (simula GitHub)
+cd /tmp
+git init --bare remote-repo.git
+
+# 2. Configura remote nel tuo repo
+cd /path/to/my-first-repo
+git remote add origin /tmp/remote-repo.git
+
+# 3. Push main
+git push -u origin main
+
+# 4-5. Crea feature branch e push
+git checkout -b feature-B
+echo "console.log('Feature B');" >> app.js
+git add app.js
+git commit -m "Add feature B"
+git push -u origin feature-B
+
+# 6. Simula clone (altro developer)
+cd /tmp
+git clone /tmp/remote-repo.git developer2-repo
+cd developer2-repo
+
+# 7. Modifica e push
+echo "# Updated by dev2" >> README.md
+git add README.md
+git commit -m "Update README"
+git push origin main
+
+# 8. Nel repo originale, pull
+cd /path/to/my-first-repo
+git checkout main
+git pull origin main
+
+# Verifica modifiche
+cat README.md
+\end{lstlisting}
+
+\subsection{Esercizio 2.3: Rebase vs Merge}
+
+\textbf{Obiettivo}: Confrontare merge e rebase.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Setup: main con 2 commit, branch \texttt{feature-merge} con 2 commit
+    \item Merge \texttt{feature-merge} in \texttt{main}
+    \item Osserva cronologia (merge commit presente)
+    \item Reset \texttt{main} a prima del merge
+    \item Questa volta: checkout \texttt{feature-merge} e rebase su \texttt{main}
+    \item Merge (fast-forward)
+    \item Osserva cronologia (lineare, no merge commit)
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Setup
+git checkout main
+echo "Line 1" > file.txt
+git add file.txt
+git commit -m "Commit 1 on main"
+
+echo "Line 2" >> file.txt
+git add file.txt
+git commit -m "Commit 2 on main"
+
+# Branch feature
+git checkout -b feature-merge
+echo "Feature line 1" > feature.txt
+git add feature.txt
+git commit -m "Feature commit 1"
+
+echo "Feature line 2" >> feature.txt
+git add feature.txt
+git commit -m "Feature commit 2"
+
+# Merge (crea merge commit)
+git checkout main
+git merge feature-merge
+
+# Cronologia
+git log --oneline --graph --all
+# * abc123 (HEAD -> main) Merge branch 'feature-merge'
+# |\
+# | * def456 Feature commit 2
+# | * ghi789 Feature commit 1
+# * | jkl012 Commit 2 on main
+# * | mno345 Commit 1 on main
+
+# Reset per riprovare con rebase
+git reset --hard HEAD~1  # torna prima del merge
+
+# Rebase invece
+git checkout feature-merge
+git rebase main
+
+# Ora merge (sarà fast-forward)
+git checkout main
+git merge feature-merge
+
+# Cronologia lineare
+git log --oneline --graph --all
+# * def456 (HEAD -> main, feature-merge) Feature commit 2
+# * ghi789 Feature commit 1
+# * jkl012 Commit 2 on main
+# * mno345 Commit 1 on main
+\end{lstlisting}
+
+\section{Livello Avanzato}
+
+\subsection{Esercizio 3.1: Interactive Rebase}
+
+\textbf{Obiettivo}: Riorganizzare commit con rebase interattivo.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea 5 commit con messaggi "WIP 1", "WIP 2", "Feature done", "WIP 3", "Fix typo"
+    \item Usa \texttt{git rebase -i} per:
+    \begin{itemize}
+        \item Squash "WIP 1", "WIP 2", "WIP 3" in "Feature done"
+        \item Fixup "Fix typo" nel commit precedente
+        \item Modifica messaggio finale
+    \end{itemize}
+    \item Risultato: 1 commit pulito
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Setup: 5 commit
+echo "v1" > code.js
+git add code.js
+git commit -m "WIP 1"
+
+echo "v2" >> code.js
+git commit -am "WIP 2"
+
+echo "v3" >> code.js
+git commit -am "Feature done"
+
+echo "v4" >> code.js
+git commit -am "WIP 3"
+
+echo "v4 fixed" > code.js
+git commit -am "Fix typo"
+
+# Verifica
+git log --oneline
+# abc123 Fix typo
+# def456 WIP 3
+# ghi789 Feature done
+# jkl012 WIP 2
+# mno345 WIP 1
+
+# Rebase interattivo ultimi 5 commit
+git rebase -i HEAD~5
+
+# Editor si apre con:
+# pick mno345 WIP 1
+# pick jkl012 WIP 2
+# pick ghi789 Feature done
+# pick def456 WIP 3
+# pick abc123 Fix typo
+
+# Modifica a:
+# pick mno345 WIP 1
+# squash jkl012 WIP 2
+# squash ghi789 Feature done
+# squash def456 WIP 3
+# fixup abc123 Fix typo
+
+# Salva e chiudi. Si apre editor per messaggio:
+# Usa: "Implement feature X with all improvements"
+
+# Risultato finale
+git log --oneline
+# xyz999 Implement feature X with all improvements
+\end{lstlisting}
+
+\subsection{Esercizio 3.2: Stash Workflow}
+
+\textbf{Obiettivo}: Usare stash in scenario reale.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Stai lavorando su \texttt{feature-X} con modifiche non committate
+    \item Ti chiedono urgentemente di fixare bug su \texttt{main}
+    \item Usa stash per salvare lavoro temporaneo
+    \item Cambia a \texttt{main}, fixa bug, committa
+    \item Torna a \texttt{feature-X}
+    \item Recupera modifiche da stash
+    \item Completa feature e committa
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1. Setup: lavoro su feature
+git checkout -b feature-X
+echo "Feature work in progress" > feature.js
+echo "More feature work" >> feature.js
+
+# Modifiche non committate
+git status
+# modified: feature.js (not staged)
+
+# 2-3. Emergenza! Salva con stash
+git stash save "WIP: feature X implementation"
+
+# Verifica working directory pulito
+git status
+# nothing to commit, working tree clean
+
+# 4. Cambia a main e fixa bug
+git checkout main
+echo "critical fix" > bugfix.js
+git add bugfix.js
+git commit -m "fix: critical security bug"
+
+# 5. Torna a feature branch
+git checkout feature-X
+
+# 6. Recupera lavoro
+git stash list
+# stash@{0}: On feature-X: WIP: feature X implementation
+
+git stash pop
+
+# Verifica modifiche tornate
+cat feature.js
+
+# 7. Completa e committa
+echo "Feature complete" >> feature.js
+git add feature.js
+git commit -m "feat: complete feature X"
+\end{lstlisting}
+
+\subsection{Esercizio 3.3: Cherry-Pick Scenario}
+
+\textbf{Obiettivo}: Applicare commit specifico tra branch.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Branch \texttt{develop} ha 5 commit
+    \item Solo commit 3 contiene fix critico
+    \item Applica solo quel fix su \texttt{main}
+    \item Verifica che altri commit non siano su \texttt{main}
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Setup develop con 5 commit
+git checkout -b develop
+echo "Feature 1" > f1.js
+git add f1.js
+git commit -m "feat: feature 1"
+
+echo "Feature 2" > f2.js
+git add f2.js
+git commit -m "feat: feature 2"
+
+echo "Critical fix" > fix.js
+git add fix.js
+CRITICAL_COMMIT=$(git rev-parse HEAD)
+git commit -m "fix: critical security issue"
+
+echo "Feature 3" > f3.js
+git add f3.js
+git commit -m "feat: feature 3"
+
+echo "Feature 4" > f4.js
+git add f4.js
+git commit -m "feat: feature 4"
+
+# Visualizza commit
+git log --oneline
+# Identifica hash del commit "critical security issue"
+
+# Cherry-pick su main
+git checkout main
+git cherry-pick $CRITICAL_COMMIT
+
+# Verifica
+ls
+# Deve esserci solo fix.js, non f1-f4.js
+
+git log --oneline
+# Deve mostrare solo il commit del fix
+\end{lstlisting}
+
+\subsection{Esercizio 3.4: Reflog Recovery}
+
+\textbf{Obiettivo}: Recuperare commit dopo reset disastroso.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea 5 commit importanti
+    \item Per errore fai \texttt{git reset --hard HEAD\textasciitilde5}
+    \item Panic! Hai perso tutto
+    \item Usa reflog per recuperare
+    \item Verifica che commit siano tornati
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# 1. Crea commit importanti
+for i in {1..5}; do
+    echo "Important work $i" > file$i.txt
+    git add file$i.txt
+    git commit -m "Important commit $i"
+done
+
+# Verifica
+git log --oneline
+# abc123 Important commit 5
+# def456 Important commit 4
+# ...
+
+# 2. DISASTER: Reset hard
+git reset --hard HEAD~5
+
+# 3. Verifica: tutto perso!
+git log --oneline
+# (nessuno dei commit importanti)
+ls
+# file1-5.txt non esistono
+
+# 4. RECOVERY: usa reflog
+git reflog
+
+# Output:
+# xyz789 HEAD@{0}: reset: moving to HEAD~5
+# abc123 HEAD@{1}: commit: Important commit 5
+# def456 HEAD@{2}: commit: Important commit 4
+# ...
+
+# Recupera tornando a HEAD@{1}
+git reset --hard HEAD@{1}
+# oppure usando hash direttamente
+# git reset --hard abc123
+
+# 5. Verifica: tutto tornato!
+git log --oneline
+ls  # tutti i file tornati
+\end{lstlisting}
+
+\subsection{Esercizio 3.5: Bisect per Bug Hunting}
+
+\textbf{Obiettivo}: Trovare commit che ha introdotto bug.
+
+\textbf{Task}:
+\begin{enumerate}
+    \item Crea 20 commit
+    \item Commit 13 introduce bug (divide by zero)
+    \item Usa bisect per trovarlo
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Setup: crea 20 commit
+for i in {1..20}; do
+    if [ $i -eq 13 ]; then
+        # Introduce bug al commit 13
+        echo "result = 100 / 0;" > calc.js
+    else
+        # Codice corretto
+        echo "result = 100 / $i;" > calc.js
+    fi
+    git add calc.js
+    git commit -m "Update calculation (commit $i)"
+done
+
+# Ora sei a commit 20, test fallisce
+# Sai che commit 1 era ok
+
+# Inizia bisect
+git bisect start
+
+# Marca corrente (20) come bad
+git bisect bad
+
+# Marca commit 1 come good
+git bisect good HEAD~19
+
+# Git checkoutterà commit 10 (metà tra 1 e 20)
+# Testa
+cat calc.js
+
+# Se ok (commit 1-12):
+git bisect good
+
+# Se bug (commit 13-20):
+git bisect bad
+
+# Continua finché Git trova il colpevole
+# Output finale:
+# abc123 is the first bad commit
+# commit abc123
+# Author: ...
+# Date: ...
+# Update calculation (commit 13)
+
+# Termina bisect
+git bisect reset
+
+# Verifica commit colpevole
+git show abc123
+\end{lstlisting}
+
+\section{Progetti Completi}
+
+\subsection{Progetto 1: Blog Engine con Git Flow}
+
+\textbf{Obiettivo}: Implementare completo Git Flow workflow.
+
+\textbf{Scenario}: Stai sviluppando blog engine. Release v1.0.0 in produzione. Devi:
+\begin{itemize}
+    \item Sviluppare feature "comments"
+    \item Preparare release v1.1.0
+    \item Fixare bug urgente in produzione (v1.0.1)
+\end{itemize}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Setup iniziale
+mkdir blog-engine
+cd blog-engine
+git init
+
+# Crea main e develop
+echo "# Blog Engine v1.0.0" > README.md
+git add README.md
+git commit -m "Initial commit"
+git tag -a v1.0.0 -m "Release 1.0.0"
+
+git checkout -b develop
+
+# Feature: Comments
+git checkout -b feature/comments develop
+
+cat > comments.js << 'EOF'
+class Comments {
+    constructor() {
+        this.comments = [];
+    }
+
+    add(comment) {
+        this.comments.push(comment);
+    }
+
+    getAll() {
+        return this.comments;
+    }
+}
+
+module.exports = Comments;
+EOF
+
+git add comments.js
+git commit -m "feat: add comments system"
+
+# Merge feature in develop
+git checkout develop
+git merge --no-ff feature/comments -m "Merge feature/comments into develop"
+git branch -d feature/comments
+
+# Release branch
+git checkout -b release/1.1.0 develop
+
+# Update version
+echo "# Blog Engine v1.1.0" > README.md
+git commit -am "chore: bump version to 1.1.0"
+
+# Merge release in main
+git checkout main
+git merge --no-ff release/1.1.0 -m "Release 1.1.0"
+git tag -a v1.1.0 -m "Release 1.1.0 - Add comments"
+
+# Merge release back to develop
+git checkout develop
+git merge --no-ff release/1.1.0
+git branch -d release/1.1.0
+
+# HOTFIX urgente su v1.0.0
+git checkout -b hotfix/1.0.1 v1.0.0
+
+cat > security-fix.js << 'EOF'
+// Critical security patch
+function sanitizeInput(input) {
+    return input.replace(/[<>]/g, '');
+}
+module.exports = sanitizeInput;
+EOF
+
+git add security-fix.js
+git commit -m "fix: critical XSS vulnerability"
+
+# Merge hotfix in main
+git checkout main
+git merge --no-ff hotfix/1.0.1 -m "Hotfix 1.0.1"
+git tag -a v1.0.1 -m "Hotfix 1.0.1 - Security patch"
+
+# Merge hotfix in develop
+git checkout develop
+git merge --no-ff hotfix/1.0.1
+git branch -d hotfix/1.0.1
+
+# Visualizza cronologia completa
+git log --oneline --graph --all --decorate
+\end{lstlisting}
+
+\subsection{Progetto 2: Open Source Contribution}
+
+\textbf{Obiettivo}: Simulare contributo a progetto open source.
+
+\textbf{Scenario}:
+\begin{enumerate}
+    \item Fork di repository esistente
+    \item Crea feature branch
+    \item Implementa feature
+    \item Apri Pull Request
+    \item Code review: richieste modifiche
+    \item Aggiorna PR
+    \item Merge
+\end{enumerate}
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Simula "upstream" repository (progetto originale)
+mkdir /tmp/upstream-project
+cd /tmp/upstream-project
+git init --bare
+
+# Crea contenuto iniziale
+cd /tmp
+git clone /tmp/upstream-project original
+cd original
+echo "# Awesome Project" > README.md
+git add README.md
+git commit -m "Initial commit"
+git push origin main
+
+# Fork (simula)
+cd /tmp
+git clone /tmp/upstream-project my-fork
+cd my-fork
+
+# Configura remote
+git remote rename origin upstream
+git remote add origin /tmp/my-fork-remote.git
+git init --bare /tmp/my-fork-remote.git
+git push -u origin main
+
+# Feature branch
+git checkout -b feature/add-documentation
+
+# Implementa feature
+cat > CONTRIBUTING.md << 'EOF'
+# Contributing Guide
+
+## How to Contribute
+1. Fork repository
+2. Create feature branch
+3. Make changes
+4. Submit Pull Request
+
+## Code Style
+- Use 2 spaces for indentation
+- Add tests for new features
+EOF
+
+git add CONTRIBUTING.md
+git commit -m "docs: add contributing guide"
+
+# Push branch
+git push -u origin feature/add-documentation
+
+# Simula Pull Request aperta
+# Maintainer chiede modifiche
+
+# Code review: aggiungi section testing
+cat >> CONTRIBUTING.md << 'EOF'
+
+## Testing
+Run tests with: npm test
+EOF
+
+git commit -am "docs: add testing section"
+git push origin feature/add-documentation
+
+# Maintainer approva e merge
+git checkout main
+git pull upstream main
+git merge --no-ff feature/add-documentation -m "Merge PR #1: Add contributing guide"
+git push upstream main
+
+# Cleanup
+git branch -d feature/add-documentation
+git push origin --delete feature/add-documentation
+
+# Update fork
+git push origin main
+\end{lstlisting}
+
+\subsection{Progetto 3: CI/CD Pipeline Completa}
+
+\textbf{Obiettivo}: Setup completo CI/CD con GitHub Actions.
+
+\textbf{Soluzione}:
+\begin{lstlisting}
+# Crea progetto Node.js
+mkdir my-app
+cd my-app
+git init
+
+# Package.json
+cat > package.json << 'EOF'
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo 'Running tests...' && exit 0",
+    "lint": "echo 'Linting code...' && exit 0",
+    "build": "echo 'Building app...' && mkdir -p dist && echo 'built' > dist/app.js"
+  }
+}
+EOF
+
+# App code
+cat > index.js << 'EOF'
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+module.exports = { greet };
+EOF
+
+# Tests
+cat > test.js << 'EOF'
+const { greet } = require('./index');
+
+if (greet('Test') === 'Hello, Test!') {
+    console.log('✓ Test passed');
+    process.exit(0);
+} else {
+    console.log('✗ Test failed');
+    process.exit(1);
+}
+EOF
+
+# GitHub Actions workflow
+mkdir -p .github/workflows
+cat > .github/workflows/ci-cd.yml << 'EOF'
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - run: npm run build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: dist/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build
+      - name: Deploy
+        run: echo "Deploying to production..."
+EOF
+
+# Commit tutto
+git add .
+git commit -m "feat: initial project setup with CI/CD"
+
+# Crea feature branch per testare PR workflow
+git checkout -b feature/improve-greeting
+
+# Modifica
+cat > index.js << 'EOF'
+function greet(name) {
+    return `Hello, ${name}! Welcome!`;
+}
+
+console.log(greet('World'));
+module.exports = { greet };
+EOF
+
+# Update test
+cat > test.js << 'EOF'
+const { greet } = require('./index');
+
+if (greet('Test') === 'Hello, Test! Welcome!') {
+    console.log('✓ Test passed');
+    process.exit(0);
+} else {
+    console.log('✗ Test failed');
+    process.exit(1);
+}
+EOF
+
+git commit -am "feat: improve greeting message"
+
+# Simula PR e merge
+git checkout main
+git merge --no-ff feature/improve-greeting -m "Merge PR: Improve greeting"
+git branch -d feature/improve-greeting
+
+# Visualizza pipeline (in GitHub, workflow runs automaticamente)
+echo "✓ CI/CD pipeline configurata"
+echo "✓ Workflow triggherà su push e PR"
+echo "✓ Deploy automatico su main"
+\end{lstlisting}
+
+\section{Challenge Avanzati}
+
+\subsection{Challenge 1: Repository Corrupted Recovery}
+
+\textbf{Scenario}: Repository corrotto, alcuni oggetti mancanti.
+
+\textbf{Task}: Recupera quanto possibile usando fsck e reflog.
+
+\subsection{Challenge 2: Monorepo Management}
+
+\textbf{Task}: Gestisci monorepo con 3 progetti, ognuno con versioning indipendente.
+
+\subsection{Challenge 3: Complex Rebase}
+
+\textbf{Task}: Branch con 50 commit, rebase interattivo per riorganizzare in 10 commit logici.
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Congratulazioni!]
+Completando questi esercizi hai acquisito competenze Git solide. La pratica costante è fondamentale: usa Git quotidianamente nei tuoi progetti per consolidare le conoscenze.
+
+\textbf{Next steps}:
+\begin{itemize}
+    \item Contribuisci a progetti open source
+    \item Setup CI/CD per progetti personali
+    \item Esplora Git hooks per automazioni
+    \item Studia Git internals (objects, pack files)
+\end{itemize}
+\end{tcolorbox}

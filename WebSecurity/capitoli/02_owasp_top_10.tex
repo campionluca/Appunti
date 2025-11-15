@@ -1,0 +1,1032 @@
+\chapter{OWASP Top 10 - 2021}
+
+\section{Introduzione all'OWASP Top 10}
+
+L'OWASP (Open Web Application Security Project) Top 10 è una lista delle 10 vulnerabilità più critiche per le applicazioni web, aggiornata periodicamente in base a dati raccolti da esperti di sicurezza e organizzazioni in tutto il mondo.
+
+\subsection{Evoluzione dall'edizione 2017 al 2021}
+
+L'edizione 2021 presenta cambiamenti significativi rispetto alla versione precedente:
+
+\begin{itemize}
+    \item \textbf{Tre nuove categorie:} Insecure Design, Software and Data Integrity Failures, SSRF
+    \item \textbf{Riorganizzazione:} Alcune categorie sono state fuse o rinominate
+    \item \textbf{Focus su design:} Maggiore enfasi sulla security by design
+\end{itemize}
+
+\subsection{Metodologia}
+
+I dati provengono da:
+\begin{itemize}
+    \item Analisi di oltre 500.000 applicazioni
+    \item Contributi della community security
+    \item Incident reports e vulnerability databases
+\end{itemize}
+
+\section{A01:2021 - Broken Access Control}
+
+\subsection{Descrizione}
+
+Il Broken Access Control si verifica quando le restrizioni sulle azioni degli utenti autenticati non sono correttamente implementate. Questa vulnerabilità è salita dalla quinta posizione del 2017 alla prima nel 2021.
+
+\subsection{Statistiche}
+
+\begin{itemize}
+    \item \textbf{94\%} delle applicazioni testate presentano qualche forma di broken access control
+    \item \textbf{Incidenza media:} 3.81\%
+    \item \textbf{CWE mappate:} 34 diverse Common Weakness Enumeration
+\end{itemize}
+
+\subsection{Tipologie di Broken Access Control}
+
+\subsubsection{1. Vertical Privilege Escalation}
+
+Un utente normale accede a funzioni amministrative.
+
+\begin{lstlisting}[language=PHP, caption=Codice VULNERABILE - Vertical Escalation]
+<?php
+// VULNERABILE: Nessun controllo dei permessi
+if (isset($_GET['admin_panel'])) {
+    include('admin_dashboard.php');
+}
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=Codice SICURO - Controllo ruoli]
+<?php
+session_start();
+
+function is_admin() {
+    return isset($_SESSION['user_role']) &&
+           $_SESSION['user_role'] === 'admin';
+}
+
+if (isset($_GET['admin_panel'])) {
+    if (!is_admin()) {
+        http_response_code(403);
+        die("Accesso negato: privilegi insufficienti");
+    }
+    include('admin_dashboard.php');
+}
+?>
+\end{lstlisting}
+
+\subsubsection{2. Horizontal Privilege Escalation}
+
+Un utente accede ai dati di un altro utente dello stesso livello.
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - Horizontal Escalation (Python)]
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.route('/api/user/<user_id>/profile')
+def get_profile(user_id):
+    # VULNERABILE: Non verifica se l'utente può accedere a questo profilo
+    profile = db.query(f"SELECT * FROM users WHERE id = {user_id}")
+    return jsonify(profile)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Verifica ownership (Python)]
+from flask import Flask, request, jsonify, session
+
+app = Flask(__name__)
+
+@app.route('/api/user/<user_id>/profile')
+def get_profile(user_id):
+    # SICURO: Verifica che l'utente acceda solo ai propri dati
+    current_user_id = session.get('user_id')
+
+    if not current_user_id:
+        return jsonify({"error": "Non autenticato"}), 401
+
+    if int(user_id) != current_user_id:
+        return jsonify({"error": "Accesso negato"}), 403
+
+    profile = db.query_safe("SELECT * FROM users WHERE id = ?", [user_id])
+    return jsonify(profile)
+\end{lstlisting}
+
+\subsubsection{3. IDOR (Insecure Direct Object Reference)}
+
+Accesso a oggetti tramite riferimenti diretti senza validazione.
+
+\begin{lstlisting}[language=Java, caption=VULNERABILE - IDOR (Java)]
+// VULNERABILE
+@GetMapping("/invoice/{invoiceId}")
+public Invoice getInvoice(@PathVariable Long invoiceId) {
+    // Non verifica se l'utente può accedere a questa fattura
+    return invoiceRepository.findById(invoiceId).orElse(null);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - IDOR mitigato (Java)]
+@GetMapping("/invoice/{invoiceId}")
+public ResponseEntity<Invoice> getInvoice(
+    @PathVariable Long invoiceId,
+    Authentication authentication
+) {
+    String currentUsername = authentication.getName();
+    Invoice invoice = invoiceRepository.findById(invoiceId).orElse(null);
+
+    if (invoice == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    // Verifica ownership
+    if (!invoice.getOwner().equals(currentUsername)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    return ResponseEntity.ok(invoice);
+}
+\end{lstlisting}
+
+\subsection{Prevenzione Broken Access Control}
+
+\begin{enumerate}
+    \item \textbf{Deny by default:} Negare tutto, poi permettere esplicitamente
+    \item \textbf{Access control centralizato:} Non duplicare logica
+    \item \textbf{Logging:} Registrare tentativi di accesso falliti
+    \item \textbf{Rate limiting:} Limitare richieste per prevenire enumerazione
+\end{enumerate}
+
+\section{A02:2021 - Cryptographic Failures}
+
+\subsection{Descrizione}
+
+Precedentemente nota come "Sensitive Data Exposure", questa categoria si concentra sui fallimenti nella protezione dei dati sensibili tramite crittografia.
+
+\subsection{Dati sensibili da proteggere}
+
+\begin{itemize}
+    \item Password e credenziali
+    \item Numeri di carte di credito (PCI DSS)
+    \item Dati sanitari (HIPAA)
+    \item Informazioni personali (GDPR)
+    \item Chiavi API e segreti
+\end{itemize}
+
+\subsection{Vulnerabilità comuni}
+
+\subsubsection{1. Password in chiaro}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - Password in chiaro]
+<?php
+// VULNERABILE: Password salvate in chiaro
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+$sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$username, $password]); // MAI fare questo!
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=SICURO - Password con bcrypt]
+<?php
+// SICURO: Password hashate con bcrypt
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+// Hash password con bcrypt (cost factor 12)
+$hashed_password = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+
+$sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$username, $hashed_password]);
+?>
+\end{lstlisting}
+
+\subsubsection{2. Dati sensibili non cifrati at rest}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - Dati in chiaro nel DB]
+# VULNERABILE
+def save_credit_card(user_id, card_number, cvv):
+    db.execute(
+        "INSERT INTO payments (user_id, card_number, cvv) VALUES (?, ?, ?)",
+        (user_id, card_number, cvv)  # Dati in chiaro!
+    )
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Tokenization e encryption]
+from cryptography.fernet import Fernet
+import hashlib
+
+class SecurePaymentStorage:
+    def __init__(self, encryption_key):
+        self.cipher = Fernet(encryption_key)
+
+    def tokenize_card(self, card_number):
+        """Crea un token irreversibile per il numero di carta"""
+        token = hashlib.sha256(
+            (card_number + "SALT_VALUE").encode()
+        ).hexdigest()
+        return token
+
+    def encrypt_sensitive_data(self, data):
+        """Cifra dati sensibili"""
+        return self.cipher.encrypt(data.encode())
+
+    def save_credit_card(self, user_id, card_number, cvv):
+        # Tokenizza il numero di carta
+        card_token = self.tokenize_card(card_number)
+
+        # Cifra CVV (se necessario salvarlo - meglio non farlo!)
+        encrypted_cvv = self.encrypt_sensitive_data(cvv)
+
+        # Salva solo dati cifrati/tokenizzati
+        db.execute(
+            "INSERT INTO payments (user_id, card_token, encrypted_cvv) VALUES (?, ?, ?)",
+            (user_id, card_token, encrypted_cvv)
+        )
+\end{lstlisting}
+
+\subsubsection{3. Algoritmi di cifratura deboli}
+
+\begin{lstlisting}[language=Java, caption=VULNERABILE - MD5 deprecato]
+// VULNERABILE: MD5 è criptograficamente rotto
+import java.security.MessageDigest;
+
+public String hashPassword(String password) {
+    MessageDigest md = MessageDigest.getInstance("MD5");
+    byte[] hash = md.digest(password.getBytes());
+    return bytesToHex(hash); // NON USARE MD5 per password!
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - BCrypt con salt]
+import org.mindrot.jbcrypt.BCrypt;
+
+public class PasswordHasher {
+    private static final int BCRYPT_ROUNDS = 12;
+
+    public static String hashPassword(String password) {
+        // BCrypt genera automaticamente un salt casuale
+        return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_ROUNDS));
+    }
+
+    public static boolean verifyPassword(String password, String hashed) {
+        return BCrypt.checkpw(password, hashed);
+    }
+}
+\end{lstlisting}
+
+\subsection{Best Practices Cryptographic}
+
+\begin{enumerate}
+    \item \textbf{Usare algoritmi moderni:} AES-256, RSA-2048+, bcrypt/argon2
+    \item \textbf{TLS 1.3:} Per dati in transit
+    \item \textbf{Gestione chiavi:} Key rotation, HSM per chiavi critiche
+    \item \textbf{Non inventare crypto:} Usare librerie consolidate
+\end{enumerate}
+
+\section{A03:2021 - Injection}
+
+\subsection{Descrizione}
+
+L'injection si verifica quando dati non fidati vengono inviati a un interprete come parte di un comando o query. SQL, NoSQL, OS command, LDAP injection sono esempi comuni.
+
+\subsection{SQL Injection}
+
+\subsubsection{Esempio base}
+
+\begin{lstlisting}[language=PHP, caption=VULNERABILE - Classic SQL Injection]
+<?php
+// VULNERABILE
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+$query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+$result = mysqli_query($conn, $query);
+
+// Attack: username = admin' --
+// Query diventa: SELECT * FROM users WHERE username = 'admin' -- ' AND password = ''
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption=SICURO - Prepared Statements]
+<?php
+// SICURO
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND password_hash = ?");
+$stmt->execute([$username, $password]);
+$user = $stmt->fetch();
+
+if ($user && password_verify($password, $user['password_hash'])) {
+    // Login successful
+}
+?>
+\end{lstlisting}
+
+\subsection{Command Injection}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - OS Command Injection]
+import os
+
+# VULNERABILE
+def ping_host(hostname):
+    # Attack: hostname = "google.com; cat /etc/passwd"
+    os.system(f"ping -c 1 {hostname}")
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Input validation e subprocess]
+import subprocess
+import re
+
+def ping_host(hostname):
+    # Validazione: solo hostname validi
+    if not re.match(r'^[a-zA-Z0-9.-]+$', hostname):
+        raise ValueError("Hostname non valido")
+
+    # Usa subprocess con array (no shell injection)
+    try:
+        result = subprocess.run(
+            ['ping', '-c', '1', hostname],
+            capture_output=True,
+            timeout=5,
+            check=True
+        )
+        return result.stdout.decode()
+    except subprocess.CalledProcessError:
+        return "Ping failed"
+\end{lstlisting}
+
+\subsection{LDAP Injection}
+
+\begin{lstlisting}[language=Java, caption=VULNERABILE - LDAP Injection]
+// VULNERABILE
+String filter = "(uid=" + username + ")";
+NamingEnumeration<SearchResult> results = ctx.search("ou=users", filter, controls);
+// Attack: username = "*)(uid=*))(|(uid=*"
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - LDAP escaping]
+public String escapeLDAPSearchFilter(String filter) {
+    StringBuilder sb = new StringBuilder();
+    for (char c : filter.toCharArray()) {
+        switch (c) {
+            case '\\': sb.append("\\5c"); break;
+            case '*':  sb.append("\\2a"); break;
+            case '(':  sb.append("\\28"); break;
+            case ')':  sb.append("\\29"); break;
+            case '\0': sb.append("\\00"); break;
+            default:   sb.append(c);
+        }
+    }
+    return sb.toString();
+}
+
+String safeFilter = "(uid=" + escapeLDAPSearchFilter(username) + ")";
+\end{lstlisting}
+
+\section{A04:2021 - Insecure Design}
+
+\subsection{Descrizione}
+
+Nuova categoria nel 2021, focalizzata su difetti nel design e nell'architettura, non nell'implementazione.
+
+\subsection{Differenza tra Insecure Design e Insecure Implementation}
+
+\begin{itemize}
+    \item \textbf{Insecure Design:} Manca il threat modeling, requirements di sicurezza assenti
+    \item \textbf{Insecure Implementation:} Il design è buono ma l'implementazione ha bug
+\end{itemize}
+
+\subsection{Esempio: Password Reset senza rate limiting}
+
+\begin{lstlisting}[language=Python, caption=INSECURE DESIGN - No rate limiting]
+# INSECURE DESIGN: Permette enumerazione utenti e brute force
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    email = request.form.get('email')
+
+    user = User.query.filter_by(email=email).first()
+    if user:
+        send_reset_email(user)
+        return "Reset email sent"
+    else:
+        return "User not found"  # Enumeration vulnerability!
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SECURE DESIGN - Rate limiting e risposta uniforme]
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(app=app, key_func=get_remote_address)
+
+@app.route('/reset-password', methods=['POST'])
+@limiter.limit("3 per hour")  # Max 3 tentativi per ora
+def reset_password():
+    email = request.form.get('email')
+
+    # Validazione email
+    if not is_valid_email(email):
+        return "If the email exists, a reset link has been sent", 200
+
+    user = User.query.filter_by(email=email).first()
+    if user:
+        # Genera token sicuro
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.reset_token_expires = datetime.now() + timedelta(hours=1)
+        db.session.commit()
+
+        send_reset_email(user, token)
+
+    # Stessa risposta indipendentemente dall'esito
+    # Previene user enumeration
+    return "If the email exists, a reset link has been sent", 200
+\end{lstlisting}
+
+\subsection{Secure Design Principles}
+
+\begin{enumerate}
+    \item \textbf{Threat modeling:} Identificare minacce in fase di design
+    \item \textbf{Secure defaults:} Configurazioni sicure di default
+    \item \textbf{Fail securely:} In caso di errore, fallire in modo sicuro
+    \item \textbf{Separation of duties:} Dividere responsabilità critiche
+    \item \textbf{Least privilege:} Minimo necessario per funzionare
+\end{enumerate}
+
+\section{A05:2021 - Security Misconfiguration}
+
+\subsection{Descrizione}
+
+Configurazioni non sicure di applicazioni, framework, server, database, cloud storage.
+
+\subsection{Esempi comuni}
+
+\subsubsection{1. Debug mode in produzione}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - Debug enabled]
+# settings.py - VULNERABILE in produzione
+DEBUG = True  # Espone stack traces con informazioni sensibili
+
+ALLOWED_HOSTS = ['*']  # Permette qualsiasi host
+
+SECRET_KEY = 'hardcoded-secret-key'  # Chiave hardcoded
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Production settings]
+import os
+
+# SICURO
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set in environment")
+
+# Security headers
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+\end{lstlisting}
+
+\subsubsection{2. Directory listing abilitato}
+
+\begin{lstlisting}[language=bash, caption=Apache - Directory listing]
+# VULNERABILE
+<Directory "/var/www/html">
+    Options Indexes FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+
+# SICURO
+<Directory "/var/www/html">
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    Require all granted
+</Directory>
+\end{lstlisting}
+
+\subsubsection{3. Credenziali di default}
+
+\begin{lstlisting}[language=Java, caption=VULNERABILE - Default credentials]
+// VULNERABILE
+public class DatabaseConfig {
+    private static final String DB_USER = "root";
+    private static final String DB_PASS = "password";  // MAI fare questo!
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/mydb";
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Java, caption=SICURO - Environment variables]
+public class DatabaseConfig {
+    private final String dbUser;
+    private final String dbPass;
+    private final String dbUrl;
+
+    public DatabaseConfig() {
+        this.dbUser = System.getenv("DB_USER");
+        this.dbPass = System.getenv("DB_PASS");
+        this.dbUrl = System.getenv("DB_URL");
+
+        if (dbUser == null || dbPass == null || dbUrl == null) {
+            throw new IllegalStateException(
+                "Database credentials must be set via environment variables"
+            );
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{Security Headers}
+
+\begin{lstlisting}[language=PHP, caption=Essential security headers]
+<?php
+// Security headers essenziali
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+header("Strict-Transport-Security: max-age=31536000; includeSubDomains; preload");
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
+header("Referrer-Policy: strict-origin-when-cross-origin");
+header("Permissions-Policy: geolocation=(), microphone=(), camera=()");
+?>
+\end{lstlisting}
+
+\section{A06:2021 - Vulnerable and Outdated Components}
+
+\subsection{Descrizione}
+
+Uso di librerie, framework e componenti con vulnerabilità note.
+
+\subsection{Rischi}
+
+\begin{itemize}
+    \item \textbf{RCE (Remote Code Execution):} Come Equifax/Apache Struts
+    \item \textbf{XSS:} Librerie JS vulnerabili
+    \item \textbf{SQL Injection:} ORM non aggiornati
+    \item \textbf{Deserializzazione:} Vulnerabilità note
+\end{itemize}
+
+\subsection{Identificazione e mitigazione}
+
+\subsubsection{Python: Safety e Dependabot}
+
+\begin{lstlisting}[language=bash, caption=Scansione vulnerabilità Python]
+# Installa safety
+pip install safety
+
+# Scansiona dipendenze
+safety check
+
+# Output esempio:
+# +==============================================================================+
+# |                                                                              |
+# |                               /$$$$$$            /$$                         |
+# |                              /$$__  $$          | $$                         |
+# |           /$$$$$$$  /$$$$$$ | $$  \__//$$$$$$  /$$$$$$   /$$   /$$           |
+# |          /$$_____/ |____  $$| $$$$   /$$__  $$|_  $$_/  | $$  | $$           |
+# |         |  $$$$$$   /$$$$$$$| $$_/  | $$$$$$$$  | $$    | $$  | $$           |
+# |          \____  $$ /$$__  $$| $$    | $$_____/  | $$ /$$| $$  | $$           |
+# |          /$$$$$$$/|  $$$$$$$| $$    |  $$$$$$$  |  $$$$/|  $$$$$$$           |
+# |         |_______/  \_______/|__/     \_______/   \___/   \____  $$           |
+# |                                                           /$$  | $$           |
+# |                                                          |  $$$$$$/           |
+# |  by pyup.io                                              \______/            |
+# |                                                                              |
+# +==============================================================================+
+# | REPORT                                                                       |
+# +==============================================================================+
+# | package      | installed | affected          | ID                           |
+# +==============================================================================+
+# | django       | 2.2.0     | <2.2.28           | 51457                        |
+# +==============================================================================+
+\end{lstlisting}
+
+\subsubsection{Node.js: npm audit}
+
+\begin{lstlisting}[language=bash, caption=Audit dipendenze Node.js]
+# Verifica vulnerabilità
+npm audit
+
+# Fix automatico (se possibile)
+npm audit fix
+
+# Fix forzato (può causare breaking changes)
+npm audit fix --force
+\end{lstlisting}
+
+\subsubsection{Java: OWASP Dependency-Check}
+
+\begin{lstlisting}[language=XML, caption=Maven plugin per dependency check]
+<project>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>7.1.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+\end{lstlisting}
+
+\section{A07:2021 - Identification and Authentication Failures}
+
+\subsection{Descrizione}
+
+Precedentemente "Broken Authentication", include problemi con l'identificazione, autenticazione e gestione delle sessioni.
+
+\subsection{Vulnerabilità comuni}
+
+\subsubsection{1. Weak password policy}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - No password strength check]
+# VULNERABILE
+def register_user(username, password):
+    # Accetta qualsiasi password!
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    db.insert_user(username, hashed)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - Strong password policy]
+import re
+
+def validate_password(password):
+    """
+    Password deve:
+    - Lunghezza minima 12 caratteri
+    - Almeno una maiuscola
+    - Almeno una minuscola
+    - Almeno un numero
+    - Almeno un carattere speciale
+    """
+    if len(password) < 12:
+        return False, "Password troppo corta (min 12 caratteri)"
+
+    if not re.search(r'[A-Z]', password):
+        return False, "Password deve contenere almeno una maiuscola"
+
+    if not re.search(r'[a-z]', password):
+        return False, "Password deve contenere almeno una minuscola"
+
+    if not re.search(r'\d', password):
+        return False, "Password deve contenere almeno un numero"
+
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Password deve contenere almeno un carattere speciale"
+
+    # Check password comuni
+    common_passwords = ['Password123!', 'Admin123!', 'Welcome123!']
+    if password in common_passwords:
+        return False, "Password troppo comune"
+
+    return True, "Password valida"
+
+def register_user(username, password):
+    is_valid, message = validate_password(password)
+
+    if not is_valid:
+        raise ValueError(message)
+
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+    db.insert_user(username, hashed)
+\end{lstlisting}
+
+\subsubsection{2. No brute force protection}
+
+\begin{lstlisting}[language=PHP, caption=SICURO - Account lockout]
+<?php
+class LoginProtection {
+    private $pdo;
+    private $max_attempts = 5;
+    private $lockout_time = 900; // 15 minuti
+
+    public function check_lockout($username) {
+        $stmt = $this->pdo->prepare(
+            "SELECT failed_attempts, last_failed_attempt
+             FROM login_attempts
+             WHERE username = ?"
+        );
+        $stmt->execute([$username]);
+        $record = $stmt->fetch();
+
+        if (!$record) {
+            return false; // Nessun tentativo precedente
+        }
+
+        $time_since_last = time() - strtotime($record['last_failed_attempt']);
+
+        if ($record['failed_attempts'] >= $this->max_attempts &&
+            $time_since_last < $this->lockout_time) {
+            return true; // Account bloccato
+        }
+
+        return false;
+    }
+
+    public function record_failed_attempt($username) {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO login_attempts (username, failed_attempts, last_failed_attempt)
+             VALUES (?, 1, NOW())
+             ON DUPLICATE KEY UPDATE
+             failed_attempts = failed_attempts + 1,
+             last_failed_attempt = NOW()"
+        );
+        $stmt->execute([$username]);
+    }
+
+    public function reset_attempts($username) {
+        $stmt = $this->pdo->prepare(
+            "DELETE FROM login_attempts WHERE username = ?"
+        );
+        $stmt->execute([$username]);
+    }
+}
+?>
+\end{lstlisting}
+
+\section{A08:2021 - Software and Data Integrity Failures}
+
+\subsection{Descrizione}
+
+Nuova categoria che include violazioni dell'integrità di codice e dati, come deserializzazione insicura e pipeline CI/CD compromesse.
+
+\subsection{Insecure Deserialization}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - Pickle deserialization]
+import pickle
+
+# VULNERABILE: pickle può eseguire codice arbitrario!
+def load_user_session(session_data):
+    return pickle.loads(session_data)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - JSON serialization]
+import json
+import hmac
+import hashlib
+
+class SecureSessionManager:
+    def __init__(self, secret_key):
+        self.secret_key = secret_key
+
+    def serialize_session(self, data):
+        """Serializza e firma i dati di sessione"""
+        json_data = json.dumps(data)
+        signature = hmac.new(
+            self.secret_key.encode(),
+            json_data.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        return json_data + '.' + signature
+
+    def deserialize_session(self, signed_data):
+        """Deserializza e verifica firma"""
+        try:
+            json_data, signature = signed_data.rsplit('.', 1)
+
+            # Verifica firma
+            expected_signature = hmac.new(
+                self.secret_key.encode(),
+                json_data.encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            if not hmac.compare_digest(signature, expected_signature):
+                raise ValueError("Firma non valida")
+
+            return json.loads(json_data)
+        except Exception as e:
+            raise ValueError(f"Sessione corrotta: {e}")
+\end{lstlisting}
+
+\section{A09:2021 - Security Logging and Monitoring Failures}
+
+\subsection{Descrizione}
+
+Mancanza di logging, monitoring e risposta adeguata agli incidenti di sicurezza.
+
+\subsection{Eventi da loggare}
+
+\begin{enumerate}
+    \item Login, logout, cambio password
+    \item Tentativi di accesso falliti
+    \item Operazioni privilegi elevati
+    \item Modifiche a configurazioni
+    \item Eccezioni e errori critici
+\end{enumerate}
+
+\begin{lstlisting}[language=Python, caption=Security logging completo]
+import logging
+import json
+from datetime import datetime
+from functools import wraps
+
+class SecurityLogger:
+    def __init__(self):
+        self.logger = logging.getLogger('security')
+        handler = logging.FileHandler('security.log')
+        handler.setFormatter(
+            logging.Formatter('%(message)s')
+        )
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
+    def log_security_event(self, event_type, user_id, ip_address,
+                          success, details=None):
+        log_entry = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'event_type': event_type,
+            'user_id': user_id,
+            'ip_address': ip_address,
+            'success': success,
+            'details': details or {}
+        }
+        self.logger.info(json.dumps(log_entry))
+
+security_log = SecurityLogger()
+
+def log_access(event_type):
+    """Decorator per loggare accessi"""
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            try:
+                result = f(*args, **kwargs)
+                security_log.log_security_event(
+                    event_type=event_type,
+                    user_id=get_current_user_id(),
+                    ip_address=get_client_ip(),
+                    success=True
+                )
+                return result
+            except Exception as e:
+                security_log.log_security_event(
+                    event_type=event_type,
+                    user_id=get_current_user_id(),
+                    ip_address=get_client_ip(),
+                    success=False,
+                    details={'error': str(e)}
+                )
+                raise
+        return wrapped
+    return decorator
+
+@log_access('LOGIN_ATTEMPT')
+def login(username, password):
+    # Login logic
+    pass
+\end{lstlisting}
+
+\section{A10:2021 - Server-Side Request Forgery (SSRF)}
+
+\subsection{Descrizione}
+
+Nuova categoria nel Top 10, SSRF permette a un attaccante di far eseguire richieste HTTP dal server verso destinazioni arbitrarie.
+
+\subsection{Esempio di SSRF}
+
+\begin{lstlisting}[language=Python, caption=VULNERABILE - SSRF]
+import requests
+
+# VULNERABILE
+@app.route('/fetch-url')
+def fetch_url():
+    url = request.args.get('url')
+    # Attacker può usare: http://localhost:8080/admin
+    # o http://169.254.169.254/latest/meta-data/ (AWS metadata)
+    response = requests.get(url)
+    return response.text
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=SICURO - SSRF mitigato]
+import requests
+from urllib.parse import urlparse
+import ipaddress
+
+class SSRFProtection:
+    ALLOWED_SCHEMES = ['http', 'https']
+    BLOCKED_NETWORKS = [
+        ipaddress.ip_network('10.0.0.0/8'),
+        ipaddress.ip_network('172.16.0.0/12'),
+        ipaddress.ip_network('192.168.0.0/16'),
+        ipaddress.ip_network('127.0.0.0/8'),
+        ipaddress.ip_network('169.254.0.0/16'),  # AWS metadata
+    ]
+
+    @staticmethod
+    def is_safe_url(url):
+        try:
+            parsed = urlparse(url)
+
+            # Verifica schema
+            if parsed.scheme not in SSRFProtection.ALLOWED_SCHEMES:
+                return False
+
+            # Resolve hostname to IP
+            import socket
+            ip = socket.gethostbyname(parsed.hostname)
+            ip_obj = ipaddress.ip_address(ip)
+
+            # Blocca IP privati/locali
+            for network in SSRFProtection.BLOCKED_NETWORKS:
+                if ip_obj in network:
+                    return False
+
+            return True
+        except Exception:
+            return False
+
+@app.route('/fetch-url')
+def fetch_url():
+    url = request.args.get('url')
+
+    if not SSRFProtection.is_safe_url(url):
+        return "URL non permesso", 403
+
+    # Whitelist di domini permessi (meglio ancora)
+    allowed_domains = ['example.com', 'api.trusted-site.com']
+    parsed = urlparse(url)
+    if parsed.hostname not in allowed_domains:
+        return "Dominio non permesso", 403
+
+    try:
+        response = requests.get(url, timeout=5, allow_redirects=False)
+        return response.text
+    except requests.exceptions.RequestException as e:
+        return "Errore nel fetch dell'URL", 500
+\end{lstlisting}
+
+\section{Esercizi CTF-Style}
+
+\subsection{Challenge 1: IDOR Exploitation}
+
+Trova la vulnerabilità IDOR nel seguente codice e sfruttala:
+
+\begin{lstlisting}[language=PHP]
+<?php
+session_start();
+$user_id = $_SESSION['user_id'];
+$document_id = $_GET['doc_id'];
+
+$query = "SELECT * FROM documents WHERE id = $document_id";
+$result = mysqli_query($conn, $query);
+$doc = mysqli_fetch_assoc($result);
+
+echo $doc['content'];
+?>
+\end{lstlisting}
+
+\textbf{Flag:} \texttt{CTF\{1ns3cur3\_d1r3ct\_0bj3ct\_r3f3r3nc3\}}
+
+\subsection{Challenge 2: Broken Access Control}
+
+URL: \texttt{https://vulnerable-app.com/user/profile?id=123}
+
+Prova a accedere al profilo dell'admin (id=1).
+
+\textbf{Soluzione:} \texttt{https://vulnerable-app.com/user/profile?id=1}
+
+\subsection{Challenge 3: Security Misconfiguration}
+
+Trova il file di configurazione esposto dal server web.
+
+\textbf{Hint:} Prova \texttt{/.env}, \texttt{/config.php.bak}, \texttt{/.git/config}
+
+\section{Best Practices Checklist}
+
+\begin{itemize}
+    \item[$\square$] Implementare access control centralizzato
+    \item[$\square$] Cifrare dati sensibili at rest e in transit
+    \item[$\square$] Usare prepared statements per query SQL
+    \item[$\square$] Eseguire threat modeling in fase di design
+    \item[$\square$] Disabilitare debug mode in produzione
+    \item[$\square$] Mantenere aggiornate le dipendenze
+    \item[$\square$] Implementare strong password policy
+    \item[$\square$] Verificare integrità dei dati deserializzati
+    \item[$\square$] Implementare comprehensive logging
+    \item[$\square$] Proteggere da SSRF con whitelist
+\end{itemize}
+
+\section{Conclusioni}
+
+L'OWASP Top 10 2021 riflette l'evoluzione del panorama delle minacce web. Le chiavi per mitigare queste vulnerabilità sono:
+
+\begin{enumerate}
+    \item \textbf{Security by Design:} Integrare la sicurezza fin dall'inizio
+    \item \textbf{Defense in Depth:} Multiple linee di difesa
+    \item \textbf{Continuous Learning:} La sicurezza evolve continuamente
+    \item \textbf{Automation:} Testing automatizzato e dependency scanning
+\end{enumerate}
+
+Nei prossimi capitoli approfondiremo alcune di queste vulnerabilità con maggiore dettaglio tecnico.

@@ -1,0 +1,94 @@
+% main.tex — Documento principale LaTeX per "React"
+\documentclass[a4paper,11pt]{book}
+
+% Lingua e codifica
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Layout
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Hyperlink e colori
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Codice sorgente (JavaScript/JSX)
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstdefinestyle{javascript}{
+  language=Java,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  frame=single,
+  breaklines=true
+}
+\lstset{style=javascript, inputencoding=utf8,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {À}{{\`A}}1 {È}{{\`E}}1 {É}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+           {–}{{-}}1 {—}{{-}}1 {‑}{{-}}1 {→}{{->}}2 {…}{{...}}3}
+
+% Box informativi
+\usepackage[skins, breakable]{tcolorbox}
+\tcbset{
+  colback=gray!5,
+  colframe=gray!60,
+  coltitle=black,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt,
+  breakable
+}
+
+% Grafica
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes}
+
+% Tipografia
+\usepackage[protrusion=true,expansion=true]{microtype}
+\setlength{\emergencystretch}{3em}
+
+% Metadati documento
+\title{React\\[0.5cm]\large Sviluppo di Applicazioni Web Moderne con React}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Inclusione dei capitoli
+\include{capitoli/00_prefazione}
+\include{capitoli/01_introduzione_react}
+\include{capitoli/02_jsx_components}
+\include{capitoli/03_props_state}
+\include{capitoli/04_hooks}
+\include{capitoli/05_event_handling}
+\include{capitoli/06_forms}
+\include{capitoli/07_lifecycle}
+\include{capitoli/08_routing}
+\include{capitoli/09_state_management}
+\include{capitoli/10_api_integration}
+\include{capitoli/11_performance}
+\include{capitoli/12_testing}
+
+\appendix
+\include{capitoli/appendice_hooks_reference}
+\include{capitoli/appendice_progetti}
+
+\end{document}

@@ -1,0 +1,1095 @@
+% appendice_esempi_api.tex
+\chapter{Appendice: Esempi di API Complete}
+
+Questa appendice presenta tre esempi completi di REST API: E-commerce, Social Media e Payments. Ogni esempio include architettura, endpoint, esempi curl e spec OpenAPI.
+
+\section{E-commerce API}
+
+\subsection{Architettura}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, minimum width=3cm, minimum height=1cm, align=center},
+  db/.style={cylinder, draw, shape border rotate=90, minimum width=2cm, minimum height=1.5cm, align=center}
+]
+  % Client
+  \node[box] (client) {Client\\(Web/Mobile)};
+
+  % API Gateway
+  \node[box, below=of client] (gateway) {API Gateway\\Load Balancer};
+
+  % Services
+  \node[box, below left=1.5cm and 1cm of gateway] (products) {Products\\Service};
+  \node[box, below=of gateway] (cart) {Cart\\Service};
+  \node[box, below right=1.5cm and 1cm of gateway] (orders) {Orders\\Service};
+
+  % Databases
+  \node[db, below=of products] (productsdb) {Products\\DB};
+  \node[db, below=of cart] (cartdb) {Redis\\Cache};
+  \node[db, below=of orders] (ordersdb) {Orders\\DB};
+
+  % Connections
+  \draw[->] (client) -- (gateway);
+  \draw[->] (gateway) -- (products);
+  \draw[->] (gateway) -- (cart);
+  \draw[->] (gateway) -- (orders);
+  \draw[->] (products) -- (productsdb);
+  \draw[->] (cart) -- (cartdb);
+  \draw[->] (orders) -- (ordersdb);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Endpoint Principali}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Descrizione} \\ \hline
+GET & /products & Lista prodotti con filtri \\ \hline
+GET & /products/\{id\} & Dettagli prodotto \\ \hline
+GET & /categories & Lista categorie \\ \hline
+POST & /cart/items & Aggiungi item al carrello \\ \hline
+GET & /cart & Visualizza carrello \\ \hline
+DELETE & /cart/items/\{id\} & Rimuovi item da carrello \\ \hline
+POST & /orders & Crea ordine da carrello \\ \hline
+GET & /orders & Lista ordini utente \\ \hline
+GET & /orders/\{id\} & Dettagli ordine \\ \hline
+POST & /orders/\{id\}/cancel & Annulla ordine \\ \hline
+\end{tabular}
+\caption{E-commerce API Endpoints}
+\end{table}
+
+\subsection{Esempi cURL}
+
+\begin{lstlisting}[language=bash, caption=E-commerce API - Esempi cURL]
+#!/bin/bash
+
+API_URL="https://api.ecommerce.example.com/v1"
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+echo "=== E-commerce API Examples ==="
+
+# 1. Lista prodotti con filtri
+echo -e "\n1. Lista prodotti categoria elettronica"
+curl -s "$API_URL/products" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "category=electronics" \
+  --data-urlencode "price_min=100" \
+  --data-urlencode "price_max=1000" \
+  --data-urlencode "in_stock=true" \
+  --data-urlencode "sort=-price" \
+  --data-urlencode "page=1" \
+  --data-urlencode "per_page=10" \
+  | jq .
+
+# 2. Dettagli prodotto
+echo -e "\n2. Dettagli prodotto specifico"
+curl -s "$API_URL/products/prod_123" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 3. Aggiungi al carrello
+echo -e "\n3. Aggiungi prodotto al carrello"
+curl -s -X POST "$API_URL/cart/items" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_id": "prod_123",
+    "quantity": 2,
+    "variant_id": "var_456"
+  }' \
+  | jq .
+
+# 4. Visualizza carrello
+echo -e "\n4. Visualizza carrello corrente"
+curl -s "$API_URL/cart" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 5. Aggiorna quantita item
+echo -e "\n5. Aggiorna quantita item carrello"
+curl -s -X PATCH "$API_URL/cart/items/item_789" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "quantity": 3
+  }' \
+  | jq .
+
+# 6. Applica coupon
+echo -e "\n6. Applica codice sconto"
+curl -s -X POST "$API_URL/cart/coupons" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "SAVE20"
+  }' \
+  | jq .
+
+# 7. Crea ordine
+echo -e "\n7. Crea ordine da carrello"
+ORDER_RESPONSE=$(curl -s -X POST "$API_URL/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "shipping_address": {
+      "name": "Mario Rossi",
+      "street": "Via Roma 123",
+      "city": "Milano",
+      "postal_code": "20100",
+      "country": "IT",
+      "phone": "+39 333 1234567"
+    },
+    "billing_address": {
+      "name": "Mario Rossi",
+      "street": "Via Roma 123",
+      "city": "Milano",
+      "postal_code": "20100",
+      "country": "IT"
+    },
+    "payment_method": "credit_card",
+    "payment_details": {
+      "card_token": "tok_visa_1234"
+    }
+  }')
+
+echo "$ORDER_RESPONSE" | jq .
+ORDER_ID=$(echo "$ORDER_RESPONSE" | jq -r '.id')
+
+# 8. Traccia ordine
+echo -e "\n8. Traccia ordine"
+curl -s "$API_URL/orders/$ORDER_ID/tracking" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 9. Storia ordini
+echo -e "\n9. Storia ordini utente"
+curl -s "$API_URL/orders" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "status=delivered" \
+  --data-urlencode "date_from=2023-01-01" \
+  --data-urlencode "sort=-created_at" \
+  | jq .
+
+# 10. Richiedi reso
+echo -e "\n10. Richiedi reso prodotto"
+curl -s -X POST "$API_URL/orders/$ORDER_ID/returns" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "order_item_id": "item_123",
+        "quantity": 1,
+        "reason": "defective",
+        "description": "Schermo difettoso"
+      }
+    ]
+  }' \
+  | jq .
+\end{lstlisting}
+
+\subsection{Response Esempi}
+
+\begin{lstlisting}[caption=E-commerce - Product Response]
+{
+  "id": "prod_123",
+  "sku": "LAPTOP-DELL-XPS13",
+  "name": "Dell XPS 13 Laptop",
+  "description": "Laptop ultraleggero con display InfinityEdge",
+  "category": {
+    "id": "cat_electronics",
+    "name": "Electronics",
+    "slug": "electronics"
+  },
+  "brand": "Dell",
+  "price": {
+    "amount": 1299.99,
+    "currency": "EUR",
+    "formatted": "€1.299,99"
+  },
+  "compare_at_price": {
+    "amount": 1499.99,
+    "currency": "EUR"
+  },
+  "discount_percentage": 13,
+  "images": [
+    {
+      "url": "https://cdn.example.com/products/prod_123/img1.jpg",
+      "alt": "Dell XPS 13 - Vista frontale",
+      "position": 1
+    }
+  ],
+  "variants": [
+    {
+      "id": "var_456",
+      "name": "16GB RAM / 512GB SSD",
+      "sku": "LAPTOP-DELL-XPS13-16-512",
+      "price": 1299.99,
+      "in_stock": true,
+      "stock_quantity": 15
+    }
+  ],
+  "attributes": {
+    "color": "Silver",
+    "weight": "1.2kg",
+    "dimensions": "30.2 x 19.9 x 1.5 cm"
+  },
+  "rating": {
+    "average": 4.7,
+    "count": 342
+  },
+  "in_stock": true,
+  "stock_quantity": 15,
+  "shipping": {
+    "free_shipping": true,
+    "estimated_days": 2
+  },
+  "created_at": "2023-10-01T10:00:00Z",
+  "updated_at": "2023-11-13T12:00:00Z",
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/products/prod_123"
+    },
+    "category": {
+      "href": "https://api.example.com/categories/cat_electronics"
+    },
+    "reviews": {
+      "href": "https://api.example.com/products/prod_123/reviews"
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=E-commerce - Cart Response]
+{
+  "id": "cart_789",
+  "user_id": "user_456",
+  "items": [
+    {
+      "id": "item_001",
+      "product": {
+        "id": "prod_123",
+        "name": "Dell XPS 13 Laptop",
+        "image": "https://cdn.example.com/products/prod_123/thumb.jpg"
+      },
+      "variant": {
+        "id": "var_456",
+        "name": "16GB RAM / 512GB SSD"
+      },
+      "quantity": 2,
+      "unit_price": 1299.99,
+      "total_price": 2599.98
+    }
+  ],
+  "coupon": {
+    "code": "SAVE20",
+    "discount_amount": 520.00,
+    "discount_type": "percentage",
+    "discount_value": 20
+  },
+  "subtotal": 2599.98,
+  "discount": 520.00,
+  "shipping": 0.00,
+  "tax": 415.99,
+  "total": 2495.97,
+  "currency": "EUR",
+  "item_count": 2,
+  "expires_at": "2023-11-14T12:00:00Z",
+  "_links": {
+    "checkout": {
+      "href": "https://api.example.com/checkout"
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=E-commerce - Order Response]
+{
+  "id": "ord_abc123",
+  "order_number": "ORD-2023-001234",
+  "status": "processing",
+  "payment_status": "paid",
+  "fulfillment_status": "unfulfilled",
+  "customer": {
+    "id": "user_456",
+    "email": "mario@example.com",
+    "name": "Mario Rossi"
+  },
+  "items": [
+    {
+      "id": "item_001",
+      "product_id": "prod_123",
+      "variant_id": "var_456",
+      "name": "Dell XPS 13 Laptop - 16GB/512GB",
+      "quantity": 2,
+      "unit_price": 1299.99,
+      "total": 2599.98
+    }
+  ],
+  "shipping_address": {
+    "name": "Mario Rossi",
+    "street": "Via Roma 123",
+    "city": "Milano",
+    "postal_code": "20100",
+    "country": "IT",
+    "phone": "+39 333 1234567"
+  },
+  "billing_address": {
+    "name": "Mario Rossi",
+    "street": "Via Roma 123",
+    "city": "Milano",
+    "postal_code": "20100",
+    "country": "IT"
+  },
+  "subtotal": 2599.98,
+  "discount": 520.00,
+  "shipping": 0.00,
+  "tax": 415.99,
+  "total": 2495.97,
+  "currency": "EUR",
+  "payment_method": "credit_card",
+  "payment_details": {
+    "last4": "1234",
+    "brand": "Visa"
+  },
+  "tracking": {
+    "carrier": "DHL",
+    "tracking_number": "DHL123456789",
+    "tracking_url": "https://dhl.com/track/DHL123456789"
+  },
+  "created_at": "2023-11-13T12:00:00Z",
+  "updated_at": "2023-11-13T12:00:00Z",
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/orders/ord_abc123"
+    },
+    "tracking": {
+      "href": "https://api.example.com/orders/ord_abc123/tracking"
+    },
+    "invoice": {
+      "href": "https://api.example.com/orders/ord_abc123/invoice"
+    },
+    "cancel": {
+      "href": "https://api.example.com/orders/ord_abc123/cancel",
+      "method": "POST"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Social Media API}
+
+\subsection{Architettura}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\small},
+  db/.style={cylinder, draw, shape border rotate=90, minimum width=1.8cm, minimum height=1.2cm, align=center, font=\small}
+]
+  % API Gateway
+  \node[box] (gateway) {API Gateway};
+
+  % Microservices
+  \node[box, below left=1cm and -1.5cm of gateway] (users) {Users};
+  \node[box, below=1cm of gateway] (posts) {Posts};
+  \node[box, below right=1cm and -1.5cm of gateway] (social) {Social};
+
+  % Databases
+  \node[db, below=of users] (usersdb) {Users\\DB};
+  \node[db, below=of posts] (postsdb) {Posts\\DB};
+  \node[db, below=of social] (socialdb) {Graph\\DB};
+
+  % Message Queue
+  \node[box, right=2cm of posts] (queue) {Message\\Queue};
+  \node[box, below=of queue] (notifications) {Notifications};
+
+  % Connections
+  \draw[->] (gateway) -- (users);
+  \draw[->] (gateway) -- (posts);
+  \draw[->] (gateway) -- (social);
+  \draw[->] (users) -- (usersdb);
+  \draw[->] (posts) -- (postsdb);
+  \draw[->] (social) -- (socialdb);
+  \draw[->] (posts) -- (queue);
+  \draw[->] (queue) -- (notifications);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Endpoint Principali}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{5.5cm}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Descrizione} \\ \hline
+GET & /users/\{id\} & Profilo utente \\ \hline
+GET & /users/\{id\}/posts & Post dell'utente \\ \hline
+POST & /users/\{id\}/follow & Segui utente \\ \hline
+DELETE & /users/\{id\}/follow & Smetti di seguire \\ \hline
+POST & /posts & Crea post \\ \hline
+GET & /feed & Feed personalizzato \\ \hline
+POST & /posts/\{id\}/like & Like a post \\ \hline
+POST & /posts/\{id\}/comments & Commenta post \\ \hline
+GET & /notifications & Notifiche utente \\ \hline
+POST & /messages & Invia messaggio \\ \hline
+\end{tabular}
+\caption{Social Media API Endpoints}
+\end{table}
+
+\subsection{Esempi cURL}
+
+\begin{lstlisting}[language=bash, caption=Social Media API - Esempi cURL]
+#!/bin/bash
+
+API_URL="https://api.social.example.com/v1"
+TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+echo "=== Social Media API Examples ==="
+
+# 1. Ottieni profilo utente
+echo -e "\n1. Profilo utente"
+curl -s "$API_URL/users/me" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 2. Aggiorna profilo
+echo -e "\n2. Aggiorna bio profilo"
+curl -s -X PATCH "$API_URL/users/me" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bio": "Software developer, coffee enthusiast",
+    "website": "https://example.com"
+  }' \
+  | jq .
+
+# 3. Upload foto profilo
+echo -e "\n3. Upload foto profilo"
+curl -s -X POST "$API_URL/users/me/avatar" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@avatar.jpg" \
+  | jq .
+
+# 4. Crea post
+echo -e "\n4. Crea nuovo post"
+POST_RESPONSE=$(curl -s -X POST "$API_URL/posts" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Just deployed my new REST API! 🚀",
+    "visibility": "public",
+    "media": [
+      {
+        "type": "image",
+        "url": "https://cdn.example.com/images/screenshot.jpg"
+      }
+    ],
+    "tags": ["#api", "#development"]
+  }')
+
+echo "$POST_RESPONSE" | jq .
+POST_ID=$(echo "$POST_RESPONSE" | jq -r '.id')
+
+# 5. Feed personalizzato
+echo -e "\n5. Feed personalizzato"
+curl -s "$API_URL/feed" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "page=1" \
+  --data-urlencode "per_page=20" \
+  --data-urlencode "filter=following" \
+  | jq .
+
+# 6. Like a post
+echo -e "\n6. Like post"
+curl -s -X POST "$API_URL/posts/$POST_ID/likes" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 7. Commenta post
+echo -e "\n7. Commenta post"
+curl -s -X POST "$API_URL/posts/$POST_ID/comments" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Great work! 👏",
+    "mentions": ["@user123"]
+  }' \
+  | jq .
+
+# 8. Segui utente
+echo -e "\n8. Segui utente"
+curl -s -X POST "$API_URL/users/user_789/follow" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 9. Lista follower
+echo -e "\n9. Lista follower"
+curl -s "$API_URL/users/me/followers" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "page=1" \
+  --data-urlencode "per_page=50" \
+  | jq .
+
+# 10. Cerca utenti
+echo -e "\n10. Cerca utenti"
+curl -s "$API_URL/search/users" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "q=mario" \
+  --data-urlencode "limit=10" \
+  | jq .
+
+# 11. Notifiche
+echo -e "\n11. Notifiche non lette"
+curl -s "$API_URL/notifications" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "unread=true" \
+  | jq .
+
+# 12. Marca notifiche come lette
+echo -e "\n12. Marca tutte notifiche lette"
+curl -s -X POST "$API_URL/notifications/mark-read" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 13. Invia messaggio diretto
+echo -e "\n13. Invia messaggio diretto"
+curl -s -X POST "$API_URL/messages" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient_id": "user_789",
+    "content": "Ciao! Come va?",
+    "attachments": []
+  }' \
+  | jq .
+
+# 14. Conversazioni
+echo -e "\n14. Lista conversazioni"
+curl -s "$API_URL/conversations" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+\end{lstlisting}
+
+\subsection{Response Esempi}
+
+\begin{lstlisting}[caption=Social Media - User Profile]
+{
+  "id": "user_456",
+  "username": "mario_rossi",
+  "display_name": "Mario Rossi",
+  "bio": "Software developer, coffee enthusiast ☕",
+  "avatar_url": "https://cdn.example.com/avatars/user_456.jpg",
+  "cover_url": "https://cdn.example.com/covers/user_456.jpg",
+  "website": "https://mariorossi.com",
+  "location": "Milano, Italy",
+  "verified": false,
+  "stats": {
+    "followers": 1234,
+    "following": 567,
+    "posts": 89
+  },
+  "joined_at": "2022-01-15T10:00:00Z",
+  "is_following": false,
+  "is_followed_by": false,
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/users/user_456"
+    },
+    "posts": {
+      "href": "https://api.example.com/users/user_456/posts"
+    },
+    "followers": {
+      "href": "https://api.example.com/users/user_456/followers"
+    },
+    "following": {
+      "href": "https://api.example.com/users/user_456/following"
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Social Media - Post]
+{
+  "id": "post_123",
+  "author": {
+    "id": "user_456",
+    "username": "mario_rossi",
+    "display_name": "Mario Rossi",
+    "avatar_url": "https://cdn.example.com/avatars/user_456.jpg",
+    "verified": false
+  },
+  "content": "Just deployed my new REST API! 🚀",
+  "media": [
+    {
+      "type": "image",
+      "url": "https://cdn.example.com/posts/post_123/img1.jpg",
+      "width": 1200,
+      "height": 800
+    }
+  ],
+  "tags": ["#api", "#development"],
+  "mentions": [],
+  "visibility": "public",
+  "stats": {
+    "likes": 42,
+    "comments": 7,
+    "shares": 3,
+    "views": 234
+  },
+  "is_liked": false,
+  "is_bookmarked": false,
+  "created_at": "2023-11-13T12:00:00Z",
+  "edited_at": null,
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/posts/post_123"
+    },
+    "comments": {
+      "href": "https://api.example.com/posts/post_123/comments"
+    },
+    "likes": {
+      "href": "https://api.example.com/posts/post_123/likes"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Payments API}
+
+\subsection{Architettura}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, minimum width=2.8cm, minimum height=0.8cm, align=center, font=\small},
+  external/.style={rectangle, draw, dashed, minimum width=2.8cm, minimum height=0.8cm, align=center, font=\small}
+]
+  % Client
+  \node[box] (client) {Client App};
+
+  % API
+  \node[box, below=of client] (api) {Payments API};
+
+  % Internal Services
+  \node[box, below left=1.5cm and 0.5cm of api] (processing) {Payment\\Processing};
+  \node[box, below right=1.5cm and 0.5cm of api] (fraud) {Fraud\\Detection};
+
+  % External
+  \node[external, below=of processing] (stripe) {Stripe};
+  \node[external, below=of fraud] (risk) {Risk\\Service};
+
+  % Database
+  \node[box, right=2cm of api] (db) {Database};
+  \node[box, below=of db] (queue) {Event\\Queue};
+
+  % Connections
+  \draw[->] (client) -- (api);
+  \draw[->] (api) -- (processing);
+  \draw[->] (api) -- (fraud);
+  \draw[->] (api) -- (db);
+  \draw[->] (processing) -- (stripe);
+  \draw[->] (fraud) -- (risk);
+  \draw[->] (processing) -- (queue);
+  \draw[->] (fraud) -- (queue);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Endpoint Principali}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Method} & \textbf{Endpoint} & \textbf{Descrizione} \\ \hline
+POST & /payment-methods & Aggiungi metodo pagamento \\ \hline
+GET & /payment-methods & Lista metodi pagamento \\ \hline
+DELETE & /payment-methods/\{id\} & Elimina metodo \\ \hline
+POST & /payments & Crea pagamento \\ \hline
+GET & /payments/\{id\} & Dettagli pagamento \\ \hline
+POST & /payments/\{id\}/refund & Rimborso \\ \hline
+POST & /payouts & Crea payout \\ \hline
+GET & /balance & Saldo account \\ \hline
+GET & /transactions & Storia transazioni \\ \hline
+\end{tabular}
+\caption{Payments API Endpoints}
+\end{table}
+
+\subsection{Esempi cURL}
+
+\begin{lstlisting}[language=bash, caption=Payments API - Esempi cURL]
+#!/bin/bash
+
+API_URL="https://api.payments.example.com/v1"
+TOKEN="sk_live_abc123..."
+
+echo "=== Payments API Examples ==="
+
+# 1. Aggiungi carta di credito
+echo -e "\n1. Aggiungi metodo di pagamento"
+CARD_RESPONSE=$(curl -s -X POST "$API_URL/payment-methods" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "card",
+    "card": {
+      "number": "4242424242424242",
+      "exp_month": 12,
+      "exp_year": 2025,
+      "cvc": "123"
+    },
+    "billing_details": {
+      "name": "Mario Rossi",
+      "email": "mario@example.com",
+      "address": {
+        "line1": "Via Roma 123",
+        "city": "Milano",
+        "postal_code": "20100",
+        "country": "IT"
+      }
+    }
+  }')
+
+echo "$CARD_RESPONSE" | jq .
+PAYMENT_METHOD_ID=$(echo "$CARD_RESPONSE" | jq -r '.id')
+
+# 2. Lista metodi di pagamento
+echo -e "\n2. Lista metodi di pagamento"
+curl -s "$API_URL/payment-methods" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 3. Crea pagamento
+echo -e "\n3. Crea pagamento"
+PAYMENT_RESPONSE=$(curl -s -X POST "$API_URL/payments" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d "{
+    \"amount\": 10000,
+    \"currency\": \"eur\",
+    \"payment_method\": \"$PAYMENT_METHOD_ID\",
+    \"description\": \"Ordine #ORD-2023-001234\",
+    \"metadata\": {
+      \"order_id\": \"ord_abc123\",
+      \"customer_id\": \"cus_456\"
+    },
+    \"receipt_email\": \"mario@example.com\"
+  }")
+
+echo "$PAYMENT_RESPONSE" | jq .
+PAYMENT_ID=$(echo "$PAYMENT_RESPONSE" | jq -r '.id')
+
+# 4. Conferma pagamento (per 3D Secure)
+echo -e "\n4. Conferma pagamento"
+curl -s -X POST "$API_URL/payments/$PAYMENT_ID/confirm" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "return_url": "https://example.com/payment/complete"
+  }' \
+  | jq .
+
+# 5. Dettagli pagamento
+echo -e "\n5. Dettagli pagamento"
+curl -s "$API_URL/payments/$PAYMENT_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 6. Lista pagamenti
+echo -e "\n6. Lista pagamenti"
+curl -s "$API_URL/payments" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "limit=10" \
+  --data-urlencode "status=succeeded" \
+  --data-urlencode "created[gte]=2023-11-01" \
+  | jq .
+
+# 7. Crea rimborso
+echo -e "\n7. Crea rimborso parziale"
+curl -s -X POST "$API_URL/payments/$PAYMENT_ID/refunds" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "amount": 5000,
+    "reason": "requested_by_customer",
+    "metadata": {
+      "reason_details": "Prodotto danneggiato"
+    }
+  }' \
+  | jq .
+
+# 8. Saldo account
+echo -e "\n8. Saldo account"
+curl -s "$API_URL/balance" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq .
+
+# 9. Crea payout
+echo -e "\n9. Crea payout"
+curl -s -X POST "$API_URL/payouts" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{
+    "amount": 50000,
+    "currency": "eur",
+    "method": "bank_account",
+    "description": "Payout mensile Novembre 2023"
+  }' \
+  | jq .
+
+# 10. Transazioni
+echo -e "\n10. Storia transazioni"
+curl -s "$API_URL/transactions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -G \
+  --data-urlencode "limit=20" \
+  --data-urlencode "type=payment" \
+  | jq .
+
+# 11. Crea subscription
+echo -e "\n11. Crea abbonamento"
+curl -s -X POST "$API_URL/subscriptions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"customer\": \"cus_456\",
+    \"items\": [
+      {
+        \"price\": \"price_pro_monthly\",
+        \"quantity\": 1
+      }
+    ],
+    \"payment_method\": \"$PAYMENT_METHOD_ID\",
+    \"trial_period_days\": 14
+  }" \
+  | jq .
+
+# 12. Webhook endpoint test
+echo -e "\n12. Test webhook signature"
+curl -s -X POST "$API_URL/webhooks/test" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook_id": "wh_abc123",
+    "event_type": "payment.succeeded"
+  }' \
+  | jq .
+\end{lstlisting}
+
+\subsection{Response Esempi}
+
+\begin{lstlisting}[caption=Payments - Payment Response]
+{
+  "id": "pay_abc123",
+  "object": "payment",
+  "amount": 10000,
+  "amount_received": 10000,
+  "currency": "eur",
+  "status": "succeeded",
+  "payment_method": {
+    "id": "pm_xyz789",
+    "type": "card",
+    "card": {
+      "brand": "visa",
+      "last4": "4242",
+      "exp_month": 12,
+      "exp_year": 2025,
+      "fingerprint": "abc123"
+    },
+    "billing_details": {
+      "name": "Mario Rossi",
+      "email": "mario@example.com",
+      "address": {
+        "line1": "Via Roma 123",
+        "city": "Milano",
+        "postal_code": "20100",
+        "country": "IT"
+      }
+    }
+  },
+  "description": "Ordine #ORD-2023-001234",
+  "receipt_email": "mario@example.com",
+  "receipt_url": "https://pay.example.com/receipts/pay_abc123",
+  "metadata": {
+    "order_id": "ord_abc123",
+    "customer_id": "cus_456"
+  },
+  "fees": [
+    {
+      "type": "stripe_fee",
+      "amount": 320,
+      "currency": "eur",
+      "description": "Stripe processing fee"
+    }
+  ],
+  "net": 9680,
+  "refunded": false,
+  "refunds": {
+    "total_count": 0,
+    "total_amount": 0,
+    "data": []
+  },
+  "risk_score": 15,
+  "risk_level": "normal",
+  "created_at": "2023-11-13T12:00:00Z",
+  "updated_at": "2023-11-13T12:00:05Z",
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/payments/pay_abc123"
+    },
+    "refund": {
+      "href": "https://api.example.com/payments/pay_abc123/refunds",
+      "method": "POST"
+    },
+    "receipt": {
+      "href": "https://pay.example.com/receipts/pay_abc123"
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Payments - Webhook Event]
+{
+  "id": "evt_abc123",
+  "type": "payment.succeeded",
+  "created_at": "2023-11-13T12:00:05Z",
+  "data": {
+    "object": {
+      "id": "pay_abc123",
+      "amount": 10000,
+      "currency": "eur",
+      "status": "succeeded",
+      "metadata": {
+        "order_id": "ord_abc123"
+      }
+    },
+    "previous_attributes": {
+      "status": "processing"
+    }
+  },
+  "livemode": true,
+  "pending_webhooks": 1,
+  "request": {
+    "id": "req_xyz789",
+    "idempotency_key": "a7b3c9d2-1234-5678-9abc-def012345678"
+  }
+}
+\end{lstlisting}
+
+\section{Postman Collections}
+
+\subsection{E-commerce Collection}
+
+\begin{lstlisting}[caption=Postman Collection - E-commerce]
+{
+  "info": {
+    "name": "E-commerce API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {"key": "token", "value": "{{access_token}}"}
+    ]
+  },
+  "variable": [
+    {"key": "base_url", "value": "https://api.ecommerce.example.com/v1"},
+    {"key": "access_token", "value": ""},
+    {"key": "product_id", "value": ""},
+    {"key": "order_id", "value": ""}
+  ],
+  "item": [
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/products?category=electronics&page=1",
+              "query": [
+                {"key": "category", "value": "electronics"},
+                {"key": "page", "value": "1"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/products/{{product_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Add to Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status is 200\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/cart/items",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": \"{{product_id}}\",\n  \"quantity\": 2\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Riepilogo}
+
+Questa appendice ha fornito tre esempi completi di REST API:
+
+\begin{enumerate}
+\item \textbf{E-commerce API}: Gestione prodotti, carrello, ordini
+\item \textbf{Social Media API}: Profili, post, feed, notifiche
+\item \textbf{Payments API}: Pagamenti, rimborsi, abbonamenti
+\end{enumerate}
+
+Ogni esempio include:
+\begin{itemize}
+\item Architettura sistema
+\item Endpoint completi
+\item Esempi cURL pratici
+\item Response dettagliate
+\item Postman collections
+\end{itemize}
+
+Usa questi esempi come riferimento per progettare le tue REST API.

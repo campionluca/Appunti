@@ -1,0 +1,310 @@
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{A chi si rivolge questo manuale}
+
+Questi appunti sono stati pensati per studenti di istituti tecnici e professionali, sviluppatori e sistemisti che vogliono apprendere le tecnologie di containerizzazione e DevOps moderne. Il percorso è strutturato per accompagnare progressivamente dalla teoria ai container fino alla gestione di infrastrutture complesse con Docker e strumenti DevOps.
+
+\section*{Struttura del corso}
+
+Il corso è organizzato in 7 capitoli che coprono l'intero ecosistema Docker e le pratiche DevOps:
+
+\textbf{Parte I - Fondamenti Container} (Capitoli 1-2)
+\begin{itemize}
+    \item Introduzione ai container e differenze con le macchine virtuali
+    \item Architettura Docker e componenti fondamentali
+    \item Comandi base per gestire container e immagini
+    \item Ciclo di vita di un container
+\end{itemize}
+
+\textbf{Parte II - Creazione Immagini} (Capitolo 3)
+\begin{itemize}
+    \item Dockerfile: sintassi e istruzioni principali
+    \item Best practices per immagini efficienti
+    \item Multi-stage builds per ottimizzazione
+    \item Layer caching e strategie di build
+\end{itemize}
+
+\textbf{Parte III - Orchestrazione e Networking} (Capitoli 4-5)
+\begin{itemize}
+    \item Docker Compose per applicazioni multi-container
+    \item Networking: bridge, host, overlay
+    \item Gestione volumi e persistenza dati
+    \item Service discovery e load balancing
+\end{itemize}
+
+\textbf{Parte IV - Distribuzione} (Capitolo 6)
+\begin{itemize}
+    \item Docker Hub e registry pubblici
+    \item Registry privati e sicurezza
+    \item CI/CD con Docker
+    \item Strategie di deployment
+\end{itemize}
+
+\section*{Prerequisiti}
+
+Per affrontare questo corso è consigliabile avere:
+\begin{itemize}
+    \item Conoscenze base di Linux e comandi shell
+    \item Familiarità con networking (IP, porte, protocolli)
+    \item Conoscenza di almeno un linguaggio di programmazione
+    \item Comprensione dei concetti di client-server
+    \item (Opzionale) Esperienza con macchine virtuali
+\end{itemize}
+
+\section*{Strumenti necessari}
+
+\textbf{Software consigliato}:
+\begin{itemize}
+    \item \textbf{Docker Engine}: Runtime per container Linux/Windows
+    \item \textbf{Docker Desktop}: Applicazione GUI per macOS/Windows
+    \item \textbf{Docker Compose}: Orchestrazione multi-container
+    \item \textbf{Visual Studio Code}: Editor con estensioni Docker
+    \item \textbf{Portainer}: Interfaccia web per gestione Docker
+\end{itemize}
+
+\textbf{Ambienti di sviluppo}:
+\begin{itemize}
+    \item \textbf{Linux}: Ubuntu 20.04+, Debian, CentOS, Fedora
+    \item \textbf{Windows}: Windows 10/11 Pro con WSL2
+    \item \textbf{macOS}: macOS 10.15+ con Docker Desktop
+    \item \textbf{Cloud}: AWS, Azure, Google Cloud (livello free tier)
+\end{itemize}
+
+\textbf{Tool aggiuntivi}:
+\begin{itemize}
+    \item \textbf{Git}: Versioning del codice e Dockerfile
+    \item \textbf{curl/wget}: Testing API e download
+    \item \textbf{jq}: Parsing JSON per inspect e API
+    \item \textbf{dive}: Analisi layer immagini Docker
+\end{itemize}
+
+\section*{Come studiare}
+
+Per ottenere il massimo da questi appunti:
+
+\begin{enumerate}
+    \item \textbf{Installa Docker}: Configura l'ambiente sul tuo sistema
+    \item \textbf{Digita i comandi}: Non copiare/incollare, scrivi manualmente
+    \item \textbf{Sperimenta}: Modifica i Dockerfile e osserva i risultati
+    \item \textbf{Leggi i log}: Impara a debuggare container in errore
+    \item \textbf{Costruisci progetti}: Containerizza applicazioni reali
+    \item \textbf{Studia i layer}: Usa \texttt{docker history} e \texttt{dive}
+    \item \textbf{Pratica networking}: Testa comunicazione tra container
+    \item \textbf{Ottimizza}: Riduci dimensioni immagini e tempi di build
+\end{enumerate}
+
+\begin{nota}
+Questo manuale usa \textbf{Docker Engine 20.10+} e \textbf{Docker Compose V2}. La maggior parte dei comandi funziona anche su versioni precedenti, ma alcune funzionalità avanzate richiedono versioni recenti.
+\end{nota}
+
+\section*{Convenzioni tipografiche}
+
+Nel testo vengono utilizzate le seguenti convenzioni:
+
+\begin{itemize}
+    \item \texttt{Comandi shell}: Comando da eseguire in terminale
+    \item \textbf{Parole chiave}: Concetti importanti (container, image, volume)
+    \item \textit{Nomi di file/path}: Riferimenti a file (Dockerfile, /var/lib/docker)
+    \item Box colorati: Note, Attenzioni, Best Practices, Errori Comuni
+    \item Diagrammi: Architetture e flussi con TikZ
+\end{itemize}
+
+\textbf{Formato comandi}:
+\begin{lstlisting}[language=bash]
+# Commento esplicativo
+$ docker comando [OPZIONI] ARGOMENTO
+\end{lstlisting}
+
+\textbf{Output esempio}:
+\begin{verbatim}
+CONTAINER ID   IMAGE     COMMAND   STATUS
+a1b2c3d4e5f6   nginx     ...       Up 2 hours
+\end{verbatim}
+
+\section*{Architettura del manuale}
+
+\textbf{Struttura di ogni capitolo}:
+\begin{enumerate}
+    \item \textbf{Obiettivi}: Cosa imparerai
+    \item \textbf{Teoria}: Concetti fondamentali
+    \item \textbf{Pratica}: Esempi completi commentati
+    \item \textbf{Diagrammi}: Visualizzazione architetture
+    \item \textbf{Best Practices}: Consigli professionali
+    \item \textbf{Errori Comuni}: Problemi da evitare
+    \item \textbf{Debugging}: Troubleshooting e log analysis
+    \item \textbf{Esercizi}: Sfide pratiche graduate
+    \item \textbf{Caso di Studio}: Progetto completo
+    \item \textbf{Riepilogo}: Riassunto concetti chiave
+    \item \textbf{Riferimenti}: Documentazione ufficiale
+\end{enumerate}
+
+\section*{Laboratorio pratico}
+
+Durante il corso costruirai:
+\begin{itemize}
+    \item \textbf{Web app multi-tier}: Frontend + Backend + Database
+    \item \textbf{Microservizi}: Architettura distribuita con API
+    \item \textbf{CI/CD Pipeline}: Build automatizzata e deployment
+    \item \textbf{Monitoring stack}: Prometheus + Grafana
+    \item \textbf{Reverse proxy}: Nginx per load balancing
+\end{itemize}
+
+\section*{Certificazioni}
+
+Questo corso prepara per:
+\begin{itemize}
+    \item \textbf{Docker Certified Associate (DCA)}
+    \item \textbf{Kubernetes fundamentals} (passo successivo naturale)
+    \item \textbf{Linux Foundation certifications} (DevOps track)
+\end{itemize}
+
+\section*{Sito web e risorse}
+
+Materiale aggiuntivo disponibile su:
+\begin{itemize}
+    \item Repository GitHub: \url{https://github.com/campionluca/Appunti}
+    \item Dockerfile di esempio scaricabili
+    \item Docker Compose templates per progetti comuni
+    \item Script di automazione e best practices
+    \item Video tutorial e screencast
+    \item Community Discord per supporto
+\end{itemize}
+
+\section*{Filosofia DevOps}
+
+Docker è uno strumento fondamentale nella cultura DevOps:
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Principi DevOps]
+\begin{itemize}
+    \item \textbf{Automation}: Automatizza build, test, deployment
+    \item \textbf{CI/CD}: Integrazione e consegna continue
+    \item \textbf{Infrastructure as Code}: Infrastruttura versionata
+    \item \textbf{Monitoring}: Osservabilità e metriche
+    \item \textbf{Collaboration}: Dev e Ops lavorano insieme
+    \item \textbf{Feedback rapido}: Cicli brevi di sviluppo
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Container nel mondo reale}
+
+Docker è utilizzato da:
+\begin{itemize}
+    \item \textbf{Startup}: Deployment rapido e scalabile
+    \item \textbf{Enterprise}: Modernizzazione applicazioni legacy
+    \item \textbf{Cloud providers}: AWS ECS/Fargate, Azure ACI, GCP Cloud Run
+    \item \textbf{Kubernetes}: Orchestrazione container in produzione
+    \item \textbf{Sviluppatori}: Ambienti consistenti dev/staging/prod
+\end{itemize}
+
+\section*{Roadmap di apprendimento}
+
+\textbf{Percorso consigliato}:
+\begin{enumerate}
+    \item \textbf{Settimana 1-2}: Capitoli 1-2 (fondamenti e comandi base)
+    \item \textbf{Settimana 3-4}: Capitolo 3 (Dockerfile e build)
+    \item \textbf{Settimana 5-6}: Capitolo 4 (Docker Compose)
+    \item \textbf{Settimana 7-8}: Capitolo 5 (networking e volumes)
+    \item \textbf{Settimana 9-10}: Capitolo 6 (registry e deployment)
+    \item \textbf{Settimana 11-12}: Progetto finale completo
+\end{enumerate}
+
+\section*{Progetto finale}
+
+Al termine del corso sarai in grado di:
+\begin{itemize}
+    \item Containerizzare qualsiasi applicazione
+    \item Creare Dockerfile ottimizzati e sicuri
+    \item Orchestrare stack multi-container con Compose
+    \item Configurare reti e volumi persistenti
+    \item Distribuire su registry pubblici e privati
+    \item Implementare CI/CD con GitHub Actions + Docker
+    \item Debuggare problemi di container in produzione
+\end{itemize}
+
+\section*{Community e supporto}
+
+\textbf{Dove trovare aiuto}:
+\begin{itemize}
+    \item \textbf{Docker Forums}: \url{https://forums.docker.com}
+    \item \textbf{Stack Overflow}: Tag [docker] e [dockerfile]
+    \item \textbf{Docker Community Slack}: Chat in tempo reale
+    \item \textbf{Reddit}: r/docker per discussioni e best practices
+    \item \textbf{GitHub Issues}: Report bug e feature requests
+\end{itemize}
+
+\section*{Sicurezza}
+
+\begin{attenzione}
+La sicurezza dei container è fondamentale:
+\begin{itemize}
+    \item Non eseguire container come root se evitabile
+    \item Scansiona immagini per vulnerabilità (Trivy, Snyk)
+    \item Usa immagini ufficiali da registry fidati
+    \item Aggiorna regolarmente base images
+    \item Limita risorse CPU/RAM per prevenire DoS
+    \item Usa secrets manager per credenziali sensibili
+\end{itemize}
+\end{attenzione}
+
+\section*{Ringraziamenti}
+
+Si ringrazia:
+\begin{itemize}
+    \item Docker Inc. per l'eccellente documentazione ufficiale
+    \item La community open source per contributi e feedback
+    \item L'Istituto Tecnico Antonio Scarpa per il supporto
+    \item Gli studenti che hanno testato e migliorato questi materiali
+\end{itemize}
+
+\vspace{1cm}
+
+\begin{flushright}
+\textit{Prof. Luca Campion}\\
+Novembre 2025
+\end{flushright}
+
+\section*{Note sulla versione}
+
+\textbf{Versione 1.0} - Novembre 2025
+\begin{itemize}
+    \item Prima release completa
+    \item 7 capitoli + esempi pratici
+    \item Coverage Docker: Engine, Compose, Networking, Registry
+    \item Esempi testati su Docker 20.10+
+    \item Diagrammi architettura con TikZ
+    \item 100+ esempi di codice funzionanti
+    \item Casi di studio reali da produzione
+\end{itemize}
+
+\textbf{Prossimi aggiornamenti}:
+\begin{itemize}
+    \item Kubernetes fundamentals (orchestrazione avanzata)
+    \item Docker Swarm per clustering
+    \item Security scanning e hardening
+    \item Monitoring con Prometheus/Grafana
+    \item Service mesh con Istio
+\end{itemize}
+
+\section*{Feedback}
+
+Questo manuale è in continua evoluzione. Invia suggerimenti, correzioni o richieste a:
+\begin{itemize}
+    \item Email: \texttt{luca.campion@example.com}
+    \item GitHub Issues: \url{https://github.com/campionluca/Appunti/issues}
+    \item Pull Requests benvenute!
+\end{itemize}
+
+\section*{Licenza}
+
+Questo materiale è distribuito con licenza Creative Commons BY-NC-SA 4.0:
+\begin{itemize}
+    \item \textbf{BY}: Attribuzione obbligatoria
+    \item \textbf{NC}: Uso non commerciale
+    \item \textbf{SA}: Condivisione con stessa licenza
+\end{itemize}
+
+\begin{center}
+\textit{"Containers are the future of software deployment"}\\
+\textbf{-- Solomon Hykes, Docker Founder}
+\end{center}

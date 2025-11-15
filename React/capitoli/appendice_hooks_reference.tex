@@ -1,0 +1,761 @@
+% appendice_hooks_reference.tex - Complete Hooks Reference
+
+\chapter{Appendice: Reference Hooks}
+\label{app:hooks}
+
+\section{Introduzione}
+
+Questa appendice fornisce una reference completa di tutti gli hooks React built-in e pattern comuni per custom hooks.
+
+\section{Hooks di Stato}
+
+\subsection{useState}
+
+Hook per aggiungere stato locale a componenti funzionali.
+
+\begin{lstlisting}[caption={useState - Reference completa}]
+import { useState } from 'react';
+
+// Sintassi base
+const [state, setState] = useState(initialState);
+
+// Con valore primitivo
+const [count, setCount] = useState(0);
+const [name, setName] = useState('');
+const [isActive, setActive] = useState(false);
+
+// Con oggetto
+const [user, setUser] = useState({ name: '', age: 0 });
+
+// Con array
+const [items, setItems] = useState([]);
+
+// Con funzione di inizializzazione (lazy init)
+const [expensive, setExpensive] = useState(() => {
+  return computeExpensiveValue();
+});
+
+// Update con valore diretto
+setCount(5);
+setName('Alice');
+
+// Update con funzione (prev state)
+setCount(prevCount => prevCount + 1);
+setUser(prevUser => ({ ...prevUser, age: 30 }));
+setItems(prevItems => [...prevItems, newItem]);
+
+// Esempio completo
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={() => setCount(count + 1)}>+</button>
+      <button onClick={() => setCount(prev => prev - 1)}>-</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{useReducer}
+
+Hook per gestire stato complesso con reducer pattern.
+
+\begin{lstlisting}[caption={useReducer - Reference completa}]
+import { useReducer } from 'react';
+
+// Sintassi
+const [state, dispatch] = useReducer(reducer, initialState, init);
+
+// Reducer function
+function reducer(state, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { count: state.count + 1 };
+    case 'DECREMENT':
+      return { count: state.count - 1 };
+    case 'RESET':
+      return { count: 0 };
+    default:
+      throw new Error('Unknown action');
+  }
+}
+
+// Uso base
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, { count: 0 });
+
+  return (
+    <div>
+      <p>{state.count}</p>
+      <button onClick={() => dispatch({ type: 'INCREMENT' })}>+</button>
+      <button onClick={() => dispatch({ type: 'DECREMENT' })}>-</button>
+      <button onClick={() => dispatch({ type: 'RESET' })}>Reset</button>
+    </div>
+  );
+}
+
+// Con payload
+function todoReducer(state, action) {
+  switch (action.type) {
+    case 'ADD':
+      return [...state, { id: Date.now(), text: action.payload }];
+    case 'DELETE':
+      return state.filter(todo => todo.id !== action.payload);
+    case 'TOGGLE':
+      return state.map(todo =>
+        todo.id === action.payload
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      );
+    default:
+      return state;
+  }
+}
+
+// Con lazy initialization
+const init = (initialCount) => ({ count: initialCount });
+
+const [state, dispatch] = useReducer(reducer, 10, init);
+\end{lstlisting}
+
+\section{Hooks di Effetti}
+
+\subsection{useEffect}
+
+Hook per effetti collaterali (side effects).
+
+\begin{lstlisting}[caption={useEffect - Reference completa}]
+import { useEffect } from 'react';
+
+// Sintassi
+useEffect(effectFunction, dependencies);
+
+// 1. Esegue ad ogni render
+useEffect(() => {
+  console.log('Ogni render');
+});
+
+// 2. Esegue solo al mount
+useEffect(() => {
+  console.log('Solo al mount');
+}, []);
+
+// 3. Esegue quando dipendenze cambiano
+useEffect(() => {
+  console.log('userId cambiato:', userId);
+}, [userId]);
+
+// Con cleanup
+useEffect(() => {
+  const timer = setInterval(() => {
+    console.log('Tick');
+  }, 1000);
+
+  // Cleanup function
+  return () => {
+    clearInterval(timer);
+  };
+}, []);
+
+// Esempi pratici
+// Fetch dati
+useEffect(() => {
+  fetch(`/api/users/${userId}`)
+    .then(res => res.json())
+    .then(setUser);
+}, [userId]);
+
+// Event listener
+useEffect(() => {
+  const handleResize = () => setWidth(window.innerWidth);
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+// Document title
+useEffect(() => {
+  document.title = `Count: ${count}`;
+}, [count]);
+
+// Subscription
+useEffect(() => {
+  const subscription = dataSource.subscribe();
+  return () => subscription.unsubscribe();
+}, []);
+\end{lstlisting}
+
+\subsection{useLayoutEffect}
+
+Come useEffect ma esegue sincronamente dopo DOM mutations.
+
+\begin{lstlisting}[caption={useLayoutEffect - Reference}]
+import { useLayoutEffect, useRef } from 'react';
+
+// Usa per misurazioni DOM o scroll position
+useLayoutEffect(() => {
+  const { height } = ref.current.getBoundingClientRect();
+  setHeight(height);
+}, []);
+
+// Esempio: Tooltip positioning
+function Tooltip({ targetRef, children }) {
+  const tooltipRef = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useLayoutEffect(() => {
+    const targetRect = targetRef.current.getBoundingClientRect();
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+
+    setPosition({
+      x: targetRect.left + targetRect.width / 2 - tooltipRect.width / 2,
+      y: targetRect.top - tooltipRect.height - 10
+    });
+  }, [targetRef]);
+
+  return (
+    <div
+      ref={tooltipRef}
+      style={{ position: 'absolute', left: position.x, top: position.y }}
+    >
+      {children}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Hooks di Ref}
+
+\subsection{useRef}
+
+Hook per valori mutabili che persistono tra render senza causare re-render.
+
+\begin{lstlisting}[caption={useRef - Reference completa}]
+import { useRef } from 'react';
+
+// Sintassi
+const ref = useRef(initialValue);
+
+// 1. DOM reference
+function InputFocus() {
+  const inputRef = useRef(null);
+
+  const focusInput = () => {
+    inputRef.current.focus();
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} />
+      <button onClick={focusInput}>Focus</button>
+    </div>
+  );
+}
+
+// 2. Valore mutabile (non causa re-render)
+function Timer() {
+  const intervalRef = useRef(null);
+
+  const start = () => {
+    intervalRef.current = setInterval(() => {
+      console.log('Tick');
+    }, 1000);
+  };
+
+  const stop = () => {
+    clearInterval(intervalRef.current);
+  };
+
+  return (
+    <div>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+    </div>
+  );
+}
+
+// 3. Previous value
+function Counter() {
+  const [count, setCount] = useState(0);
+  const prevCountRef = useRef();
+
+  useEffect(() => {
+    prevCountRef.current = count;
+  }, [count]);
+
+  return (
+    <div>
+      <p>Now: {count}, Before: {prevCountRef.current}</p>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </div>
+  );
+}
+
+// 4. Instance variable (come in class component)
+function Component() {
+  const renderCountRef = useRef(0);
+
+  renderCountRef.current += 1;
+
+  return <div>Renders: {renderCountRef.current}</div>;
+}
+\end{lstlisting}
+
+\subsection{useImperativeHandle}
+
+Personalizza l'istanza del ref esposto a componenti padre.
+
+\begin{lstlisting}[caption={useImperativeHandle - Reference}]
+import { useRef, useImperativeHandle, forwardRef } from 'react';
+
+// Componente figlio
+const FancyInput = forwardRef((props, ref) => {
+  const inputRef = useRef();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      inputRef.current.focus();
+    },
+    scrollIntoView: () => {
+      inputRef.current.scrollIntoView();
+    },
+    getValue: () => {
+      return inputRef.current.value;
+    }
+  }));
+
+  return <input ref={inputRef} {...props} />;
+});
+
+// Componente padre
+function Parent() {
+  const inputRef = useRef();
+
+  const handleClick = () => {
+    inputRef.current.focus();
+    console.log('Value:', inputRef.current.getValue());
+  };
+
+  return (
+    <div>
+      <FancyInput ref={inputRef} />
+      <button onClick={handleClick}>Focus & Get Value</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Hooks di Performance}
+
+\subsection{useMemo}
+
+Memoizza valore calcolato.
+
+\begin{lstlisting}[caption={useMemo - Reference completa}]
+import { useMemo } from 'react';
+
+// Sintassi
+const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);
+
+// Esempi
+// 1. Calcolo costoso
+const sortedList = useMemo(() => {
+  return items.sort((a, b) => a.value - b.value);
+}, [items]);
+
+// 2. Filtro
+const filteredUsers = useMemo(() => {
+  return users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}, [users, searchTerm]);
+
+// 3. Oggetto config
+const chartConfig = useMemo(() => ({
+  type: 'line',
+  data: chartData,
+  options: { responsive: true }
+}), [chartData]);
+
+// 4. Aggregazione
+const stats = useMemo(() => {
+  const sum = numbers.reduce((acc, n) => acc + n, 0);
+  const avg = sum / numbers.length;
+  return { sum, avg, count: numbers.length };
+}, [numbers]);
+\end{lstlisting}
+
+\subsection{useCallback}
+
+Memoizza funzione.
+
+\begin{lstlisting}[caption={useCallback - Reference completa}]
+import { useCallback } from 'react';
+
+// Sintassi
+const memoizedCallback = useCallback(fn, dependencies);
+
+// Esempi
+// 1. Event handler
+const handleClick = useCallback(() => {
+  console.log('Clicked:', count);
+}, [count]);
+
+// 2. Con parametro
+const handleDelete = useCallback((id) => {
+  setItems(items => items.filter(item => item.id !== id));
+}, []);
+
+// 3. Submit handler
+const handleSubmit = useCallback((e) => {
+  e.preventDefault();
+  onSave({ name, email });
+}, [name, email, onSave]);
+
+// 4. Passato a child memoizzato
+const MemoChild = memo(Child);
+
+function Parent() {
+  const handleUpdate = useCallback((data) => {
+    console.log('Update:', data);
+  }, []);
+
+  return <MemoChild onUpdate={handleUpdate} />;
+}
+\end{lstlisting}
+
+\section{Hooks di Context}
+
+\subsection{useContext}
+
+Accede a Context value.
+
+\begin{lstlisting}[caption={useContext - Reference completa}]
+import { createContext, useContext } from 'react';
+
+// Crea context
+const ThemeContext = createContext('light');
+const UserContext = createContext(null);
+
+// Provider
+function App() {
+  return (
+    <ThemeContext.Provider value="dark">
+      <UserContext.Provider value={{ name: 'Alice', role: 'admin' }}>
+        <Component />
+      </UserContext.Provider>
+    </ThemeContext.Provider>
+  );
+}
+
+// Consumer con useContext
+function Component() {
+  const theme = useContext(ThemeContext);
+  const user = useContext(UserContext);
+
+  return (
+    <div className={theme}>
+      Hello, {user.name} ({user.role})
+    </div>
+  );
+}
+
+// Pattern: Custom hook per context
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+
+  const login = (userData) => setUser(userData);
+  const logout = () => setUser(null);
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
+\end{lstlisting}
+
+\section{Hooks di Transizione}
+
+\subsection{useTransition}
+
+Marca aggiornamenti come transizioni (bassa priorità).
+
+\begin{lstlisting}[caption={useTransition - Reference}]
+import { useState, useTransition } from 'react';
+
+function SearchResults() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value); // Alta priorità (immediato)
+
+    // Bassa priorità (può essere interrotto)
+    startTransition(() => {
+      const filtered = allItems.filter(item =>
+        item.name.includes(value)
+      );
+      setResults(filtered);
+    });
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={handleChange} />
+      {isPending && <div>Loading...</div>}
+      <Results items={results} />
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{useDeferredValue}
+
+Differisce l'aggiornamento di un valore.
+
+\begin{lstlisting}[caption={useDeferredValue - Reference}]
+import { useState, useDeferredValue } from 'react';
+
+function Search() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  // query si aggiorna immediatamente
+  // deferredQuery si aggiorna con delay (bassa priorità)
+
+  return (
+    <div>
+      <input value={query} onChange={(e) => setQuery(e.target.value)} />
+      <SlowList query={deferredQuery} />
+    </div>
+  );
+}
+
+function SlowList({ query }) {
+  // Questo componente usa deferredQuery
+  // Re-render ritardato se user sta ancora digitando
+  const items = useMemo(() => {
+    return hugeList.filter(item => item.includes(query));
+  }, [query]);
+
+  return <div>{items.map(...)}</div>;
+}
+\end{lstlisting}
+
+\section{Altri Hooks}
+
+\subsection{useId}
+
+Genera ID unici stabili.
+
+\begin{lstlisting}[caption={useId - Reference}]
+import { useId } from 'react';
+
+function FormField({ label }) {
+  const id = useId();
+
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} />
+    </div>
+  );
+}
+
+// Multiple IDs
+function Form() {
+  const baseId = useId();
+
+  return (
+    <form>
+      <label htmlFor={`${baseId}-name`}>Name</label>
+      <input id={`${baseId}-name`} />
+
+      <label htmlFor={`${baseId}-email`}>Email</label>
+      <input id={`${baseId}-email`} />
+    </form>
+  );
+}
+\end{lstlisting}
+
+\subsection{useDebugValue}
+
+Label custom hook in DevTools.
+
+\begin{lstlisting}[caption={useDebugValue - Reference}]
+import { useDebugValue, useState } from 'react';
+
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
+
+  // Mostra "Online" o "Offline" in DevTools
+  useDebugValue(isOnline ? 'Online' : 'Offline');
+
+  // Con formatter (eseguito solo quando DevTools ispeziona)
+  useDebugValue(date, date => date.toDateString());
+
+  return isOnline;
+}
+\end{lstlisting}
+
+\section{Custom Hooks Pattern}
+
+\subsection{useFetch}
+
+\begin{lstlisting}[caption={Custom hook per fetch}]
+function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    setLoading(true);
+
+    fetch(url, { signal: controller.signal })
+      .then(res => res.json())
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [url]);
+
+  return { data, loading, error };
+}
+\end{lstlisting}
+
+\subsection{useLocalStorage}
+
+\begin{lstlisting}[caption={Custom hook per localStorage}]
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+\end{lstlisting}
+
+\subsection{useToggle}
+
+\begin{lstlisting}[caption={Custom hook per toggle}]
+function useToggle(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+
+  const toggle = useCallback(() => {
+    setValue(v => !v);
+  }, []);
+
+  return [value, toggle];
+}
+\end{lstlisting}
+
+\subsection{usePrevious}
+
+\begin{lstlisting}[caption={Custom hook per previous value}]
+function usePrevious(value) {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+}
+\end{lstlisting}
+
+\subsection{useOnClickOutside}
+
+\begin{lstlisting}[caption={Custom hook per click fuori elemento}]
+function useOnClickOutside(ref, handler) {
+  useEffect(() => {
+    const listener = (event) => {
+      if (!ref.current || ref.current.contains(event.target)) {
+        return;
+      }
+      handler(event);
+    };
+
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+}
+\end{lstlisting}
+
+\section{Regole degli Hooks}
+
+\begin{tcolorbox}[title=Regole Fondamentali]
+\begin{enumerate}
+\item \textbf{Solo al Top Level}: Non chiamare hooks dentro loop, condizioni o funzioni nidificate
+\item \textbf{Solo in React Functions}: Chiamare hooks solo in function components o custom hooks
+\item \textbf{Ordine Consistente}: L'ordine delle chiamate agli hooks deve essere lo stesso ad ogni render
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{lstlisting}[caption={Esempi di violazioni}]
+// SBAGLIATO: Hook in condizione
+if (condition) {
+  useEffect(() => {});
+}
+
+// SBAGLIATO: Hook in loop
+for (let i = 0; i < 10; i++) {
+  useState(i);
+}
+
+// SBAGLIATO: Hook in funzione normale
+function regularFunction() {
+  const [state, setState] = useState(0);
+}
+
+// CORRETTO: Hook al top level
+function Component() {
+  const [state, setState] = useState(0);
+
+  useEffect(() => {
+    if (condition) {
+      // Logica qui
+    }
+  });
+
+  return <div>{state}</div>;
+}
+\end{lstlisting}
+
+\section{Conclusioni}
+
+Gli hooks React forniscono un'API potente e flessibile per gestire stato, effetti e logica riutilizzabile. La chiave è:
+
+\begin{itemize}
+\item Comprendere quando usare ciascun hook
+\item Rispettare le regole degli hooks
+\item Creare custom hooks per logica riutilizzabile
+\item Usare memoization solo quando necessario
+\item Testare hooks con renderHook
+\end{itemize}

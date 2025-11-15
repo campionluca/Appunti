@@ -1,115 +1,723 @@
 \chapter{Funzioni}\label{cap:funzioni}
 
 \begin{tcolorbox}[title=Mappa del capitolo]
-Teoria, Definizione e chiamata, Parametri e ritorni, Scope, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+Obiettivi, Teoria funzioni, Definizione e sintassi, Parametri (default, type hints, variadic), Return types, Scope variabili, Arrow functions, Closures, Callback, Anonymous functions, Pure functions, Higher-order functions, Esempi pratici, Progetti, Troubleshooting, Esercizi, Riferimenti.
 \end{tcolorbox}
 
 \section{Obiettivi di apprendimento}
+
+Al termine di questo capitolo sarai in grado di:
+
 \begin{itemize}
-  \item Incapsulare logica riutilizzabile con funzioni chiare.
-  \item Comprendere parametri, valori di ritorno e scope delle variabili.
-  \item Applicare pattern di funzioni pure e gestire effetti collaterali.
+    \item Definire e chiamare funzioni in PHP
+    \item Utilizzare parametri con type hints e valori default
+    \item Comprendere scope di variabili (locale, globale, statico)
+    \item Usare arrow functions e closures
+    \item Implementare callback e higher-order functions
+    \item Scrivere funzioni pure e gestire side effects
+    \item Applicare pattern funzionali (map, filter, reduce)
 \end{itemize}
 
-\section{Teoria}
-Le funzioni incapsulano logica riutilizzabile. In PHP moderno è consigliato usare type hints per parametri e tipo di ritorno.
+\section{Teoria: Perché le Funzioni}
 
-\section{Definizione e chiamata}
-\begin{lstlisting}
+Le funzioni sono blocchi di codice riutilizzabili che:
+
+\begin{itemize}
+    \item \textbf{Riducono duplicazione}: Scrivi una volta, usa ovunque
+    \item \textbf{Migliorano leggibilità}: Codice auto-documentante
+    \item \textbf{Facilitano testing}: Testabili indipendentemente
+    \item \textbf{Incapsulano logica}: Nascondono complessità
+    \item \textbf{Promuovono riuso}: Librerie e moduli
+\end{itemize}
+
+\section{Definizione e Sintassi}
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[language=PHP, caption={Funzione base}]
+<?php
+function functionName($param1, $param2) {
+    // Codice
+    return $result;
+}
+
+// Chiamata
+$value = functionName($arg1, $arg2);
+?>
+\end{lstlisting}
+
+\subsection{Funzione con Type Hints (PHP 7+)}
+
+\begin{lstlisting}[language=PHP, caption={Type hints consigliati}]
 <?php
 function greet(string $name): string {
-    return "Ciao, $name";
+    return "Ciao, $name!";
 }
-echo greet('Mondo');
+
+echo greet('Mario');  // Output: Ciao, Mario!
+
+// Errore se tipo sbagliato
+// greet(123);  // TypeError in strict mode
+?>
 \end{lstlisting}
 
-\subsection*{Stile alternativo senza type hints (compatibilità)}
-\begin{lstlisting}
+\subsection{Strict Types}
+
+\begin{lstlisting}[language=PHP, caption={Modalità strict types}]
 <?php
-function greet2($name) {
-    $name = (string)$name;
-    return 'Ciao, ' . $name;
+declare(strict_types=1);  // PRIMA riga del file
+
+function add(int $a, int $b): int {
+    return $a + $b;
 }
-echo greet2('Mondo');
+
+echo add(5, 10);     // OK: 15
+// echo add('5', 10);   // TypeError: deve essere int, non string
+?>
 \end{lstlisting}
 
-\section{Parametri e valori di ritorno}
-- Parametri con default, tipi unione, passaggio per riferimento se necessario.
+\begin{nota}
+Usa \texttt{declare(strict\_types=1)} per forzare type checking rigoroso. È best practice per codice production.
+\end{nota}
 
-\begin{lstlisting}
-<?php
-function add(int $a, int $b = 0): int { return $a + $b; }
-function normalize(?string $s): string { return trim($s ?? ''); }
-\end{lstlisting}
+\section{Parametri delle Funzioni}
 
-\subsection*{Passaggio per riferimento e variadiche}
-\begin{lstlisting}
+\subsection{Parametri con Valori Default}
+
+\begin{lstlisting}[language=PHP, caption={Default parameters}]
 <?php
-function pushValue(array &$arr, $value) { $arr[] = $value; }
-function sumAll(...$nums) {
-    $tot = 0;
-    foreach ($nums as $n) { $tot += (int)$n; }
-    return $tot;
+function createUser(string $name, string $role = 'user', bool $active = true) {
+    return [
+        'name' => $name,
+        'role' => $role,
+        'active' => $active
+    ];
 }
-$a = [];
-pushValue($a, 10); // $a = [10]
+
+// Chiama con tutti i parametri
+$admin = createUser('Mario', 'admin', true);
+
+// Usa defaults per role e active
+$user = createUser('Anna');  // role='user', active=true
+
+// Usa default solo per active
+$guest = createUser('Carlo', 'guest');
+?>
 \end{lstlisting}
 
-\section{Variabili globali e locali}
-- Evitare l'uso di \texttt{global}; preferire passaggio parametri o dipendenze esplicite.
+\begin{attenzione}
+Parametri con default devono essere DOPO quelli obbligatori:
+\begin{itemize}
+    \item ✅ \texttt{function f(\$required, \$optional = 'default')}
+    \item ❌ \texttt{function f(\$optional = 'default', \$required)}
+\end{itemize}
+\end{attenzione}
 
-\begin{lstlisting}
+\subsection{Parametri Variadic (...)}
+
+\begin{lstlisting}[language=PHP, caption={Variadic parameters}]
 <?php
-$counter = 0;
-function inc(): int {
-    static $c = 0; // persiste tra chiamate
-    $c++; return $c;
+function sum(...$numbers): int {
+    $total = 0;
+    foreach ($numbers as $num) {
+        $total += $num;
+    }
+    return $total;
 }
+
+echo sum(1, 2, 3);           // 6
+echo sum(10, 20, 30, 40);    // 100
+echo sum(5);                 // 5
+echo sum();                  // 0
+?>
 \end{lstlisting}
 
-\section{Esempi pratici}
-\begin{lstlisting}
-<?php
-// Funzione pura
-function twice($n) { return (int)$n * 2; }
+\subsection{Unpacking Arguments}
 
-// Closure con cattura di contesto
-$prefixer = function($p) {
-    return function($s) use ($p) { return $p . (string)$s; };
+\begin{lstlisting}[language=PHP, caption={Argument unpacking}]
+<?php
+function createPoint(int $x, int $y, int $z): array {
+    return ['x' => $x, 'y' => $y, 'z' => $z];
+}
+
+$coords = [10, 20, 30];
+$point = createPoint(...$coords);  // Unpacking con ...
+
+print_r($point);
+// Output: ['x' => 10, 'y' => 20, 'z' => 30]
+?>
+\end{lstlisting}
+
+\subsection{Named Arguments (PHP 8+)}
+
+\begin{lstlisting}[language=PHP, caption={Named arguments PHP 8}]
+<?php
+function createRect(int $width, int $height, string $color = 'black') {
+    return compact('width', 'height', 'color');
+}
+
+// Posizionali (tradizionale)
+$rect1 = createRect(100, 50);
+
+// Named (PHP 8+)
+$rect2 = createRect(width: 100, height: 50);
+
+// Salta parametri intermedi
+$rect3 = createRect(width: 200, color: 'red', height: 100);
+?>
+\end{lstlisting}
+
+\subsection{Passaggio per Riferimento}
+
+\begin{lstlisting}[language=PHP, caption={Pass by reference}]
+<?php
+// Per valore (default) - NON modifica originale
+function incrementValue(int $n): void {
+    $n++;  // Modifica copia locale
+}
+
+// Per riferimento - MODIFICA originale
+function incrementRef(int &$n): void {
+    $n++;  // Modifica variabile originale
+}
+
+$x = 10;
+incrementValue($x);
+echo $x;  // 10 (invariato)
+
+incrementRef($x);
+echo $x;  // 11 (modificato!)
+?>
+\end{lstlisting}
+
+\begin{attenzione}
+Usa passaggio per riferimento SOLO quando necessario. Preferisci return values per chiarezza.
+\end{attenzione}
+
+\section{Return Types}
+
+\subsection{Tipi Primitivi}
+
+\begin{lstlisting}[language=PHP, caption={Return type primitives}]
+<?php
+function getAge(): int {
+    return 25;
+}
+
+function getPrice(): float {
+    return 19.99;
+}
+
+function isActive(): bool {
+    return true;
+}
+
+function getName(): string {
+    return "Mario";
+}
+?>
+\end{lstlisting}
+
+\subsection{Tipi Complessi}
+
+\begin{lstlisting}[language=PHP, caption={Complex return types}]
+<?php
+function getUser(): array {
+    return ['id' => 1, 'name' => 'Mario'];
+}
+
+function getUserOrNull(): ?array {  // Nullable
+    return null;  // OK
+    // return ['id' => 1];  // OK anche
+}
+
+function mixed(): mixed {  // PHP 8+
+    return 123;     // OK
+    return "text";  // OK
+    return [];      // OK
+}
+?>
+\end{lstlisting}
+
+\subsection{Void Return}
+
+\begin{lstlisting}[language=PHP, caption={Void functions}]
+<?php
+function logMessage(string $msg): void {
+    error_log($msg);
+    // Non può fare return con valore
+    // return $msg;  // ERRORE!
+
+    // Solo return senza valore
+    return;  // OK (opzionale)
+}
+?>
+\end{lstlisting}
+
+\subsection{Union Types (PHP 8+)}
+
+\begin{lstlisting}[language=PHP, caption={Union types}]
+<?php
+function process(int|string $input): bool {
+    if (is_int($input)) {
+        return $input > 0;
+    }
+    return strlen($input) > 0;
+}
+
+echo process(123);      // true
+echo process("hello");  // true
+echo process(0);        // false
+?>
+\end{lstlisting}
+
+\section{Scope delle Variabili}
+
+\subsection{Scope Locale}
+
+\begin{lstlisting}[language=PHP, caption={Local scope}]
+<?php
+function test() {
+    $local = "Sono locale";
+    echo $local;  // OK
+}
+
+test();
+// echo $local;  // ERRORE: $local non definita fuori dalla funzione
+?>
+\end{lstlisting}
+
+\subsection{Scope Globale (Evitare)}
+
+\begin{lstlisting}[language=PHP, caption={Global scope (BAD PRACTICE)}]
+<?php
+$globalVar = "Globale";
+
+function useGlobal() {
+    global $globalVar;  // Dichiarazione necessaria
+    echo $globalVar;
+}
+
+useGlobal();  // OK: Globale
+
+// ALTERNATIVA MIGLIORE: passare come parametro
+function useParam(string $value) {
+    echo $value;
+}
+
+useParam($globalVar);  // PREFERISCI QUESTO
+?>
+\end{lstlisting}
+
+\subsection{Variabili Statiche}
+
+\begin{lstlisting}[language=PHP, caption={Static variables}]
+<?php
+function counter(): int {
+    static $count = 0;  // Inizializzata UNA SOLA VOLTA
+    $count++;
+    return $count;
+}
+
+echo counter();  // 1
+echo counter();  // 2
+echo counter();  // 3
+echo counter();  // 4
+?>
+\end{lstlisting}
+
+\section{Arrow Functions (PHP 7.4+)}
+
+\subsection{Sintassi Arrow Function}
+
+\begin{lstlisting}[language=PHP, caption={Arrow functions}]
+<?php
+// Funzione tradizionale
+$double1 = function($n) {
+    return $n * 2;
 };
-$hello = $prefixer('Hello ');
-echo $hello('world');
+
+// Arrow function (più concisa)
+$double2 = fn($n) => $n * 2;
+
+echo $double2(5);  // 10
+
+// Usata con array_map
+$numbers = [1, 2, 3, 4, 5];
+$doubled = array_map(fn($n) => $n * 2, $numbers);
+print_r($doubled);  // [2, 4, 6, 8, 10]
+?>
 \end{lstlisting}
 
-\section{Caso di studio: libreria di utilità}
-Raccolta di funzioni pure per normalizzare input (trim, lower/upper, sostituzioni) e funzioni impure per logging controllato, con documentazione delle pre/post-condizioni.
+\subsection{Cattura Automatica Scope}
+
+\begin{lstlisting}[language=PHP, caption={Auto capture scope}]
+<?php
+$multiplier = 10;
+
+// Closure tradizionale: serve 'use'
+$func1 = function($n) use ($multiplier) {
+    return $n * $multiplier;
+};
+
+// Arrow function: cattura automaticamente
+$func2 = fn($n) => $n * $multiplier;
+
+echo $func2(5);  // 50
+?>
+\end{lstlisting}
+
+\section{Closures (Anonymous Functions)}
+
+\subsection{Closure Base}
+
+\begin{lstlisting}[language=PHP, caption={Basic closures}]
+<?php
+$greet = function($name) {
+    return "Ciao, $name!";
+};
+
+echo $greet('Mario');  // Ciao, Mario!
+
+// Closure come callback
+$numbers = [1, 2, 3, 4, 5];
+$squared = array_map(function($n) {
+    return $n * $n;
+}, $numbers);
+
+print_r($squared);  // [1, 4, 9, 16, 25]
+?>
+\end{lstlisting}
+
+\subsection{Closure con Use}
+
+\begin{lstlisting}[language=PHP, caption={Closures with use}]
+<?php
+$prefix = "Hello";
+
+$greet = function($name) use ($prefix) {
+    return "$prefix, $name!";
+};
+
+echo $greet('World');  // Hello, World!
+
+// Use by reference
+$counter = 0;
+$increment = function() use (&$counter) {
+    $counter++;
+};
+
+$increment();
+$increment();
+echo $counter;  // 2
+?>
+\end{lstlisting}
+
+\subsection{Closure Factory}
+
+\begin{lstlisting}[language=PHP, caption={Closure factory pattern}]
+<?php
+function makeMultiplier(int $factor) {
+    return fn($n) => $n * $factor;
+}
+
+$double = makeMultiplier(2);
+$triple = makeMultiplier(3);
+$quadruple = makeMultiplier(4);
+
+echo $double(10);     // 20
+echo $triple(10);     // 30
+echo $quadruple(10);  // 40
+?>
+\end{lstlisting}
+
+\section{Callback Functions}
+
+\subsection{Callback con Funzioni Named}
+
+\begin{lstlisting}[language=PHP, caption={Named function callbacks}]
+<?php
+function isEven(int $n): bool {
+    return $n % 2 === 0;
+}
+
+$numbers = [1, 2, 3, 4, 5, 6];
+$evens = array_filter($numbers, 'isEven');
+
+print_r($evens);  // [2, 4, 6]
+?>
+\end{lstlisting}
+
+\subsection{Callable Type Hint}
+
+\begin{lstlisting}[language=PHP, caption={Callable type hint}]
+<?php
+function applyOperation(array $numbers, callable $operation): array {
+    $result = [];
+    foreach ($numbers as $num) {
+        $result[] = $operation($num);
+    }
+    return $result;
+}
+
+$numbers = [1, 2, 3, 4, 5];
+
+// Con closure
+$squared = applyOperation($numbers, fn($n) => $n * $n);
+
+// Con funzione named
+$doubled = applyOperation($numbers, fn($n) => $n * 2);
+
+print_r($squared);  // [1, 4, 9, 16, 25]
+print_r($doubled);  // [2, 4, 6, 8, 10]
+?>
+\end{lstlisting}
+
+\section{Pure Functions}
+
+\subsection{Cos'è una Pure Function}
+
+Una funzione è "pura" se:
+\begin{enumerate}
+    \item Dato lo stesso input, ritorna sempre lo stesso output (deterministica)
+    \item Non ha side effects (non modifica stato esterno)
+\end{enumerate}
+
+\begin{lstlisting}[language=PHP, caption={Pure vs Impure functions}]
+<?php
+// PURE - deterministico, no side effects
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+echo add(2, 3);  // Sempre 5
+
+// IMPURE - usa stato esterno (time)
+function getCurrentTime(): string {
+    return date('H:i:s');  // Output varia
+}
+
+// IMPURE - ha side effects (scrive file)
+function logMessage(string $msg): void {
+    file_put_contents('log.txt', $msg, FILE_APPEND);
+}
+
+// IMPURE - modifica stato esterno
+$counter = 0;
+function incrementGlobal(): void {
+    global $counter;
+    $counter++;  // Side effect!
+}
+?>
+\end{lstlisting}
+
+\subsection{Vantaggi Pure Functions}
+
+\begin{itemize}
+    \item \textbf{Testabili}: Facile scrivere unit test
+    \item \textbf{Prevedibili}: Nessuna sorpresa
+    \item \textbf{Componibili}: Combinabili facilmente
+    \item \textbf{Parallelizzabili}: Nessuna race condition
+    \item \textbf{Cacheable}: Memoization possibile
+\end{itemize}
+
+\section{Higher-Order Functions}
+
+Funzioni che:
+\begin{itemize}
+    \item Accettano altre funzioni come parametri
+    \item Ritornano funzioni
+\end{itemize}
+
+\subsection{array\_map, array\_filter, array\_reduce}
+
+\begin{lstlisting}[language=PHP, caption={HOF built-in}]
+<?php
+$numbers = [1, 2, 3, 4, 5];
+
+// MAP: trasforma ogni elemento
+$doubled = array_map(fn($n) => $n * 2, $numbers);
+// [2, 4, 6, 8, 10]
+
+// FILTER: seleziona elementi
+$evens = array_filter($numbers, fn($n) => $n % 2 === 0);
+// [2, 4]
+
+// REDUCE: aggrega in un valore
+$sum = array_reduce($numbers, fn($carry, $n) => $carry + $n, 0);
+// 15
+?>
+\end{lstlisting}
+
+\subsection{Compose e Pipe}
+
+\begin{lstlisting}[language=PHP, caption={Function composition}]
+<?php
+// Compose: applica funzioni da destra a sinistra
+function compose(callable ...$functions): callable {
+    return fn($value) => array_reduce(
+        array_reverse($functions),
+        fn($carry, $fn) => $fn($carry),
+        $value
+    );
+}
+
+$double = fn($n) => $n * 2;
+$increment = fn($n) => $n + 1;
+$square = fn($n) => $n * $n;
+
+$composed = compose($square, $increment, $double);
+echo $composed(5);  // ((5 * 2) + 1)^2 = 121
+
+// Pipe: applica funzioni da sinistra a destra
+function pipe(callable ...$functions): callable {
+    return fn($value) => array_reduce(
+        $functions,
+        fn($carry, $fn) => $fn($carry),
+        $value
+    );
+}
+
+$piped = pipe($double, $increment, $square);
+echo $piped(5);  // ((5 * 2) + 1)^2 = 121
+?>
+\end{lstlisting}
+
+\section{Esempi Pratici Completi}
+
+\subsection{Utility Functions Library}
+
+\begin{lstlisting}[language=PHP, caption={utils.php}]
+<?php
+// String utilities
+function slugify(string $text): string {
+    $text = strtolower($text);
+    $text = preg_replace('/[^a-z0-9-]/', '-', $text);
+    $text = preg_replace('/-+/', '-', $text);
+    return trim($text, '-');
+}
+
+function truncate(string $text, int $length, string $suffix = '...'): string {
+    if (strlen($text) <= $length) {
+        return $text;
+    }
+    return substr($text, 0, $length - strlen($suffix)) . $suffix;
+}
+
+// Array utilities
+function pluck(array $array, string $key): array {
+    return array_map(fn($item) => $item[$key] ?? null, $array);
+}
+
+function groupBy(array $array, string $key): array {
+    $result = [];
+    foreach ($array as $item) {
+        $groupKey = $item[$key] ?? 'undefined';
+        $result[$groupKey][] = $item;
+    }
+    return $result;
+}
+
+// Validation
+function validateEmail(string $email): bool {
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function validateAge(int $age): bool {
+    return $age >= 18 && $age <= 120;
+}
+
+// Usage
+echo slugify("Hello World! 123");  // hello-world-123
+echo truncate("Long text here", 10);  // Long te...
+
+$users = [
+    ['name' => 'Mario', 'role' => 'admin'],
+    ['name' => 'Anna', 'role' => 'user'],
+    ['name' => 'Carlo', 'role' => 'admin']
+];
+
+$names = pluck($users, 'name');  // ['Mario', 'Anna', 'Carlo']
+$byRole = groupBy($users, 'role');
+// ['admin' => [Mario, Carlo], 'user' => [Anna]]
+?>
+\end{lstlisting}
+
+\section{Troubleshooting}
+
+\subsection{Errore: "Too few arguments"}
+
+\begin{lstlisting}[language=PHP]
+function greet(string $name, string $title) {
+    return "$title $name";
+}
+
+greet("Mario");  // ERROR: Too few arguments
+\end{lstlisting}
+
+Soluzione: fornisci tutti i parametri o usa valori default.
+
+\subsection{Type Error}
+
+\begin{lstlisting}[language=PHP]
+declare(strict_types=1);
+
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+add("5", "10");  // TypeError
+\end{lstlisting}
+
+Soluzione: passa tipi corretti o rimuovi strict_types.
 
 \section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea funzioni utility:
 \begin{itemize}
-  \item Implementa una funzione \verb|rename_key($arr, $old, $new)| che rinomini una chiave se presente.
-  \item Scrivi una funzione \verb|compose($f,$g)| che restituisca una nuova funzione composizione.
+    \item \texttt{isEven(\$n)}: verifica se numero è pari
+    \item \texttt{capitalize(\$str)}: prima lettera maiuscola
+    \item \texttt{average(...\$numbers)}: calcola media
 \end{itemize}
 
-\section{Verifica}
+\subsection{Esercizio 2 (Intermedio)}
+Implementa higher-order functions:
 \begin{itemize}
-  \item Quando è opportuno usare variabili \texttt{static} all'interno delle funzioni?
-  \item Quali benefici e limiti portano i type hints in PHP?
+    \item \texttt{arrayEvery(\$arr, \$predicate)}: tutti gli elementi soddisfano predicato
+    \item \texttt{arraySome(\$arr, \$predicate)}: almeno un elemento soddisfa
+    \item \texttt{memoize(\$fn)}: wrapper che cache i risultati
 \end{itemize}
+
+\subsection{Esercizio 3 (Avanzato)}
+Sistema validazione con compose:
+\begin{itemize}
+    \item Singole funzioni validazione (email, lunghezza, regex)
+    \item \texttt{validateAll(...\$validators)}: compone validators
+    \item Applica a form registration
+\end{itemize}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Best Practices Funzioni]
+\begin{itemize}
+    \item[$\square$] Usa type hints per parametri e return types
+    \item[$\square$] Preferisci funzioni pure quando possibile
+    \item[$\square$] Una funzione = una responsabilità (SRP)
+    \item[$\square$] Nomi descrittivi (verbi per azioni)
+    \item[$\square$] Evita funzioni con troppe righe (max 20-30)
+    \item[$\square$] Evita troppi parametri (max 3-4)
+    \item[$\square$] Documenta con DocBlocks
+    \item[$\square$] Return early per ridurre nesting
+    \item[$\square$] Evita global, preferisci dependency injection
+    \item[$\square$] Usa arrow functions per callback brevi
+\end{itemize}
+\end{tcolorbox}
 
 \section{Riferimenti}
+
 \begin{itemize}
-  \item Manuale PHP — Funzioni: \url{https://www.php.net/functions}
-  \item PSR — Best practices di coding: \url{https://www.php-fig.org/}
+    \item PHP Manual - Funzioni: \url{https://www.php.net/manual/en/language.functions.php}
+    \item PSR Coding Standards: \url{https://www.php-fig.org/psr/}
+    \item Clean Code PHP: \url{https://github.com/jupeter/clean-code-php}
 \end{itemize}
-
-\begin{tcolorbox}[title=Best practice]
-- Tipizzare parametri e ritorni per chiarezza e robustezza.
-- Funzioni pure quando possibile; gestione degli effetti collaterali ben delimitata.
-- Documentare pre/post-condizioni e casi limite.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Errori comuni]
-- Abuso di variabili globali.
-- Mancata validazione degli argomenti.
-- Ignorare i tipi e restituire valori eterogenei.
-\end{tcolorbox}

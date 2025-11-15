@@ -1,0 +1,839 @@
+% Capitolo 07 — Networking in Linux
+\chapter{Networking in Linux}
+
+\section{Introduzione}
+La configurazione e gestione della rete è una competenza fondamentale per ogni amministratore di sistema Linux. In questo capitolo esploreremo i comandi essenziali per diagnosticare, configurare e trasferire dati attraverso la rete.
+
+Dalla verifica della connettività alla configurazione di interfacce, dal trasferimento sicuro di file alla download di risorse web, questi strumenti costituiscono il fondamento delle operazioni di rete quotidiane.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Configurazione interfacce (ifconfig, ip), Diagnostica rete (netstat, ss, ping), Connessioni remote (ssh, scp), Sincronizzazione (rsync), Download (curl, wget), Esempi pratici, Best practice, Troubleshooting.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Configurare e visualizzare interfacce di rete con \texttt{ip} e \texttt{ifconfig}.
+    \item Diagnosticare problemi di rete con \texttt{netstat}, \texttt{ss}, \texttt{ping}, \texttt{traceroute}.
+    \item Gestire connessioni remote sicure con SSH.
+    \item Trasferire file con \texttt{scp}, \texttt{rsync}.
+    \item Scaricare e interagire con API tramite \texttt{curl} e \texttt{wget}.
+\end{itemize}
+
+\section{Configurazione Interfacce di Rete}
+
+\subsection{Il comando \texttt{ifconfig} (deprecato ma ancora usato)}
+\texttt{ifconfig} era lo strumento tradizionale per configurare interfacce di rete. Sebbene deprecato in favore di \texttt{ip}, è ancora presente in molti sistemi legacy.
+
+\begin{lstlisting}
+# Visualizzare tutte le interfacce
+ifconfig
+
+# Visualizzare una interfaccia specifica
+ifconfig eth0
+
+# Attivare/disattivare un'interfaccia
+sudo ifconfig eth0 up
+sudo ifconfig eth0 down
+
+# Assegnare indirizzo IP
+sudo ifconfig eth0 192.168.1.100 netmask 255.255.255.0
+
+# Abilitare modalità promiscua (sniffing)
+sudo ifconfig eth0 promisc
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Spiegazione del codice]
+- \textbf{ifconfig}: senza parametri mostra tutte le interfacce attive.\\
+- \textbf{up/down}: attiva o disattiva un'interfaccia di rete.\\
+- \textbf{netmask}: specifica la maschera di sottorete.\\
+- \textbf{promisc}: modalità promiscua per catturare tutto il traffico.
+\end{tcolorbox}
+
+\subsection{Il comando \texttt{ip} (moderno e raccomandato)}
+\texttt{ip} è il comando moderno per la gestione di rete in Linux, parte del pacchetto \textit{iproute2}.
+
+\begin{lstlisting}
+# Visualizzare tutte le interfacce
+ip link show
+ip addr show
+
+# Interfaccia specifica
+ip addr show dev eth0
+
+# Attivare/disattivare interfaccia
+sudo ip link set eth0 up
+sudo ip link set eth0 down
+
+# Assegnare indirizzo IP
+sudo ip addr add 192.168.1.100/24 dev eth0
+
+# Rimuovere indirizzo IP
+sudo ip addr del 192.168.1.100/24 dev eth0
+
+# Visualizzare routing table
+ip route show
+
+# Aggiungere route
+sudo ip route add 192.168.2.0/24 via 192.168.1.1 dev eth0
+
+# Route di default
+sudo ip route add default via 192.168.1.1
+
+# Visualizzare statistiche
+ip -s link show eth0
+
+# Visualizzare neighbors (ARP)
+ip neigh show
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Confronto ifconfig vs ip]
+\begin{tabular}{ll}
+\textbf{ifconfig} & \textbf{ip} \\
+\hline
+ifconfig -a & ip link show \\
+ifconfig eth0 & ip addr show dev eth0 \\
+ifconfig eth0 up & ip link set eth0 up \\
+route -n & ip route show \\
+arp -a & ip neigh show \\
+\end{tabular}
+\end{tcolorbox}
+
+\section{Diagnostica di Rete}
+
+\subsection{Test di Connettività: \texttt{ping}}
+\begin{lstlisting}
+# Ping base
+ping google.com
+
+# Limitare numero di pacchetti
+ping -c 4 8.8.8.8
+
+# Impostare intervallo tra ping (0.2 secondi)
+ping -i 0.2 192.168.1.1
+
+# Dimensione pacchetto personalizzata
+ping -s 1000 google.com
+
+# Ping fino a successo
+while ! ping -c 1 192.168.1.1 > /dev/null 2>&1; do
+    echo "Waiting for network..."
+    sleep 2
+done
+echo "Network is up!"
+\end{lstlisting}
+
+\subsection{Traceroute: percorso verso destinazione}
+\begin{lstlisting}
+# Tracciare il percorso
+traceroute google.com
+
+# Con numeri IP (no DNS)
+traceroute -n 8.8.8.8
+
+# Usare ICMP invece di UDP
+traceroute -I google.com
+
+# Numero massimo di hop
+traceroute -m 20 google.com
+\end{lstlisting}
+
+\subsection{\texttt{netstat}: statistiche di rete (deprecato)}
+\begin{lstlisting}
+# Tutte le connessioni
+netstat -a
+
+# Solo connessioni TCP
+netstat -at
+
+# Solo connessioni UDP
+netstat -au
+
+# Porte in ascolto
+netstat -l
+
+# Con numeri invece di nomi
+netstat -n
+
+# Mostrare PID e nome programma
+netstat -p
+
+# Routing table
+netstat -r
+
+# Statistiche interfacce
+netstat -i
+
+# Combinazione utile: porte in ascolto con PID
+sudo netstat -tulpn
+\end{lstlisting}
+
+\subsection{\texttt{ss}: socket statistics (moderno)}
+\texttt{ss} è il sostituto moderno di \texttt{netstat}, più veloce ed efficiente.
+
+\begin{lstlisting}
+# Tutti i socket
+ss -a
+
+# Socket TCP
+ss -t
+
+# Socket in ascolto
+ss -l
+
+# Combinazione comune: TCP listening con processi
+sudo ss -tlpn
+
+# Statistiche dettagliate
+ss -s
+
+# Filtrare per porta
+ss -tn sport = :80
+ss -tn dport = :443
+
+# Connessioni stabilite
+ss -t state established
+
+# Mostrare timer
+ss -to
+
+# Connessioni a un host specifico
+ss dst 192.168.1.100
+
+# Contare connessioni per stato
+ss -tan | awk '{print $1}' | sort | uniq -c
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Stati comuni delle connessioni TCP]
+\begin{itemize}
+\item \textbf{LISTEN}: porta in ascolto per connessioni in entrata
+\item \textbf{ESTABLISHED}: connessione attiva e funzionante
+\item \textbf{TIME-WAIT}: attesa dopo chiusura connessione
+\item \textbf{CLOSE-WAIT}: connessione chiusa dal remoto, in attesa di chiusura locale
+\item \textbf{SYN-SENT}: tentativo di connessione in corso
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Test avanzati di connettività}
+\begin{lstlisting}
+# Test porta TCP specifica (telnet/nc)
+nc -zv google.com 80
+
+# Scansione range di porte
+nc -zv 192.168.1.1 20-80
+
+# Test UDP
+nc -zvu 192.168.1.1 53
+
+# Ascoltare su porta (server)
+nc -l 8080
+
+# Connettersi (client)
+nc localhost 8080
+
+# Trasferire file con netcat
+# Server
+nc -l 8080 > received_file.txt
+# Client
+nc 192.168.1.100 8080 < file.txt
+\end{lstlisting}
+
+\section{DNS e Risoluzione Nomi}
+
+\begin{lstlisting}
+# Interrogare DNS
+nslookup google.com
+
+# Interrogare server DNS specifico
+nslookup google.com 8.8.8.8
+
+# Query DNS dettagliate (dig)
+dig google.com
+
+# Solo la risposta
+dig google.com +short
+
+# Record specifici
+dig google.com MX
+dig google.com TXT
+dig google.com AAAA  # IPv6
+
+# Reverse DNS lookup
+dig -x 8.8.8.8
+
+# Tracciare query DNS
+dig google.com +trace
+
+# Host command (semplice)
+host google.com
+host -t MX google.com
+\end{lstlisting}
+
+\section{SSH: Secure Shell}
+
+\subsection{Connessioni Base}
+\begin{lstlisting}
+# Connessione base
+ssh user@hostname
+
+# Porta custom
+ssh -p 2222 user@hostname
+
+# Specificare chiave privata
+ssh -i ~/.ssh/mykey user@hostname
+
+# Verbose mode (debugging)
+ssh -v user@hostname
+ssh -vv user@hostname  # più dettagli
+ssh -vvv user@hostname  # massimo dettaglio
+
+# Eseguire comando remoto
+ssh user@hostname 'ls -la'
+ssh user@hostname 'df -h'
+
+# Eseguire comandi multipli
+ssh user@hostname 'cd /var/log && tail -n 20 syslog'
+
+# X11 Forwarding
+ssh -X user@hostname
+\end{lstlisting}
+
+\subsection{SSH Configuration}
+Il file \texttt{\textasciitilde/.ssh/config} permette di semplificare le connessioni.
+
+\begin{lstlisting}
+# File: ~/.ssh/config
+
+Host myserver
+    HostName 192.168.1.100
+    User admin
+    Port 2222
+    IdentityFile ~/.ssh/myserver_key
+
+Host jump
+    HostName jump.example.com
+    User jumper
+
+Host internal
+    HostName 10.0.0.50
+    User admin
+    ProxyJump jump
+
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+    Compression yes
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Uso dopo configurazione]
+Dopo aver configurato \texttt{\textasciitilde/.ssh/config}, puoi connetterti semplicemente con:
+\begin{lstlisting}
+ssh myserver
+ssh internal  # usa automaticamente jump host
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Port Forwarding e Tunneling}
+\begin{lstlisting}
+# Local port forwarding
+# Connetti porta locale 8080 a remoto:80
+ssh -L 8080:localhost:80 user@server
+
+# Accedere a database remoto
+ssh -L 3306:localhost:3306 user@dbserver
+# Ora: mysql -h localhost -P 3306
+
+# Remote port forwarding
+# Esporre porta locale 3000 su remoto:8080
+ssh -R 8080:localhost:3000 user@server
+
+# Dynamic port forwarding (SOCKS proxy)
+ssh -D 8080 user@server
+# Configura browser con SOCKS proxy localhost:8080
+
+# Combinare forwarding multipli
+ssh -L 8080:localhost:80 -L 3306:localhost:3306 user@server
+
+# Background e keep alive
+ssh -fN -L 8080:localhost:80 user@server
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Opzioni SSH utili]
+\begin{itemize}
+\item \textbf{-f}: manda SSH in background
+\item \textbf{-N}: non eseguire comandi remoti (solo tunneling)
+\item \textbf{-L}: local port forwarding
+\item \textbf{-R}: remote port forwarding
+\item \textbf{-D}: dynamic port forwarding (SOCKS)
+\item \textbf{-J}: jump host
+\end{itemize}
+\end{tcolorbox}
+
+\section{Trasferimento File}
+
+\subsection{SCP: Secure Copy}
+\begin{lstlisting}
+# Copiare file verso server remoto
+scp file.txt user@server:/path/to/destination/
+
+# Copiare da server remoto
+scp user@server:/path/to/file.txt ./
+
+# Copiare directory ricorsivamente
+scp -r mydir/ user@server:/path/to/destination/
+
+# Porta custom
+scp -P 2222 file.txt user@server:/path/
+
+# Preservare permessi e timestamp
+scp -p file.txt user@server:/path/
+
+# Limitare banda (KB/s)
+scp -l 1000 largefile.tar.gz user@server:/path/
+
+# Verbose mode
+scp -v file.txt user@server:/path/
+
+# Compressione
+scp -C largefile.txt user@server:/path/
+
+# Copia tra due server remoti
+scp user1@server1:/path/file.txt user2@server2:/path/
+
+# Specificare chiave
+scp -i ~/.ssh/mykey file.txt user@server:/path/
+\end{lstlisting}
+
+\subsection{RSYNC: Sincronizzazione Efficiente}
+\texttt{rsync} è superiore a \texttt{scp} per sincronizzare grandi quantità di dati, trasferendo solo le differenze.
+
+\begin{lstlisting}
+# Sincronizzazione base locale
+rsync -av source/ destination/
+
+# Sincronizzazione remota
+rsync -av source/ user@server:/path/to/destination/
+
+# Download da remoto
+rsync -av user@server:/path/to/source/ ./destination/
+
+# Opzioni comuni
+# -a: archive mode (preserva tutto)
+# -v: verbose
+# -z: compressione
+# -P: progress + partial (riprende download interrotti)
+# --delete: elimina file in dest non presenti in source
+
+# Sincronizzazione completa con progress e delete
+rsync -avzP --delete source/ user@server:/backup/
+
+# Dry run (simulazione)
+rsync -avzn --delete source/ destination/
+
+# Escludere file/directory
+rsync -av --exclude='*.log' --exclude='tmp/' source/ dest/
+
+# Includere solo certi file
+rsync -av --include='*.txt' --exclude='*' source/ dest/
+
+# Limitare banda (KB/s)
+rsync -av --bwlimit=1000 source/ user@server:/dest/
+
+# SSH con porta custom
+rsync -av -e 'ssh -p 2222' source/ user@server:/dest/
+
+# Backup incrementale con hard links
+rsync -av --link-dest=../previous_backup source/ new_backup/
+
+# Mostrare progresso
+rsync -av --progress source/ dest/
+
+# Log delle operazioni
+rsync -av --log-file=rsync.log source/ dest/
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Differenza trailing slash in rsync]
+\textbf{Con slash}: \texttt{rsync source/ dest/} copia il \textit{contenuto} di source in dest\\
+\textbf{Senza slash}: \texttt{rsync source dest/} copia la \textit{directory} source dentro dest
+\end{tcolorbox}
+
+\subsection{Script rsync per backup}
+\begin{lstlisting}
+#!/bin/bash
+# backup_script.sh - Backup incrementale con rsync
+
+SOURCE="/home/user/documents"
+DEST="user@backup-server:/backups/documents"
+LOG="/var/log/backup.log"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+echo "[$DATE] Starting backup..." >> "$LOG"
+
+rsync -avzP \
+    --delete \
+    --exclude='*.tmp' \
+    --exclude='.cache/' \
+    --log-file="$LOG" \
+    "$SOURCE/" \
+    "$DEST/"
+
+if [ $? -eq 0 ]; then
+    echo "[$DATE] Backup completed successfully" >> "$LOG"
+else
+    echo "[$DATE] Backup failed!" >> "$LOG"
+    # Invia notifica email o alert
+fi
+\end{lstlisting}
+
+\section{Download e Web: curl e wget}
+
+\subsection{WGET: Download Files}
+\begin{lstlisting}
+# Download semplice
+wget https://example.com/file.zip
+
+# Salvare con nome diverso
+wget -O output.zip https://example.com/file.zip
+
+# Continuare download interrotto
+wget -c https://example.com/largefile.iso
+
+# Download in background
+wget -b https://example.com/file.zip
+
+# Limitare velocità (KB/s)
+wget --limit-rate=200k https://example.com/file.zip
+
+# Download ricorsivo di un sito
+wget -r -np -k https://example.com/docs/
+
+# Mirror di un sito
+wget --mirror --convert-links --page-requisites \
+     --no-parent https://example.com/
+
+# Download con autenticazione
+wget --user=username --password=pass https://site.com/file
+
+# Retry automatico
+wget --tries=10 --retry-connrefused https://example.com/file
+
+# User agent custom
+wget --user-agent="Mozilla/5.0" https://example.com/
+
+# Download multipli da file
+# File urls.txt contiene un URL per riga
+wget -i urls.txt
+
+# Timestamping (scarica solo se più recente)
+wget -N https://example.com/file.zip
+\end{lstlisting}
+
+\subsection{CURL: Swiss Army Knife del Web}
+\texttt{curl} è più versatile di wget, ideale per API e debugging HTTP.
+
+\begin{lstlisting}
+# GET request base
+curl https://api.example.com/data
+
+# Salvare output su file
+curl -o output.json https://api.example.com/data
+curl -O https://example.com/file.zip  # usa nome originale
+
+# Seguire redirect
+curl -L https://short.url/xyz
+
+# Mostrare headers
+curl -I https://example.com
+curl -i https://example.com  # headers + body
+
+# Verbose mode (debug)
+curl -v https://example.com
+
+# POST request con dati
+curl -X POST https://api.example.com/users \
+     -d "name=John&email=john@example.com"
+
+# POST JSON
+curl -X POST https://api.example.com/users \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John","email":"john@example.com"}'
+
+# PUT request
+curl -X PUT https://api.example.com/users/123 \
+     -H "Content-Type: application/json" \
+     -d '{"name":"John Updated"}'
+
+# DELETE request
+curl -X DELETE https://api.example.com/users/123
+
+# Autenticazione Basic
+curl -u username:password https://api.example.com/data
+
+# Bearer token
+curl -H "Authorization: Bearer TOKEN" https://api.example.com/data
+
+# Custom headers
+curl -H "X-Custom-Header: value" https://api.example.com/
+
+# Upload file
+curl -F "file=@/path/to/file.pdf" https://api.example.com/upload
+
+# Form multipart
+curl -F "name=John" -F "file=@photo.jpg" https://api.example.com/
+
+# Cookie
+curl -b "session=abc123" https://example.com/
+curl -c cookies.txt https://example.com/  # salva cookies
+
+# Timeout
+curl --connect-timeout 10 --max-time 30 https://example.com/
+
+# Seguire redirect con limite
+curl -L --max-redirs 5 https://example.com/
+
+# Download con progress bar
+curl -# -O https://example.com/largefile.zip
+
+# Rate limiting
+curl --limit-rate 100K https://example.com/file.zip
+
+# Proxy
+curl -x http://proxy.example.com:8080 https://api.example.com/
+
+# Ignorare certificati SSL (non in produzione!)
+curl -k https://self-signed.example.com/
+\end{lstlisting}
+
+\subsection{Script curl per monitoraggio API}
+\begin{lstlisting}
+#!/bin/bash
+# api_monitor.sh - Monitora availability e response time di API
+
+API_URL="https://api.example.com/health"
+THRESHOLD=2  # secondi
+
+# Misurare tempo di risposta
+RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}\n' "$API_URL")
+HTTP_CODE=$(curl -o /dev/null -s -w '%{http_code}\n' "$API_URL")
+
+echo "API Response Time: ${RESPONSE_TIME}s"
+echo "HTTP Status Code: $HTTP_CODE"
+
+if [ "$HTTP_CODE" != "200" ]; then
+    echo "ERROR: API returned non-200 status!"
+    # Invia alert
+elif (( $(echo "$RESPONSE_TIME > $THRESHOLD" | bc -l) )); then
+    echo "WARNING: API response time above threshold!"
+fi
+\end{lstlisting}
+
+\subsection{curl: format output avanzato}
+\begin{lstlisting}
+# Creare file curl-format.txt:
+# time_namelookup:  %{time_namelookup}\n
+# time_connect:     %{time_connect}\n
+# time_starttransfer: %{time_starttransfer}\n
+# time_total:       %{time_total}\n
+# speed_download:   %{speed_download}\n
+# http_code:        %{http_code}\n
+
+curl -w "@curl-format.txt" -o /dev/null -s https://example.com
+
+# Inline
+curl -w "DNS: %{time_namelookup}s\nConnect: %{time_connect}s\nTotal: %{time_total}s\n" \
+     -o /dev/null -s https://example.com
+\end{lstlisting}
+
+\section{Best Practice e Sicurezza}
+
+\begin{tcolorbox}[title=Best Practice Networking]
+\begin{enumerate}
+\item \textbf{Usa ip invece di ifconfig}: il comando moderno è più potente e consistente.
+\item \textbf{Preferisci ss a netstat}: più veloce ed efficiente.
+\item \textbf{Sempre verbose in debug}: usa \texttt{-v} o \texttt{-vv} per troubleshooting.
+\item \textbf{Verifica connettività a livelli}: ping → traceroute → nc → curl.
+\item \textbf{rsync per sincronizzazioni}: più efficiente di scp per file multipli.
+\item \textbf{Usa SSH config}: semplifica gestione di server multipli.
+\item \textbf{Limitare banda}: usa \texttt{--bwlimit} per non saturare rete.
+\item \textbf{Dry-run}: testa sempre con \texttt{-n} prima di operazioni distruttive.
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Sicurezza]
+\begin{itemize}
+\item \textbf{SSH keys}: mai usare password in produzione, sempre chiavi SSH.
+\item \textbf{Firewall}: configurare iptables/ufw per limitare accessi.
+\item \textbf{Cambia porte default}: SSH su porta diversa da 22.
+\item \textbf{Fail2ban}: protezione contro brute force.
+\item \textbf{VPN}: per accesso a risorse interne, non esporre direttamente.
+\item \textbf{HTTPS sempre}: per API e trasferimenti sensibili.
+\item \textbf{Validare certificati SSL}: non usare \texttt{curl -k} in produzione.
+\item \textbf{Limitare utenti SSH}: configurare \texttt{AllowUsers} in sshd\_config.
+\end{itemize}
+\end{tcolorbox}
+
+\section{Troubleshooting Comuni}
+
+\subsection{Problemi di connettività}
+\begin{lstlisting}
+# Checklist diagnostica rete
+
+# 1. Verificare interfaccia è up
+ip link show
+
+# 2. Verificare indirizzo IP
+ip addr show
+
+# 3. Ping localhost
+ping -c 2 127.0.0.1
+
+# 4. Ping gateway
+ping -c 2 $(ip route | grep default | awk '{print $3}')
+
+# 5. Ping DNS pubblico
+ping -c 2 8.8.8.8
+
+# 6. Risoluzione DNS
+nslookup google.com
+
+# 7. Traceroute
+traceroute google.com
+
+# 8. Verificare firewall
+sudo iptables -L -n
+sudo ufw status
+\end{lstlisting}
+
+\subsection{SSH non si connette}
+\begin{lstlisting}
+# Debug SSH connection
+ssh -vvv user@host
+
+# Verificare porta SSH
+sudo ss -tlpn | grep ssh
+
+# Test porta SSH da remoto
+nc -zv host 22
+
+# Verificare chiavi
+ssh-keygen -l -f ~/.ssh/id_rsa.pub
+
+# Permessi corretti per chiavi
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_rsa
+chmod 644 ~/.ssh/id_rsa.pub
+chmod 600 ~/.ssh/authorized_keys
+
+# Verificare configurazione server
+sudo sshd -t  # test configuration
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\begin{enumerate}
+\item Configurare un indirizzo IP statico su interfaccia eth0 con \texttt{ip addr}.
+\item Creare uno script che verifichi se un host è raggiungibile e invii email se down.
+\item Configurare \texttt{\textasciitilde/.ssh/config} per 3 server con configurazioni diverse.
+\item Creare uno script rsync per backup incrementale giornaliero con rotazione settimanale.
+\item Usare curl per interrogare un'API REST (es. https://api.github.com/users/USERNAME).
+\item Scaricare un intero sito web con wget in modalità mirror.
+\item Configurare un tunnel SSH per accedere a database remoto via porta locale.
+\item Usare netcat per trasferire un file tra due macchine.
+\item Creare script che monitora porte aperte e notifica se cambiano.
+\item Misurare latenza e throughput di connessione con ping e iperf.
+\end{enumerate}
+
+\section{Script Completo: Network Monitor}
+\begin{lstlisting}
+#!/bin/bash
+# network_monitor.sh - Monitor completo stato rete
+
+LOG_FILE="/var/log/network_monitor.log"
+HOSTS=("8.8.8.8" "google.com" "192.168.1.1")
+EMAIL="admin@example.com"
+
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
+check_host() {
+    local host=$1
+    if ping -c 3 -W 2 "$host" > /dev/null 2>&1; then
+        log_message "OK: $host is reachable"
+        return 0
+    else
+        log_message "ERROR: $host is unreachable!"
+        return 1
+    fi
+}
+
+check_dns() {
+    if nslookup google.com > /dev/null 2>&1; then
+        log_message "OK: DNS resolution working"
+        return 0
+    else
+        log_message "ERROR: DNS resolution failed!"
+        return 1
+    fi
+}
+
+check_interface() {
+    local iface=$1
+    if ip link show "$iface" | grep -q "state UP"; then
+        log_message "OK: Interface $iface is UP"
+        return 0
+    else
+        log_message "ERROR: Interface $iface is DOWN!"
+        return 1
+    fi
+}
+
+send_alert() {
+    local message=$1
+    echo "$message" | mail -s "Network Alert" "$EMAIL"
+}
+
+main() {
+    log_message "Starting network monitor"
+
+    # Check interface
+    if ! check_interface "eth0"; then
+        send_alert "Interface eth0 is DOWN!"
+    fi
+
+    # Check DNS
+    if ! check_dns; then
+        send_alert "DNS resolution failed!"
+    fi
+
+    # Check hosts
+    for host in "${HOSTS[@]}"; do
+        if ! check_host "$host"; then
+            send_alert "Host $host is unreachable!"
+        fi
+    done
+
+    log_message "Network monitor completed"
+}
+
+main
+\end{lstlisting}
+
+\section{Riepilogo}
+In questo capitolo hai imparato:
+\begin{itemize}
+\item Configurare interfacce di rete con \texttt{ip} e \texttt{ifconfig}
+\item Diagnosticare problemi con \texttt{ping}, \texttt{traceroute}, \texttt{ss}, \texttt{netstat}
+\item Gestire connessioni remote sicure con SSH e tunneling
+\item Trasferire file efficientemente con \texttt{scp} e \texttt{rsync}
+\item Interagire con API e scaricare contenuti con \texttt{curl} e \texttt{wget}
+\item Implementare monitoring e automazione delle operazioni di rete
+\end{itemize}
+
+\section{Riferimenti}
+\begin{itemize}
+\item \url{https://man7.org/linux/man-pages/man8/ip.8.html}
+\item \url{https://man.openbsd.org/ssh}
+\item \url{https://rsync.samba.org/}
+\item \url{https://curl.se/docs/}
+\item \url{https://www.gnu.org/software/wget/manual/}
+\end{itemize}

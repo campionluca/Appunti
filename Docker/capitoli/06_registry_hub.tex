@@ -1,0 +1,887 @@
+\chapter{Docker Registry e Hub}
+
+\section*{Introduzione}
+I registry Docker sono repository centralizzati per memorizzare e distribuire immagini Docker. Questo capitolo copre Docker Hub, registry privati, strategie di versioning, e integrazione con pipeline CI/CD.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Usare Docker Hub per pull e push di immagini
+    \item Implementare strategie di tagging e versioning
+    \item Setup registry privati (Docker Registry, Harbor)
+    \item Configurare registry cloud (AWS ECR, GCP GCR, Azure ACR)
+    \item Integrare con CI/CD per build e deploy automatici
+    \item Applicare security scanning e best practices
+\end{itemize}
+
+\section{Docker Hub}
+
+\subsection{Cos'è Docker Hub}
+
+\textbf{Docker Hub} è il registry pubblico ufficiale di Docker:
+\begin{itemize}
+    \item 100.000+ immagini ufficiali e community
+    \item Gratuito per repository pubblici
+    \item Piani a pagamento per repository privati
+    \item Automated builds da GitHub/Bitbucket
+    \item Webhook e integrazioni
+\end{itemize}
+
+\textbf{URL}: \url{https://hub.docker.com}
+
+\subsection{Account e Login}
+
+\begin{lstlisting}[language=bash]
+# Crea account su hub.docker.com, poi login
+$ docker login
+Username: myusername
+Password:
+Login Succeeded
+
+# Login con token (più sicuro)
+$ docker login -u myusername -p $(cat token.txt)
+
+# Logout
+$ docker logout
+\end{lstlisting}
+
+\subsection{Pull Immagini}
+
+\begin{lstlisting}[language=bash]
+# Formato: [REGISTRY/]REPOSITORY[:TAG]
+
+# Pull da Docker Hub (default registry)
+$ docker pull nginx
+$ docker pull nginx:1.25-alpine
+$ docker pull ubuntu:22.04
+
+# Pull da user/org repository
+$ docker pull myusername/myapp:latest
+$ docker pull bitnami/postgresql:15
+
+# Pull da registry alternativo
+$ docker pull ghcr.io/myorg/myapp:v1.0
+$ docker pull quay.io/prometheus/prometheus
+\end{lstlisting}
+
+\subsection{Push Immagini}
+
+\begin{lstlisting}[language=bash, caption=Pubblicare immagine su Docker Hub]
+# 1. Build immagine con tag corretto
+$ docker build -t myusername/myapp:v1.0 .
+
+# 2. (Opzionale) Tag aggiuntivo per latest
+$ docker tag myusername/myapp:v1.0 myusername/myapp:latest
+
+# 3. Login
+$ docker login
+
+# 4. Push
+$ docker push myusername/myapp:v1.0
+$ docker push myusername/myapp:latest
+
+# Verifica su hub.docker.com/r/myusername/myapp
+\end{lstlisting}
+
+\subsection{Repository Pubblici vs Privati}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Tipo} & \textbf{Visibilità} & \textbf{Costo} \\
+\hline
+Pubblico & Tutti possono pull & Gratis \\
+Privato & Solo autorizzati & 1 gratis, poi a pagamento \\
+\hline
+\end{tabular}
+\caption{Repository Docker Hub}
+\end{table}
+
+\begin{lstlisting}[language=bash]
+# Crea repository privato su hub.docker.com
+
+# Push a repository privato
+$ docker push myusername/private-app:v1.0
+
+# Pull richiede autenticazione
+$ docker login
+$ docker pull myusername/private-app:v1.0
+\end{lstlisting}
+
+\section{Tagging e Versioning}
+
+\subsection{Strategie di Tag}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Best Practices Tagging]
+\begin{enumerate}
+    \item \textbf{Semantic Versioning}: \texttt{v1.2.3} (major.minor.patch)
+
+    \item \textbf{Tag multipli}:
+    \begin{lstlisting}
+myapp:v1.2.3     # Versione specifica
+myapp:v1.2       # Minor version
+myapp:v1         # Major version
+myapp:latest     # Ultima stabile
+    \end{lstlisting}
+
+    \item \textbf{Tag descrittivi}:
+    \begin{lstlisting}
+myapp:v1.2.3-alpine
+myapp:v1.2.3-debian
+myapp:nightly
+myapp:dev
+myapp:prod
+    \end{lstlisting}
+
+    \item \textbf{Git commit SHA}:
+    \begin{lstlisting}
+myapp:sha-a1b2c3d
+myapp:v1.2.3-a1b2c3d
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Esempio Completo Tagging}
+
+\begin{lstlisting}[language=bash, caption=Multi-tag workflow]
+# Versione corrente
+VERSION=1.2.3
+
+# Build immagine
+$ docker build -t myusername/myapp:v${VERSION} .
+
+# Tag multiple version levels
+$ docker tag myusername/myapp:v${VERSION} myusername/myapp:v1.2
+$ docker tag myusername/myapp:v${VERSION} myusername/myapp:v1
+$ docker tag myusername/myapp:v${VERSION} myusername/myapp:latest
+
+# Push tutti i tag
+$ docker push myusername/myapp:v${VERSION}
+$ docker push myusername/myapp:v1.2
+$ docker push myusername/myapp:v1
+$ docker push myusername/myapp:latest
+
+# Oppure push all tags
+$ docker push --all-tags myusername/myapp
+\end{lstlisting}
+
+\subsection{Tag Immutabili}
+
+\begin{attenzione}
+\textbf{Evita di sovrascrivere tag in produzione!}
+
+\begin{lstlisting}
+# SBAGLIATO: Sovrascrivi tag esistente
+$ docker tag myapp:latest myapp:v1.0
+$ docker push myapp:v1.0  # Sovrascrive v1.0 precedente
+
+# CORRETTO: Usa nuovo tag
+$ docker tag myapp:latest myapp:v1.1
+$ docker push myapp:v1.1
+\end{lstlisting}
+
+Solo \texttt{latest}, \texttt{dev}, \texttt{nightly} dovrebbero essere sovrascritti.
+\end{attenzione}
+
+\section{Registry Privati}
+
+\subsection{Docker Registry (Open Source)}
+
+Registry ufficiale Docker, self-hosted.
+
+\begin{lstlisting}[language=bash, caption=Setup Docker Registry]
+# Deploy registry con Docker
+$ docker run -d \
+  -p 5000:5000 \
+  --name registry \
+  --restart always \
+  -v registry-data:/var/lib/registry \
+  registry:2
+
+# Push a registry locale
+$ docker tag myapp localhost:5000/myapp:v1.0
+$ docker push localhost:5000/myapp:v1.0
+
+# Pull da registry locale
+$ docker pull localhost:5000/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Registry con HTTPS e Autenticazione}
+
+\begin{lstlisting}[language=bash, caption=Secure registry setup]
+# Genera certificati SSL (self-signed)
+$ mkdir -p certs auth
+$ openssl req -newkey rsa:4096 -nodes -sha256 \
+  -keyout certs/domain.key -x509 -days 365 \
+  -out certs/domain.crt
+
+# Crea htpasswd per autenticazione
+$ docker run --rm --entrypoint htpasswd \
+  httpd:2 -Bbn myuser mypassword > auth/htpasswd
+
+# Deploy registry con TLS e auth
+$ docker run -d \
+  -p 5000:5000 \
+  --name secure-registry \
+  --restart always \
+  -v $(pwd)/certs:/certs \
+  -v $(pwd)/auth:/auth \
+  -v registry-data:/var/lib/registry \
+  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+  -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+  -e REGISTRY_AUTH=htpasswd \
+  -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+  -e REGISTRY_AUTH_HTPASSWD_REALM="Registry Realm" \
+  registry:2
+
+# Login
+$ docker login myregistry.com:5000
+Username: myuser
+Password:
+\end{lstlisting}
+
+\subsection{Docker Compose per Registry}
+
+\begin{lstlisting}[language=yaml, caption=docker-compose.yml per registry]
+version: '3.8'
+
+services:
+  registry:
+    image: registry:2
+    container_name: docker-registry
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry
+    volumes:
+      - registry-data:/data
+      - ./auth:/auth
+    networks:
+      - registry-net
+
+  # UI per navigare registry
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      - REGISTRY_TITLE=My Docker Registry
+      - REGISTRY_URL=http://registry:5000
+      - DELETE_IMAGES=true
+      - SHOW_CONTENT_DIGEST=true
+    networks:
+      - registry-net
+    depends_on:
+      - registry
+
+networks:
+  registry-net:
+
+volumes:
+  registry-data:
+\end{lstlisting}
+
+\section{Harbor: Enterprise Registry}
+
+\subsection{Cos'è Harbor}
+
+\textbf{Harbor} è un registry enterprise open-source by VMware/CNCF:
+\begin{itemize}
+    \item Web UI completa
+    \item Role-based access control (RBAC)
+    \item Vulnerability scanning integrato
+    \item Image signing e notary
+    \item Replication tra registry
+    \item Webhook e audit logging
+    \item Helm charts support
+\end{itemize}
+
+\subsection{Installazione Harbor}
+
+\begin{lstlisting}[language=bash, caption=Deploy Harbor con Docker Compose]
+# Download installer
+$ wget https://github.com/goharbor/harbor/releases/download/v2.9.0/harbor-offline-installer-v2.9.0.tgz
+$ tar xzf harbor-offline-installer-v2.9.0.tgz
+$ cd harbor
+
+# Configura
+$ cp harbor.yml.tmpl harbor.yml
+$ vim harbor.yml
+# Modifica:
+# - hostname: registry.example.com
+# - harbor_admin_password: MySecretPass
+# - database password
+# - certificate paths (se HTTPS)
+
+# Installa
+$ sudo ./install.sh --with-trivy --with-chartmuseum
+
+# Accedi a https://registry.example.com
+# User: admin
+# Pass: MySecretPass
+\end{lstlisting}
+
+\subsection{Usare Harbor}
+
+\begin{lstlisting}[language=bash]
+# Login
+$ docker login registry.example.com
+Username: admin
+Password:
+
+# Tag immagine per Harbor
+$ docker tag myapp registry.example.com/myproject/myapp:v1.0
+
+# Push
+$ docker push registry.example.com/myproject/myapp:v1.0
+
+# Pull
+$ docker pull registry.example.com/myproject/myapp:v1.0
+\end{lstlisting}
+
+\section{Cloud Registry}
+
+\subsection{AWS Elastic Container Registry (ECR)}
+
+\begin{lstlisting}[language=bash, caption=AWS ECR workflow]
+# Installa AWS CLI
+$ aws configure
+
+# Crea repository
+$ aws ecr create-repository --repository-name myapp
+
+# Login a ECR
+$ aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin \
+  123456789012.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag immagine
+$ docker tag myapp:v1.0 \
+  123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:v1.0
+
+# Push
+$ docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:v1.0
+
+# Pull
+$ docker pull 123456789012.dkr.ecr.us-east-1.amazonaws.com/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Google Container Registry (GCR)}
+
+\begin{lstlisting}[language=bash, caption=GCR workflow]
+# Installa gcloud CLI
+$ gcloud auth configure-docker
+
+# Tag immagine
+$ docker tag myapp:v1.0 gcr.io/my-project-id/myapp:v1.0
+
+# Push
+$ docker push gcr.io/my-project-id/myapp:v1.0
+
+# Pull
+$ docker pull gcr.io/my-project-id/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Azure Container Registry (ACR)}
+
+\begin{lstlisting}[language=bash, caption=Azure ACR workflow]
+# Crea registry
+$ az acr create --resource-group myResourceGroup \
+  --name myregistry --sku Basic
+
+# Login
+$ az acr login --name myregistry
+
+# Tag immagine
+$ docker tag myapp:v1.0 myregistry.azurecr.io/myapp:v1.0
+
+# Push
+$ docker push myregistry.azurecr.io/myapp:v1.0
+
+# Pull
+$ docker pull myregistry.azurecr.io/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Confronto Cloud Registry}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Feature} & \textbf{AWS ECR} & \textbf{GCP GCR} & \textbf{Azure ACR} \\
+\hline
+Pricing & Storage + transfer & Storage + egress & Tiered (Basic/Standard/Premium) \\
+Scanning & ECR scan & GCR scan & Defender for Cloud \\
+Geo-replication & Si (Premium) & Multi-region & Si (Premium) \\
+Integrazione & ECS, EKS, Fargate & GKE, Cloud Run & AKS, Container Instances \\
+\hline
+\end{tabular}
+\caption{Cloud Registry Comparison}
+\end{table}
+
+\section{CI/CD Integration}
+
+\subsection{GitHub Actions}
+
+\begin{lstlisting}[language=yaml, caption=.github/workflows/docker.yml]
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: myusername/myapp
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+\end{lstlisting}
+
+\subsection{GitLab CI/CD}
+
+\begin{lstlisting}[language=yaml, caption=.gitlab-ci.yml]
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_REF_SLUG
+
+stages:
+  - build
+  - push
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+  only:
+    - main
+    - tags
+
+push-latest:
+  stage: push
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $IMAGE_NAME:$IMAGE_TAG
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+    - docker push $IMAGE_NAME:latest
+  only:
+    - main
+\end{lstlisting}
+
+\subsection{Jenkins Pipeline}
+
+\begin{lstlisting}[caption=Jenkinsfile]
+pipeline {
+    agent any
+
+    environment {
+        REGISTRY = 'myregistry.com:5000'
+        IMAGE_NAME = 'myapp'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    docker.build("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('Push') {
+            steps {
+                script {
+                    docker.withRegistry("https://${REGISTRY}", 'registry-credentials') {
+                        docker.image("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}").push()
+                        docker.image("${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}").push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                    docker pull ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                    docker stop myapp || true
+                    docker rm myapp || true
+                    docker run -d --name myapp -p 80:80 ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                '''
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\section{Security e Best Practices}
+
+\subsection{Image Scanning}
+
+\begin{lstlisting}[language=bash, caption=Scan vulnerabilities]
+# Docker scan (Snyk)
+$ docker scan myapp:latest
+
+# Trivy (open source)
+$ trivy image myapp:latest
+
+# Grype
+$ grype myapp:latest
+
+# Clair
+$ clairctl analyze myapp:latest
+\end{lstlisting}
+
+\subsection{Content Trust}
+
+\begin{lstlisting}[language=bash, caption=Docker Content Trust (DCT)]
+# Abilita content trust
+$ export DOCKER_CONTENT_TRUST=1
+
+# Push firma automaticamente
+$ docker push myusername/myapp:v1.0
+# Richiede passphrase per chiave di signing
+
+# Pull verifica firma
+$ docker pull myusername/myapp:v1.0
+# Fallisce se firma non valida
+\end{lstlisting}
+
+\subsection{Image Signing con Cosign}
+
+\begin{lstlisting}[language=bash]
+# Installa cosign
+$ brew install cosign  # macOS
+$ apt install cosign   # Linux
+
+# Genera keypair
+$ cosign generate-key-pair
+
+# Firma immagine
+$ cosign sign --key cosign.key myregistry.com/myapp:v1.0
+
+# Verifica firma
+$ cosign verify --key cosign.pub myregistry.com/myapp:v1.0
+\end{lstlisting}
+
+\subsection{Best Practices}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Security Best Practices]
+\begin{enumerate}
+    \item \textbf{Scan regolarmente}: CI/CD pipeline con scanning
+
+    \item \textbf{Base images ufficiali}: Usa immagini verificate
+
+    \item \textbf{Minimal images}: Alpine, distroless
+
+    \item \textbf{Multi-stage builds}: No build tools in produzione
+
+    \item \textbf{No secrets in images}:
+    \begin{lstlisting}
+# SBAGLIATO
+ENV API_KEY=secret123
+
+# CORRETTO
+# Pass at runtime
+$ docker run -e API_KEY=$(vault read secret) myapp
+    \end{lstlisting}
+
+    \item \textbf{Versioni esplicite}: No :latest in prod
+
+    \item \textbf{Content trust}: Firma immagini critiche
+
+    \item \textbf{Registry privati}: Per codice proprietario
+
+    \item \textbf{RBAC}: Limita accesso push/pull
+
+    \item \textbf{Audit logging}: Traccia chi push cosa quando
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Gestione Registry Avanzata}
+
+\subsection{Garbage Collection}
+
+\begin{lstlisting}[language=bash, caption=Cleanup registry storage]
+# Docker Registry garbage collection
+$ docker exec registry bin/registry garbage-collect \
+  /etc/docker/registry/config.yml
+
+# Delete old images (API)
+$ curl -X DELETE http://registry:5000/v2/myapp/manifests/sha256:abc123...
+\end{lstlisting}
+
+\subsection{Replication}
+
+\begin{lstlisting}[language=bash, caption=Harbor replication example]
+# Replica tra due Harbor registry
+# Via Harbor UI:
+# Administration → Replications → New Replication Rule
+# - Name: prod-to-backup
+# - Source: Local
+# - Destination: backup-harbor.com
+# - Trigger: Event based (push)
+\end{lstlisting}
+
+\subsection{Webhook Notifications}
+
+\begin{lstlisting}[language=yaml, caption=Registry webhook config]
+# /etc/docker/registry/config.yml
+notifications:
+  endpoints:
+    - name: slack
+      url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+      headers:
+        Content-Type: [application/json]
+      events:
+        - push
+        - pull
+        - delete
+\end{lstlisting}
+
+\section{Caso di Studio: Production Registry}
+
+\begin{lstlisting}[language=yaml, caption=Production-grade registry stack]
+version: '3.8'
+
+services:
+  # Harbor core services
+  harbor:
+    image: goharbor/harbor:v2.9.0
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - harbor-data:/data
+      - ./certs:/certs
+    environment:
+      - HARBOR_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    networks:
+      - harbor-net
+
+  # Trivy scanner
+  trivy:
+    image: goharbor/trivy-adapter-photon:v2.9.0
+    restart: always
+    environment:
+      - SCANNER_TRIVY_CACHE_DIR=/home/scanner/.cache/trivy
+    volumes:
+      - trivy-cache:/home/scanner/.cache
+    networks:
+      - harbor-net
+
+  # PostgreSQL database
+  postgres:
+    image: goharbor/harbor-db:v2.9.0
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - harbor-net
+
+  # Redis cache
+  redis:
+    image: goharbor/redis-photon:v2.9.0
+    restart: always
+    volumes:
+      - redis-data:/var/lib/redis
+    networks:
+      - harbor-net
+
+  # Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - harbor-net
+    depends_on:
+      - harbor
+
+networks:
+  harbor-net:
+    driver: bridge
+
+volumes:
+  harbor-data:
+  trivy-cache:
+  postgres-data:
+  redis-data:
+\end{lstlisting}
+
+\section*{Errori Comuni}
+
+\begin{attenzione}
+\begin{enumerate}
+    \item \textbf{Push senza tag}: Default :latest sovrascrive
+
+    \item \textbf{Insecure registry}:
+    \begin{lstlisting}
+# Error: http: server gave HTTP response to HTTPS client
+
+# Fix: /etc/docker/daemon.json
+{
+  "insecure-registries": ["myregistry.com:5000"]
+}
+$ sudo systemctl restart docker
+    \end{lstlisting}
+
+    \item \textbf{Credentials non salvate}: Usa credential helper
+
+    \item \textbf{Rate limiting Docker Hub}: 100 pull/6h (free tier)
+
+    \item \textbf{Storage pieno registry}: Setup garbage collection
+
+    \item \textbf{Tag latest in produzione}: Usa versioni esplicite
+\end{enumerate}
+\end{attenzione}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Setup Docker Hub account e pubblica un'immagine
+
+    \item Deploy registry privato:
+    \begin{itemize}
+        \item Setup con HTTPS e autenticazione
+        \item Push/pull immagini
+        \item Verifica via UI
+    \end{itemize}
+
+    \item Implementa versioning strategy:
+    \begin{itemize}
+        \item Semantic versioning (v1.2.3)
+        \item Multi-tag (latest, v1, v1.2, v1.2.3)
+        \item Script automation
+    \end{itemize}
+
+    \item CI/CD pipeline:
+    \begin{itemize}
+        \item GitHub Actions build automatico
+        \item Push su Docker Hub
+        \item Deploy su server staging
+    \end{itemize}
+
+    \item Security scanning:
+    \begin{itemize}
+        \item Scansiona immagine con Trivy
+        \item Risolvi vulnerabilità HIGH/CRITICAL
+        \item Integra scanning in CI/CD
+    \end{itemize}
+\end{enumerate}
+
+\section*{Quiz di Verifica}
+
+\begin{enumerate}
+    \item Qual è il formato completo di un'immagine Docker?
+
+    \item Cosa significa tag "latest"? È sicuro in produzione?
+
+    \item Differenza tra Docker Registry e Harbor?
+
+    \item Come configurare registry insecure (solo HTTP)?
+
+    \item Perché è importante scannerizzare le immagini?
+\end{enumerate}
+
+\section*{Riepilogo}
+
+\begin{itemize}
+    \item \textbf{Docker Hub}: Registry pubblico ufficiale
+    \item \textbf{Tagging}: Semantic versioning, tag multipli
+    \item \textbf{Registry privati}: Docker Registry, Harbor
+    \item \textbf{Cloud registry}: AWS ECR, GCP GCR, Azure ACR
+    \item \textbf{CI/CD}: Automazione build/push/deploy
+    \item \textbf{Security}: Scanning, signing, RBAC
+    \item \textbf{Best practices}: Versioni esplicite, no secrets, minimal images
+\end{itemize}
+
+\section*{Conclusione del Corso}
+
+Complimenti! Hai completato il corso Docker e DevOps. Ora sei in grado di:
+\begin{itemize}
+    \item Containerizzare qualsiasi applicazione
+    \item Creare Dockerfile ottimizzati
+    \item Orchestrare stack con Docker Compose
+    \item Configurare networking e volumi
+    \item Distribuire su registry pubblici e privati
+    \item Implementare CI/CD pipeline
+    \item Applicare security best practices
+\end{itemize}
+
+\textbf{Prossimi passi consigliati}:
+\begin{itemize}
+    \item Kubernetes per orchestrazione enterprise
+    \item Docker Swarm per clustering
+    \item Monitoring con Prometheus/Grafana
+    \item Service mesh con Istio/Linkerd
+    \item Certificazione Docker Certified Associate (DCA)
+\end{itemize}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Docker Hub: \url{https://hub.docker.com}
+    \item Docker Registry: \url{https://docs.docker.com/registry/}
+    \item Harbor: \url{https://goharbor.io}
+    \item AWS ECR: \url{https://aws.amazon.com/ecr/}
+    \item GCP GCR: \url{https://cloud.google.com/container-registry}
+    \item Azure ACR: \url{https://azure.microsoft.com/en-us/services/container-registry/}
+    \item Trivy: \url{https://github.com/aquasecurity/trivy}
+    \item Cosign: \url{https://github.com/sigstore/cosign}
+\end{itemize}

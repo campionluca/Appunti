@@ -1,0 +1,646 @@
+\chapter{Introduzione a REST}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Definizione REST, Principi architetturali, Vincoli REST, Richardson Maturity Model, REST vs SOAP vs GraphQL, Architettura client-server, Stateless communication, Cacheability, Layered system, Uniform interface, Code on demand, Esempi pratici, Diagrammi, Best practices.
+\end{tcolorbox}
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Comprendere i principi fondamentali dell'architettura REST
+  \item Conoscere i sei vincoli architetturali di REST
+  \item Applicare il Richardson Maturity Model per valutare API
+  \item Confrontare REST, SOAP e GraphQL: vantaggi e svantaggi
+  \item Progettare API RESTful seguendo le best practices
+  \item Riconoscere API veramente RESTful da quelle HTTP-based
+\end{itemize}
+
+\section{Cos'è REST}
+
+\subsection{Definizione}
+
+\textbf{REST} (Representational State Transfer) è uno \textbf{stile architetturale} per sistemi distribuiti, introdotto da Roy Fielding nella sua tesi di dottorato del 2000. Non è un protocollo né uno standard, ma un insieme di \textbf{vincoli architetturali} che, se applicati, rendono un sistema scalabile, performante e manutenibile.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Concetto chiave]
+REST non significa ``usare HTTP con JSON''. È un'architettura basata su:
+\begin{itemize}
+    \item \textbf{Risorse} identificate da URI
+    \item \textbf{Rappresentazioni} (JSON, XML, HTML) delle risorse
+    \item \textbf{Operazioni standard} (GET, POST, PUT, DELETE) su risorse
+    \item \textbf{Stateless} communication tra client e server
+    \item \textbf{Hypermedia} per navigare tra risorse correlate
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{REST vs HTTP API}
+
+Molte API sono chiamate ``REST API'' ma in realtà sono solo \textbf{HTTP API}:
+\begin{itemize}
+    \item \textbf{HTTP API}: Usa HTTP per trasporto, ma non rispetta vincoli REST
+    \item \textbf{REST API}: Rispetta tutti i vincoli REST (client-server, stateless, cacheable, layered, uniform interface, code on demand)
+\end{itemize}
+
+\begin{lstlisting}[caption=Esempio: HTTP API (NON RESTful)]
+POST /getUserById HTTP/1.1
+Content-Type: application/json
+
+{
+  "userId": 123
+}
+\end{lstlisting}
+
+Problema: usa POST per operazione di lettura, nome operation-based invece di resource-based.
+
+\begin{lstlisting}[caption=Esempio: REST API (RESTful)]
+GET /api/v1/users/123 HTTP/1.1
+Accept: application/json
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario.rossi@example.com",
+  "_links": {
+    "self": {"href": "/api/v1/users/123"},
+    "orders": {"href": "/api/v1/users/123/orders"}
+  }
+}
+\end{lstlisting}
+
+Corretto: GET per lettura, URI resource-based, hypermedia links.
+
+\section{I Sei Vincoli Architetturali REST}
+
+Roy Fielding definisce sei vincoli che caratterizzano REST:
+
+\subsection{1. Client-Server}
+
+\textbf{Principio}: Separazione delle responsabilità tra client (UI) e server (dati/logica).
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Client e server evolvono indipendentemente
+    \item Miglior portabilità UI
+    \item Scalabilità server separata da client
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=3cm,
+    box/.style={rectangle, draw, fill=blue!20, text width=3cm, text centered, minimum height=1.5cm, rounded corners},
+    arrow/.style={->, thick}
+]
+    \node[box] (client) {Client\\(UI, Browser, App)};
+    \node[box, right of=client, node distance=5cm] (server) {Server\\(Business Logic, DB)};
+
+    \draw[arrow] (client) -- node[above] {Request} (server);
+    \draw[arrow] (server) -- node[below] {Response} (client);
+
+    \node[below of=client, node distance=2cm, text width=3cm] {Responsabilità:\\- Presentazione\\- User experience};
+    \node[below of=server, node distance=2cm, text width=3cm] {Responsabilità:\\- Dati\\- Logica business};
+\end{tikzpicture}
+\caption{Architettura Client-Server}
+\end{figure}
+
+\subsection{2. Stateless}
+
+\textbf{Principio}: Ogni richiesta deve contenere tutte le informazioni necessarie. Il server non mantiene stato della sessione client.
+
+\textbf{Implicazioni}:
+\begin{itemize}
+    \item Nessuna sessione server-side
+    \item Autenticazione in ogni richiesta (token, API key)
+    \item Client mantiene stato applicazione
+\end{itemize}
+
+\begin{lstlisting}[caption=Esempio Stateless: token in ogni richiesta]
+GET /api/v1/orders HTTP/1.1
+Host: api.example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Accept: application/json
+
+# Server non ha sessione, autentica via token
+\end{lstlisting}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Scalabilità: qualsiasi server può gestire qualsiasi richiesta
+    \item Affidabilità: nessuna sincronizzazione stato tra server
+    \item Visibilità: request completa per monitoring/debugging
+\end{itemize}
+
+\textbf{Svantaggi}:
+\begin{itemize}
+    \item Overhead: ripetere dati in ogni richiesta
+    \item Performance: nessuna ottimizzazione basata su stato precedente
+\end{itemize}
+
+\subsection{3. Cacheable}
+
+\textbf{Principio}: Le risposte devono esplicitamente indicare se sono cacheable o meno.
+
+\textbf{HTTP Headers per caching}:
+\begin{itemize}
+    \item \texttt{Cache-Control}: Direttive di caching
+    \item \texttt{ETag}: Identificatore versione risorsa
+    \item \texttt{Last-Modified}: Data ultima modifica
+    \item \texttt{Expires}: Data scadenza cache
+\end{itemize}
+
+\begin{lstlisting}[caption=Response cacheable con Cache-Control]
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: max-age=3600, public
+ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+Last-Modified: Wed, 15 Nov 2025 10:00:00 GMT
+
+{
+  "id": 123,
+  "name": "Product ABC",
+  "price": 99.99
+}
+\end{lstlisting}
+
+\textbf{Richiesta successiva con ETag}:
+\begin{lstlisting}
+GET /api/v1/products/123 HTTP/1.1
+If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+
+HTTP/1.1 304 Not Modified
+# Server risponde 304, client usa cache locale
+\end{lstlisting}
+
+\subsection{4. Layered System}
+
+\textbf{Principio}: Client non sa se è connesso direttamente al server finale o a un intermediario.
+
+\textbf{Intermediari possibili}:
+\begin{itemize}
+    \item Load balancer
+    \item Proxy cache (Varnish, Cloudflare)
+    \item API Gateway
+    \item Firewall
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=2.5cm,
+    box/.style={rectangle, draw, fill=green!20, minimum width=2.5cm, minimum height=1cm, rounded corners},
+    arrow/.style={->, thick}
+]
+    \node[box, fill=blue!20] (client) {Client};
+    \node[box, right of=client] (lb) {Load\\Balancer};
+    \node[box, right of=lb] (cache) {Cache\\Layer};
+    \node[box, right of=cache] (api) {API\\Server};
+    \node[box, below of=api, node distance=1.8cm] (db) {Database};
+
+    \draw[arrow] (client) -- (lb);
+    \draw[arrow] (lb) -- (cache);
+    \draw[arrow] (cache) -- (api);
+    \draw[arrow] (api) -- (db);
+\end{tikzpicture}
+\caption{Layered System: client ignora intermediari}
+\end{figure}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Scalabilità: aggiungere layer senza modificare client
+    \item Security: firewall e gateway nascondono architettura interna
+    \item Caching centralizzato
+\end{itemize}
+
+\subsection{5. Uniform Interface}
+
+\textbf{Principio}: Interfaccia uniforme semplifica e disaccoppia architettura.
+
+\textbf{Quattro sotto-vincoli}:
+
+\textbf{a) Identificazione risorse}: URI univoci
+\begin{lstlisting}
+/api/v1/users/123
+/api/v1/orders/456
+/api/v1/products?category=electronics
+\end{lstlisting}
+
+\textbf{b) Manipolazione tramite rappresentazioni}: Client manipola rappresentazione (JSON), non risorsa diretta
+\begin{lstlisting}
+PUT /api/v1/users/123 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Mario Rossi Updated",
+  "email": "mario.updated@example.com"
+}
+\end{lstlisting}
+
+\textbf{c) Messaggi auto-descrittivi}: Ogni messaggio include metadati per processarlo
+\begin{lstlisting}
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 142
+Cache-Control: max-age=300
+
+{...}
+\end{lstlisting}
+
+\textbf{d) Hypermedia as the Engine of Application State (HATEOAS)}: Response include link a risorse correlate
+\begin{lstlisting}
+{
+  "id": 123,
+  "status": "processing",
+  "_links": {
+    "self": {"href": "/api/v1/orders/123"},
+    "cancel": {"href": "/api/v1/orders/123/cancel", "method": "POST"},
+    "customer": {"href": "/api/v1/customers/789"}
+  }
+}
+\end{lstlisting}
+
+\subsection{6. Code on Demand (opzionale)}
+
+\textbf{Principio}: Server può estendere funzionalità client inviando codice eseguibile (JavaScript, applet).
+
+\textbf{Esempio}:
+\begin{itemize}
+    \item API invia JavaScript per validazione form
+    \item Single Page Application che carica dinamicamente UI component
+\end{itemize}
+
+\textbf{Nota}: Unico vincolo opzionale. Raramente implementato in REST API moderne.
+
+\section{Richardson Maturity Model}
+
+Leonard Richardson propone modello a 4 livelli per valutare ``quanto REST'' è una API:
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    level/.style={rectangle, draw, fill=blue!#1, text width=4cm, text centered, minimum height=1.2cm, rounded corners},
+    arrow/.style={->, thick}
+]
+    \node[level=10] (l0) at (0,0) {Level 0: The Swamp of POX};
+    \node[level=30] (l1) at (0,1.5) {Level 1: Resources};
+    \node[level=50] (l2) at (0,3) {Level 2: HTTP Verbs};
+    \node[level=70] (l3) at (0,4.5) {Level 3: Hypermedia Controls};
+
+    \draw[arrow] (l0) -- (l1);
+    \draw[arrow] (l1) -- (l2);
+    \draw[arrow] (l2) -- (l3);
+
+    \node[right of=l0, node distance=6cm, text width=5cm, align=left] {Single URI, single method\\(es: SOAP, XML-RPC)};
+    \node[right of=l1, node distance=6cm, text width=5cm, align=left] {URI per risorsa\\(/users, /orders)};
+    \node[right of=l2, node distance=6cm, text width=5cm, align=left] {Metodi HTTP corretti\\(GET, POST, PUT, DELETE)};
+    \node[right of=l3, node distance=6cm, text width=5cm, align=left] {HATEOAS: link in response\\(vero REST)};
+\end{tikzpicture}
+\caption{Richardson Maturity Model}
+\end{figure}
+
+\subsection{Level 0: The Swamp of POX}
+
+\textbf{POX} = Plain Old XML (o JSON).
+
+Single URI, tutto via POST, payload contiene operazione:
+
+\begin{lstlisting}[caption=Level 0 Example (SOAP-like)]
+POST /api HTTP/1.1
+Content-Type: application/json
+
+{
+  "operation": "getUser",
+  "parameters": {
+    "userId": 123
+  }
+}
+\end{lstlisting}
+
+Problema: HTTP usato solo come tunnel. Nessun vantaggio REST.
+
+\subsection{Level 1: Resources}
+
+URI per ogni risorsa:
+
+\begin{lstlisting}[caption=Level 1: URI per risorse]
+POST /api/users/123 HTTP/1.1
+# Ottiene user 123
+
+POST /api/orders/456 HTTP/1.1
+# Ottiene order 456
+\end{lstlisting}
+
+Miglioramento: risorse identificate, ma metodi HTTP non usati correttamente (tutto POST).
+
+\subsection{Level 2: HTTP Verbs}
+
+Usa metodi HTTP semanticamente corretti:
+
+\begin{lstlisting}[caption=Level 2: HTTP Verbs corretti]
+GET /api/users/123 HTTP/1.1
+# Legge user
+
+POST /api/users HTTP/1.1
+Content-Type: application/json
+{"name": "Mario", "email": "mario@example.com"}
+# Crea nuovo user
+
+PUT /api/users/123 HTTP/1.1
+Content-Type: application/json
+{"name": "Mario Rossi"}
+# Aggiorna user
+
+DELETE /api/users/123 HTTP/1.1
+# Elimina user
+\end{lstlisting}
+
+Status codes HTTP semantici:
+\begin{lstlisting}
+HTTP/1.1 200 OK          # GET successo
+HTTP/1.1 201 Created     # POST creazione
+HTTP/1.1 204 No Content  # DELETE successo
+HTTP/1.1 404 Not Found   # Risorsa non trovata
+\end{lstlisting}
+
+\subsection{Level 3: Hypermedia Controls (HATEOAS)}
+
+Response include link navigabili:
+
+\begin{lstlisting}[caption=Level 3: HATEOAS full REST]
+GET /api/orders/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "status": "shipped",
+  "total": 99.99,
+  "items": [
+    {
+      "productId": 789,
+      "quantity": 2,
+      "price": 49.99
+    }
+  ],
+  "_links": {
+    "self": {
+      "href": "/api/orders/123"
+    },
+    "customer": {
+      "href": "/api/customers/456"
+    },
+    "invoice": {
+      "href": "/api/orders/123/invoice"
+    },
+    "track": {
+      "href": "/api/orders/123/tracking"
+    }
+  }
+}
+\end{lstlisting}
+
+Client può navigare senza conoscere URI structure a priori.
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Nota pratica]
+La maggior parte delle API moderne si ferma al \textbf{Level 2}. Level 3 (HATEOAS) è raro perché:
+\begin{itemize}
+    \item Complessità implementativa
+    \item Client spesso preferiscono URI hardcoded
+    \item Overhead payload con link
+\end{itemize}
+Tuttavia, HATEOAS è fondamentale per API veramente RESTful e auto-documentanti.
+\end{tcolorbox}
+
+\section{REST vs SOAP vs GraphQL}
+
+\subsection{SOAP (Simple Object Access Protocol)}
+
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item Protocollo XML-based
+    \item WSDL per definizione interfaccia
+    \item WS-Security per sicurezza enterprise
+    \item Stateful o stateless
+    \item Overhead elevato
+\end{itemize}
+
+\textbf{Esempio SOAP request}:
+\begin{lstlisting}[language=XML]
+POST /api/soap HTTP/1.1
+Content-Type: application/soap+xml
+
+<?xml version="1.0"?>
+<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">
+  <soap:Header>
+    <auth:credentials>token123</auth:credentials>
+  </soap:Header>
+  <soap:Body>
+    <m:GetUser xmlns:m="http://example.com/users">
+      <m:UserId>123</m:UserId>
+    </m:GetUser>
+  </soap:Body>
+</soap:Envelope>
+\end{lstlisting}
+
+\textbf{Quando usare SOAP}:
+\begin{itemize}
+    \item Ambiente enterprise con WS-* standards
+    \item Transazioni ACID distribuite
+    \item Sicurezza complessa (WS-Security)
+    \item Legacy integration
+\end{itemize}
+
+\subsection{GraphQL}
+
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item Query language per API
+    \item Client richiede esattamente dati necessari
+    \item Single endpoint
+    \item Strongly typed schema
+    \item Introspection
+\end{itemize}
+
+\textbf{Esempio GraphQL query}:
+\begin{lstlisting}[caption=GraphQL: client specifica campi]
+POST /graphql HTTP/1.1
+Content-Type: application/json
+
+{
+  "query": "{ user(id: 123) { name email orders { id total } } }"
+}
+
+# Response include solo campi richiesti
+{
+  "data": {
+    "user": {
+      "name": "Mario Rossi",
+      "email": "mario@example.com",
+      "orders": [
+        {"id": 1, "total": 99.99},
+        {"id": 2, "total": 149.99}
+      ]
+    }
+  }
+}
+\end{lstlisting}
+
+\textbf{Quando usare GraphQL}:
+\begin{itemize}
+    \item Client con necessità dati variabili (mobile, web, desktop)
+    \item Evitare under-fetching/over-fetching
+    \item Real-time subscriptions
+    \item Rapid prototyping frontend
+\end{itemize}
+
+\subsection{Confronto REST vs SOAP vs GraphQL}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{3.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Aspetto} & \textbf{REST} & \textbf{SOAP} & \textbf{GraphQL} \\ \hline
+\textbf{Tipo} & Architettura & Protocollo & Query language \\ \hline
+\textbf{Formato} & JSON, XML, HTML & XML obbligatorio & JSON \\ \hline
+\textbf{Endpoint} & Multipli (/users, /orders) & Singolo & Singolo \\ \hline
+\textbf{Metodi HTTP} & GET, POST, PUT, DELETE & POST (SOAP), GET (REST-like) & POST \\ \hline
+\textbf{Schema} & Opzionale (OpenAPI) & WSDL obbligatorio & Schema obbligatorio \\ \hline
+\textbf{Caching} & HTTP nativo & Complesso & Richiede libreria \\ \hline
+\textbf{Curva apprendimento} & Bassa & Alta & Media \\ \hline
+\textbf{Over-fetching} & Sì (fisso) & Sì & No (client decide) \\ \hline
+\textbf{Versioning} & URI o header & Namespace & Schema evolution \\ \hline
+\textbf{Performance} & Buona & Overhead XML & Ottima per client \\ \hline
+\textbf{Use case} & Web API pubbliche, microservices & Enterprise, legacy & Mobile, dashboard complesse \\ \hline
+\end{tabular}
+\caption{Confronto REST, SOAP, GraphQL}
+\end{table}
+
+\section{Quando usare REST}
+
+\textbf{REST è ideale per}:
+\begin{itemize}
+    \item \textbf{API pubbliche}: GitHub, Stripe, Twitter
+    \item \textbf{Microservices}: Comunicazione inter-service
+    \item \textbf{CRUD operations}: Create, Read, Update, Delete risorse
+    \item \textbf{Web applications}: Backend per frontend
+    \item \textbf{Mobile backend}: App iOS/Android
+    \item \textbf{IoT}: Device communication
+\end{itemize}
+
+\textbf{REST NON è ideale per}:
+\begin{itemize}
+    \item Operazioni complesse non mappabili a risorse
+    \item Real-time bi-direzionale (usare WebSocket)
+    \item Query complesse con join (considerare GraphQL)
+    \item Transazioni distribuite ACID (considerare SOAP o gRPC)
+\end{itemize}
+
+\section{Best Practices REST}
+
+\begin{tcolorbox}[title=Best Practices]
+\begin{enumerate}
+    \item \textbf{Nouns, not verbs}: \texttt{/users} non \texttt{/getUsers}
+    \item \textbf{Plural names}: \texttt{/products} non \texttt{/product}
+    \item \textbf{HTTP methods semantici}: GET per lettura, POST per creazione
+    \item \textbf{Status codes corretti}: 201 per creazione, 404 per non trovato
+    \item \textbf{Versioning}: \texttt{/api/v1/users}
+    \item \textbf{Filtering}: \texttt{/users?status=active\&role=admin}
+    \item \textbf{Pagination}: \texttt{/users?page=2\&limit=50}
+    \item \textbf{HATEOAS}: Include link per navigazione
+    \item \textbf{Stateless}: Ogni richiesta self-contained
+    \item \textbf{Security}: HTTPS, authentication, rate limiting
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Errori comuni]
+\begin{itemize}
+    \item Usare GET per operazioni che modificano stato
+    \item URI con verbs: \texttt{/createUser}, \texttt{/deleteOrder}
+    \item Ignorare status codes: tutto 200 OK
+    \item Session-based auth invece di token
+    \item Mancanza di versioning (breaking changes)
+    \item Over-nesting: \texttt{/users/123/orders/456/items/789/reviews}
+    \item Esporre implementazione interna in URI
+\end{itemize}
+\end{tcolorbox}
+
+\section{Caso di studio: GitHub REST API v3}
+
+GitHub API è esempio eccellente di REST Level 2:
+
+\begin{lstlisting}[caption=GitHub API: Get repository]
+GET /repos/octocat/Hello-World HTTP/1.1
+Host: api.github.com
+Accept: application/vnd.github.v3+json
+Authorization: token ghp_abc123...
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4999
+
+{
+  "id": 1296269,
+  "name": "Hello-World",
+  "full_name": "octocat/Hello-World",
+  "owner": {
+    "login": "octocat",
+    "id": 1,
+    "url": "https://api.github.com/users/octocat"
+  },
+  "private": false,
+  "description": "My first repository",
+  "fork": false,
+  "url": "https://api.github.com/repos/octocat/Hello-World",
+  "forks_url": "https://api.github.com/repos/octocat/Hello-World/forks",
+  "stargazers_count": 80,
+  "watchers_count": 80,
+  "language": "Python",
+  "forks": 9,
+  "open_issues": 0
+}
+\end{lstlisting}
+
+\textbf{Caratteristiche notevoli}:
+\begin{itemize}
+    \item URI resource-based: \texttt{/repos/:owner/:repo}
+    \item Versioning in Accept header: \texttt{application/vnd.github.v3+json}
+    \item Rate limiting headers: \texttt{X-RateLimit-*}
+    \item Hypermedia partial: URL reference in response
+    \item Pagination via Link header (RFC 5988)
+    \item Authentication: token-based
+\end{itemize}
+
+\section{Riepilogo}
+
+\begin{itemize}
+    \item REST è stile architetturale con 6 vincoli: client-server, stateless, cacheable, layered, uniform interface, code on demand
+    \item Richardson Maturity Model valuta API da Level 0 (POX) a Level 3 (HATEOAS)
+    \item SOAP: protocollo enterprise XML-based, verbose
+    \item GraphQL: query language, client-driven, single endpoint
+    \item REST: ideale per API pubbliche, CRUD, microservices
+    \item Best practices: nouns not verbs, HTTP semantic, status codes, versioning, stateless
+\end{itemize}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Valuta la tua API aziendale: a che livello Richardson si trova?
+    \item Progetta URI structure per blog API: posts, comments, users
+    \item Confronta overhead payload SOAP vs REST vs GraphQL per stessa operazione
+    \item Implementa client che consuma GitHub API v3
+    \item Identifica violazioni REST in API pubbliche (Spotify, Facebook)
+    \item Progetta HATEOAS completo per e-commerce API
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Roy Fielding PhD dissertation: \url{https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm}
+    \item Richardson Maturity Model: \url{https://martinfowler.com/articles/richardsonMaturityModel.html}
+    \item RFC 7231 HTTP/1.1 Semantics: \url{https://tools.ietf.org/html/rfc7231}
+    \item GitHub REST API: \url{https://docs.github.com/en/rest}
+    \item REST API Tutorial: \url{https://restfulapi.net/}
+\end{itemize}
