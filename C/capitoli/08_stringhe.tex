@@ -27,12 +27,7 @@ A differenza di altri linguaggi, C non ha un tipo di dato "stringa" nativo. Le s
 
 \subsection{Caratteristiche delle Stringhe}
 
-\begin{itemize}
-    \item Array di caratteri con terminatore null
-    \item Il terminatore \texttt{'\textbackslash 0'} marca la fine della stringa
-    \item La dimensione dell'array deve includere spazio per il terminatore
-    \item Possono essere manipolate come array o tramite puntatori
-\end{itemize}
+Le stringhe in C hanno caratteristiche distintive che ne determinano il comportamento e l'uso. Una stringa è essenzialmente un \textbf{array di caratteri con terminatore null}: ogni stringa termina con il carattere speciale \texttt{'\textbackslash 0'}, anche conosciuto come terminatore nullo. Questo terminatore \texttt{'\textbackslash 0'} \textbf{marca la fine della stringa}, permettendo alle funzioni di sapere dove termina il contenuto effettivo della stringa. Questa caratteristica ha un'implicazione importante: \textbf{la dimensione dell'array deve includere spazio per il terminatore}. Se desideri una stringa di 5 caratteri (ad esempio "Hello"), devi allocare un array di almeno 6 elementi per far spazio al terminatore. Le stringhe \textbf{possono essere manipolate come array o tramite puntatori}, il che offre flessibilità nel modo in cui accedi e modifichi il contenuto della stringa.
 
 \section{Dichiarazione e Inizializzazione}
 

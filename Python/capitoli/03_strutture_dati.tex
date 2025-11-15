@@ -105,14 +105,17 @@ Hai esplorato le principali strutture dati e le loro operazioni tipiche.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{Liste vs tuple}: liste per collezioni mutabili; tuple per record immutabili e chiavi di dizionari.
-  \item \textbf{Insiemi}: utili per eliminare duplicati e test di appartenenza rapidi (hash-based); attenzione agli oggetti non hashable.
-  \item \textbf{Dizionari}: mapping flessibile; sfruttare \verb|dict.get|, \verb|defaultdict| e \verb|Counter| per pattern frequenti.
-  \item \textbf{Comprensioni}: preferire list/dict/set comprehension a cicli espliciti per trasformazioni; mantenere espressioni leggibili.
-  \item \textbf{Copia superficiale/profonda}: distinguere tra copia dei contenitori e copia degli elementi; usare \verb|copy| e \verb|deepcopy| consapevolmente.
-  \item \textbf{Complessità}: conoscere i costi di operazioni chiave (append, pop, membership) per evitare colli di bottiglia.
-\end{itemize}
+La scelta tra \textbf{liste e tuple} dipende dai requisiti di mutabilità e uso. Liste sono adatte per collezioni che cambiano nel tempo, mentre tuple sono ideali per record immutabili e quando è necessario usarle come chiavi di dizionari, grazie alla loro immutabilità.
+
+Gli \textbf{insiemi} sono particolarmente utili per eliminare duplicati e per eseguire test di appartenenza rapidi grazie alla loro implementazione hash-based. Tuttavia, è importante ricordare che solo oggetti hashable possono essere inseriti in un set.
+
+I \textbf{dizionari} forniscono un mapping flessibile tra chiavi e valori. Oltre alle operazioni di base, è opportuno sfruttare metodi come \verb|dict.get| per accesso sicuro, \verb|defaultdict| per evitare controlli di chiave, e \verb|Counter| per conteggi di frequenza, che sono costruiti su dizionari e risolvono pattern comuni in modo elegante.
+
+Le \textbf{comprensioni} (list/dict/set comprehension) sono un idioma fondamentale di Python che dovrebbe essere preferito ai cicli espliciti per trasformazioni dati. Tuttavia, è importante mantenere le espressioni leggibili; comprensioni molto complesse dovrebbero essere sostituite da funzioni esplicite.
+
+La distinzione tra \textbf{copia superficiale e profonda} è cruciale quando si lavora con strutture dati nidificate. La copia superficiale copia solo il contenitore, mantenendo riferimenti agli oggetti interni; la copia profonda, al contrario, copia ricorsivamente tutti gli oggetti. È necessario usare \verb|copy.copy| e \verb|copy.deepcopy| consapevolmente a seconda dei requisiti.
+
+Infine, conoscere la \textbf{complessità computazionale} delle operazioni chiave (append, pop, membership test) su diverse strutture dati è essenziale per evitare colli di bottiglia in applicazioni critiche per le prestazioni.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Per chi viene da C/Java/JS: mapping, set e ordinamenti}]
@@ -157,9 +160,11 @@ print(sorted(people, key=lambda p: (p["age"], p["name"])) )
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Idiomi: comprensioni, unpacking, generatori}]
-- \textbf{Comprensioni}: `[f(x) for x in xs if cond]` per trasformazioni rapide.  
-- \textbf{Unpacking}: `a, b = pair`, `first, *rest = xs`.  
-- \textbf{Generatori}: `(... for x in xs)` per elaborazioni lazy e ridotto uso memoria; usa `sum`, `any`, `all` su generatori.
+Le \textbf{comprensioni} come `[f(x) for x in xs if cond]` sono il modo idiomatico di Python per eseguire trasformazioni rapide su collezioni. Sono sia più efficienti che più leggibili rispetto a cicli for con accumulator.
+
+L'\textbf{unpacking} di sequenze consente di scomporre dati in modo elegante e dichiarativo. L'assegnazione semplice `a, b = pair` funziona per coppie, mentre l'operatore `*rest` consente di raccogliere elementi rimanenti in una lista: `first, *rest = xs`. Questo meccanismo è particolarmente utile per pattern matching su strutture dati.
+
+I \textbf{generatori} sono funzioni che usano `yield` per produrre valori uno alla volta, permettendo elaborazioni lazy che riducono significativamente l'uso di memoria. Le generator expression, scritte come `(... for x in xs)`, funzionano come list comprehension ma non allocano l'intera lista in memoria. Quando si processano generatori, funzioni come `sum`, `any` e `all` lavorano naturalmente e in modo efficiente.
 \end{tcolorbox}
 
 \paragraph{Idiomi utili} Sfruttare \verb|zip|, \verb|sorted(key=...)| e generatori per elaborare sequenze in modo espressivo e efficiente.

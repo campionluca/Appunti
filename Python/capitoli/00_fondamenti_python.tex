@@ -98,16 +98,21 @@ Hai visto la sintassi di base e come eseguire semplici programmi in Python, con 
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-Questo modulo introduce le basi del linguaggio e del runtime Python. Alcuni punti essenziali:
-\begin{itemize}
-  \item \textbf{Tipi di base e immutabilità}: interi e stringhe sono immutabili; liste e dizionari sono mutabili. Comprendere le implicazioni per aliasing e copie.
-  \item \textbf{Verità implicita (truthiness)}: oggetti vuoti (\verb|[]|, \verb|{}|, \verb|""|) e lo zero sono valutati come \verb|False| in contesti booleani.
-  \item \textbf{Slice e passi}: la notazione \verb|seq[start:end:step]| è potente; usare \verb|[:] | per ottenere una copia superficiale.
-  \item \textbf{Script vs funzione}: isolare la logica in funzioni rende il codice testabile e riusabile; usare il guardiano \verb|if __name__ == "__main__"| negli script.
-  \item \textbf{Stile e leggibilità}: seguire PEP8 per nomi, indentazione, lunghezza delle righe; preferire nomi esplicativi rispetto ad abbreviazioni.
-\item \textbf{Docstring e aiuto}: documentare funzioni e moduli con docstring; \verb|help(obj)| e \verb|obj.__doc__| facilitano l'esplorazione.
-  \item \textbf{Ambiente}: usare ambienti virtuali per isolare dipendenze; non installare globalmente salvo necessità.
-\end{itemize}
+Questo modulo introduce le basi del linguaggio e del runtime Python attraverso una visione pratica dei suoi componenti fondamentali.
+
+La comprensione dei \textbf{tipi di base e immutabilità} è essenziale per scrivere codice corretto. Interi e stringhe sono immutabili, il che significa che non possono essere modificati dopo la creazione; liste e dizionari, al contrario, sono mutabili e consentono modifiche in place. Capire questa distinzione è fondamentale per evitare bug subdoli dovuti ad aliasing e per decidere quando fare copie esplicite dei dati.
+
+Un concetto particolarmente Pythonico è la \textbf{verità implicita (truthiness)}: non tutti gli oggetti vanno confrontati esplicitamente con \verb|True| o \verb|False|. Gli oggetti vuoti come liste vuote (\verb|[]|), dizionari vuoti (\verb|{}|) e stringhe vuote (\verb|""| ) sono valutati come \verb|False| in contesti booleani, mentre la maggior parte degli altri oggetti è considerata \verb|True|. Questo semplifica il codice in molte situazioni comuni.
+
+La \textbf{notazione slice e passi} (\verb|seq[start:end:step]|) è uno strumento potente di Python che permette di estrarre porzioni di sequenze in modo elegante e conciso. Per ottenere una copia superficiale di una sequenza, è sufficiente usare \verb|[:]|, una tecnica idiomatica molto diffusa.
+
+Quando si organizza il codice, la separazione tra \textbf{script e funzioni} ha importanti implicazioni pratiche. Isolare la logica in funzioni rende il codice testabile e riusabile; inoltre, usare il guardiano \verb|if __name__ == "__main__"| negli script permette di importare il modulo senza eseguire automaticamente il codice principale, un pattern fondamentale in Python.
+
+Lo \textbf{stile e la leggibilità} del codice devono seguire le convenzioni PEP8, che forniscono linee guida per nomi di variabili, indentazione, lunghezza delle righe e uso di spazi. Preferire nomi esplicativi rispetto a abbreviazioni non solo rende il codice più leggibile, ma facilita anche la manutenzione futura.
+
+La documentazione mediante \textbf{docstring} è un aspetto spesso sottovalutato ma importante. Documentare funzioni e moduli con docstring non è solo una buona pratica, ma rende il codice auto-esplicativo; inoltre, funzioni come \verb|help(obj)| e l'accesso a \verb|obj.__doc__| facilitano l'esplorazione interattiva dell'API.
+
+Infine, la gestione dell'\textbf{ambiente} di sviluppo non deve essere trascurata. Usare ambienti virtuali per isolare le dipendenze di ogni progetto evita conflitti e mantiene il sistema pulito; non è consigliabile installare pacchetti globalmente salvo necessità.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Per chi viene da C/Java/JS]
@@ -141,11 +146,15 @@ def sum_positives_fast(arr):
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Idiomi e differenze pratiche]
-- \textbf{Enumerare}: `for i, x in enumerate(xs)` al posto di contatori manuali.  
-- \textbf{Comprensioni}: trasformazioni compatte `[f(x) for x in xs if cond]`.  
-- \textbf{Packing/Unpacking}: `a, b = pair` e `*rest` per raccogliere.  
-- \textbf{Path e I/O}: usa `pathlib` e context manager `with` per risorse.  
-- \textbf{Test}: prediligi funzioni pure e `pytest` con fixture isolanti.
+Python offre diversi idiomi che rendono il codice più espressivo e leggibile. L'\textbf{enumerazione} è un pattern fondamentale: anziché usare contatori manuali, la funzione `for i, x in enumerate(xs)` fornisce sia l'indice che il valore in modo elegante.
+
+Le \textbf{comprensioni} sono una delle caratteristiche distintive di Python e permettono di creare liste trasformate in modo compatto e leggibile: `[f(x) for x in xs if cond]` è molto più idiomatico di un ciclo for esplicito con accumulatore.
+
+Il \textbf{packing e unpacking} sono meccanismi potenti per lavorare con sequenze: l'assegnazione `a, b = pair` scompone una coppia in due variabili, mentre l'operatore `*rest` consente di raccogliere elementi rimanenti in una sottolista, facilitando la decomposizione strutturata di dati.
+
+Per operazioni su \textbf{percorsi e I/O}, è raccomandato usare il modulo `pathlib` al posto dei metodi antiquati di `os.path`, poiché offre un'API più leggibile e composabile. Inoltre, i context manager con `with` garantiscono la corretta gestione delle risorse, evitando perdite e semplificando il codice di cleanup.
+
+Infine, quando si scrivono \textbf{test}, è opportuno prediligere funzioni pure (senza effetti collaterali) e utilizzare `pytest` con fixture isolanti per garantire test manutenibili e affidabili.
 \end{tcolorbox}
 
 \paragraph{Copy vs alias} Assegnazioni come \verb|b = a| condividono il riferimento; modifiche su oggetti mutabili si riflettono su tutte le variabili alias. Per copiare: \verb|list(a)|, \verb|a[:] |, oppure \verb|copy.copy|/\verb|copy.deepcopy|.

@@ -10,28 +10,11 @@ Queste domande trovano risposta nell'analisi asintotica, uno strumento matematic
 Un \textbf{algoritmo} è una sequenza finita di istruzioni non ambigue che, dato un input appartenente a un insieme specificato, termina dopo un numero finito di passi producendo un output.
 \end{definizione}
 
-Le proprietà fondamentali di un algoritmo sono:
-\begin{itemize}
-    \item \textbf{Input}: Dati iniziali provenienti da un insieme specificato
-    \item \textbf{Output}: Risultato prodotto dall'algoritmo
-    \item \textbf{Definitezza}: Ogni passo è definito precisamente
-    \item \textbf{Finitezza}: L'algoritmo termina dopo un numero finito di passi
-    \item \textbf{Efficacia}: Ogni operazione è sufficientemente basilare da poter essere eseguita
-\end{itemize}
+Un algoritmo ben definito deve possedere cinque proprietà fondamentali. In primo luogo, deve avere un \textbf{input}: i dati iniziali che provengono da un insieme specificato. In secondo luogo, deve produrre un \textbf{output}, il risultato della computazione. La \textbf{definitezza} è una proprietà cruciale: ogni passo dell'algoritmo deve essere precisamente definito senza ambiguità. Inoltre, un algoritmo deve garantire la \textbf{finitezza}, cioè la certezza che terminerà dopo un numero finito di passi. Infine, l'algoritmo deve soddisfare il criterio di \textbf{efficacia}: ogni operazione deve essere sufficientemente elementare da poter essere effettivamente eseguita da un computer o da una persona con carta e penna.
 
 \section{Modello di calcolo}
 
-Per analizzare gli algoritmi abbiamo bisogno di un modello di calcolo. Utilizziamo il modello della \textbf{macchina RAM} (Random Access Machine):
-
-\begin{itemize}
-    \item Memoria infinita organizzata in celle, ciascuna contenente un numero intero
-    \item Accesso a qualsiasi cella in tempo costante $O(1)$
-    \item Operazioni aritmetiche di base (+, -, *, /, \%) in tempo costante
-    \item Operazioni logiche e di confronto in tempo costante
-    \item Un processore che esegue un'istruzione alla volta
-\end{itemize}
-
-Questo modello è un'astrazione semplificata ma ragionevole dei computer reali.
+Per analizzare gli algoritmi abbiamo bisogno di un modello di calcolo standard. Utilizziamo il modello della \textbf{macchina RAM} (Random Access Machine), un'astrazione semplificata ma ragionevole dei computer reali. In questo modello, si assume una memoria infinita organizzata in celle, ciascuna contenente un numero intero, accessibile in tempo costante $O(1)$. Le operazioni aritmetiche di base (addizione, sottrazione, moltiplicazione, divisione, modulo) si eseguono tutte in tempo costante, così come le operazioni logiche e di confronto. Il processore, infine, esegue un'istruzione alla volta in modo sequenziale.
 
 \section{Complessità temporale e spaziale}
 
@@ -62,13 +45,7 @@ In altre parole, $f(n) = O(g(n))$ significa che $f(n)$ cresce al più come $g(n)
 
 La notazione O-grande fornisce un \textbf{limite superiore asintotico}.
 
-\textbf{Esempi:}
-\begin{itemize}
-    \item $3n + 5 = O(n)$ perché $3n + 5 \leq 4n$ per $n \geq 5$ (scegliamo $c = 4$, $n_0 = 5$)
-    \item $n^2 + 100n + 50 = O(n^2)$ perché $n^2 + 100n + 50 \leq 151n^2$ per $n \geq 1$
-    \item $\log n = O(n)$ perché il logaritmo cresce più lentamente di $n$
-    \item $2^n = O(3^n)$ ma $3^n \neq O(2^n)$
-\end{itemize}
+\textbf{Esempi:} Consideriamo la funzione $f(n) = 3n + 5$. Possiamo dimostrare che $f(n) = O(n)$ scegliendo $c = 4$ e $n_0 = 5$, poiché $3n + 5 \leq 4n$ per tutti i $n \geq 5$. Similmente, $n^2 + 100n + 50 = O(n^2)$ perché questa espressione non supera $151n^2$ per $n \geq 1$. Un altro esempio è $\log n = O(n)$: il logaritmo cresce asintoticamente più lentamente di $n$. Infine, mentre $2^n = O(3^n)$ (una funzione esponenziale minore è sempre big-O di una funzione esponenziale maggiore), la relazione inversa non vale: $3^n \neq O(2^n)$.
 
 \textbf{Visualizzazione grafica:}
 
@@ -104,12 +81,7 @@ La notazione Omega-grande fornisce un \textbf{limite inferiore asintotico}.
 
 In altre parole, $f(n) = \Omega(g(n))$ significa che $f(n)$ cresce almeno come $g(n)$ a meno di una costante moltiplicativa.
 
-\textbf{Esempi:}
-\begin{itemize}
-    \item $5n^2 = \Omega(n^2)$
-    \item $n^3 = \Omega(n^2)$ perché $n^3$ cresce più velocemente di $n^2$
-    \item $n = \Omega(\log n)$
-\end{itemize}
+\textbf{Esempi:} Chiaramente $5n^2 = \Omega(n^2)$, poiché $5n^2$ è un multiplo costante di $n^2$. Inoltre, $n^3 = \Omega(n^2)$ perché $n^3$ cresce più velocemente di $n^2$: esiste sempre un punto oltre il quale $n^3$ supera qualsiasi multiplo costante di $n^2$. Allo stesso modo, $n = \Omega(\log n)$ perché la funzione lineare cresce più rapidamente del logaritmo.
 
 \subsection{Notazione Theta (Big-Theta)}
 
@@ -122,14 +94,9 @@ Date due funzioni $f(n)$ e $g(n)$ da $\mathbb{N}$ a $\mathbb{R}^+$, diciamo che 
 
 Equivalentemente, $f(n) = \Theta(g(n))$ se e solo se $f(n) = O(g(n))$ e $f(n) = \Omega(g(n))$.
 
-La notazione Theta fornisce un \textbf{limite asintotico stretto}: $f(n)$ e $g(n)$ crescono allo stesso ritmo.
+La notazione Theta fornisce un \textbf{limite asintotico stretto}: $f(n)$ e $g(n)$ crescono allo stesso ritmo, a meno di costanti moltiplicative.
 
-\textbf{Esempi:}
-\begin{itemize}
-    \item $3n^2 + 5n + 2 = \Theta(n^2)$
-    \item $\frac{n^2}{2} - 3n = \Theta(n^2)$
-    \item $\log_2 n = \Theta(\log_{10} n)$ (i logaritmi in basi diverse differiscono solo per una costante)
-\end{itemize}
+\textbf{Esempi:} L'espressione polinomiale $3n^2 + 5n + 2$ è asintoticamente equivalente a $n^2$, dunque $3n^2 + 5n + 2 = \Theta(n^2)$. Similmente, $\frac{n^2}{2} - 3n = \Theta(n^2)$ perché il termine dominante è il quadratico. Un altro esempio interessante è $\log_2 n = \Theta(\log_{10} n)$: i logaritmi in basi diverse differiscono solo per una costante moltiplicativa (il rapporto tra le basi), quindi sono asintoticamente equivalenti.
 
 \begin{center}
 \begin{tikzpicture}[scale=0.8]
@@ -532,13 +499,6 @@ Dimostrare che se $f(n) = O(g(n))$ e $g(n) = O(h(n))$, allora $f(n) + g(n) = O(h
 
 L'analisi di complessità è lo strumento fondamentale per valutare e confrontare algoritmi. Le notazioni asintotiche ci permettono di astrarre dai dettagli implementativi e concentrarci sul comportamento scalabile degli algoritmi.
 
-I concetti chiave di questo capitolo:
-\begin{itemize}
-    \item Le notazioni O, Omega, Theta caratterizzano limiti superiori, inferiori e stretti
-    \item Il Master Theorem risolve molte ricorrenze di tipo divide-et-impera
-    \item Gli algoritmi hanno comportamenti diversi nei casi best, average, worst
-    \item Esistono limiti inferiori teorici per classi di problemi
-    \item La complessità spaziale è importante quanto quella temporale
-\end{itemize}
+I concetti chiave di questo capitolo sono molteplici. Le notazioni O, Omega e Theta sono fondamentali per caratterizzare limiti superiori, inferiori e stretti della crescita di una funzione. Quando affrontiamo algoritmi ricorsivi di tipo divide-et-impera, il Master Theorem fornisce uno strumento potente per risolvere le ricorrenze risultanti. È importante ricordare che gli algoritmi manifestano comportamenti diversi nei casi best, average e worst, e il nostro compito è analizzare ognuno di questi scenari. Inoltre, non dobbiamo dimenticare che esistono limiti inferiori teorici per intere classi di problemi: per esempio, qualsiasi algoritmo di ordinamento basato su confronti richiede almeno $\Omega(n \log n)$ confronti. Infine, la complessità spaziale è importante quanto quella temporale, e spesso rappresenta un trade-off critico nella progettazione di algoritmi efficienti.
 
 Nei prossimi capitoli applicheremo questi strumenti all'analisi di strutture dati e algoritmi concreti.

@@ -280,12 +280,7 @@ def BFS(G, s):
     return distanze, padri
 \end{lstlisting}
 
-\textbf{Colori:}
-\begin{itemize}
-    \item BIANCO: Non ancora scoperto
-    \item GRIGIO: Scoperto ma non completamente esplorato
-    \item NERO: Completamente esplorato
-\end{itemize}
+\textbf{Colori:} L'algoritmo BFS utilizza un sistema di colorazione per tracciare lo stato di ogni vertice. Un vertice BIANCO è un vertice che non è stato ancora scoperto. Un vertice GRIGIO è stato scoperto ma non è stato completamente esplorato, ovvero sappiamo che esiste ma non abbiamo ancora visitato tutti i suoi vicini. Un vertice NERO è stato completamente esplorato: abbiamo scoperto tutti i suoi vicini e non avremo bisogno di visitarlo nuovamente.
 
 \textbf{Esempio di esecuzione:}
 
@@ -331,15 +326,7 @@ Sia $G = (V, E)$ un grafo e $s \in V$ il vertice sorgente. Allora:
 Per induzione sulla distanza da $s$. BFS procede per livelli, quindi scopre prima tutti i vertici a distanza $k$ prima di scoprire vertici a distanza $k+1$.
 \end{proof}
 
-\textbf{Applicazioni di BFS:}
-\begin{itemize}
-    \item Trovare il cammino più breve (non pesato)
-    \item Testare se un grafo è connesso
-    \item Trovare componenti connesse
-    \item Testare se un grafo è bipartito
-    \item Web crawling
-    \item Sistemi di raccomandazione (amici di amici)
-\end{itemize}
+\textbf{Applicazioni di BFS:} L'algoritmo BFS ha numerose applicazioni pratiche e teoriche. Innanzitutto, è lo strumento ideale per trovare il cammino più breve in grafi non pesati, dove "più breve" significa il minimo numero di archi. BFS può essere utilizzato per testare se un grafo è connesso, visitando tutti i vertici a partire da un vertice iniziale e verificando se tutti sono stati raggiunti. Allo stesso modo, può essere usato per trovare tutte le componenti connesse di un grafo. Un'applicazione sofisticata è il test del bipartitismo di un grafo, che può essere fatto colorando i vertici mentre si esegue BFS. Nel contesto del web, BFS è il fondamento degli algoritmi di web crawling. Infine, BFS trova applicazione nei sistemi di raccomandazione, dove è possibile scoprire gli amici di amici seguendo i livelli della visita.
 
 \section{Visita in profondità (DFS)}
 
@@ -453,14 +440,7 @@ Durante DFS, ogni arco $(u, v)$ può essere classificato:
 Un grafo orientato ha un ciclo se e solo se DFS trova un arco all'indietro.
 \end{teorema}
 
-\textbf{Applicazioni di DFS:}
-\begin{itemize}
-    \item Rilevazione di cicli
-    \item Ordinamento topologico
-    \item Componenti fortemente connesse
-    \item Risoluzione di labirinti
-    \item Analisi di dipendenze
-\end{itemize}
+\textbf{Applicazioni di DFS:} La visita in profondità è particolarmente utile per compiti che richiedono un'esplorazione completa della struttura del grafo. La rilevazione di cicli è una delle applicazioni più importanti: un grafo orientato ha cicli se e solo se DFS trova archi all'indietro durante l'esecuzione. L'ordinamento topologico di grafi aciclici orientati (DAG) si realizza naturalmente con DFS. Un'altra applicazione è il calcolo delle componenti fortemente connesse in grafi orientati. Nel contesto pratico, DFS è utilizzato nella risoluzione di labirinti, dove la ricerca in profondità esplora gli "agenti di scelta" (choice points) in modo sistematico fino a trovare l'uscita. Infine, DFS è fondamentale nell'analisi di dipendenze, dove i vertici rappresentano compiti o moduli e gli archi rappresentano dipendenze.
 
 \section{Ordinamento topologico}
 

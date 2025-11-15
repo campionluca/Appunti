@@ -90,13 +90,15 @@ Hai visto metodi delle stringhe e tecniche moderne di formattazione.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{f-string vs \texttt{format}}: preferire f-string per leggibilità; \verb|format| resta utile per formattazioni avanzate.
-  \item \textbf{Precisione e allineamento}: specificare \verb|:.2f| per decimali, \verb|:>10| per allineamento; gestire numeri grandi con separatori.
-  \item \textbf{Localizzazione}: separare formattazioni dipendenti dalla lingua; evitare concatenazioni manuali, preferendo template.
-  \item \textbf{Sanitizzazione}: evitare injections e errori; normalizzare input (trim, lower) e validare prima di formattare.
-  \item \textbf{Unicode ed encoding}: usare \verb|utf-8|; attenzione a normalizzazione (NFC/NFD) per confronti affidabili.
-\end{itemize}
+Nella scelta tra \textbf{f-string e format}, le f-string dovrebbero essere preferite per la loro leggibilità intrinseca e la capacità di includere espressioni inline. Tuttavia, il metodo \verb|format| resta utile in situazioni con template parametrizzati o formattazioni avanzate riutilizzate.
+
+La gestione di \textbf{precisione e allineamento} è importante per ottenere output formattato correttamente. Specificare formati come \verb|:.2f| per decimali e \verb|:>10| per allineamento a destra permette un controllo fine. Per numeri grandi, l'uso di separatori (come \verb|:,|) migliora la leggibilità.
+
+Quando si trattano testi che dipendono dalla lingua, è fondamentale \textbf{separare le formattazioni} dal codice logico. Evitare concatenazioni manuali di stringhe; preferire template che centralizzano messaggi e formattazioni, facilitando manutenzione e localizzazione.
+
+La \textbf{sanitizzazione dell'input} è critica per evitare injections e comportamenti inattesi. Normalizzare l'input (trim, lowercase) e validare prima di formattare riduce errori e vulnerabilità.
+
+Infine, \textbf{Unicode ed encoding} sono considerazioni essenziali nel moderno sviluppo software. Usare UTF-8 come encoding predefinito è standard; tuttavia, è necessario prestare attenzione alla normalizzazione Unicode (NFC/NFD) quando si confrontano stringhe, poiché rappresentazioni visivamente identiche possono avere byte sequence diverse.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Per chi viene da C/Java/JS: stringhe, bytes ed encoding}]
@@ -134,9 +136,11 @@ print(bool(pat.match("ada@example.com")))
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Idiomi: split/join, f-string, template}]
-- \textbf{split/join}: `";".join(parts)` e `s.split(",")` per CSV semplici.  
-- \textbf{f-string}: espressioni inline e specifiche di formato; evita concatenazioni con `+`.  
-- \textbf{Template}: centralizza formattazioni e messaggi; separa logica dai testi.
+Le operazioni \textbf{split/join} sono il modo idiomatico per tokenizzare e ricombinare stringhe. L'uso di `";".join(parts)` per unire elementi è preferito a concatenazioni ripetute con `+`, che è meno efficiente. Similmente, `s.split(",")` è il pattern standard per il parsing di dati delimitati in semplici case.
+
+Le \textbf{f-string} permettono di includere espressioni inline e specifiche di formato direttamente nel testo, rendendo il codice più leggibile e conciso. Dovrebbero essere preferite alle concatenazioni con l'operatore `+`, che risultano prolisse e meno eleganti.
+
+L'uso di \textbf{template} per centralizzare formattazioni e messaggi è una buona pratica che facilita manutenzione e localizzazione. Separare la logica dai testi crea una chiara distinzione di responsabilità e riduce il rischio di errori.
 \end{tcolorbox}
 
 \paragraph{Suggerimenti} Per testo lungo in codice, valutare \verb|\lstinline| per parti inline e spezzare stringhe multi-linea con triple quotes mantenendo indentazione chiara.

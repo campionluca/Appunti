@@ -11,16 +11,9 @@ La storia di Linux inizia con Unix. Nel 1969, presso i Bell Labs di AT\&T, Ken T
 Unix nacque inizialmente come progetto personale di Ken Thompson, che voleva continuare a giocare al videogioco "Space Travel" dopo la cancellazione del progetto Multics. Per farlo, riscrisse il gioco per un computer PDP-7 inutilizzato, e insieme creò un sistema operativo minimale. Il nome "Unix" è un gioco di parole su "Multics" (Multiplexed Information and Computing Service).
 \end{tcolorbox}
 
-\textbf{Caratteristiche innovative di Unix:}
+Unix si distingueva dalle altre soluzioni dell'epoca per un insieme di innovazioni rivoluzionarie. Il sistema era concepito come multitasking e multiutente: poteva eseguire simultaneamente molteplici processi e permettere a diversi utenti di lavorare sullo stesso computer senza interferire l'uno con l'altro. Un'altra caratteristica fondamentale era il filesystem gerarchico, che organizzava tutti i file e le directory in una struttura ad albero, rendendo la navigazione logica e intuitiva.
 
-\begin{itemize}
-    \item Sistema multitasking e multiutente
-    \item Filesystem gerarchico
-    \item File di testo per configurazione
-    \item Shell come interfaccia utente programmabile
-    \item Pipe per concatenare comandi
-    \item Portabilità (dopo la riscrittura in C nel 1973)
-\end{itemize}
+La filosofia dei file di testo per la configurazione era semplice ma rivoluzionaria: anziché usare database binari complessi, Unix immagazzinava tutte le impostazioni di sistema in file di testo leggibili e modificabili. La shell non era una semplice interfaccia utente, ma un vero e proprio linguaggio di programmazione, permettendo agli utenti di scrivere script e automatizzare compiti. Un'innovazione particolarmente elegante era il concetto di pipe, che permetteva di concatenare comandi tra loro, facendo fluire l'output di un comando direttamente nell'input di un altro. Infine, dopo la riscrittura del kernel in linguaggio C nel 1973, Unix acquisì una straordinaria portabilità, potendo essere compilato e eseguito su diverse architetture hardware senza modifiche significative al codice sorgente.
 
 \subsection{La Nascita di Linux}
 
@@ -304,15 +297,7 @@ yay -S nome-pacchetto-aur          # Installa da AUR
 
 La \textbf{shell} è l'interfaccia a riga di comando che permette di interagire con il sistema operativo.
 
-\subsection{Tipi di Shell}
-
-\begin{itemize}
-    \item \textbf{sh} (Bourne Shell): shell originale Unix
-    \item \textbf{bash} (Bourne Again Shell): shell standard su Linux
-    \item \textbf{zsh} (Z Shell): estensioni avanzate, popolare su macOS
-    \item \textbf{fish} (Friendly Interactive Shell): syntax highlighting, autosuggestions
-    \item \textbf{dash} (Debian Almquist Shell): leggera, usata per script di sistema
-\end{itemize}
+Nel corso degli anni sono state sviluppate numerose shell, ognuna con caratteristiche proprie. La \textbf{sh} (Bourne Shell) è stata la shell originale di Unix, creata da Stephen Bourne. La \textbf{bash} (Bourne Again Shell) è diventata lo standard de facto su Linux, offrendo estensioni rispetto alla shell originale mantenendo la compatibilità all'indietro. La \textbf{zsh} (Z Shell) aggiunge estensioni avanzate e features interattive, ed è diventata particolarmente popolare su macOS. Per coloro che cercano un'esperienza ancora più moderna e intuitiva, \textbf{fish} (Friendly Interactive Shell) offre syntax highlighting automatico e suggerimenti intelligenti. Infine, \textbf{dash} (Debian Almquist Shell) è una shell leggera e veloce, spesso usata per l'esecuzione di script di sistema dove la leggerezza è prioritaria rispetto alle feature avanzate.
 
 \subsection{Bash: La Shell Standard}
 
@@ -683,19 +668,9 @@ sayHello
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo esplorato:
+In questo capitolo abbiamo intrapreso un viaggio affascinante attraverso la storia e l'architettura di Linux. Abbiamo visto come Unix sia nato dai laboratori di AT\&T e come Linus Torvalds, armato di passione e creatività, lo abbia trasformato in un sistema operativo libero e aperto. Abbiamo esplorato l'architettura affascinante del sistema Linux, organizzato in livelli gerarchici dal kernel fino alle applicazioni utente, e approfondito il ruolo cruciale che il kernel svolge nel gestire processori, memoria, file system, dispositivi e networking. Le distribuzioni Linux rappresentano diverse filosofie e target di utenti, da quelle orientate alla stabilità come Debian, a quelle all'avanguardia come Fedora, fino a quelle per specialisti come Kali Linux. Abbiamo imparato a conoscere Bash, la shell più diffusa, con i suoi strumenti di navigazione nella history dei comandi, il job control, e le variabili d'ambiente che permettono di personalizzare e estendere il nostro ambiente di lavoro. Infine, abbiamo scoperto come configurare e personalizzare i nostri file di configurazione per adattare il sistema alle nostre esigenze.
 
-\begin{itemize}
-    \item La storia di Unix e Linux: dalle origini ai giorni nostri
-    \item L'architettura a livelli del sistema Linux
-    \item Il ruolo del kernel e le sue responsabilità
-    \item Le principali famiglie di distribuzioni e come scegliere
-    \item La shell Bash: prompt, history, job control
-    \item Variabili d'ambiente e PATH
-    \item File di configurazione e personalizzazione
-\end{itemize}
-
-Avete ora una solida comprensione teorica del sistema Linux. Nel prossimo capitolo inizieremo a sporcarci le mani con i comandi fondamentali per navigare e manipolare il filesystem.
+Possedete ora una solida comprensione teorica del sistema Linux, dalle sue radici storiche fino alle sue implementazioni moderne. Nel prossimo capitolo inizieremo a sporcarci le mani con i comandi fondamentali che vi permetteranno di navigare e manipolare il filesystem con facilità e precisione.
 
 \begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
 Nel Capitolo 2 impareremo i comandi base di Linux: come navigare nel filesystem, creare e manipolare file e directory, cercare file e ottenere aiuto dalla documentazione.

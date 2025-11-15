@@ -101,14 +101,7 @@ La specificity può essere visualizzata come una piramide, dove i livelli superi
 
 \subsection{Come si calcola la specificity}
 
-La specificity si rappresenta come una tupla $(a, b, c, d)$ dove:
-
-\begin{itemize}
-    \item \textbf{a}: numero di inline styles (\texttt{style="..."})
-    \item \textbf{b}: numero di ID selectors (\texttt{\#id})
-    \item \textbf{c}: numero di class selectors, attribute selectors, pseudo-classes
-    \item \textbf{d}: numero di element selectors, pseudo-elements
-\end{itemize}
+La specificity si rappresenta come una tupla $(a, b, c, d)$ dove ogni posizione conta un tipo diverso di selettore. Il valore \textbf{a} rappresenta il numero di inline styles (attributi \texttt{style="..."}), che hanno la massima priorità. Il valore \textbf{b} conta il numero di ID selectors (\texttt{\#id}), che sono altamente specifici. Il valore \textbf{c} include il numero di class selectors, attribute selectors e pseudo-classes, che hanno una priorità media. Infine, il valore \textbf{d} conta il numero di element selectors e pseudo-elements, che hanno la priorità più bassa tra i selettori normali.
 
 \textbf{Esempi di calcolo}:
 

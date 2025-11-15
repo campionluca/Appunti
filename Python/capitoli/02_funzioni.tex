@@ -107,14 +107,17 @@ Hai imparato a definire funzioni, gestire parametri flessibili e comprendere sco
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{Parametri e firme}: preferire parametri nominali (keyword) per chiarezza; usare argomenti obbligatori per input essenziali.
-  \item \textbf{Default mutabili}: evitare \verb|def f(x=[])|; usare \verb|None| e inizializzare internamente.
-  \item \textbf{\*args e \*\*kwargs}: utili per passare collezioni di argomenti; documentare cosa viene accettato e quali chiavi sono supportate.
-\item \textbf{Docstring e annotazioni}: spiegare contratti, esempi d'uso e complessità; usare type annotations per favore l'inferenza e la comunicazione.
-  \item \textbf{Purezza e effetti collaterali}: preferire funzioni pure quando possibile; isolare effetti (I/O, mutazioni) ai confini del sistema.
-\item \textbf{Closure e currying}: chiudere valori nell'ambiente per creare funzioni specializzate; attenzione alla cattura di variabili mutevoli.
-\end{itemize}
+Nella progettazione delle \textbf{firme delle funzioni}, è opportuno preferire parametri nominali (keyword) per migliorare la chiarezza delle chiamate. Usare argomenti obbligatori per gli input essenziali e parametri opzionali con valori di default per quelli meno critici rende l'API più intuitiva.
+
+Un errore comune riguarda l'uso di \textbf{default mutabili}. Assegnare una lista o un dizionario come valore di default (ad esempio, \verb|def f(x=[])|) è un anti-pattern pericoloso perché il valore di default viene creato una sola volta all'atto della definizione della funzione, causando sharing indesiderato tra chiamate. La soluzione è usare \verb|None| come default e inizializzare l'oggetto mutabile all'interno della funzione.
+
+I parametri \textbf{\*args e \*\*kwargs} sono utili per accettare un numero variabile di argomenti, permettendo grande flessibilità nella firma della funzione. Tuttavia, è essenziale documentare chiaramente cosa viene accettato e, nel caso di \*\*kwargs, quali chiavi sono supportate.
+
+La documentazione mediante \textbf{docstring e annotazioni di tipo} è fondamentale per comunicare il contratto di una funzione. Docstring dovrebbero spiegare comportamento, parametri, valore di ritorno e possibili eccezioni; le annotazioni di tipo facilitano l'inferenza e comunicano le aspettative ai lettori e agli strumenti di analisi statica.
+
+Un principio importante è la distinzione tra \textbf{purezza e effetti collaterali}. Preferire funzioni pure (quelle che non modificano stato esterno e non dipendono da esso) quando possibile rende il codice testabile e prevedibile. Gli effetti collaterali come I/O e mutazioni dovrebbero essere isolati ai confini del sistema.
+
+Concetti avanzati come \textbf{closure e currying} permettono di chiudere valori nell'ambiente per creare funzioni specializzate. Tuttavia, è necessario prestare attenzione alla cattura di variabili mutevoli, poiché il comportamento può diventare sorprendente se le variabili cambiano valore dopo la definizione della closure.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Per chi viene da C/Java/JS: firme e scope]
@@ -154,9 +157,11 @@ res = transform(xs=data, fn=lambda x: x * 2)
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Idiomi: funzioni piccole, composizione, map/filter}]
-- \textbf{Composizione}: costruisci pipeline con funzioni pure e piccole.  
-- \textbf{map/filter}: usa `map(f, xs)`/`filter(pred, xs)` oppure comprensioni per leggibilità.  
-- \textbf{Docstring}: inserisci esempio d'uso e contratti; evita commenti superflui dentro la funzione.
+La \textbf{composizione} di funzioni piccole e pure è uno dei principi cardine della programmazione funzionale e di un buon design software. Costruire pipeline componibili consente di combinare operazioni semplici per risolvere problemi complessi, migliorando la testabilità e la riusabilità.
+
+Le funzioni \textbf{map e filter} rappresentano operazioni fondamentali su collezioni. È possibile usarle direttamente (`map(f, xs)` e `filter(pred, xs)`) oppure preferire le list comprehension `[f(x) for x in xs]` e `[x for x in xs if pred(x)]` che spesso risultano più leggibili e Pythonici.
+
+La \textbf{documentazione mediante docstring} dovrebbe includere esempi d'uso chiari e descrivere i contratti della funzione. I commenti all'interno della funzione dovrebbero spiegare il "perché" piuttosto che il "cosa", evitando commenti superflui che semplicemente ripetono il codice.
 
 \begin{lstlisting}
 def normalize(xs):

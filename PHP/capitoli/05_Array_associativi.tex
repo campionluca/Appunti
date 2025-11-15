@@ -15,8 +15,8 @@ Teoria, Confronto con array numerici, Funzioni utili, Esempi pratici, Conversion
 Gli array associativi usano chiavi stringa per mappare valori, ideali per rappresentare oggetti semplici o record.
 
 \section{Differenze con array numerici}
-- Chiave esplicita vs indice numerico.
-- Iterazione con \verb|foreach ($arr as $k=>$v)|.
+
+Gli array associativi differiscono dagli array numerici in aspetti fondamentali. La differenza principale è che gli array associativi utilizzano chiavi esplicite (generalmente stringhe) per accedere ai valori, mentre gli array numerici usano indici numerici. Questa distinzione permette di creare strutture dati semantiche dove le chiavi descrivono il significato del valore. Per quanto riguarda l'iterazione, gli array associativi richiedono l'uso di \verb|foreach ($arr as $k=>$v)| per accedere sia alla chiave che al valore, a differenza degli array numerici dove spesso si usa semplicemente \verb|foreach ($arr as $v)|.
 
 \begin{lstlisting}
 <?php
@@ -25,7 +25,8 @@ echo $user['name'];
 \end{lstlisting}
 
 \section{Funzioni specifiche}
-- \texttt{array\_keys}, \texttt{array\_values}, \texttt{array\_merge}, \texttt{array\_replace}
+
+Diverse funzioni PHP sono specificamente progettate per lavorare efficacemente con array associativi. \texttt{array\_keys()} estrae tutte le chiavi di un array associativo e le restituisce come array indicizzato. \texttt{array\_values()} estrae tutti i valori e li restituisce come array indicizzato, perdendo l'informazione sulle chiavi originali. \texttt{array\_merge()} combina due o più array associativi, unendo le loro chiavi e valori. \texttt{array\_replace()} consente di sostituire i valori di un array con i valori di altri array, utile per l'override di configurazioni predefinite con valori personalizzati.
 
 \begin{lstlisting}
 <?php
@@ -61,8 +62,8 @@ foreach ($user as $k=>$v) {
 \end{lstlisting}
 
 \section{Conversione da/verso altri formati}
-- JSON: \texttt{json\_encode} / \texttt{json\_decode(true)} (associativo)
-- Query string: costruzione manuale (\texttt{urlencode} + \texttt{implode})
+
+Gli array associativi PHP possono essere facilmente convertiti verso altri formati di serializzazione. Per JSON, \texttt{json\_encode} converte un array associativo in una stringa JSON, mentre \texttt{json\_decode(true)} (con il parametro \texttt{true}) deserializza una stringa JSON back in un array associativo. Per la query string (usata negli URL), la conversione richiede una costruzione manuale combinando \texttt{urlencode()} per codificare le chiavi e valori, e \texttt{implode()} per unire le coppie chiave-valore con il separatore &. Questo permette di trasformare facilmente array associativi in formato standard per la trasmissione nei parametri URL.
 
 \begin{lstlisting}
 <?php

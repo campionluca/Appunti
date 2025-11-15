@@ -91,13 +91,15 @@ Hai praticato I/O su file e uso di context manager.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{Modalità di apertura}: \verb|'r'|, \verb|'w'|, \verb|'a'|, \verb|'rb'|/\verb|'wb'|; scegliere testo o binario in base ai dati.
-  \item \textbf{Context manager}: usare \verb|with open(...) as f| per chiusura automatica e gestione sicura delle risorse.
-  \item \textbf{Encoding}: esplicitare \verb|encoding='utf-8'|; gestire errori con \verb|errors='replace'| quando necessario.
-  \item \textbf{Buffering e newline}: controllare buffering per prestazioni; gestire newlines con \verb|newline| su piattaforme diverse.
-  \item \textbf{Pathlib}: preferire \verb|pathlib.Path| a \verb|os.path| per operazioni leggibili e composabili.
-\end{itemize}
+La scelta delle \textbf{modalità di apertura} è importante per operazioni I/O corrette. Le modalità \verb|'r'|, \verb|'w'| e \verb|'a'| lavorano con testo, mentre \verb|'rb'| e \verb|'wb'| con dati binari. È fondamentale scegliere il modo corretto in base alla natura dei dati.
+
+L'uso del \textbf{context manager} con \verb|with open(...) as f| è non solo una best practice ma obbligatorio per la sicurezza e l'affidabilità. Garantisce che il file sia chiuso automaticamente, anche se si verifica un'eccezione, prevenendo perdite di risorse.
+
+La gestione dell'\textbf{encoding} è critica per evitare errori di decodifica. Esplicitare \verb|encoding='utf-8'| è lo standard; per tollerare errori di encoding non perfetti, si può usare \verb|errors='replace'| o \verb|errors='ignore'|.
+
+Il \textbf{buffering e newline} controllano come i dati vengono trattenuti in memoria prima della scrittura su disco e come vengono interpretati i terminatori di linea. Gestire newlines correttamente è essenziale, specialmente quando si lavora con file CSV o su piattaforme diverse.
+
+Per operazioni su \textbf{percorsi di file}, \verb|pathlib.Path| dovrebbe essere preferito a \verb|os.path|. Offre un'API molto più leggibile e composabile, con supporto per operazioni comuni come composizione di path, controllo di esistenza e iterazione su directory.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Per chi viene da C/Java/JS: filesystem e flussi]
@@ -140,9 +142,11 @@ with (base / "people.csv").open("r", newline="", encoding="utf-8") as f:
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Idiomi: pathlib, context manager, validazione}]
-- \textbf{pathlib}: preferisci `Path` per comporre, controllare e creare percorsi.  
-- \textbf{context manager}: usa `with` per file, socket e risorse; riduce boilerplate e bug.  
-- \textbf{validazione}: verifica esistenza/permessi prima di elaborare; isola l'I/O dalla logica di trasformazione.
+L'uso di \textbf{pathlib} per comporre, controllare e creare percorsi è il moderno standard Python. Preferire `Path` a `os.path` rende il codice più leggibile e portabile across piattaforme.
+
+I \textbf{context manager} con `with` dovrebbero essere usati per gestire file, socket e altre risorse. Riducono boilerplate e preveniscono bug dovuti a cleanup manual mancato.
+
+Infine, la \textbf{validazione} è importante prima di elaborare file. Verificare l'esistenza dei file e i permessi di accesso prevenisce errori cryptici successivamente. Inoltre, è fondamentale isolare l'I/O dalla logica di trasformazione, permettendo di testare la logica indipendentemente dal filesystem.
 \end{tcolorbox}
 
 \paragraph{Pratiche} Validare dimensione file, esistenza e permessi prima di elaborare. Isolare l'I/O dai trasformazioni per semplificare test e riuso.

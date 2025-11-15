@@ -35,13 +35,7 @@ Alcuni elementi HTML non hanno contenuto. Questi sono chiamati \textbf{tag auto-
 \end{lstlisting}
 
 \begin{nota}
-Anche se HTML5 permette di omettere la chiusura (\texttt{/>}), è consigliabile usare sempre la sintassi XML/XHTML con chiusura esplicita per:
-\begin{itemize}
-  \item Garantire la compatibilità con XHTML e XML
-  \item Rendere il codice più consistente e leggibile
-  \item Evitare problemi con parser XML
-  \item Facilitare la migrazione tra diversi formati
-\end{itemize}
+Anche se HTML5 permette di omettere la chiusura (\texttt{/>}), è consigliabile usare sempre la sintassi XML/XHTML con chiusura esplicita. Questo approccio garantisce la compatibilità con XHTML e XML, rendendo il codice più consistente e leggibile. Inoltre, aiuta a evitare problemi con parser XML e facilita la migrazione tra diversi formati, assicurando che il tuo codice possa essere facilmente convertito o integrato con altri sistemi.
 \end{nota}
 
 \begin{nota}
@@ -72,12 +66,7 @@ I commenti in HTML sono utili per documentare il codice e vengono ignorati dal b
 -->
 \end{lstlisting}
 
-I commenti sono utili per:
-\begin{itemize}
-  \item Documentare sezioni complesse del codice
-  \item Disabilitare temporaneamente parti di HTML
-  \item Aggiungere note per altri sviluppatori
-\end{itemize}
+I commenti sono strumenti molto utili durante lo sviluppo. Puoi utilizzarli per documentare sezioni complesse del codice, spiegando il ragionamento dietro decisioni di design o struttura. Sono particolarmente utili quando hai bisogno di disabilitare temporaneamente parti di HTML durante il debugging o il refactoring. Infine, i commenti permettono di aggiungere note per altri sviluppatori che lavoreranno sul tuo codice, facilitando la comprensione e la collaborazione nel team.
 
 \subsection{Attributi HTML}
 Gli attributi forniscono informazioni aggiuntive ai tag e hanno questa sintassi:
@@ -89,22 +78,10 @@ Gli attributi forniscono informazioni aggiuntive ai tag e hanno questa sintassi:
 Gli attributi \texttt{id} e \texttt{class} sono fondamentali per identificare e raggruppare elementi HTML:
 
 \begin{description}
-  \item[\texttt{id}] È un identificatore \textbf{univoco} per un elemento nella pagina:
-  \begin{itemize}
-    \item Deve essere unico nel documento (non ci possono essere due elementi con lo stesso \texttt{id})
-    \item Viene usato per identificare un elemento specifico
-    \item Utile per JavaScript e per collegamenti interni alla pagina
-    \item Si riferisce con \texttt{\#} nel CSS (es: \texttt{\#header})
-  \end{itemize}
+  \item[\texttt{id}] È un identificatore \textbf{univoco} per un elemento nella pagina. Deve essere unico nel documento, il che significa che non possono coesistere due elementi con lo stesso \texttt{id}. Viene utilizzato per identificare un elemento specifico e risulta particolarmente utile per JavaScript quando hai bisogno di accedere a un elemento preciso. L'attributo \texttt{id} è anche fondamentale per creare collegamenti interni alla pagina (bookmark). Nel CSS, ti riferisci a un elemento con id usando il selettore \texttt{\#} (es: \texttt{\#header}).
   Esempio: \texttt{<div id="header">}
 
-  \item[\texttt{class}] Definisce una o più categorie a cui l'elemento appartiene:
-  \begin{itemize}
-    \item Un elemento può avere multiple classi (separate da spazi)
-    \item La stessa classe può essere usata su più elementi
-    \item Utile per applicare stili comuni a gruppi di elementi
-    \item Si riferisce con \texttt{.} nel CSS (es: \texttt{.container})
-  \end{itemize}
+  \item[\texttt{class}] Definisce una o più categorie a cui l'elemento appartiene. Un elemento può avere multiple classi, separate da spazi, permettendoti di combinare diversi stili e comportamenti. Diversamente da \texttt{id}, la stessa classe può essere usata su molteplici elementi della pagina, rendendola ideale per applicare stili comuni a gruppi di elementi. Nel CSS, ti riferisci a una classe usando il selettore \texttt{.} (es: \texttt{.container}).
   Esempio: \texttt{<div class="container blue">}
 \end{description}
 
@@ -119,19 +96,7 @@ Differenze principali:
 \subsection{Attributi per collegamenti e risorse}
 
 \subsubsection{L'attributo href}
-L'attributo \texttt{href} (Hypertext REFerence) definisce il collegamento a una risorsa:
-
-\begin{itemize}
-  \item Usato principalmente con il tag \texttt{<a>} per creare link
-  \item Può contenere:
-    \begin{itemize}
-      \item URL assoluti: \texttt{https://www.esempio.com}
-      \item URL relativi: \texttt{./immagini/foto.jpg}
-      \item Collegamenti interni: \texttt{\#sezione}
-      \item Collegamenti email: \texttt{mailto:esempio@email.com}
-      \item Collegamenti telefonici: \texttt{tel:+390123456789}
-    \end{itemize}
-\end{itemize}
+L'attributo \texttt{href} (Hypertext REFerence) definisce il collegamento a una risorsa ed è utilizzato principalmente con il tag \texttt{<a>} per creare link. L'attributo \texttt{href} può contenere diversi tipi di valori, a seconda della destinazione desiderata. Puoi specificare URL assoluti (come \texttt{https://www.esempio.com}) per collegamenti a siti web esterni, oppure URL relativi (come \texttt{./immagini/foto.jpg}) per risorse all'interno del tuo progetto. È possibile anche creare collegamenti interni alla pagina stessa usando anchor link (come \texttt{\#sezione}), stabilire collegamenti email (come \texttt{mailto:esempio@email.com}) che permettono agli utenti di inviare messaggi, oppure creare link telefonici (come \texttt{tel:+390123456789}) che attivano applicazioni di composizione su dispositivi mobili.
 
 Esempi di utilizzo:
 \begin{lstlisting}[language=HTML]
@@ -146,23 +111,7 @@ Esempi di utilizzo:
 \end{lstlisting}
 
 \subsubsection{L'attributo src}
-L'attributo \texttt{src} (source) specifica la fonte di una risorsa multimediale:
-
-\begin{itemize}
-  \item Utilizzato con elementi che caricano contenuti esterni:
-    \begin{itemize}
-      \item \texttt{<img>} per immagini
-      \item \texttt{<video>} per filmati
-      \item \texttt{<audio>} per suoni
-      \item \texttt{<script>} per JavaScript
-    \end{itemize}
-  \item Può contenere:
-    \begin{itemize}
-      \item Percorsi assoluti: \texttt{https://cdn.esempio.com/immagine.jpg}
-      \item Percorsi relativi: \texttt{./assets/logo.png}
-      \item Data URI: \texttt{data:image/png;base64,...}
-    \end{itemize}
-\end{itemize}
+L'attributo \texttt{src} (source) specifica la fonte di una risorsa multimediale ed è utilizzato con diversi elementi HTML che caricano contenuti esterni. Troverai \texttt{src} utilizzato con il tag \texttt{<img>} per le immagini, con \texttt{<video>} per i filmati, con \texttt{<audio>} per i suoni, e con \texttt{<script>} per file JavaScript. Proprio come \texttt{href}, \texttt{src} può contenere diversi tipi di percorsi. Puoi specificare percorsi assoluti (come \texttt{https://cdn.esempio.com/immagine.jpg}) che puntano a risorse su server remoti, oppure percorsi relativi (come \texttt{./assets/logo.png}) che riferiscono risorse locali nel tuo progetto. In alcuni casi avanzati, puoi anche utilizzare Data URI (come \texttt{data:image/png;base64,...}) per incorporare direttamente il contenuto nel markup HTML.
 
 Esempi di utilizzo:
 \begin{lstlisting}[language=HTML]
@@ -188,12 +137,7 @@ Differenze principali:
 \end{nota}
 
 \subsection{Annidamento dei tag}
-I tag possono essere annidati (contenuti dentro altri tag) ma devono seguire regole precise:
-\begin{itemize}
-  \item I tag devono essere chiusi nell'ordine inverso di apertura
-  \item Ogni tag figlio deve essere completamente contenuto nel genitore
-  \item L'indentazione aiuta a visualizzare la struttura
-\end{itemize}
+I tag possono essere annidati, cioè contenuti dentro altri tag, ma devono seguire regole precise per assicurare un markup valido. I tag devono essere chiusi nell'ordine inverso rispetto a quello in cui sono stati aperti, garantendo coerenza strutturale. Inoltre, ogni tag figlio deve essere completamente contenuto dentro il suo tag genitore, mantenendo una corretta gerarchia. Un accorgimento pratico e molto utile è utilizzare l'indentazione appropriata nel codice, che aiuta visivamente a comprendere la struttura e la profondità di annidamento degli elementi.
 
 Esempio corretto:
 \begin{lstlisting}[language=HTML]
@@ -220,13 +164,7 @@ L'annidamento errato può causare comportamenti imprevedibili nel rendering dell
 \end{attenzione}
 
 \subsection{Commenti HTML}
-I commenti in HTML servono per documentare il codice e non vengono visualizzati nel browser. Sono utili per:
-\begin{itemize}
-  \item Spiegare sezioni complesse di codice
-  \item Disabilitare temporaneamente parti di codice
-  \item Organizzare il codice in sezioni logiche
-  \item Comunicare con altri sviluppatori
-\end{itemize}
+I commenti in HTML servono per documentare il codice e non vengono visualizzati nel browser, rendendoli ideali per note interne. I commenti sono particolarmente utili per spiegare sezioni complesse di codice, aiutando te e gli altri sviluppatori a comprendere il ragionamento dietro determinate scelte. Durante lo sviluppo e il debugging, i commenti permettono di disabilitare temporaneamente parti di codice senza eliminarle completamente. Puoi anche utilizzarli per organizzare il codice in sezioni logiche ben definite, facilitando la navigazione in file di grandi dimensioni. Infine, i commenti sono uno strumento essenziale di comunicazione con altri sviluppatori, permettendoti di condividere informazioni importanti e best practices all'interno del team.
 
 Sintassi dei commenti:
 \begin{lstlisting}[language=HTML]
@@ -337,11 +275,7 @@ Ecco i meta tag più importanti e il loro utilizzo:
 \begin{description}
   \item[\texttt{charset}] Specifica la codifica dei caratteri del documento. UTF-8 è lo standard moderno che supporta caratteri internazionali e emoji.
   
-  \item[\texttt{viewport}] Controlla come la pagina si adatta ai dispositivi mobili:
-  \begin{itemize}
-    \item \texttt{width=device-width}: imposta la larghezza della pagina alla larghezza del dispositivo
-    \item \texttt{initial-scale=1.0}: imposta il livello di zoom iniziale
-  \end{itemize}
+  \item[\texttt{viewport}] Controlla come la pagina si adatta ai dispositivi mobili. Contiene parametri come \texttt{width=device-width}, che imposta la larghezza della pagina alla larghezza effettiva del dispositivo, garantendo che il layout si adatti correttamente su schermi di diverse dimensioni. Inoltre include \texttt{initial-scale=1.0}, che imposta il livello di zoom iniziale al 100%, assicurando che la pagina non sia ingrandita o rimpicciolita quando viene caricata per la prima volta.
   
   \item[\texttt{description}] Fornisce una breve descrizione della pagina (massimo 155 caratteri). Viene mostrata nei risultati di ricerca di Google.
   

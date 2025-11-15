@@ -41,13 +41,7 @@ Entità \textbf{Cliente} ha attributi:
 \end{tcolorbox}
 
 \subsubsection{Tipi di attributi}
-\begin{description}
-    \item[\textbf{Semplice}] Non è scomponibile (es. \texttt{email})
-    \item[\textbf{Composto}] Scomponibile in attributi più piccoli (es. \texttt{indirizzo} = \texttt{via, numero, città, CAP})
-    \item[\textbf{Univoco/Chiave}] Identifica univocamente l'entità (es. \texttt{idCliente})
-    \item[\textbf{Opzionale}] Può non avere un valore (es. \texttt{numeroCellulare})
-    \item[\textbf{Multivalore}] Può assumere più valori (es. \texttt{telefoni} di una ditta)
-\end{description}
+Gli attributi possono essere classificati in diverse categorie in base alle loro caratteristiche. Un attributo \textbf{semplice} non è scomponibile e rappresenta un'unità atomica di informazione, come un indirizzo email. Un attributo \textbf{composto}, al contrario, può essere scomposto in attributi più piccoli e semanticamente significativi; per esempio, un indirizzo può essere diviso in via, numero civico, città e CAP. Un attributo \textbf{univoco} o chiave identifica univocamente l'entità, come un identificativo di cliente. Un attributo \textbf{opzionale} può non avere un valore assegnato, come un numero di cellulare che potrebbe non essere disponibile per tutti i clienti. Infine, un attributo \textbf{multivalore} può assumere più valori per la stessa entità, come una raccolta di numeri di telefono per una ditta.
 
 \subsection{Relazioni}
 Una \textbf{relazione} (o associazione) descrive come due o più entità interagiscono tra loro.
@@ -66,13 +60,7 @@ La \textbf{cardinalità} specifica quanti elementi di un'entità possono essere 
 
 \subsection{Tipi di cardinalità}
 
-\begin{description}
-    \item[\textbf{1:1 (uno a uno)}] Ogni elemento di A è associato a esattamente un elemento di B e viceversa.
-    \item[\textbf{1:N (uno a molti)}] Ogni elemento di A è associato a uno o più elementi di B, ma ogni elemento di B è associato a un solo elemento di A.
-    \item[\textbf{N:M (molti a molti)}] Ogni elemento di A può essere associato a più elementi di B e viceversa.
-    \item[\textbf{0..1}] Opzionale: da zero a uno
-    \item[\textbf{1..N}] Obbligatorio: da uno a molti
-\end{description}
+La cardinalità può assumere diverse forme a seconda della natura della relazione tra entità. Una relazione \textbf{1:1 (uno a uno)} si verifica quando ogni elemento di A è associato a esattamente un elemento di B, e viceversa; questo è il caso più restrittivo. Una relazione \textbf{1:N (uno a molti)} permette che ogni elemento di A sia associato a uno o più elementi di B, ma ogni elemento di B rimane associato a un solo elemento di A. Una relazione \textbf{N:M (molti a molti)} è la più flessibile, consentendo che ogni elemento di A sia associato a più elementi di B e viceversa. Oltre ai tipi principali, esistono notazioni aggiuntive per specificare l'obbligatorietà: una notazione \textbf{0..1} indica un'associazione opzionale (zero a uno), mentre \textbf{1..N} rappresenta un'associazione obbligatoria (da uno a molti).
 
 \subsection{Esempio 1: Relazione 1:1}
 
@@ -205,14 +193,7 @@ Entità \textbf{Ordine}:
 \section*{Riepilogo concetti chiave}
 
 \begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
-\begin{itemize}
-    \item Un'\textbf{entità} rappresenta una classe di oggetti del dominio
-    \item Un \textbf{attributo} descrive una proprietà dell'entità
-    \item Una \textbf{relazione} collega due o più entità
-    \item La \textbf{cardinalità} specifica il numero di associazioni (1:1, 1:N, N:M)
-    \item La \textbf{chiave primaria} identifica univocamente l'entità
-    \item La \textbf{chiave esterna} crea il collegamento tra entità
-\end{itemize}
+Nel modello entità-relazione, un'\textbf{entità} rappresenta una classe di oggetti del dominio reale di interesse. Ogni entità possiede \textbf{attributi} che descrivono specifiche proprietà e caratteristiche. Le entità sono collegate tra loro attraverso \textbf{relazioni} che definiscono le associazioni significative. La \textbf{cardinalità} specifica il numero e la natura delle associazioni possibili tra entità, espresse come 1:1, 1:N, o N:M. Per identificare univocamente ogni istanza di entità, si utilizza una \textbf{chiave primaria}, mentre una \textbf{chiave esterna} crea il collegamento tra entità diverse, mantenendo la coerenza strutturale del modello.
 \end{tcolorbox}
 
 \section*{Esercizi}

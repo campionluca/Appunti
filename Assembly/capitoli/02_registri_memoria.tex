@@ -14,11 +14,7 @@ L'8086 ha 4 registri general purpose a 16 bit, ciascuno divisibile in due regist
 \textbf{AX} è il registro \emph{accumulatore}, utilizzato per operazioni aritmetiche, I/O e moltiplicazioni/divisioni.
 \end{definizione}
 
-\begin{itemize}
-    \item \textbf{AX} (16 bit): Accumulatore completo
-    \item \textbf{AH} (8 bit): Byte alto (High)
-    \item \textbf{AL} (8 bit): Byte basso (Low)
-\end{itemize}
+Il registro AX è un registro a 16 bit che può essere suddiviso in due sezioni: \textbf{AH} (byte alto - High) e \textbf{AL} (byte basso - Low). Questo design consente al programmatore di operare sia su dati a 16 bit usando AX nel suo complesso, sia su dati a 8 bit usando singolarmente AH per le cifre più significative e AL per quelle meno significative.
 
 \begin{center}
 \begin{tikzpicture}
@@ -36,54 +32,32 @@ L'8086 ha 4 registri general purpose a 16 bit, ciascuno divisibile in due regist
 \end{center}
 
 \textbf{Usi tipici}:
-\begin{itemize}
-    \item Operazioni aritmetiche generiche
-    \item Istruzioni I/O (\texttt{IN AL, port} / \texttt{OUT port, AL})
-    \item Moltiplicazione: risultato in AX (8 bit) o DX:AX (16 bit)
-    \item Divisione: dividendo in AX (8 bit) o DX:AX (16 bit)
-\end{itemize}
+
+Il registro AX è fondamentale per molteplici operazioni. Innanzitutto, è il registro principale per le \emph{operazioni aritmetiche generiche}, poiché dispone di istruzioni ottimizzate per il calcolo. AX gioca anche un ruolo cruciale nelle \emph{istruzioni I/O}, dove AL viene utilizzato per leggere byte da una porta (\texttt{IN AL, port}) o scrivere byte su una porta (\texttt{OUT port, AL}). Nelle \emph{operazioni di moltiplicazione}, il registro AX contiene uno dei moltiplicandi e riceve il risultato: per moltiplicazioni a 8 bit il risultato risiede completamente in AX, mentre per moltiplicazioni a 16 bit il risultato si estende fino a DX:AX. Similmente, nelle \emph{operazioni di divisione}, AX funge da parte bassa del dividendo (per divisioni a 8 bit il dividendo è in AX; per divisioni a 16 bit è in DX:AX) e riceve il quoziente dopo la divisione.
 
 \subsection{Registro BX (Base)}
 
-\begin{itemize}
-    \item \textbf{BX}: Registro base per indirizzamento indiretto
-    \item \textbf{BH} / \textbf{BL}: Byte alto/basso
-\end{itemize}
+Il registro BX è un registro a 16 bit suddiviso in \textbf{BH} (byte alto) e \textbf{BL} (byte basso), progettato specificamente come \emph{registro base per l'indirizzamento indiretto della memoria}.
 
 \textbf{Usi tipici}:
-\begin{itemize}
-    \item Indirizzamento di array: \texttt{MOV AL, [BX]}
-    \item Puntatore a strutture dati
-    \item Calcoli generici
-\end{itemize}
+
+BX rappresenta il registro preferito per l'\emph{indirizzamento di array}, permettendo di caricare dati dalla memoria con sintassi come \texttt{MOV AL, [BX]}. È frequentemente utilizzato come \emph{puntatore a strutture dati} complesse, consentendo di accedere ai vari campi della struttura combinando BX con offset. Oltre a questi ruoli specializzati, BX può essere impiegato per \emph{calcoli generici} come qualsiasi altro registro general purpose, offrendo così una versatilità che lo rende uno dei registri più utilizzati in Assembly.
 
 \subsection{Registro CX (Contatore)}
 
-\begin{itemize}
-    \item \textbf{CX}: Registro contatore per loop
-    \item \textbf{CH} / \textbf{CL}: Byte alto/basso
-\end{itemize}
+Il registro CX è un registro a 16 bit suddiviso in \textbf{CH} (byte alto) e \textbf{CL} (byte basso), concepito come \emph{registro contatore per loop} e operazioni ripetitive.
 
 \textbf{Usi tipici}:
-\begin{itemize}
-    \item Contatore in istruzioni \texttt{LOOP}, \texttt{LOOPE}, \texttt{LOOPNE}
-    \item Contatore in operazioni su stringhe con prefisso \texttt{REP}
-    \item Shift/rotate: CL specifica il numero di posizioni
-\end{itemize}
+
+CX è essenziale per le \emph{istruzioni di ciclo}, dove funge da contatore automaticamente decrementato dalle istruzioni \texttt{LOOP}, \texttt{LOOPE} e \texttt{LOOPNE}, permettendo al programma di ripetere blocchi di codice un numero specificato di volte. CX è anche il registro deputato al conteggio nelle \emph{operazioni su stringhe}, dove il prefisso \texttt{REP} utilizza CX per specificare quante volte ripetere un'istruzione come \texttt{MOVSB} o \texttt{STOSB}. Inoltre, CX è cruciale nelle \emph{operazioni di shift e rotate}, dove il registro CL (parte bassa di CX) specifica il numero di posizioni di cui spostare o ruotare un valore, consentendo shift e rotate dinamici.
 
 \subsection{Registro DX (Dati)}
 
-\begin{itemize}
-    \item \textbf{DX}: Registro dati per I/O e operazioni estese
-    \item \textbf{DH} / \textbf{DL}: Byte alto/basso
-\end{itemize}
+Il registro DX è un registro a 16 bit suddiviso in \textbf{DH} (byte alto) e \textbf{DL} (byte basso), progettato come \emph{registro dati per operazioni di I/O avanzate e calcoli estesi}.
 
 \textbf{Usi tipici}:
-\begin{itemize}
-    \item Indirizzamento porte I/O: \texttt{IN AL, DX} / \texttt{OUT DX, AL}
-    \item Moltiplicazione 16 bit: risultato alto in DX, basso in AX
-    \item Divisione 16 bit: dividendo in DX:AX
-\end{itemize}
+
+DX è il registro specializzato per l'\emph{indirizzamento di porte I/O}, dove consente l'accesso a un grande numero di porte (fino a 65535) tramite istruzioni come \texttt{IN AL, DX} (per leggere da una porta il cui numero è in DX) e \texttt{OUT DX, AL} (per scrivere su una porta il cui numero è in DX). Nelle \emph{operazioni di moltiplicazione a 16 bit}, DX riceve la parte alta del risultato (mentre AX contiene la parte bassa), permettendo il calcolo di numeri molto grandi. Infine, nelle \emph{operazioni di divisione a 16 bit}, DX contiene la parte alta del dividendo insieme ad AX che contiene la parte bassa, formando così il registro a 32 bit DX:AX necessario per divisioni precise.
 
 \subsection{Tabella riassuntiva}
 
@@ -112,35 +86,19 @@ Questi registri sono utilizzati per l'indirizzamento della memoria e non sono di
 \textbf{SP} punta alla cima dello stack nel segmento SS. Lo stack cresce verso indirizzi decrescenti.
 \end{definizione}
 
-\begin{itemize}
-    \item Utilizzato con \texttt{PUSH} e \texttt{POP}
-    \item Automaticamente decrementato da \texttt{PUSH}, incrementato da \texttt{POP}
-    \item Indirizzo stack: \texttt{SS:SP}
-\end{itemize}
+Il Stack Pointer è un registro specializzato per la gestione dello stack, una struttura dati LIFO (Last In, First Out) cruciale per la programmazione in Assembly. SP è utilizzato esclusivamente con le istruzioni \texttt{PUSH} e \texttt{POP}, che lo modificano automaticamente. Quando si esegue una \texttt{PUSH}, SP viene decrementato di 2 (per memorizzare una word di 16 bit), permettendo all'elemento di essere aggiunto in cima allo stack. Inversamente, una \texttt{POP} incrementa SP di 2 dopo aver recuperato l'elemento dalla cima dello stack. L'indirizzo fisico della cima dello stack è sempre calcolato combinando il registri segmento \texttt{SS} con l'offset \texttt{SP}, formando l'indirizzo \texttt{SS:SP}.
 
 \subsection{Base Pointer (BP)}
 
-\begin{itemize}
-    \item \textbf{BP}: Puntatore base per accedere parametri e variabili locali
-    \item Tipicamente usato con segmento SS: \texttt{[BP+offset]}
-    \item Fondamentale nelle chiamate a procedure
-\end{itemize}
+Il Base Pointer è un \emph{puntatore base per accedere a parametri e variabili locali} all'interno dello stack frame di una procedura. BP è tipicamente utilizzato in combinazione con il segmento \texttt{SS} per accedere ai dati nello stack con indirizzamento del tipo \texttt{[BP+offset]}, dove l'offset specifica la posizione relativa rispetto alla cima dello stack frame. BP è \emph{fondamentale nelle chiamate a procedure}, dove viene salvato all'inizio di ogni procedura per stabilire un punto di riferimento fisso per l'accesso ai parametri e alle variabili locali, indipendentemente dalle modifiche apportate a SP durante l'esecuzione della procedura stessa.
 
 \subsection{Source Index (SI)}
 
-\begin{itemize}
-    \item \textbf{SI}: Indice sorgente per operazioni su stringhe
-    \item Usato con segmento DS: \texttt{DS:SI}
-    \item Auto-incremento/decremento con istruzioni \texttt{LODS}, \texttt{MOVS}, \texttt{CMPS}
-\end{itemize}
+Il Source Index è un \emph{registro indice sorgente specializzato per operazioni su stringhe}. SI è principalmente utilizzato in combinazione con il segmento di dati \texttt{DS}, formando l'indirizzo \texttt{DS:SI}, per specificare la posizione dei dati sorgente. Il suo valore viene \emph{automaticamente incrementato o decrementato} quando viene utilizzato con istruzioni come \texttt{LODS} (Load String), \texttt{MOVS} (Move String) e \texttt{CMPS} (Compare String), permettendo di traversare facilmente una sequenza di byte o word in memoria senza dover gestire manualmente l'incremento dell'indice.
 
 \subsection{Destination Index (DI)}
 
-\begin{itemize}
-    \item \textbf{DI}: Indice destinazione per operazioni su stringhe
-    \item Usato con segmento ES: \texttt{ES:DI}
-    \item Auto-incremento/decremento con istruzioni \texttt{STOS}, \texttt{MOVS}, \texttt{SCAS}
-\end{itemize}
+Il Destination Index è il \emph{registro indice destinazione utilizzato per operazioni su stringhe}. DI è solitamente utilizzato con il segmento extra \texttt{ES}, formando l'indirizzo \texttt{ES:DI}, per specificare dove i dati devono essere scritti o confrontati. Come SI, il valore di DI viene \emph{automaticamente modificato} (incrementato o decrementato) durante l'esecuzione di istruzioni come \texttt{STOS} (Store String), \texttt{MOVS} (Move String) e \texttt{SCAS} (Scan String), facilitando l'elaborazione sequenziale di stringhe.
 
 \subsection{Instruction Pointer (IP)}
 
@@ -148,11 +106,7 @@ Questi registri sono utilizzati per l'indirizzamento della memoria e non sono di
 \textbf{IP} contiene l'offset della prossima istruzione da eseguire nel segmento CS. Non è direttamente modificabile, ma cambia con istruzioni di salto e chiamate.
 \end{definizione}
 
-\begin{itemize}
-    \item Indirizzo istruzione corrente: \texttt{CS:IP}
-    \item Modificato da: \texttt{JMP}, \texttt{CALL}, \texttt{RET}, \texttt{INT}, \texttt{IRET}
-    \item Automaticamente incrementato dopo ogni istruzione
-\end{itemize}
+L'Instruction Pointer è un registro specializzato che non può essere direttamente letto o modificato dal programmatore, ma che governa completamente il flusso di esecuzione del programma. L'indirizzo fisico dell'istruzione corrente è sempre calcolato combinando il registro segmento \texttt{CS} con l'offset contenuto in \texttt{IP}, formando l'indirizzo \texttt{CS:IP}. Il valore di IP è modificato solamente da istruzioni di controllo del flusso: le istruzioni \texttt{JMP} (salti incondizionati) cambiano IP per saltare a una nuova posizione, le istruzioni \texttt{CALL} (chiamate a procedura) modificano IP durante la chiamata, \texttt{RET} (return da procedura) ripristina il valore precedente di IP, e gli interrupt (\texttt{INT} e \texttt{IRET}) modificano IP per gestire situazioni eccezionali. Dopo l'esecuzione di ogni istruzione ordinaria, IP viene \emph{automaticamente incrementato} per puntare alla prossima istruzione in sequenza.
 
 \section{Registri Segmento}
 
@@ -160,35 +114,19 @@ I 4 registri segmento definiscono le basi dei segmenti di memoria.
 
 \subsection{Code Segment (CS)}
 
-\begin{itemize}
-    \item \textbf{CS}: Segmento codice, contiene le istruzioni del programma
-    \item Indirizzo istruzione: \texttt{CS:IP}
-    \item Modificabile solo con \texttt{JMP FAR}, \texttt{CALL FAR}, \texttt{RET FAR}
-\end{itemize}
+Il \textbf{Code Segment} è il registro segmento che contiene le istruzioni del programma. L'indirizzo fisico di ogni istruzione è calcolato combinando CS con l'Instruction Pointer, formando \texttt{CS:IP}. CS è \emph{modificabile solo tramite istruzioni di salto far} (\texttt{JMP FAR}, \texttt{CALL FAR}) o istruzioni di return da procedure far (\texttt{RET FAR}), che cambiano sia CS che IP per consentire salti tra segmenti diversi.
 
 \subsection{Data Segment (DS)}
 
-\begin{itemize}
-    \item \textbf{DS}: Segmento dati, contiene variabili globali
-    \item Usato implicitamente da: \texttt{[BX]}, \texttt{[SI]}, \texttt{[DI]}
-    \item Modificabile con \texttt{MOV DS, AX}
-\end{itemize}
+Il \textbf{Data Segment} è il registro segmento predefinito che contiene le variabili globali del programma. DS è \emph{utilizzato implicitamente} da molte istruzioni di indirizzamento che referenziano registri come \texttt{[BX]}, \texttt{[SI]}, e \texttt{[DI]}, i quali per default calcolano il loro indirizzo fisico usando DS come segmento di base. A differenza di CS, DS può essere \emph{modificato dal programmatore} tramite l'istruzione \texttt{MOV DS, AX}, permettendo di accedere a diversi segmenti di dati durante l'esecuzione del programma.
 
 \subsection{Stack Segment (SS)}
 
-\begin{itemize}
-    \item \textbf{SS}: Segmento stack, area per \texttt{PUSH}/\texttt{POP}
-    \item Indirizzo cima stack: \texttt{SS:SP}
-    \item Usato implicitamente da \texttt{[BP]}
-\end{itemize}
+Lo \textbf{Stack Segment} è il registro segmento che definisce la base del segmento dello stack. La cima dello stack è sempre localizzata all'indirizzo \texttt{SS:SP}, calcolato combinando il valore di SS con il Stack Pointer. SS è \emph{usato implicitamente} dalle istruzioni \texttt{PUSH} e \texttt{POP}, nonché da istruzioni di indirizzamento che utilizzano il registro \texttt{[BP]}, che per default riferisce al segmento SS piuttosto che DS.
 
 \subsection{Extra Segment (ES)}
 
-\begin{itemize}
-    \item \textbf{ES}: Segmento extra per operazioni su stringhe
-    \item Usato implicitamente da \texttt{DI} in \texttt{STOS}, \texttt{MOVS}, \texttt{SCAS}
-    \item Utile per copiare dati tra segmenti
-\end{itemize}
+L'Extra Segment è un \textbf{registro segmento aggiuntivo} comunemente utilizzato per operazioni su stringhe. ES è \emph{usato implicitamente} dal registro DI (Destination Index) nelle istruzioni di manipolazione di stringhe come \texttt{STOS}, \texttt{MOVS} e \texttt{SCAS}, permettendo di specificare il segmento destinazione. ES risulta particolarmente \emph{utile per copiare dati tra segmenti diversi}, poiché consente di leggere da un segmento (usando DS:SI) e scrivere in un altro (usando ES:DI) nella stessa operazione.
 
 \begin{attenzione}
 I registri segmento \textbf{non possono essere modificati direttamente}. Bisogna passare attraverso un registro general purpose:
@@ -271,14 +209,7 @@ Nei programmi \textbf{.COM}, tutti i registri segmento puntano allo stesso indir
 
 \subsection{Layout programma .EXE}
 
-Nei file .EXE i segmenti sono separati:
-
-\begin{itemize}
-    \item \textbf{CS}: Segmento codice (istruzioni)
-    \item \textbf{DS}: Segmento dati (variabili globali)
-    \item \textbf{SS}: Segmento stack (separato da codice e dati)
-    \item \textbf{ES}: Tipicamente uguale a DS all'avvio
-\end{itemize}
+Nei file .EXE i segmenti hanno una struttura più complessa rispetto ai programmi .COM. Il \textbf{CS} (Code Segment) contiene le istruzioni del programma in una sezione dedicata. Il \textbf{DS} (Data Segment) è allocato separatamente per contenere le variabili globali, mantenendo una chiara separazione tra codice e dati. Lo \textbf{SS} (Stack Segment) è completamente separato da entrambi il segmento codice e il segmento dati, permettendo al programma di avere uno spazio stack ben definito e di dimensione appropriata. Infine, l'\textbf{ES} (Extra Segment) è tipicamente inizializzato allo stesso valore di DS all'avvio del programma, anche se può essere modificato durante l'esecuzione per operazioni su stringhe o per accedere a segmenti diversi.
 
 \section{Convenzioni di utilizzo}
 
@@ -345,14 +276,7 @@ MOV AL, [BX]           ; AL = 20h
 
 \section{Riepilogo}
 
-\begin{itemize}
-    \item L'8086 ha 14 registri a 16 bit
-    \item I 4 registri general purpose (AX, BX, CX, DX) sono divisibili in byte
-    \item SP punta allo stack, BP ai parametri, SI/DI alle stringhe
-    \item I 4 registri segmento (CS, DS, SS, ES) definiscono le basi dei segmenti
-    \item IP contiene l'offset della prossima istruzione
-    \item I programmi .COM usano un unico segmento, i .EXE hanno segmenti separati
-\end{itemize}
+L'architettura dell'8086 dispone di 14 registri a 16 bit, ognuno specializzato in compiti specifici. I \emph{4 registri general purpose} (AX, BX, CX, DX) forniscono la flessibilità per operazioni di calcolo generiche e possono essere suddivisi in 8 coppie di byte (AH/AL, BH/BL, CH/CL, DH/DL) per operazioni su dati più piccoli. I \emph{registri puntatore e indice} hanno ruoli ben definiti: SP punta alla cima dello stack per le operazioni di push e pop, BP consente l'accesso ai parametri e alle variabili locali di una procedura, mentre SI e DI sono dedicati alle operazioni su stringhe. I \emph{4 registri segmento} (CS, DS, SS, ES) definiscono le basi dei diversi segmenti di memoria, permettendo l'accesso ai 1 MB di memoria totale tramite la combinazione di registro segmento e offset. Infine, IP contiene l'offset della prossima istruzione da eseguire e governa il flusso di esecuzione del programma. È importante notare che i \emph{programmi .COM utilizzano un unico segmento} dove codice, dati e stack coesistono, mentre i \emph{programmi .EXE hanno segmenti separati} per ciascuna di queste componenti, permettendo una migliore organizzazione e protezione dei dati.
 
 \section{Esercizi}
 

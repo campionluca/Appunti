@@ -20,15 +20,7 @@ Al termine di questo capitolo sarai in grado di:
 
 \section{Teoria: Perché le Funzioni}
 
-Le funzioni sono blocchi di codice riutilizzabili che:
-
-\begin{itemize}
-    \item \textbf{Riducono duplicazione}: Scrivi una volta, usa ovunque
-    \item \textbf{Migliorano leggibilità}: Codice auto-documentante
-    \item \textbf{Facilitano testing}: Testabili indipendentemente
-    \item \textbf{Incapsulano logica}: Nascondono complessità
-    \item \textbf{Promuovono riuso}: Librerie e moduli
-\end{itemize}
+Le funzioni sono blocchi di codice riutilizzabili che offrono numerosi vantaggi cruciali per lo sviluppo software professionale. In primo luogo, le funzioni riducono drasticamente la duplicazione di codice permettendoti di scrivere una volta una soluzione e riutilizzarla ovunque sia necessaria. Inoltre, le funzioni ben progettate migliorano significativamente la leggibilità del codice, creando un codice auto-documentante dove il nome della funzione comunica chiaramente l'intenzione. Dal punto di vista del testing, le funzioni facilitano notevolmente il processo di verifica permettendo di testare ogni funzione indipendentemente dalle altre, migliorando la copertura dei test. Le funzioni incapsulano la logica complessa nascondendo i dettagli di implementazione, permettendo a chi usa la funzione di non doversi preoccupare dei meccanismi interni. Infine, le funzioni promuovono il riuso del codice, permettendo la creazione di librerie e moduli riutilizzabili che accelerano lo sviluppo di nuovi progetti.
 
 \section{Definizione e Sintassi}
 
@@ -513,21 +505,11 @@ function incrementGlobal(): void {
 
 \subsection{Vantaggi Pure Functions}
 
-\begin{itemize}
-    \item \textbf{Testabili}: Facile scrivere unit test
-    \item \textbf{Prevedibili}: Nessuna sorpresa
-    \item \textbf{Componibili}: Combinabili facilmente
-    \item \textbf{Parallelizzabili}: Nessuna race condition
-    \item \textbf{Cacheable}: Memoization possibile
-\end{itemize}
+Le funzioni pure presentano molteplici vantaggi che le rendono preferibili nel design di sistemi software robusti. Innanzitutto, sono estremamente semplici da testare poiché producono sempre lo stesso output per lo stesso input, senza dipendenze esterne da mockare. Sono inoltre prevedibili, eliminando sorprese dovute a side effects nascosti che renderebbero il codice difficile da ragionare. Le funzioni pure sono facilmente componibili, permettendo di combinare funzioni semplici in funzioni più complesse seguendo il principio di composizione funzionale. Poiché non modificano lo stato esterno, sono naturalmente parallelizzabili senza rischi di race condition, permettendo l'esecuzione simultanea su più processori. Infine, i risultati delle funzioni pure possono essere cachati tramite memoization, consentendo di evitare ricalcoli ridondanti e migliorando così le performance dell'applicazione.
 
 \section{Higher-Order Functions}
 
-Funzioni che:
-\begin{itemize}
-    \item Accettano altre funzioni come parametri
-    \item Ritornano funzioni
-\end{itemize}
+Le funzioni di ordine superiore (Higher-Order Functions) sono funzioni che operano su altre funzioni, caratterizzandosi per due proprietà fondamentali: possono accettare altre funzioni come parametri, permettendo di passare la logica come argomento, e possono anche ritornare funzioni, permettendo di generare dinamicamente comportamenti personalizzati.
 
 \subsection{array\_map, array\_filter, array\_reduce}
 

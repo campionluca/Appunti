@@ -9,14 +9,7 @@
 
 \subsection{Caratteristiche principali}
 
-\begin{itemize}
-    \item \textbf{Server-side}: Il codice viene eseguito sul server, non sul client
-    \item \textbf{Open Source}: Gratuito, con vasta community e documentazione
-    \item \textbf{Cross-platform}: Funziona su Windows, Linux, macOS
-    \item \textbf{Database integration}: Supporto nativo per MySQL, PostgreSQL, SQLite, Oracle
-    \item \textbf{Sintassi C-like}: Familiare per chi conosce C, Java, JavaScript
-    \item \textbf{Loosely typed}: Tipi di variabili determinati automaticamente (PHP < 7.4) o con type hints (PHP 7.4+)
-\end{itemize}
+PHP presenta diverse caratteristiche che lo rendono ideale per lo sviluppo web. È un linguaggio server-side, il che significa che il codice viene eseguito completamente sul server senza essere visibile al client, offrendo una maggiore sicurezza. PHP è open source, gratuito e supportato da una vasta community con abbondante documentazione online. È anche cross-platform, funzionando senza problemi su Windows, Linux e macOS. Una delle sue forze principali è l'eccellente integrazione con i database, con supporto nativo per MySQL, PostgreSQL, SQLite e Oracle. La sintassi di PHP è simile a quella di C, Java e JavaScript, rendendola familiare per gli sviluppatori che conoscono questi linguaggi. Infine, PHP è loosely typed, il che significa che i tipi di variabili possono essere determinati automaticamente dal linguaggio (nelle versioni precedenti a PHP 7.4) oppure dichiarati esplicitamente tramite type hints nelle versioni più recenti.
 
 \subsection{Storia e versioni}
 
@@ -280,25 +273,7 @@ $var = 3.14;      // ora float
 
 \subsection{Tipi di dati}
 
-\begin{itemize}
-    \item \textbf{Scalari}:
-    \begin{itemize}
-        \item \texttt{int}: Numeri interi
-        \item \texttt{float/double}: Numeri decimali
-        \item \texttt{string}: Stringhe
-        \item \texttt{bool}: true/false
-    \end{itemize}
-    \item \textbf{Composti}:
-    \begin{itemize}
-        \item \texttt{array}: Array
-        \item \texttt{object}: Oggetti
-    \end{itemize}
-    \item \textbf{Speciali}:
-    \begin{itemize}
-        \item \texttt{NULL}: Valore nullo
-        \item \texttt{resource}: Riferimenti risorse esterne
-    \end{itemize}
-\end{itemize}
+PHP supporta una varietà di tipi di dati che si dividono in tre categorie principali. I \textbf{tipi scalari} rappresentano valori singoli: \texttt{int} per numeri interi, \texttt{float} o \texttt{double} per numeri decimali, \texttt{string} per stringhe di testo, e \texttt{bool} per valori booleani vero/falso. I \textbf{tipi composti} aggregano più valori: \texttt{array} per collezioni ordinate di elementi (indicizzate numericamente o per chiave), e \texttt{object} per istanze di classi. I \textbf{tipi speciali} includono \texttt{NULL} che rappresenta l'assenza di valore, e \texttt{resource} che rappresenta riferimenti a risorse esterne come connessioni a database o handle di file aperti.
 
 \subsection{Type juggling e casting}
 
@@ -371,13 +346,7 @@ echo $_SERVER['REMOTE_ADDR'];     // IP client
 
 \subsection{Livelli di errori}
 
-\begin{itemize}
-    \item \textbf{E\_ERROR}: Errori fatali (script termina)
-    \item \textbf{E\_WARNING}: Warning (script continua)
-    \item \textbf{E\_NOTICE}: Notice (possibili problemi)
-    \item \textbf{E\_PARSE}: Errori di sintassi
-    \item \textbf{E\_ALL}: Tutti gli errori
-\end{itemize}
+PHP classifica gli errori in diversi livelli di severità. \textbf{E\_ERROR} rappresenta gli errori fatali che causano l'arresto immediato dello script in esecuzione. \textbf{E\_WARNING} indica avvertimenti che non fermano l'esecuzione dello script, permettendo al codice di continuare ma segnalando potenziali problemi. \textbf{E\_NOTICE} rappresenta notifiche di problemi non critici, come l'accesso a variabili non definite, che potrebbero indicare logica errata. \textbf{E\_PARSE} rappresenta gli errori di sintassi nel codice PHP stesso, che impediscono il parsing del file. Infine, \textbf{E\_ALL} è una costante che rappresenta contemporaneamente tutti i tipi di errore, utilizzata quando si desidera abilitare la segnalazione completa degli errori.
 
 \subsection{Configurazione}
 
@@ -480,11 +449,4 @@ Sperimentare con type juggling: sommare stringa "10" + intero 5 e spiegare il ri
 
 \section{Riepilogo}
 
-\begin{itemize}
-    \item PHP è un linguaggio server-side per web development
-    \item Richiede stack LAMP/WAMP con Apache, MySQL, PHP
-    \item Script PHP embedded in HTML con \texttt{<?php ... ?>}
-    \item Superglobali (\texttt{\$\_GET}, \texttt{\$\_POST}, \texttt{\$\_SERVER}) forniscono accesso a richieste HTTP
-    \item Type juggling automatico ma attenzione ai bug
-    \item Gestione errori essenziale (development vs production)
-\end{itemize}
+Ricapitolando i punti essenziali del capitolo: PHP è un linguaggio server-side specializzato nello sviluppo web che fornisce gli strumenti necessari per creare applicazioni dinamiche. Per eseguire applicazioni PHP è necessario disporre di uno stack completo denominato LAMP (su Linux), WAMP (su Windows) oppure MAMP (su macOS), che comprende il server Apache, il database MySQL e l'interprete PHP. Gli script PHP vengono integrati direttamente nel codice HTML utilizzando i tag di apertura e chiusura \texttt{<?php ... ?>}, permettendo una perfetta fusione tra logica di programmazione e markup. PHP fornisce superglobali come \texttt{\$\_GET}, \texttt{\$\_POST} e \texttt{\$\_SERVER} che offrono accesso diretto ai parametri delle richieste HTTP e alle informazioni del server. È importante tenere presente che PHP esegue un type juggling automatico, ovvero una conversione implicita di tipi, che sebbene conveniente può portare a bug sottili e inaspettati se non gestito con cautela. Infine, la gestione appropriata degli errori è essenziale, con un approccio differente tra l'ambiente di development (dove è importante visualizzare tutti gli errori per il debugging) e production (dove gli errori devono essere registrati senza essere esposti agli utenti).

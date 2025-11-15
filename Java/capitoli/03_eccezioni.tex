@@ -18,10 +18,7 @@ Un'\textbf{eccezione} è un evento anomalo che si verifica durante l'esecuzione 
 
 \subsection{Differenza tra errori ed eccezioni}
 
-\begin{itemize}
-    \item \textbf{Errori (Error)}: problemi gravi del sistema che il programma normalmente non dovrebbe tentare di gestire (es: OutOfMemoryError, StackOverflowError)
-    \item \textbf{Eccezioni (Exception)}: problemi che il programma può e deve gestire (es: file non trovato, divisione per zero, input non valido)
-\end{itemize}
+Nel contesto della gerarchia delle eccezioni, è importante distinguere tra errori ed eccezioni. Gli \textbf{errori (Error)} rappresentano problemi gravi a livello del sistema operativo o della JVM, come OutOfMemoryError quando la memoria disponibile si esaurisce o StackOverflowError quando lo stack di ricorsione supera il limite. Il programma normalmente non dovrebbe tentare di gestire questi errori perché indicano che il sistema non è più in uno stato controllabile. Le \textbf{eccezioni (Exception)}, al contrario, rappresentano problemi che il programma può e deve gestire attraverso meccanismi di try-catch. Esempi tipici includono un file non trovato, una divisione per zero, o un input non valido dall'utente.
 
 \subsection{Esempio 1: Eccezione non gestita}
 
@@ -108,12 +105,7 @@ Le eccezioni che derivano da \texttt{RuntimeException} sono dette \textbf{unchec
 
 \section{try-catch-finally}
 
-Il meccanismo base per gestire le eccezioni usa tre blocchi:
-\begin{itemize}
-    \item \texttt{try}: contiene il codice che potrebbe generare un'eccezione
-    \item \texttt{catch}: gestisce l'eccezione se si verifica
-    \item \texttt{finally}: codice che viene sempre eseguito, sia che ci sia un'eccezione o no
-\end{itemize}
+Il meccanismo base per gestire le eccezioni in Java utilizza tre blocchi con responsabilità specifiche. Il blocco \texttt{try} contiene il codice che potrebbe generare un'eccezione, ovvero le operazioni potenzialmente rischiose. Il blocco \texttt{catch} viene eseguito se si verifica un'eccezione, permettendoti di gestire l'errore in modo appropriato con codice di recupero o notifica dell'errore. Il blocco \texttt{finally} contiene il codice che viene sempre eseguito, indipendentemente dal fatto che si verifichi un'eccezione o meno, rendendolo il posto ideale per le operazioni di pulizia e rilascio di risorse.
 
 \subsection{Esempio 2: Gestione base}
 
@@ -289,21 +281,11 @@ Questo esempio mostra la differenza tra \texttt{throw} e \texttt{throws}, e il c
 
 \subsection{Eccezioni Unchecked (RuntimeException)}
 
-\begin{itemize}
-    \item Derivano da \texttt{RuntimeException}
-    \item Non è obbligatorio gestirle con try-catch
-    \item Indicano errori di programmazione (bug) che andrebbero evitati
-    \item Esempi: \texttt{NullPointerException}, \texttt{ArrayIndexOutOfBoundsException}, \texttt{ArithmeticException}
-\end{itemize}
+Le eccezioni unchecked derivano dalla classe \texttt{RuntimeException} e rappresentano una categoria speciale di eccezioni. A differenza delle eccezioni checked, non è obbligatorio gestirle con try-catch oppure dichiararle nella firma del metodo con la keyword \texttt{throws}. Le eccezioni unchecked di solito indicano errori di programmazione (bug) che il sviluppatore dovrebbe prevenire scrivendo codice corretto, non attraverso la gestione delle eccezioni. Esempi comuni includono \texttt{NullPointerException} quando si tenta di accedere a un membro di un oggetto null, \texttt{ArrayIndexOutOfBoundsException} quando si accede a un indice non valido in un array, e \texttt{ArithmeticException} quando si tenta una divisione per zero.
 
 \subsection{Eccezioni Checked}
 
-\begin{itemize}
-    \item NON derivano da \texttt{RuntimeException}
-    \item È obbligatorio gestirle (try-catch) o dichiararle (throws)
-    \item Indicano condizioni eccezionali prevedibili
-    \item Esempi: \texttt{IOException}, \texttt{SQLException}, \texttt{FileNotFoundException}
-\end{itemize}
+Le eccezioni checked sono quelle che NON derivano da \texttt{RuntimeException} e rappresentano condizioni eccezionali prevedibili che il programma dovrebbe gestire consapevolmente. A differenza delle unchecked, è obbligatorio per il compilatore verificare che le eccezioni checked vengano gestite: il metodo che potrebbe lanciarle deve dichiararle con la keyword \texttt{throws}, oppure il codice che le chiama deve racchiuderlo in un blocco try-catch. Questa obbligatorietà riflette il fatto che queste eccezioni rappresentano situazioni recuperabili, come un file non trovato (\texttt{FileNotFoundException}), un errore di accesso al database (\texttt{SQLException}), o un errore di input/output (\texttt{IOException}) che il programmatore sa già potrebbe accadere durante l'esecuzione.
 
 \begin{table}[h]
 \centering
@@ -325,10 +307,7 @@ IOException, SQLException & NullPointerException, ArithmeticException \\
 
 \subsection{Quando usare l'una o l'altra}
 
-\begin{itemize}
-    \item \textbf{Usa checked} per condizioni che il chiamante può ragionevolmente gestire (file non trovato, rete non disponibile)
-    \item \textbf{Usa unchecked} per errori di programmazione che andrebbero corretti nel codice (null check mancante, indice array errato)
-\end{itemize}
+La scelta tra eccezioni checked e unchecked dipende dalla natura dell'errore e dalle aspettative di recupero. Dovresti \textbf{usare eccezioni checked} per situazioni eccezionali ma prevedibili che il chiamante può ragionevolmente gestire. Esempi includono un file non trovato durante la lettura di una configurazione (il programma potrebbe creare un file di default), una rete non disponibile quando si tenta una connessione (il programma potrebbe riprovare), o un formato di file inatteso (il programma potrebbe chiedere all'utente di fornire un file diverso). Al contrario, \textbf{usa eccezioni unchecked} per errori di programmazione che andrebbero corretti nel codice stesso, non gestiti a runtime. Esempi includono un null check mancante (il codice dovrebbe controllare prima di usare un oggetto), un indice array errato (il codice dovrebbe verificare l'indice), o assunzioni violate sulla consistenza dei dati.
 
 \section{Creare eccezioni personalizzate}
 

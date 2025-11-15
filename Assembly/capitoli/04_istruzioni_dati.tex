@@ -20,11 +20,8 @@ MOV memoria, immediato
 \end{lstlisting}
 
 \textbf{Restrizioni}:
-\begin{itemize}
-    \item Non è consentito MOV memoria, memoria
-    \item Non è consentito MOV segmento, immediato
-    \item Gli operandi devono avere la stessa dimensione
-\end{itemize}
+
+L'istruzione MOV ha diverse limitazioni importanti che il programmatore deve rispettare. \emph{Non è consentito trasferire dati direttamente da una locazione di memoria a un'altra} (MOV memoria, memoria): per copiare dati tra due posizioni di memoria è necessario utilizzare un registro intermedio come step intermedio. \emph{Non è consentito caricare un valore immediato direttamente in un registro segmento} (MOV segmento, immediato): per modificare un registro segmento bisogna passare attraverso un registro general purpose come intermediario. Infine, \emph{gli operandi di origine e destinazione devono avere la stessa dimensione}: non è possibile copiare un byte in un registro word o viceversa senza conversione esplicita.
 
 \begin{esempio}
 \begin{lstlisting}

@@ -55,22 +55,11 @@ Prima di procedere, è importante capire la differenza tra linguaggi compilati e
 
 \subsection{Linguaggi Interpretati}
 
-\begin{itemize}
-    \item Il codice viene eseguito riga per riga da un \textbf{interprete}
-    \item Esempi: Python, JavaScript, Ruby
-    \item \textbf{Vantaggio}: Sviluppo rapido, facile debugging
-    \item \textbf{Svantaggio}: Generalmente più lenti
-\end{itemize}
+Nei linguaggi interpretati, il codice viene eseguito riga per riga da un programma speciale chiamato \textbf{interprete}. Esempi di linguaggi interpretati includono Python, JavaScript e Ruby. Questo approccio offre il vantaggio di uno sviluppo molto rapido e un debugging facile, poiché l'interprete può fornire feedback immediati durante l'esecuzione. Tuttavia, il principale svantaggio è che l'esecuzione è generalmente più lenta rispetto ai linguaggi compilati, poiché ogni riga di codice deve essere tradotta durante l'esecuzione.
 
 \subsection{Linguaggi Compilati}
 
-\begin{itemize}
-    \item Il codice viene tradotto tutto insieme in linguaggio macchina da un \textbf{compilatore}
-    \item Il risultato è un file eseguibile
-    \item Esempi: C, C++, Rust
-    \item \textbf{Vantaggio}: Molto più veloci in esecuzione
-    \item \textbf{Svantaggio}: Processo di compilazione necessario
-\end{itemize}
+Nei linguaggi compilati, il codice sorgente viene tradotto completamente in linguaggio macchina da un programma speciale chiamato \textbf{compilatore}, producendo un file eseguibile autonomo. Linguaggi come C, C++ e Rust seguono questo modello. Il principale vantaggio è la velocità di esecuzione: i programmi compilati sono molto più veloci poiché il codice è già stato tradotto in linguaggio macchina nativo. Lo svantaggio principale è che è necessario un processo di compilazione esplicito prima di poter eseguire il programma.
 
 \subsection{Il Processo di Compilazione in C}
 
@@ -186,12 +175,7 @@ Analizziamo ogni componente:
 #include <stdio.h>
 \end{lstlisting}
 
-\begin{itemize}
-    \item \texttt{\#include} è una direttiva del preprocessore
-    \item Include il contenuto di un file header
-    \item \texttt{<stdio.h>} è la libreria Standard Input/Output
-    \item Contiene le dichiarazioni delle funzioni della libreria stdio come \texttt{printf()} e \texttt{scanf()}
-\end{itemize}
+La direttiva \texttt{\#include} è elaborata dal preprocessore del C e include il contenuto di un file header nel programma. Nel caso di \texttt{<stdio.h>}, questa è la libreria Standard Input/Output che contiene le dichiarazioni delle funzioni essenziali per l'input e l'output, quali \texttt{printf()} per stampare valori e \texttt{scanf()} per leggere input dall'utente.
 
 \subsection{Funzione main()}
 
@@ -202,13 +186,7 @@ int main() {
 }
 \end{lstlisting}
 
-\begin{itemize}
-    \item \texttt{main()} è la funzione principale del programma
-    \item L'esecuzione inizia sempre da \texttt{main()}
-    \item \texttt{int} indica che la funzione restituisce un intero
-    \item \texttt{return 0} indica che il programma è terminato correttamente
-    \item Le parentesi graffe \texttt{\{...\}} delimitano il corpo della funzione
-\end{itemize}
+La funzione \texttt{main()} è la funzione principale e il punto di ingresso di ogni programma C: l'esecuzione inizia sempre da questa funzione. La dichiarazione \texttt{int main} indica che la funzione restituisce un valore intero, una convenzione utilizzata per comunicare lo stato del programma al sistema operativo. L'istruzione \texttt{return 0} indica al sistema operativo che il programma è terminato correttamente. Il corpo della funzione, delimitato dalle parentesi graffe \texttt{\{...\}}, contiene tutte le istruzioni che il programma deve eseguire.
 
 \begin{attenzione}
 Ogni programma C deve avere una (e una sola) funzione \texttt{main()}. Senza di essa, il programma non può essere eseguito.
@@ -389,13 +367,7 @@ int main() {
 \end{lstlisting}
 
 \begin{errore}
-Gli errori di sintassi più comuni per i principianti sono:
-\begin{itemize}
-    \item Dimenticare il punto e virgola
-    \item Non bilanciare le parentesi (tonde, quadre, graffe)
-    \item Dimenticare il \texttt{\#include <stdio.h>}
-    \item Usare virgolette semplici per stringhe (usare doppie!)
-\end{itemize}
+Gli errori di sintassi più comuni per i principianti sono vari e ricorrenti. Il primo errore frequente è dimenticare il punto e virgola alla fine delle istruzioni, senza il quale il compilatore non può capire dove una dichiarazione termina. Un altro errore tipico è non bilanciare correttamente le parentesi tonde, quadre e graffe: ogni apertura deve avere una chiusura corrispondente. Inoltre, è facile dimenticare di includere gli header necessari, come \texttt{\#include <stdio.h>}, senza i quali le funzioni standard non sono disponibili. Infine, un errore comune è usare virgolette semplici per le stringhe quando la sintassi del C richiede virgolette doppie; le virgolette semplici sono riservate ai singoli caratteri.
 \end{errore}
 
 \section{Librerie Standard del C}
@@ -456,17 +428,8 @@ Il C fornisce diverse librerie standard utili:
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo imparato:
+In questo capitolo abbiamo affrontato i fondamenti del linguaggio C. Inizialmente, abbiamo esaminato la storia affascinante del C, dalle sue origini nel 1969 con Dennis Ritchie fino ai suoi standard moderni (C89, C99, C11, C17), e ne abbiamo compreso le caratteristiche distintive che lo rendono uno dei linguaggi più influenti della storia dell'informatica. Successivamente, abbiamo chiarito la differenza cruciale tra compilazione e interpretazione, comprendendo come il C sia un linguaggio compilato che produce codice eseguibile altamente efficiente. Abbiamo poi affrontato l'importante questione della configurazione dell'ambiente di sviluppo, mostrando come installare compilatori come GCC su diverse piattaforme e scegliere editor e IDE appropriati. Abbiamo quindi illustrato la struttura base di un programma C, dalla direttiva \texttt{\#include} alla funzione \texttt{main()}, spiegando il significato e la funzione di ogni componente. Praticando con il classico programma "Hello World", abbiamo imparato come scrivere, compilare ed eseguire il nostro primo programma C. Abbiamo inoltre identificato e discusso gli errori comuni che i principianti incontrano, fornendo strategie per risolverli. Infine, abbiamo introdotto le principali librerie standard del C, come \texttt{stdio.h}, \texttt{stdlib.h} e \texttt{string.h}, che forniscono funzioni essenziali per la programmazione quotidiana.
 
-\begin{itemize}
-    \item La storia e le caratteristiche del linguaggio C
-    \item La differenza tra compilazione e interpretazione
-    \item Come installare e configurare l'ambiente di sviluppo
-    \item La struttura base di un programma C
-    \item Come scrivere, compilare ed eseguire il primo programma
-    \item Gli errori comuni e come risolverli
-    \item Le principali librerie standard
-\end{itemize}
 
 \section{Approfondimenti}
 

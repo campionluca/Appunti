@@ -59,22 +59,10 @@ I cookie sono \textbf{piccoli file di testo} (max 4KB) salvati nel browser dell'
 \end{itemize}
 
 \subsection{Quando usare i cookie}
-\textbf{Usa cookie per}:
-\begin{itemize}
-  \item Session ID (autenticazione)
-  \item Preferenze utente (tema, lingua, layout)
-  \item "Remember me" functionality
-  \item Tracking analytics
-  \item Carrello acquisti (se no autenticazione)
-\end{itemize}
 
-\textbf{NON usare cookie per}:
-\begin{itemize}
-  \item Dati sensibili non cifrati (password, carte credito)
-  \item Dati grandi (> 4KB)
-  \item Dati che non servono al server (usa LocalStorage)
-  \item Token anti-CSRF (usa session, non cookie diretto)
-\end{itemize}
+I cookie sono particolarmente appropriati per diversi casi d'uso. Sono ideali per l'archiviazione del Session ID utilizzato nell'autenticazione degli utenti, permettendo al server di identificare chi è connesso. Sono anche utili per memorizzare le preferenze utente come il tema dell'interfaccia (chiaro/scuro), la lingua preferita e il layout preferito. I cookie abilitano facilmente la funzionalità "Remember me" che permette agli utenti di rimanere connessi automaticamente. Sono inoltre comunemente utilizzati per il tracking analytics, permettendo ai servizi di analisi di tracciare il comportamento degli utenti. Infine, i cookie possono essere usati per memorizzare il carrello acquisti in siti e-commerce quando l'utente non è autenticato.
+
+D'altro canto, ci sono casi in cui i cookie dovrebbero essere evitati. Non dovrebbero mai essere utilizzati per archiviare dati sensibili non cifrati come password o numeri di carte di credito, poiché sarebbero facilmente vulnerabili al furto. Non dovrebbero contenere dati grandi superiori ai 4KB, il limite dimensionale dei cookie, rendendo il loro trasferimento inefficiente. Dati che non hanno alcun bisogno di essere inviati al server per ogni richiesta (come lo stato dell'interfaccia) dovrebbero essere archiviati in LocalStorage invece che in cookie. Infine, i token anti-CSRF dovrebbero essere memorizzati in sessione lato server piuttosto che come cookie diretto, per evitare che siano facilmente accessibili.
 
 \section{Ciclo di vita dei Cookie}
 
@@ -173,49 +161,17 @@ setcookie('nome', 'valore', time() + 3600, '/', '', true, true);
 
 \subsection{Attributi cookie}
 
-\textbf{expires} (Unix timestamp):
-\begin{itemize}
-  \item Se omesso o 0: cookie di sessione (cancellato alla chiusura browser)
-  \item \texttt{time() + 3600}: scade tra 1 ora
-  \item \texttt{time() + 86400}: scade tra 1 giorno
-  \item \texttt{time() + 86400 * 30}: scade tra 30 giorni
-  \item \texttt{time() - 1}: scaduto (cancella cookie)
-\end{itemize}
+\textbf{expires} (Unix timestamp): Questo attributo controlla la scadenza del cookie e accetta un timestamp Unix. Se omesso o impostato a 0, il cookie diventa un cookie di sessione e viene automaticamente eliminato quando l'utente chiude il browser. Per impostare una durata specifica, si utilizza \texttt{time() + 3600} per farlo scadere tra 1 ora, \texttt{time() + 86400} per una durata di 1 giorno, o \texttt{time() + 86400 * 30} per 30 giorni. Se si desidera eliminare un cookie esistente, si imposta \texttt{time() - 1} per un timestamp nel passato.
 
-\textbf{path} (string):
-\begin{itemize}
-  \item \texttt{'/'}: cookie valido per tutto il dominio
-  \item \texttt{'/admin'}: cookie valido solo sotto /admin
-  \item Default: path della pagina corrente
-\end{itemize}
+\textbf{path} (string): Questo attributo define il percorso nel dominio dove il cookie è valido. Impostando \texttt{'/'} si rende il cookie valido per l'intero dominio, mentre \texttt{'/admin'} lo rende disponibile solo sotto il path /admin e suoi sottopercorsi. Se non specificato, il default è il path della pagina corrente.
 
-\textbf{domain} (string):
-\begin{itemize}
-  \item \texttt{''}: dominio corrente (default)
-  \item \texttt{'.example.com'}: valido per tutti i sottodomini
-  \item NON può impostare cookie per altri domini (sicurezza browser)
-\end{itemize}
+\textbf{domain} (string): Controlla per quale dominio è valido il cookie. La stringa vuota \texttt{''} indica il dominio corrente (comportamento default). È possibile specificare \texttt{'.example.com'} per renderlo valido per tutti i sottodomini di example.com. Per motivi di sicurezza, il browser impedisce di impostare cookie per domini diversi da quello corrente.
 
-\textbf{secure} (bool):
-\begin{itemize}
-  \item \texttt{true}: cookie trasmesso SOLO su HTTPS
-  \item \texttt{false}: trasmesso anche su HTTP (INSICURO per dati sensibili)
-  \item SEMPRE true per session cookie e dati sensibili
-\end{itemize}
+\textbf{secure} (bool): Questo flag booleano determina se il cookie viene trasmesso tramite HTTPS o no. Quando impostato a \texttt{true}, il cookie è trasmesso SOLO su HTTPS, proteggendo la riservatezza in transito. Impostando a \texttt{false}, il cookie viene trasmesso anche su HTTP non criptato, opzione rischiosa per dati sensibili. È buona pratica impostare SEMPRE \texttt{secure = true} per cookie di sessione e per cookie contenenti dati sensibili.
 
-\textbf{httponly} (bool):
-\begin{itemize}
-  \item \texttt{true}: cookie NON accessibile da JavaScript (\texttt{document.cookie})
-  \item \texttt{false}: JavaScript può leggere/scrivere cookie
-  \item SEMPRE true per session cookie (previene XSS cookie theft)
-\end{itemize}
+\textbf{httponly} (bool): Questo flag determina l'accessibilità del cookie da parte di JavaScript. Quando impostato a \texttt{true}, il cookie NON è accessibile tramite \texttt{document.cookie} in JavaScript, mitigando il rischio di furto tramite XSS. Se impostato a \texttt{false}, JavaScript può leggere e scrivere il cookie liberamente. Per i cookie di sessione, è fondamentale impostare SEMPRE \texttt{httponly = true} per prevenire il furto del session ID tramite attacchi XSS.
 
-\textbf{samesite} (string):
-\begin{itemize}
-  \item \texttt{'Strict'}: cookie MAI inviato in richieste cross-site (max sicurezza CSRF)
-  \item \texttt{'Lax'}: cookie inviato solo in navigazioni top-level GET (bilanciamento sicurezza/UX)
-  \item \texttt{'None'}: cookie sempre inviato (richiede \texttt{secure = true})
-\end{itemize}
+\textbf{samesite} (string): Questo attributo controlla il comportamento del cookie in richieste cross-site. \texttt{'Strict'} è l'impostazione più rigorosa e impedisce completamente l'invio del cookie in richieste cross-site, offrendo la massima protezione da CSRF ma potendo causare inconvenienti di usabilità. \texttt{'Lax'} rappresenta un compromesso, inviando il cookie solo in navigazioni top-level GET (come clicare su un link), garantendo un buon equilibrio tra sicurezza e usabilità. \texttt{'None'} consente sempre l'invio del cookie, utile per integrazioni cross-site, ma richiede che \texttt{secure = true} sia impostato.
 
 \subsection{Esempi pratici impostazione}
 \begin{lstlisting}
@@ -340,34 +296,7 @@ echo "Tema: " . htmlspecialchars($prefs['theme']);
 
 \subsection{Minacce principali}
 
-\textbf{XSS (Cross-Site Scripting)}:
-\begin{itemize}
-  \item Attaccante inietta JavaScript che legge \texttt{document.cookie}
-  \item Ruba session cookie e impersona utente
-  \item \textbf{Difesa}: \texttt{httponly = true} (cookie non accessibile a JS)
-\end{itemize}
-
-\textbf{CSRF (Cross-Site Request Forgery)}:
-\begin{itemize}
-  \item Sito malevolo invia richieste al tuo sito con cookie utente
-  \item Browser invia automaticamente cookie anche in richieste cross-site
-  \item \textbf{Difesa}: \texttt{samesite = 'Lax'} o \texttt{'Strict'}
-\end{itemize}
-
-\textbf{Man-in-the-Middle (MITM)}:
-\begin{itemize}
-  \item Attaccante intercetta traffico HTTP non cifrato
-  \item Legge o modifica cookie in transito
-  \item \textbf{Difesa}: \texttt{secure = true} (solo HTTPS)
-\end{itemize}
-
-\textbf{Session Fixation}:
-\begin{itemize}
-  \item Attaccante imposta session ID noto all'utente
-  \item Utente si autentica con quel session ID
-  \item Attaccante accede con stesso session ID
-  \item \textbf{Difesa}: Rigenera session ID dopo login (\texttt{session\_regenerate\_id()})
-\end{itemize}
+I cookie sono esposti a diverse minacce di sicurezza che è importante comprendere e mitigare. \textbf{XSS (Cross-Site Scripting)} rappresenta una minaccia significativa dove un attaccante inietta codice JavaScript malicioso che può leggere \texttt{document.cookie} e rubare i cookie di sessione, permettendo all'attaccante di impersonare l'utente. La difesa principale è impostare \texttt{httponly = true} in modo che il cookie non sia accessibile a JavaScript. \textbf{CSRF (Cross-Site Request Forgery)} sfrutta il fatto che il browser invia automaticamente i cookie in richieste cross-site verso il tuo sito da parte di siti malevoli. Un attaccante può così far compiere azioni non autorizzate a nome dell'utente autenticato. La difesa è impostare \texttt{samesite = 'Lax'} o \texttt{'Strict'} per controllare quando il cookie viene inviato. \textbf{Man-in-the-Middle (MITM)} è un attacco dove un attaccante intercetta il traffico HTTP non criptato, riuscendo a leggere o modificare i cookie in transito. La difesa è impostare \texttt{secure = true} in modo che il cookie sia trasmesso solo su HTTPS criptato. \textbf{Session Fixation} è un attacco dove l'attaccante impone un session ID noto all'utente, poi attende che l'utente si autentichi con quel session ID, permettendo all'attaccante di accedere come utente autenticato. La difesa è rigenerare il session ID dopo login utilizzando \texttt{session\_regenerate\_id()}.
 
 \subsection{Cookie sicuri per autenticazione}
 \begin{lstlisting}

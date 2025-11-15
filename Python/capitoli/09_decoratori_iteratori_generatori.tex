@@ -21,10 +21,13 @@ Questi strumenti rendono il codice più espressivo e performante in logging, val
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Iterazione e valutazione lazy]
-- Gli iteratori consumano elementi uno alla volta, riducendo memoria.
-- I generatori con \texttt{yield} modellano pipeline e flussi.
-- Componi trasformazioni con generator expression e \texttt{itertools}.
-- Backpressure: produci solo quanto richiesto dal consumatore.
+Gli \textbf{iteratori} sono oggetti che consumano elementi uno alla volta, il che riduce significativamente l'uso di memoria rispetto a materialisare l'intera collezione in una lista. Questo è particolarmente importante quando si lavora con grandi volumi di dati o flussi potenzialmente infiniti.
+
+I \textbf{generatori con yield} forniscono un modo elegante per modellare pipeline e flussi di dati. Anziché construire e immagazzinare una lista completa, i generatori producono valori su richiesta, permettendo programmi memory-efficient e composabili.
+
+La composizione di trasformazioni con \textbf{generator expression e itertools} è un pattern fondamentale per pipeline dati complesse. Generator expression (scritte come `(expr for item in collection)`) e funzioni da `itertools` consentono di concatenare operazioni di filtraggio, trasformazione e aggregazione in modo dichiarativo e efficiente.
+
+Un concetto importante in questo contesto è \textbf{backpressure}: il principio che il produttore dovrebbe produrre solo quanto richiesto dal consumatore. I generatori rispettano naturalmente questo principio, calcolando il valore successivo solo quando richiesto.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -211,12 +214,13 @@ Hai esplorato decoratori, iteratori e generatori in pratica.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{Protocollo iteratore}: implementare \verb|__iter__| e \verb|__next__| per oggetti iterabili.
-  \item \textbf{Generatori}: usare \verb|yield| per pipeline lazy e flussi di dati; gestire cleanup con \verb|finally|.
-  \item \textbf{Decoratori}: incapsulare cross-cutting concerns (logging, caching, autorizzazione); usare \verb|functools.wraps|.
-  \item \textbf{Caching}: \verb|functools.lru_cache| per funzioni pure; definire dimensioni e politiche di invalidazione.
-\end{itemize}
+Il \textbf{protocollo iteratore} è implementato attraverso i metodi \verb|__iter__| (che ritorna self o un iteratore) e \verb|__next__| (che ritorna il valore successivo o solleva StopIteration). Comprendere questo protocollo consente di creare oggetti custom iterabili che si integrano perfettamente con il resto dell'ecosistema Python.
+
+I \textbf{generatori} sono un'applicazione potente del protocollo iteratore, che permette di usare \verb|yield| per pipeline lazy e flussi di dati efficienti. Un aspetto spesso dimenticato è la gestione della cleanup: è possibile usare \verb|finally| dentro un generatore per eseguire codice di pulizia quando il generatore termina o viene chiuso.
+
+I \textbf{decoratori} sono un meccanismo per incapsulare cross-cutting concerns come logging, caching e autorizzazione senza modificare il codice originale. È importante usare \verb|functools.wraps| per preservare i metadati della funzione originale (nome, docstring) nel wrapper.
+
+Per \textbf{caching} di risultati, \verb|functools.lru_cache| è uno strumento essenziale per ottimizzare funzioni pure ricorsive o computazionalmente costose. È importante definire attentamente le dimensioni della cache e considerare politiche di invalidazione quando appropriato.
 \end{tcolorbox}
 
 \paragraph{Pattern} Combinare generatori e decoratori per pipeline efficienti e componibili; preferire iterazione lazy per dataset grandi.

@@ -274,12 +274,7 @@ tree -h /var             # Con dimensioni human-readable
 
 \subsection{Il Modello di Permessi Unix}
 
-Ogni file e directory in Linux ha:
-\begin{itemize}
-    \item Un \textbf{proprietario} (owner/user)
-    \item Un \textbf{gruppo} (group)
-    \item Tre set di \textbf{permessi}: owner, group, others
-\end{itemize}
+Ogni file e directory in Linux è associato a tre elementi fondamentali di controllo d'accesso. In primo luogo, ogni risorsa ha un \textbf{proprietario} (owner o user), di solito l'utente che ha creato il file. In secondo luogo, ogni file appartiene a un \textbf{gruppo}, una collezione di utenti che condividono permessi comuni. Infine, Linux definisce tre distinti set di \textbf{permessi}: uno per il proprietario, uno per i membri del gruppo, e uno per tutti gli altri utenti. Questa struttura a tre livelli consente un controllo granulare dell'accesso senza necessità di configurazioni complesse.
 
 \subsection{Tipi di Permessi}
 
@@ -844,21 +839,13 @@ find / -nouser -o -nogroup 2>/dev/null
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo esplorato:
+In questo capitolo abbiamo intrapreso un'esplorazione approfondita del filesystem Linux e dei suoi mecanismi di protezione. Abbiamo iniziato comprendendo il Filesystem Hierarchy Standard, lo schema che organizza le directory di Linux in una struttura logica e coerente. Abbiamo mappato le directory principali come la root (/), i file di configurazione (/etc), i dati variabili (/var), le home degli utenti (/home), le risorse di sistema (/usr), i filesystem virtuali (/proc, /sys) e i dispositivi (/dev).
 
-\begin{itemize}
-    \item \textbf{Filesystem Hierarchy Standard}: organizzazione directory Linux
-    \item \textbf{Directory principali}: /, /etc, /var, /home, /usr, /proc, /sys, /dev
-    \item \textbf{Permessi}: lettura, scrittura, esecuzione per owner/group/others
-    \item \textbf{chmod}: modifica permessi (numerico e simbolico)
-    \item \textbf{chown/chgrp}: modifica ownership
-    \item \textbf{umask}: permessi di default per nuovi file
-    \item \textbf{Permessi speciali}: SUID, SGID, sticky bit
-    \item \textbf{Attributi estesi}: chattr, lsattr
-    \item \textbf{ACL}: permessi granulari
-\end{itemize}
+Successivamente, abbiamo imparato il fondamentale concetto di permessi, che consente di controllare chi può leggere, scrivere o eseguire un file, con granularità separata per il proprietario, il gruppo e gli altri utenti. Abbiamo esplorato due metodi per modificare questi permessi: chmod, il comando che utilizza sia notazione numerica che simbolica per impostare i permessi. Abbiamo anche appreso come cambiare la proprietà dei file usando chown e chgrp, e come impostare i permessi di default per i nuovi file mediante umask.
 
-La comprensione del filesystem e dei permessi è fondamentale per la sicurezza e l'amministrazione di sistemi Linux.
+Andando oltre i permessi standard, abbiamo scoperto i permessi speciali come SUID, SGID e il sticky bit, che aggiungono strati di sofisticazione alla gestione dell'accesso. Abbiamo inoltre esaminato gli attributi estesi come chattr e lsattr, che permettono di aggiungere restrizioni addizionali ai file. Infine, abbiamo toccato le Access Control Lists (ACL), che offrono un controllo ancora più granulare dell'accesso rispetto al modello standard.
+
+La comprensione profonda del filesystem e dei permessi è assolutamente fondamentale per garantire la sicurezza dei sistemi Linux e per amministrarli in modo efficace e responsabile.
 
 \begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
 Nel Capitolo 4 impareremo a gestire i processi: monitorarli con ps e top, controllarli con kill, e gestire job in foreground e background.

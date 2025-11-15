@@ -3,16 +3,7 @@
 
 \section{Introduzione al Debugging}
 
-Il debugging è il processo di ricerca e correzione degli errori (bug) in un programma. GDB (GNU Debugger) è uno strumento potente che permette di:
-
-\begin{itemize}
-    \item Eseguire il programma passo dopo passo
-    \item Impostare breakpoint per fermare l'esecuzione in punti specifici
-    \item Ispezionare il valore delle variabili durante l'esecuzione
-    \item Visualizzare lo stack di chiamate (call stack)
-    \item Modificare il comportamento del programma al volo
-    \item Rilevare errori di memoria e segmentation fault
-\end{itemize}
+Il debugging è il processo di ricerca e correzione degli errori (bug) che si verificano durante l'esecuzione di un programma. GDB (GNU Debugger) è uno strumento potente che fornisce un controllo sofisticato dell'esecuzione dei programmi. Con GDB è possibile \textbf{eseguire il programma passo dopo passo}, fermandosi dopo ogni istruzione per ispezionare lo stato del programma. È possibile \textbf{impostare breakpoint per fermare l'esecuzione in punti specifici}, permettendo di fermare il programma quando raggiunge una riga di codice critica. GDB permette di \textbf{ispezionare il valore delle variabili durante l'esecuzione}, consentendo di vedere come i dati cambiano man mano che il programma è in esecuzione. Inoltre, è possibile \textbf{visualizzare lo stack di chiamate (call stack)}, mostrando la sequenza di funzioni che hanno portato al punto di esecuzione corrente. Un'altra capacità importante è \textbf{modificare il comportamento del programma al volo}, cambiando i valori delle variabili durante l'esecuzione per testare diversi scenari. Infine, GDB è particolarmente utile nel \textbf{rilevare errori di memoria e segmentation fault}, fornendo informazioni dettagliate su dove e perché il programma si è bloccato.
 
 \begin{nota}
 Per usare GDB è necessario compilare il programma con il flag \texttt{-g} che include informazioni di debugging nel binario.
@@ -50,13 +41,7 @@ gcc -g -O0 -o programma main.c
 gcc -g -Wall -Wextra -o programma main.c
 \end{lstlisting}
 
-Il flag \texttt{-g} include informazioni di debugging:
-\begin{itemize}
-    \item Nomi di funzioni e variabili
-    \item Numeri di linea del sorgente
-    \item Tipi di dati
-    \item Path ai file sorgenti
-\end{itemize}
+Il flag \texttt{-g} include nel binario compilato informazioni di debugging essenziali. Queste informazioni includono i \textbf{nomi di funzioni e variabili}, permettendo a GDB di mostrare nomi significativi anziché indirizzi astratti di memoria. Inoltre, il flag \texttt{-g} preserva i \textbf{numeri di linea del sorgente}, consentendo a GDB di collegare le istruzioni macchina alle righe di codice originali, il che è fondamentale per il debugging interattivo. Il compilatore include anche i \textbf{tipi di dati}, permettendo a GDB di visualizzare correttamente i valori e di effettuare verifiche di tipo durante il debugging. Infine, vengono memorizzati i \textbf{path ai file sorgenti}, permettendo a GDB di localizzare e visualizzare il codice sorgente originale durante una sessione di debug.
 
 \subsection{Esempio Programma con Bug}
 

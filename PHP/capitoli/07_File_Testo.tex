@@ -16,31 +16,10 @@ Dopo questo capitolo saprai:
 \section{Teoria}
 
 \subsection{Perché gestire file di testo}
-I file di testo sono fondamentali per:
-\begin{itemize}
-  \item \textbf{Persistenza dati}: configurazioni, log, cache, sessioni
-  \item \textbf{Interoperabilità}: CSV, JSON, XML per scambio dati
-  \item \textbf{Debugging}: log applicativi, trace, dump
-  \item \textbf{Import/Export}: dati utente, backup, migrazioni
-  \item \textbf{Comunicazione}: file come IPC (Inter-Process Communication)
-\end{itemize}
+I file di testo rivestono un ruolo fondamentale nello sviluppo di applicazioni web moderne. Anzitutto, permettono la persistenza dei dati, essenziale per salvare configurazioni dell'applicazione, log di esecuzione, dati in cache e le sessioni utente tra le richieste. Offrono inoltre eccellente interoperabilità attraverso formati standardizzati come CSV, JSON e XML, rendendo facile lo scambio di dati tra diverse applicazioni e sistemi. I file di testo sono cruciali per il debugging e l'analisi dei problemi, permettendo di registrare log applicativi, tracce di esecuzione e dump della memoria per identificare e risolvere i bug. Facilitano anche operazioni di import/export, essenziali per la migrazione dei dati utente, la creazione di backup e le transizioni tra sistemi. Infine, i file possono fungere da meccanismo di comunicazione inter-processo (IPC), permettendo a diversi processi di scambiarsi informazioni attraverso il filesystem.
 
 \subsection{Operazioni di alto vs basso livello}
-PHP offre due approcci:
-
-\textbf{Alto livello} (funzioni pratiche):
-\begin{itemize}
-  \item \texttt{file\_get\_contents()}, \texttt{file\_put\_contents()}
-  \item \texttt{file()}, \texttt{readfile()}
-  \item Caricano tutto in memoria: semplici ma non scalabili per file grandi
-\end{itemize}
-
-\textbf{Basso livello} (controllo granulare):
-\begin{itemize}
-  \item \texttt{fopen()}, \texttt{fread()}, \texttt{fwrite()}, \texttt{fclose()}
-  \item \texttt{fgets()}, \texttt{fgetcsv()}, \texttt{flock()}
-  \item Leggono a blocchi: più complessi ma efficienti con file di GB
-\end{itemize}
+PHP offre due approcci complementari per la gestione dei file, ognuno con i propri vantaggi e compromessi. L'approccio di \textbf{alto livello} utilizza funzioni pratiche come \texttt{file\_get\_contents()} e \texttt{file\_put\_contents()} per leggere e scrivere interi file in una singola operazione, insieme a funzioni come \texttt{file()} per leggere file riga per riga in memoria e \texttt{readfile()} per output diretto. Queste funzioni sono semplici da usare ma caricano l'intero contenuto in memoria, rendendole inadeguate per file di grandi dimensioni dove potrebbe verificarsi esaurimento della memoria. L'approccio di \textbf{basso livello} fornisce un controllo granulare tramite funzioni come \texttt{fopen()}, \texttt{fread()}, \texttt{fwrite()} e \texttt{fclose()} per operazioni di base, \texttt{fgets()} per lettura riga per riga, \texttt{fgetcsv()} per parsing CSV, e \texttt{flock()} per il bloccaggio file. Sebbene più complesse da utilizzare, queste funzioni leggono i file a blocchi, consentendo di processare file di diversi gigabyte senza esaurire la memoria disponibile.
 
 \section{Modalità di apertura file}
 
@@ -243,14 +222,8 @@ if (atomicWrite('config.json', $config)) {
 \section{File locking (bloccaggio)}
 
 \subsection{Tipi di lock}
-\begin{lstlisting}
-<?php
-// LOCK_SH = Shared lock (lettura): altri possono leggere, nessuno scrive
-// LOCK_EX = Exclusive lock (scrittura): nessun altro accesso
-// LOCK_UN = Unlock: rilascia il lock
-// LOCK_NB = Non-blocking: non aspetta, fallisce subito se già locked
-?>
-\end{lstlisting}
+
+PHP offre diversi tipi di lock per controllare l'accesso concorrente ai file. \texttt{LOCK\_SH} rappresenta un shared lock (blocco condiviso) utilizzato per la lettura, permettendo a più processi di leggere simultaneamente il file ma impedendo a chiunque di scrivere. \texttt{LOCK\_EX} rappresenta un exclusive lock (blocco esclusivo) utilizzato per la scrittura, garantendo che nessun altro processo possa accedere al file, né per lettura né per scrittura. \texttt{LOCK\_UN} rilascia qualsiasi lock attualmente attivo, rendendo il file nuovamente accessibile. \texttt{LOCK\_NB} modifica il comportamento dei lock rendendoli non-bloccanti: invece di aspettare che il lock diventi disponibile, la funzione fallisce immediatamente se il lock non può essere acquisito.
 
 \subsection{Lock esclusivo per scrittura}
 \begin{lstlisting}

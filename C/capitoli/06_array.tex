@@ -22,12 +22,7 @@ Al termine di questo capitolo sarai in grado di:
 
 \subsection{Caratteristiche degli Array}
 
-\begin{itemize}
-    \item Tutti gli elementi hanno lo stesso tipo
-    \item Gli elementi sono indicizzati a partire da 0
-    \item La dimensione è fissa (definita alla creazione)
-    \item Gli elementi sono memorizzati in memoria contigua
-\end{itemize}
+Gli array in C hanno quattro caratteristiche distintive che definiscono il loro comportamento. Innanzitutto, \textbf{tutti gli elementi hanno lo stesso tipo}: un array non può contenere contemporaneamente numeri interi e numeri decimali, ad esempio. In secondo luogo, \textbf{gli elementi sono indicizzati a partire da 0}, il che significa che il primo elemento si accede con l'indice 0, il secondo con l'indice 1, e così via; questa convenzione è comune in molti linguaggi di programmazione ma spesso causa confusione nei principianti abituati a contare a partire da 1. In terzo luogo, \textbf{la dimensione è fissa e viene definita alla creazione} dell'array: una volta creato un array di 10 elementi, non è possibile aggiungervi ulteriori elementi senza allocare un nuovo array. Infine, \textbf{gli elementi sono memorizzati in memoria contigua}, il che significa che occupano locazioni di memoria consecutive, rendendo l'accesso agli elementi rapido e efficiente.
 
 \begin{nota}
 Gli array in C sono a base zero: il primo elemento ha indice 0, il secondo ha indice 1, e così via.
