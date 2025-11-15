@@ -34,6 +34,78 @@ Flexbox (Flexible Box Layout) è un modello di layout monodimensionale che perme
   \item[Cross start/end] Inizio e fine dell'asse trasversale
 \end{description}
 
+\subsubsection{Diagramma Assi Flexbox}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.0]
+    % Flex container row
+    \node[above, font=\small\bfseries] at (3,4.5) {flex-direction: row (default)};
+    \draw[thick, fill=blue!10] (0,2) rectangle (6,4);
+    \node[above left, font=\footnotesize] at (0,4) {flex container};
+
+    % Flex items
+    \draw[thick, fill=green!30] (0.3,2.3) rectangle (1.5,3.7);
+    \node[font=\small] at (0.9,3) {Item 1};
+
+    \draw[thick, fill=green!30] (1.8,2.3) rectangle (3.0,3.7);
+    \node[font=\small] at (2.4,3) {Item 2};
+
+    \draw[thick, fill=green!30] (3.3,2.3) rectangle (4.5,3.7);
+    \node[font=\small] at (3.9,3) {Item 3};
+
+    \draw[thick, fill=green!30] (4.8,2.3) rectangle (5.7,3.7);
+    \node[font=\small] at (5.25,3) {Item 4};
+
+    % Main axis (orizzontale)
+    \draw[->, ultra thick, red] (0,1.5) -- (6,1.5) node[right, font=\small] {Main axis};
+    \node[below, font=\footnotesize] at (0,1.5) {main start};
+    \node[below, font=\footnotesize] at (6,1.5) {main end};
+
+    % Cross axis (verticale)
+    \draw[->, ultra thick, blue] (-0.5,2) -- (-0.5,4) node[above, font=\small] {Cross axis};
+    \node[left, font=\footnotesize, rotate=90] at (-0.5,2) {cross start};
+    \node[left, font=\footnotesize, rotate=90] at (-0.5,4) {cross end};
+
+    % Flex container column
+    \node[above, font=\small\bfseries] at (9.5,4.5) {flex-direction: column};
+    \draw[thick, fill=blue!10] (7.5,0) rectangle (9.5,4);
+    \node[above left, font=\footnotesize] at (7.5,4) {flex container};
+
+    % Flex items verticali
+    \draw[thick, fill=orange!30] (7.7,3.4) rectangle (9.3,3.9);
+    \node[font=\footnotesize] at (8.5,3.65) {Item 1};
+
+    \draw[thick, fill=orange!30] (7.7,2.7) rectangle (9.3,3.2);
+    \node[font=\footnotesize] at (8.5,2.95) {Item 2};
+
+    \draw[thick, fill=orange!30] (7.7,2.0) rectangle (9.3,2.5);
+    \node[font=\footnotesize] at (8.5,2.25) {Item 3};
+
+    \draw[thick, fill=orange!30] (7.7,1.3) rectangle (9.3,1.8);
+    \node[font=\footnotesize] at (8.5,1.55) {Item 4};
+
+    % Main axis (verticale)
+    \draw[->, ultra thick, red] (7,4) -- (7,0) node[below, font=\small] {Main axis};
+    \node[left, font=\footnotesize, rotate=90] at (7,4) {main start};
+    \node[left, font=\footnotesize, rotate=90] at (7,0) {main end};
+
+    % Cross axis (orizzontale)
+    \draw[->, ultra thick, blue] (7.5,-0.5) -- (9.5,-0.5) node[right, font=\small] {Cross axis};
+    \node[below, font=\footnotesize] at (7.5,-0.5) {cross start};
+    \node[below, font=\footnotesize] at (9.5,-0.5) {cross end};
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Assi Flexbox: concetto chiave]
+\begin{itemize}
+    \item Con \texttt{flex-direction: row}: main axis è orizzontale, cross axis è verticale
+    \item Con \texttt{flex-direction: column}: main axis è verticale, cross axis è orizzontale
+    \item \texttt{justify-content} allinea lungo il \textbf{main axis}
+    \item \texttt{align-items} allinea lungo il \textbf{cross axis}
+    \item Cambiare \texttt{flex-direction} inverte gli assi!
+\end{itemize}
+\end{tcolorbox}
+
 \subsection{Proprietà del Flex Container}
 
 \subsubsection{1. display}

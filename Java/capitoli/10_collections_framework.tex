@@ -22,18 +22,115 @@ Il \textbf{Collections Framework} è una suite di interfacce e classi per rappre
 
 \subsection{Gerarchia di interfacce}
 
-\begin{verbatim}
-Collection<E>
-├── List<E>          (ArrayList, LinkedList, Vector)
-├── Set<E>           (HashSet, TreeSet, LinkedHashSet)
-└── Queue<E>         (PriorityQueue, LinkedList)
+\begin{center}
+\begin{tikzpicture}[
+    interface/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=2.5cm, minimum height=0.7cm, font=\small},
+    class/.style={rectangle, draw=green!60, fill=green!15, thick, minimum width=2.5cm, minimum height=0.6cm, font=\small},
+    edge/.style={->, >=stealth, thick}
+]
+    % Iterable (root)
+    \node[interface] (iterable) at (5,8) {\texttt{Iterable<E>}};
 
-Map<K, V>
-├── HashMap
-├── TreeMap
-├── LinkedHashMap
-└── Hashtable (legacy)
-\end{verbatim}
+    % Collection interface
+    \node[interface] (collection) at (5,6.5) {\texttt{Collection<E>}};
+    \draw[edge, blue!70] (iterable) -- (collection);
+
+    % List branch
+    \node[interface] (list) at (1,5) {\texttt{List<E>}};
+    \draw[edge, blue!70] (collection) -- (list);
+
+    \node[class] (arraylist) at (0,3.5) {\texttt{ArrayList}};
+    \node[class] (linkedlist1) at (1.5,3.5) {\texttt{LinkedList}};
+    \node[class] (vector) at (3,3.5) {\texttt{Vector}};
+
+    \draw[edge, dashed, green!70] (list) -- (arraylist);
+    \draw[edge, dashed, green!70] (list) -- (linkedlist1);
+    \draw[edge, dashed, green!70] (list) -- (vector);
+
+    % Set branch
+    \node[interface] (set) at (5,5) {\texttt{Set<E>}};
+    \draw[edge, blue!70] (collection) -- (set);
+
+    \node[interface] (sortedset) at (6.5,3.8) {\texttt{SortedSet<E>}};
+    \draw[edge, blue!70] (set) -- (sortedset);
+
+    \node[class] (hashset) at (4,2.5) {\texttt{HashSet}};
+    \node[class] (linkedhashset) at (5.8,2.5) {\texttt{LinkedHashSet}};
+    \node[class] (treeset) at (7.5,2.5) {\texttt{TreeSet}};
+
+    \draw[edge, dashed, green!70] (set) -- (hashset);
+    \draw[edge, dashed, green!70] (set) -- (linkedhashset);
+    \draw[edge, dashed, green!70] (sortedset) -- (treeset);
+
+    % Queue branch
+    \node[interface] (queue) at (9,5) {\texttt{Queue<E>}};
+    \draw[edge, blue!70] (collection) -- (queue);
+
+    \node[class] (priorityqueue) at (8.5,3.5) {\texttt{PriorityQueue}};
+    \node[class] (linkedlist2) at (10.5,3.5) {\texttt{LinkedList}};
+
+    \draw[edge, dashed, green!70] (queue) -- (priorityqueue);
+    \draw[edge, dashed, green!70] (queue) -- (linkedlist2);
+
+    % Map (separate hierarchy)
+    \node[interface] (map) at (5,1) {\texttt{Map<K,V>}};
+
+    \node[interface] (sortedmap) at (7,-0.2) {\texttt{SortedMap<K,V>}};
+    \draw[edge, blue!70] (map) -- (sortedmap);
+
+    \node[class] (hashmap) at (2.5,-1) {\texttt{HashMap}};
+    \node[class] (linkedhashmap) at (4.5,-1) {\texttt{LinkedHashMap}};
+    \node[class] (hashtable) at (6.5,-1) {\texttt{Hashtable}};
+    \node[class] (treemap) at (8.5,-1) {\texttt{TreeMap}};
+
+    \draw[edge, dashed, green!70] (map) -- (hashmap);
+    \draw[edge, dashed, green!70] (map) -- (linkedhashmap);
+    \draw[edge, dashed, green!70] (map) -- (hashtable);
+    \draw[edge, dashed, green!70] (sortedmap) -- (treemap);
+
+    % Legenda
+    \node[interface, minimum width=1.8cm] at (11.5,7) {Interfaccia};
+    \node[class, minimum width=1.8cm] at (11.5,6.3) {Classe};
+    \draw[edge, blue!70] (10.5,5.8) -- (11,5.8) node[right, font=\footnotesize] {extends};
+    \draw[edge, dashed, green!70] (10.5,5.3) -- (11,5.3) node[right, font=\footnotesize] {implements};
+
+    % Annotazioni caratteristiche
+    \node[below, font=\footnotesize, align=center] at (1,2.8) {Ordine\\Duplicati};
+    \node[below, font=\footnotesize, align=center] at (5.5,1.8) {No duplicati\\Rapido};
+    \node[below, font=\footnotesize, align=center] at (9,2.8) {FIFO};
+    \node[below, font=\footnotesize, align=center] at (5.5,-1.7) {Chiave→Valore};
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scelta della collezione giusta]
+\begin{description}
+    \item[List:] Quando serve mantenere l'ordine di inserimento e permettere duplicati
+        \begin{itemize}
+            \item \texttt{ArrayList}: accesso rapido per indice O(1), inserimento lento
+            \item \texttt{LinkedList}: inserimento/rimozione rapida O(1), accesso lento
+        \end{itemize}
+
+    \item[Set:] Quando serve garantire unicità (no duplicati)
+        \begin{itemize}
+            \item \texttt{HashSet}: performance O(1), ordine casuale
+            \item \texttt{LinkedHashSet}: O(1), mantiene ordine inserimento
+            \item \texttt{TreeSet}: O(log n), ordinamento naturale
+        \end{itemize}
+
+    \item[Queue:] Quando serve processare elementi in ordine FIFO (First In First Out)
+        \begin{itemize}
+            \item \texttt{PriorityQueue}: priorità basata su ordinamento
+            \item \texttt{LinkedList}: implementa anche Queue
+        \end{itemize}
+
+    \item[Map:] Quando serve associare chiavi a valori (dizionario)
+        \begin{itemize}
+            \item \texttt{HashMap}: O(1), ordine casuale
+            \item \texttt{LinkedHashMap}: O(1), mantiene ordine inserimento
+            \item \texttt{TreeMap}: O(log n), ordinamento per chiave
+        \end{itemize}
+\end{description}
+\end{tcolorbox}
 
 Ogni ramo offre diverse implementazioni con caratteristiche specifiche di performance e ordinamento.
 
