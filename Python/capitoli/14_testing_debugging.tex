@@ -1,108 +1,748 @@
 % Modulo 14 — Testing e Debugging
 \chapter{Testing e Debugging}
 
-\section{Introduzione}
-Validare il codice con test e diagnosticare problemi con strumenti di debug.
-
-La descrizione illustra come scrivere test isolati e ripetibili, organizzare suite di test e utilizzare strumenti di debug e logging per individuare difetti. Evidenziamo strategie come TDD light, fixture e mocking dove opportuno.
-
-Investire in test e debug sistematici riduce regressioni e accelera lo sviluppo, migliorando qualità e fiducia nel codice.
-
-\section{Obiettivi di Apprendimento}
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
 \begin{itemize}
-  \item Scrivere test con \texttt{unittest}/\texttt{pytest}.
-  \item Usare assert e fixture.
-  \item Debuggare con \texttt{pdb} o IDE.
+  \item Comprendere l'importanza del testing e tipi di test
+  \item Scrivere test con unittest e pytest
+  \item Usare fixtures, parametrize e markers
+  \item Implementare mocking con unittest.mock
+  \item Misurare code coverage
+  \item Applicare Test-Driven Development (TDD)
+  \item Debuggare con pdb, breakpoint() e IDE
+  \item Usare logging strategico
+  \item Profilare codice per performance
+  \item Integrare testing in CI/CD
 \end{itemize}
-
-\section{Concetti Fondamentali}
-\begin{tcolorbox}[title={Qualità, isolamento e feedback}]
-- Test deterministici e isolati: controlla input/dipendenze.
-- Fixture vs factory: chiarezza vs flessibilità.
-- Mocking mirato: solo dove serve, evita over-mocking.
-- Piramide dei test: unitari veloci, integrazione mirata.
 \end{tcolorbox}
 
-\section{Esempi Pratici}
-\subsection{unittest}
+\section{Introduzione}
+
+\subsection{Perché testare?}
+
+I test sono fondamentali per:
+\begin{itemize}
+  \item \textbf{Qualità}: Catturare bug prima della produzione
+  \item \textbf{Refactoring sicuro}: Modificare codice con confidenza
+  \item \textbf{Documentazione}: Test come esempi d'uso
+  \item \textbf{Design}: Test influenzano architettura (testabile = modulare)
+  \item \textbf{Regressioni}: Prevenire re-introduzione di bug
+\end{itemize}
+
+\subsection{Piramide dei test}
+
+\begin{verbatim}
+        /\
+       /E2E\        End-to-End (pochi, lenti, fragili)
+      /------\
+     /  Inte  \     Integration (moderati)
+    /----------\
+   /    Unit    \   Unit (molti, veloci, stabili)
+  /--------------\
+\end{verbatim}
+
+\textbf{Unit Tests} (70\%):
+\begin{itemize}
+  \item Testano singola funzione/classe isolatamente
+  \item Veloci (ms), stabili, facili da debuggare
+  \item Mock dependencies esterne
+\end{itemize}
+
+\textbf{Integration Tests} (20\%):
+\begin{itemize}
+  \item Testano interazione tra componenti
+  \item Database, API, file system reali
+  \item Più lenti, più setup richiesto
+\end{itemize}
+
+\textbf{End-to-End Tests} (10\%):
+\begin{itemize}
+  \item Testano applicazione completa (UI, API, DB)
+  \item Molto lenti, fragili (flaky)
+  \item Solo per flussi critici
+\end{itemize}
+
+\section{unittest: Testing Standard Library}
+
+\subsection{Struttura base}
+
 \begin{lstlisting}
 import unittest
 
-def add(a,b): return a+b
+def add(a, b):
+    return a + b
 
-class TestAdd(unittest.TestCase):
-    def test_add(self):
-        self.assertEqual(add(2,3), 5)
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+
+class TestMathFunctions(unittest.TestCase):
+    def test_add_positive_numbers(self):
+        result = add(2, 3)
+        self.assertEqual(result, 5)
+
+    def test_add_negative_numbers(self):
+        result = add(-2, -3)
+        self.assertEqual(result, -5)
+
+    def test_divide_normal(self):
+        result = divide(10, 2)
+        self.assertEqual(result, 5.0)
+
+    def test_divide_by_zero_raises_error(self):
+        with self.assertRaises(ValueError):
+            divide(10, 0)
+
+if __name__ == "__main__":
+    unittest.main()
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{unittest} organizza test in classi/metodi; usare assert chiari e casi minimali.
-- Separare setup/teardown con metodi dedicati o fixture per isolamento.
-- Rendere i test deterministici e veloci; evitare dipendenze tra test.
-\end{tcolorbox}
+\subsection{Assertions comuni}
 
-\subsection{pytest}
 \begin{lstlisting}
-def inc(x): return x+1
+import unittest
 
-def test_inc():
-    assert inc(2) == 3
+class TestAssertions(unittest.TestCase):
+    def test_equality(self):
+        self.assertEqual(1 + 1, 2)
+        self.assertNotEqual(1 + 1, 3)
+
+    def test_boolean(self):
+        self.assertTrue(True)
+        self.assertFalse(False)
+
+    def test_none(self):
+        value = None
+        self.assertIsNone(value)
+        self.assertIsNotNone("hello")
+
+    def test_membership(self):
+        self.assertIn(3, [1, 2, 3])
+        self.assertNotIn(4, [1, 2, 3])
+
+    def test_types(self):
+        self.assertIsInstance("hello", str)
+        self.assertNotIsInstance("hello", int)
+
+    def test_exceptions(self):
+        with self.assertRaises(ZeroDivisionError):
+            1 / 0
+
+        with self.assertRaises(ValueError) as context:
+            int("not a number")
+        self.assertIn("invalid literal", str(context.exception))
+
+    def test_approximate_equality(self):
+        # Float comparison con tolleranza
+        self.assertAlmostEqual(0.1 + 0.2, 0.3, places=7)
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{pytest} usa funzioni e assert semplici; fixture per setup flessibile.
-- Strutturare i test per chiarezza e copertura efficace del codice critico.
-- Integrare in CI con report e selezione mirata delle suite.
-\end{tcolorbox}
+\subsection{setUp e tearDown}
 
-\subsection{pdb}
 \begin{lstlisting}
-import pdb
-pdb.set_trace()
+import unittest
+
+class DatabaseTest(unittest.TestCase):
+    def setUp(self):
+        """Eseguito PRIMA di ogni test"""
+        print("Setup: Creating database connection")
+        self.db_connection = connect_to_database()
+        self.user = create_test_user()
+
+    def tearDown(self):
+        """Eseguito DOPO ogni test"""
+        print("Teardown: Cleaning up")
+        delete_test_user(self.user)
+        self.db_connection.close()
+
+    def test_user_creation(self):
+        # self.db_connection e self.user disponibili qui
+        self.assertIsNotNone(self.user.id)
+
+    def test_user_update(self):
+        # setUp viene eseguito di nuovo, fresh user
+        self.user.name = "New Name"
+        self.user.save()
+        self.assertEqual(self.user.name, "New Name")
+
+class TestWithClassSetup(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        """Eseguito UNA VOLTA all'inizio della classe"""
+        print("Setup class: Heavy initialization")
+        cls.expensive_resource = load_expensive_resource()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Eseguito UNA VOLTA alla fine della classe"""
+        print("Teardown class: Release resources")
+        cls.expensive_resource.cleanup()
+
+    def test_one(self):
+        self.assertIsNotNone(self.expensive_resource)
+
+    def test_two(self):
+        # Stessa expensive_resource condivisa
+        self.assertIsNotNone(self.expensive_resource)
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{pdb} inserisce breakpoint per ispezionare stato e flusso.
-- Usare debugger/IDE per navigare stack e variabili; riprodurre bug in modo affidabile.
-- Automatizzare casi che hanno rivelato regressioni per prevenire ricadute.
-\end{tcolorbox}
+\section{pytest: Testing Moderno}
 
-\begin{tcolorbox}[title=Casi d'uso]
-- Validare funzioni critiche con test unitari.
-- Test d'integrazione per componenti principali.
-- Debug di flussi con breakpoint e ispezione stato.
-- Smoke test in CI per prevenire regressioni.
-\end{tcolorbox}
+\subsection{Installazione e primi test}
 
-\section{Esercizi}
-\begin{enumerate}
-  \item Scrivi test per funzioni aritmetiche.
-  \item Usa fixture per preparare dati.
-  \item Simula errori e verifica eccezioni.
-  \item Integra CI locale per eseguire test.
-  \item Usa un debugger per tracciare un bug.
-\end{enumerate}
+\begin{lstlisting}[language=bash]
+pip install pytest
 
-\section{Riepilogo}
-Hai impostato test e tecniche base di debugging.
+# Run tests
+pytest                    # Tutti i test
+pytest test_math.py       # File specifico
+pytest -v                 # Verbose
+pytest -k "test_add"      # Solo test con "add" nel nome
+pytest -x                 # Stop alla prima failure
+pytest --maxfail=2        # Stop dopo 2 failures
+\end{lstlisting}
 
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-- Pipeline di qualità con test automatici.
-- Suite unit/integration per componenti chiave.
-- Debug guidato per riprodurre e risolvere bug.
-- Gate di rilascio in CI/CD.
-\end{tcolorbox}
+\begin{lstlisting}
+# test_math.py
+def add(a, b):
+    return a + b
 
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
+def test_add_positive():
+    assert add(2, 3) == 5
+
+def test_add_negative():
+    assert add(-2, -3) == -5
+
+def test_add_zero():
+    assert add(5, 0) == 5
+
+# pytest trova automaticamente tutti i file test_*.py
+# e tutte le funzioni test_*()
+\end{lstlisting}
+
+\subsection{Fixtures}
+
+\begin{lstlisting}
+import pytest
+
+@pytest.fixture
+def sample_user():
+    """Fixture: crea user per test"""
+    user = {"id": 1, "name": "Alice", "email": "alice@example.com"}
+    return user
+
+@pytest.fixture
+def database_connection():
+    """Fixture con setup e teardown"""
+    print("\nSetup: Connecting to database")
+    conn = connect_to_database()
+
+    yield conn  # Il test riceve conn
+
+    print("\nTeardown: Closing database")
+    conn.close()
+
+def test_user_name(sample_user):
+    # pytest inietta automaticamente sample_user
+    assert sample_user["name"] == "Alice"
+
+def test_database_query(database_connection):
+    # database_connection automaticamente injected
+    result = database_connection.execute("SELECT 1")
+    assert result == 1
+
+@pytest.fixture(scope="module")
+def expensive_resource():
+    """Fixture condivisa per tutto il modulo"""
+    resource = load_expensive_resource()
+    yield resource
+    resource.cleanup()
+
+# scope options: function (default), class, module, session
+\end{lstlisting}
+
+\subsection{Parametrize: Test Data-Driven}
+
+\begin{lstlisting}
+import pytest
+
+@pytest.mark.parametrize("a,b,expected", [
+    (2, 3, 5),
+    (-2, -3, -5),
+    (0, 0, 0),
+    (100, 200, 300),
+])
+def test_add_parametrized(a, b, expected):
+    assert add(a, b) == expected
+
+@pytest.mark.parametrize("dividend,divisor,expected", [
+    (10, 2, 5.0),
+    (9, 3, 3.0),
+    (7, 2, 3.5),
+])
+def test_divide_parametrized(dividend, divisor, expected):
+    assert divide(dividend, divisor) == expected
+
+@pytest.mark.parametrize("invalid_input", [
+    "not a number",
+    "",
+    "12.34.56",
+    None,
+])
+def test_int_conversion_fails(invalid_input):
+    with pytest.raises(ValueError):
+        int(invalid_input)
+\end{lstlisting}
+
+\subsection{Markers: Organizzare test}
+
+\begin{lstlisting}
+import pytest
+
+@pytest.mark.slow
+def test_slow_operation():
+    # Test che richiede molto tempo
+    time.sleep(5)
+    assert True
+
+@pytest.mark.database
+def test_database_query():
+    # Test che richiede database
+    result = db.query("SELECT 1")
+    assert result == 1
+
+@pytest.mark.skip(reason="Feature not implemented yet")
+def test_future_feature():
+    assert False
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Unix only")
+def test_unix_specific():
+    assert True
+
+@pytest.mark.xfail(reason="Known bug #123")
+def test_known_failing():
+    assert 1 + 1 == 3  # Aspettato failure
+
+# Run specific markers
+# pytest -m slow              # Solo slow tests
+# pytest -m "not slow"        # Escludi slow tests
+# pytest -m "database and not slow"
+\end{lstlisting}
+
+\section{Mocking}
+
+\subsection{unittest.mock}
+
+\begin{lstlisting}
+from unittest.mock import Mock, patch, MagicMock
+import requests
+
+def get_user_data(user_id):
+    """Funzione che chiama API esterna"""
+    response = requests.get(f"https://api.example.com/users/{user_id}")
+    return response.json()
+
+# Test SENZA mock (chiama API reale - MALE!)
+# def test_get_user_data():
+#     data = get_user_data(1)  # Chiama API reale!
+#     assert data["name"] == "Alice"
+
+# Test CON mock (simula API - BENE!)
+@patch("requests.get")
+def test_get_user_data_mocked(mock_get):
+    # Configura mock response
+    mock_response = Mock()
+    mock_response.json.return_value = {"id": 1, "name": "Alice"}
+    mock_get.return_value = mock_response
+
+    # Chiama funzione (usa mock invece di requests.get reale)
+    data = get_user_data(1)
+
+    # Verifica
+    assert data["name"] == "Alice"
+    mock_get.assert_called_once_with("https://api.example.com/users/1")
+\end{lstlisting}
+
+\subsection{Mock con side\_effect}
+
+\begin{lstlisting}
+from unittest.mock import Mock
+
+def test_mock_side_effect():
+    # Simula eccezione
+    mock = Mock(side_effect=ValueError("Invalid input"))
+
+    with pytest.raises(ValueError):
+        mock()
+
+    # Simula valori multipli
+    mock = Mock(side_effect=[1, 2, 3])
+    assert mock() == 1
+    assert mock() == 2
+    assert mock() == 3
+
+    # Simula funzione custom
+    def custom_function(x):
+        return x * 2
+
+    mock = Mock(side_effect=custom_function)
+    assert mock(5) == 10
+\end{lstlisting}
+
+\subsection{pytest-mock}
+
+\begin{lstlisting}[language=bash]
+pip install pytest-mock
+\end{lstlisting}
+
+\begin{lstlisting}
+# Con pytest-mock fixture
+def test_get_user_data(mocker):
+    # mocker.patch invece di @patch decorator
+    mock_get = mocker.patch("requests.get")
+
+    mock_response = mocker.Mock()
+    mock_response.json.return_value = {"id": 1, "name": "Alice"}
+    mock_get.return_value = mock_response
+
+    data = get_user_data(1)
+
+    assert data["name"] == "Alice"
+    mock_get.assert_called_once()
+\end{lstlisting}
+
+\section{Code Coverage}
+
+\begin{lstlisting}[language=bash]
+pip install coverage pytest-cov
+
+# Con coverage tool
+coverage run -m pytest
+coverage report         # Report testuale
+coverage html          # Report HTML in htmlcov/
+
+# Con pytest-cov
+pytest --cov=mymodule --cov-report=html
+pytest --cov=mymodule --cov-report=term-missing  # Mostra righe non coperte
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Coverage Best Practices]
 \begin{itemize}
-  \item \textbf{Tipi di test}: unit, integration, end-to-end; scegliere livelli adeguati e bilanciati.
-  \item \textbf{Fixture e isolamenti}: organizzare setup/teardown; evitare dipendenze tra test.
-  \item \textbf{Copertura}: misurare coverage ma non inseguire il 100\%; concentrarsi su codice critico.
-  \item \textbf{Debug}: usare \verb|pdb|, logging e riproduzioni minimal; automatizzare casi che rivelano regressioni.
+  \item \textbf{Non puntare a 100\%}: Focus su codice critico, non su getters/setters
+  \item \textbf{Coverage $\neq$ Quality}: 100\% coverage non garantisce qualità test
+  \item \textbf{Identifica gap}: Usa coverage per trovare codice non testato
+  \item \textbf{Concentrati su logica business}: Testa algoritmi, edge cases
+  \item \textbf{Target ragionevole}: 70-80\% è spesso sufficiente
 \end{itemize}
 \end{tcolorbox}
 
-\paragraph{CI/CD} Impostare gate chiari, tempi ragionevoli di esecuzione e reporting utile; fallimenti devono essere informativi e riproducibili.
-Consulta: \url{https://docs.python.org/3/library/unittest.html}, \url{https://docs.pytest.org/}.
+\section{Test-Driven Development (TDD)}
+
+\subsection{Red-Green-Refactor Cycle}
+
+\begin{verbatim}
+1. RED:     Scrivi test che fallisce
+2. GREEN:   Scrivi codice minimo per passare test
+3. REFACTOR: Migliora codice mantenendo test verdi
+\end{verbatim}
+
+\subsection{Esempio TDD: Funzione is\_prime()}
+
+\begin{lstlisting}
+# Step 1: RED - Scrivi test che fallisce
+def test_is_prime_2():
+    assert is_prime(2) == True
+
+# Step 2: GREEN - Implementa minimo
+def is_prime(n):
+    return True  # Passa test ma è sbagliato!
+
+# Step 1 (again): RED - Aggiungi test che fallisce
+def test_is_prime_4():
+    assert is_prime(4) == False
+
+# Step 2 (again): GREEN - Fix implementation
+def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, n):
+        if n % i == 0:
+            return False
+    return True
+
+# Step 3: REFACTOR - Ottimizza
+def is_prime(n):
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n**0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+# Test ancora verdi! Refactoring sicuro
+\end{lstlisting}
+
+\section{Debugging con pdb}
+
+\subsection{Breakpoint manuale}
+
+\begin{lstlisting}
+def buggy_function(numbers):
+    total = 0
+    for num in numbers:
+        import pdb; pdb.set_trace()  # Breakpoint qui
+        total += num
+    return total
+
+result = buggy_function([1, 2, 3])
+
+# Comandi pdb:
+# n (next): esegui prossima riga
+# s (step): entra in funzione
+# c (continue): continua fino a prossimo breakpoint
+# l (list): mostra codice circostante
+# p variable: stampa variabile
+# pp variable: pretty print
+# w (where): mostra stack trace
+# q (quit): esci
+\end{lstlisting}
+
+\subsection{breakpoint() - Python 3.7+}
+
+\begin{lstlisting}
+def calculate(a, b):
+    result = a + b
+    breakpoint()  # Equivalente a pdb.set_trace()
+    return result * 2
+
+# Disable all breakpoints senza modificare codice:
+# PYTHONBREAKPOINT=0 python script.py
+\end{lstlisting}
+
+\subsection{Post-mortem debugging}
+
+\begin{lstlisting}
+import pdb
+
+def divide(a, b):
+    return a / b
+
+try:
+    result = divide(10, 0)
+except ZeroDivisionError:
+    pdb.post_mortem()  # Debug al momento del crash
+\end{lstlisting}
+
+\section{Logging Strategico}
+
+\subsection{Configurazione logging}
+
+\begin{lstlisting}
+import logging
+
+# Setup logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.StreamHandler()  # Anche su console
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+# Livelli: DEBUG < INFO < WARNING < ERROR < CRITICAL
+
+def process_data(data):
+    logger.debug(f"Processing data: {data}")
+
+    if not data:
+        logger.warning("Empty data received")
+        return
+
+    try:
+        result = expensive_operation(data)
+        logger.info(f"Operation successful: {result}")
+        return result
+    except Exception as e:
+        logger.error(f"Operation failed: {e}", exc_info=True)
+        raise
+\end{lstlisting}
+
+\subsection{Logging in produzione}
+
+\begin{lstlisting}
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Rotating log files (max 10MB, keep 5 backups)
+handler = RotatingFileHandler(
+    "app.log",
+    maxBytes=10*1024*1024,
+    backupCount=5
+)
+
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+handler.setFormatter(formatter)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Prod: INFO, Dev: DEBUG
+logger.addHandler(handler)
+\end{lstlisting}
+
+\section{Profiling Performance}
+
+\subsection{timeit: Misura tempo}
+
+\begin{lstlisting}
+import timeit
+
+# Misura tempo di esecuzione
+def slow_function():
+    return sum(range(1000000))
+
+execution_time = timeit.timeit(slow_function, number=100)
+print(f"Time: {execution_time:.4f}s for 100 executions")
+
+# One-liner
+time = timeit.timeit("sum(range(1000000))", number=100)
+
+# Confronta approcci
+list_comp = timeit.timeit("[x*2 for x in range(1000)]", number=10000)
+map_func = timeit.timeit("list(map(lambda x: x*2, range(1000)))", number=10000)
+
+print(f"List comprehension: {list_comp:.4f}s")
+print(f"Map function: {map_func:.4f}s")
+\end{lstlisting}
+
+\subsection{cProfile: Profiling dettagliato}
+
+\begin{lstlisting}[language=bash]
+# Da command line
+python -m cProfile -s cumtime script.py
+
+# In codice
+import cProfile
+import pstats
+
+profiler = cProfile.Profile()
+profiler.enable()
+
+# Codice da profilare
+slow_function()
+
+profiler.disable()
+
+# Stampa stats
+stats = pstats.Stats(profiler)
+stats.sort_stats("cumulative")
+stats.print_stats(10)  # Top 10 funzioni più lente
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best Practices Testing]
+\begin{itemize}
+  \item Scrivi test PRIMA di fixare bug (test regression)
+  \item Test devono essere veloci (< 1s per unit test)
+  \item Test devono essere deterministici (no random, no time.sleep)
+  \item Test devono essere isolati (no dipendenze tra test)
+  \item Usa nomi descrittivi: \texttt{test\_user\_creation\_with\_invalid\_email\_fails}
+  \item Mock dipendenze esterne (DB, API, file system)
+  \item Organizza test in directory \texttt{tests/}
+  \item Usa fixtures per setup comune
+  \item Non testare implementation details, testa behavior
+  \item CI deve runare test su ogni commit
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori Comuni]
+\begin{itemize}
+  \item Test che dipendono da ordine esecuzione
+  \item Test che modificano stato globale
+  \item Over-mocking (mock tutto, testa nulla)
+  \item Under-testing edge cases
+  \item Test troppo lenti (no sleep, no I/O reale)
+  \item Assert senza messaggi descrittivi
+  \item Non testare error paths (solo happy path)
+  \item Non usare fixtures (duplicazione setup)
+  \item Test fragili (hardcoded values, tight coupling)
+  \item Ignorare test flaky invece di fixarli
+\end{itemize}
+\end{tcolorbox}
+
+\section{CI/CD Integration}
+
+\subsection{GitHub Actions esempio}
+
+\begin{lstlisting}[language=yaml]
+# .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run tests with coverage
+      run: |
+        pytest --cov=myapp --cov-report=xml
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v2
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Livello Base}
+\begin{enumerate}
+  \item Scrivi 5 unit test per funzione \texttt{fibonacci(n)}
+  \item Usa setUp/tearDown per creare/pulire file temporaneo
+  \item Parametrizza test con pytest per testare 10 input diversi
+\end{enumerate}
+
+\subsection{Livello Intermedio}
+\begin{enumerate}
+  \item Implementa TDD per funzione \texttt{sort\_students\_by\_grade()}
+  \item Mock API call a \texttt{requests.get()} e testa error handling
+  \item Raggiungi 80\% coverage su modulo esistente
+  \item Usa pdb per debuggare bug in algoritmo ricorsivo
+\end{enumerate}
+
+\subsection{Livello Avanzato}
+\begin{enumerate}
+  \item Implementa test suite completa per mini-blog (User, Post, Comment)
+  \item Setup CI/CD con GitHub Actions che run test su Python 3.9, 3.10, 3.11
+  \item Profile applicazione e ottimizza bottleneck (target: 50\% faster)
+  \item Crea custom pytest fixture per database test con rollback automatico
+\end{enumerate}
+
+\section{Riferimenti}
+\begin{itemize}
+  \item unittest Documentation: \url{https://docs.python.org/3/library/unittest.html}
+  \item pytest Documentation: \url{https://docs.pytest.org/}
+  \item unittest.mock: \url{https://docs.python.org/3/library/unittest.mock.html}
+  \item pdb Debugger: \url{https://docs.python.org/3/library/pdb.html}
+  \item Python Logging: \url{https://docs.python.org/3/library/logging.html}
+\end{itemize}
