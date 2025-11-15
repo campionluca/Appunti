@@ -1,148 +1,856 @@
 \chapter{Database con MySQLi}\label{cap:db_mysqli}
 
 \begin{tcolorbox}[title=Mappa del capitolo]
-Teoria, Connessione, Query preparate, Transazioni, Gestione errori, Ottimizzazione, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+Obiettivi, Teoria MySQLi, Connessione sicura, CRUD Operations, Query preparate, Transazioni ACID, Error handling, Security (SQL Injection), Esempi completi, Progetti pratici, Troubleshooting, Ottimizzazione, Esercizi, Riferimenti.
 \end{tcolorbox}
 
-\section{Teoria}
-L'estensione \texttt{mysqli} fornisce API procedurali e a oggetti per interagire con MySQL/MariaDB, con supporto a query preparate e transazioni.
+\section{Obiettivi di apprendimento}
 
-\section{Connessione al database}
-\begin{lstlisting}
+Al termine di questo capitolo sarai in grado di:
+
+\begin{itemize}
+    \item Connettersi a MySQL/MariaDB in modo sicuro
+    \item Eseguire operazioni CRUD (Create, Read, Update, Delete)
+    \item Utilizzare query preparate per prevenire SQL Injection
+    \item Gestire transazioni con ACID properties
+    \item Implementare error handling robusto
+    \item Ottimizzare query con indici ed EXPLAIN
+    \item Creare applicazioni database-driven sicure
+\end{itemize}
+
+\section{Teoria: MySQLi Extension}
+
+\subsection{Cos'è MySQLi?}
+
+MySQLi (\textbf{MySQL improved}) è un'estensione PHP per interagire con database MySQL/MariaDB. Offre due API:
+
+\begin{itemize}
+    \item \textbf{Procedurale}: Funzioni (\texttt{mysqli\_connect}, \texttt{mysqli\_query})
+    \item \textbf{Orientata agli oggetti}: Classi e metodi (\texttt{\$mysqli->query()})
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=MySQLi vs PDO]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Caratteristica} & \textbf{MySQLi} & \textbf{PDO} \\
+\hline
+Database supportati & Solo MySQL/MariaDB & 12+ database (MySQL, PostgreSQL, SQLite...) \\
+\hline
+API & Procedurale + OOP & Solo OOP \\
+\hline
+Prepared statements & Sì & Sì \\
+\hline
+Named parameters & No (solo ?) & Sì (:name) \\
+\hline
+Performance & Leggermente più veloce & Lievemente più lenta \\
+\hline
+Portabilità & Bassa & Alta \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Quando usare MySQLi}:
+\begin{itemize}
+    \item Progetto usa solo MySQL/MariaDB
+    \item Servono funzionalità MySQL-specific (async queries)
+    \item Performance critiche
+\end{itemize}
+
+\textbf{Quando usare PDO}:
+\begin{itemize}
+    \item Possibilità di cambiare DB in futuro
+    \item Named parameters preferiti
+    \item Codice più portabile
+\end{itemize}
+\end{tcolorbox}
+
+\section{Connessione al Database}
+
+\subsection{Connessione Base (OOP)}
+
+\begin{lstlisting}[language=PHP, caption={Connessione MySQLi OOP}]
 <?php
-$mysqli = new mysqli('localhost', 'user', 'pass', 'db');
+// Parametri connessione
+$host = 'localhost';
+$user = 'username';
+$pass = 'password';
+$db   = 'database_name';
+
+// Crea connessione
+$mysqli = new mysqli($host, $user, $pass, $db);
+
+// Verifica errori connessione
 if ($mysqli->connect_errno) {
-    error_log('Connessione fallita: ' . $mysqli->connect_error);
-    exit('DB non disponibile');
+    // Log error (non mostrare all'utente!)
+    error_log('Errore connessione DB: ' . $mysqli->connect_error);
+    die('Impossibile connettersi al database. Riprova più tardi.');
 }
-\end{lstlisting}
 
-\section{Query preparate}
-\begin{lstlisting}
-<?php
-$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');
-$stmt->bind_param('s', $email);
-$stmt->execute();
-$result = $stmt->get_result();
-while ($row = $result->fetch_assoc()) {
-    echo $row['name'];
-}
-$stmt->close();
-\end{lstlisting}
-
-\section{Query non sicure (senza bind) e SQL injection}
-\begin{lstlisting}
-<?php
-// ESEMPIO NON SICURO: concatenazione di input utente
-$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
-$sql = "SELECT id, name FROM users WHERE email = '" . $email . "'";
-$res = $mysqli->query($sql);
-if ($res) {
-    while ($row = $res->fetch_assoc()) { echo $row['name']; }
-}
-// Input malevolo: x' OR '1'='1  -> restituisce TUTTI gli utenti
-// $sql diventa: SELECT id, name FROM users WHERE email = 'x' OR '1'='1'
-?>
-\end{lstlisting}
-
-\subsection*{Rifacimento sicuro con parametri bind}
-\begin{lstlisting}
-<?php
-// VERSIONE SICURA: placeholder e bind_param
-$email = isset($_GET['email']) ? (string)$_GET['email'] : '';
-$stmt = $mysqli->prepare('SELECT id, name FROM users WHERE email = ?');
-if (!$stmt) { exit('Errore prepare'); }
-$stmt->bind_param('s', $email);
-$stmt->execute();
-$result = $stmt->get_result();
-while ($row = $result->fetch_assoc()) { echo $row['name']; }
-$stmt->close();
-?>
-\end{lstlisting}
-
-\begin{tcolorbox}[title=Dimostrazione]
-La versione non sicura consente l'iniezione di frammenti SQL in \verb|$email|, alterando la logica della WHERE e restituendo risultati non previsti. Con i parametri bind, il valore viene inviato separatamente dall'istruzione SQL e trattato come dato, eliminando la vulnerabilità.
-\end{tcolorbox}
-
-\section{Transazioni}
-\begin{lstlisting}
-<?php
-$mysqli->begin_transaction();
-try {
-    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?');
-    $stmt->bind_param('di', $amount, $fromId);
-    $stmt->execute();
-
-    $stmt = $mysqli->prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?');
-    $stmt->bind_param('di', $amount, $toId);
-    $stmt->execute();
-
-    $mysqli->commit();
-} catch (Throwable $e) {
-    $mysqli->rollback();
-    error_log($e->getMessage());
-}
-\end{lstlisting}
-
-\section{Gestione errori}
-- Controllare \verb|$mysqli->errno| e \verb|$mysqli->error|; loggare errori e non esporre dettagli sensibili all'utente.
-- Gestire eccezioni e timeouts; impostare charset \texttt{utf8mb4}.
-
-\begin{lstlisting}
-<?php
+// Imposta charset UTF-8 (IMPORTANTE!)
 $mysqli->set_charset('utf8mb4');
-if (!$mysqli->query('SET NAMES utf8mb4')) {
-    error_log($mysqli->error);
-}
+
+echo "Connesso con successo!";
+?>
 \end{lstlisting}
 
-\section{Ottimizzazione delle query}
-- Indici appropriati, evitare SELECT * nelle tabelle grandi.
-- Limitare i risultati, usare paginazione.
-- Misurare con \texttt{EXPLAIN} e profilarne i piani.
+\subsection{Connessione Sicura con Classe Wrapper}
 
-\begin{tcolorbox}[title=Best practice]
-- Usare query preparate per prevenire SQL injection.
-- Gestire transazioni per operazioni atomiche.
-- Impostare charset \texttt{utf8mb4} e collation coerente.
-- Centralizzare la gestione della connessione e pooling se necessario.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Errori comuni]
-- Concatenare input utente nelle query.
-- Dimenticare \texttt{commit}/\texttt{rollback} e lasciare transazioni aperte.
-- Ignorare settaggio del charset e problemi di encoding.
-\end{tcolorbox}
-
-\section{Esempi pratici}
-\begin{lstlisting}
+\begin{lstlisting}[language=PHP, caption={Database.php - Connection wrapper}]
 <?php
-// Inserimento utente con validazioni minime
-$stmt = $mysqli->prepare('INSERT INTO users(username,email,password_hash) VALUES (?,?,?)');
-$stmt->bind_param('sss', $username, $email, $hash);
-$stmt->execute();
-if ($stmt->errno) { error_log($stmt->error); }
+// Database.php
+class Database {
+    private $mysqli;
+    private static $instance = null;
+
+    private function __construct() {
+        $host = $_ENV['DB_HOST'] ?? 'localhost';
+        $user = $_ENV['DB_USER'] ?? 'root';
+        $pass = $_ENV['DB_PASS'] ?? '';
+        $db   = $_ENV['DB_NAME'] ?? 'app';
+
+        $this->mysqli = new mysqli($host, $user, $pass, $db);
+
+        if ($this->mysqli->connect_errno) {
+            error_log('DB Connection failed: ' . $this->mysqli->connect_error);
+            throw new Exception('Database connection failed');
+        }
+
+        // UTF-8 support
+        $this->mysqli->set_charset('utf8mb4');
+
+        // Error reporting mode
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+    }
+
+    // Singleton pattern
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function getConnection() {
+        return $this->mysqli;
+    }
+
+    public function close() {
+        if ($this->mysqli) {
+            $this->mysqli->close();
+        }
+    }
+
+    // Previene clonazione
+    private function __clone() {}
+}
+
+// Uso
+$db = Database::getInstance();
+$mysqli = $db->getConnection();
+?>
+\end{lstlisting}
+
+\begin{nota}
+Usa variabili d'ambiente (\texttt{\$\_ENV}) per credenziali database. Non hardcodare mai password nel codice!
+\end{nota}
+
+\section{CRUD Operations}
+
+\subsection{CREATE - Inserimento Dati}
+
+\begin{lstlisting}[language=PHP, caption={INSERT con query preparata}]
+<?php
+// Dati da inserire
+$username = 'mario_rossi';
+$email = 'mario@example.com';
+$password = 'SecurePass123!';
+
+// Hash password
+$password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+// Prepara statement
+$stmt = $mysqli->prepare('INSERT INTO users (username, email, password_hash, created_at)
+                          VALUES (?, ?, ?, NOW())');
+
+if (!$stmt) {
+    die('Prepare failed: ' . $mysqli->error);
+}
+
+// Bind parametri (s = string, i = integer, d = double, b = blob)
+$stmt->bind_param('sss', $username, $email, $password_hash);
+
+// Esegui
+if ($stmt->execute()) {
+    echo "Utente inserito con ID: " . $stmt->insert_id;
+} else {
+    error_log('Insert error: ' . $stmt->error);
+    echo "Errore durante l'inserimento.";
+}
+
 $stmt->close();
 ?>
 \end{lstlisting}
 
-\section{Caso di studio}
-Registrazione e login: creazione utente, ricerca per username/email e verifica hash. Discutere error handling e messaggi user-friendly.
+\subsection{READ - Lettura Dati}
+
+\subsubsection{Singola Riga}
+
+\begin{lstlisting}[language=PHP, caption={SELECT singola riga}]
+<?php
+$email = 'mario@example.com';
+
+$stmt = $mysqli->prepare('SELECT id, username, email, created_at
+                          FROM users WHERE email = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($row = $result->fetch_assoc()) {
+    echo "Username: " . htmlspecialchars($row['username']) . "<br>";
+    echo "Email: " . htmlspecialchars($row['email']) . "<br>";
+    echo "Registrato: " . $row['created_at'] . "<br>";
+} else {
+    echo "Utente non trovato.";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\subsubsection{Multiple Righe}
+
+\begin{lstlisting}[language=PHP, caption={SELECT multiple righe}]
+<?php
+$search = '%mario%';
+
+$stmt = $mysqli->prepare('SELECT id, username, email
+                          FROM users WHERE username LIKE ?
+                          ORDER BY created_at DESC
+                          LIMIT 10');
+$stmt->bind_param('s', $search);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+echo "<h2>Risultati (" . $result->num_rows . " trovati)</h2>";
+
+while ($row = $result->fetch_assoc()) {
+    echo "<div class='user'>";
+    echo "  <strong>" . htmlspecialchars($row['username']) . "</strong> ";
+    echo "  (" . htmlspecialchars($row['email']) . ")";
+    echo "</div>";
+}
+
+if ($result->num_rows === 0) {
+    echo "<p>Nessun utente trovato.</p>";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\subsection{UPDATE - Aggiornamento Dati}
+
+\begin{lstlisting}[language=PHP, caption={UPDATE con prepared statement}]
+<?php
+$user_id = 123;
+$new_email = 'newemail@example.com';
+$new_username = 'mario_new';
+
+$stmt = $mysqli->prepare('UPDATE users
+                          SET email = ?, username = ?, updated_at = NOW()
+                          WHERE id = ?');
+
+$stmt->bind_param('ssi', $new_email, $new_username, $user_id);
+
+if ($stmt->execute()) {
+    $affected = $stmt->affected_rows;
+
+    if ($affected > 0) {
+        echo "Utente aggiornato con successo!";
+    } else {
+        echo "Nessuna modifica effettuata (dati identici o utente non esiste).";
+    }
+} else {
+    error_log('Update error: ' . $stmt->error);
+    echo "Errore durante l'aggiornamento.";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\subsection{DELETE - Cancellazione Dati}
+
+\begin{lstlisting}[language=PHP, caption={DELETE con prepared statement}]
+<?php
+$user_id = 123;
+
+// Verifica prima che l'utente esista e non sia admin
+$stmt = $mysqli->prepare('SELECT is_admin FROM users WHERE id = ?');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($row = $result->fetch_assoc()) {
+    if ($row['is_admin']) {
+        die('Impossibile eliminare utente admin!');
+    }
+
+    // Procedi con eliminazione
+    $stmt = $mysqli->prepare('DELETE FROM users WHERE id = ?');
+    $stmt->bind_param('i', $user_id);
+
+    if ($stmt->execute()) {
+        echo "Utente eliminato.";
+    } else {
+        error_log('Delete error: ' . $stmt->error);
+        echo "Errore durante l'eliminazione.";
+    }
+} else {
+    echo "Utente non trovato.";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\section{Query Preparate Dettagliate}
+
+\subsection{Tipi di Parametri bind\_param}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Tipo} & \textbf{Significato} & \textbf{Esempio} \\
+\hline
+\texttt{i} & Integer & \texttt{bind\_param('i', \$user\_id)} \\
+\hline
+\texttt{d} & Double (float) & \texttt{bind\_param('d', \$price)} \\
+\hline
+\texttt{s} & String & \texttt{bind\_param('s', \$username)} \\
+\hline
+\texttt{b} & Blob (binary) & \texttt{bind\_param('b', \$image\_data)} \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Multiple Parametri}
+
+\begin{lstlisting}[language=PHP, caption={Bind multipli parametri}]
+<?php
+$username = 'mario';
+$email = 'mario@example.com';
+$age = 25;
+$is_active = 1;
+
+// Tipi: ssii (string, string, int, int)
+$stmt = $mysqli->prepare('INSERT INTO users (username, email, age, is_active)
+                          VALUES (?, ?, ?, ?)');
+
+$stmt->bind_param('ssii', $username, $email, $age, $is_active);
+$stmt->execute();
+$stmt->close();
+?>
+\end{lstlisting}
+
+\subsection{bind\_result vs get\_result}
+
+\begin{lstlisting}[language=PHP, caption={bind\_result (più verboso)}]
+<?php
+$stmt = $mysqli->prepare('SELECT id, username, email FROM users WHERE id = ?');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+
+// Bind risultato a variabili
+$stmt->bind_result($id, $username, $email);
+
+// Fetch
+if ($stmt->fetch()) {
+    echo "ID: $id, Username: $username, Email: $email";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\begin{lstlisting}[language=PHP, caption={get\_result (più flessibile, consigliato)}]
+<?php
+$stmt = $mysqli->prepare('SELECT id, username, email FROM users WHERE id = ?');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+
+// Get result set
+$result = $stmt->get_result();
+
+// Fetch come array associativo
+if ($row = $result->fetch_assoc()) {
+    echo "ID: {$row['id']}, Username: {$row['username']}, Email: {$row['email']}";
+}
+
+$stmt->close();
+?>
+\end{lstlisting}
+
+\begin{nota}
+Preferisci \texttt{get\_result()} e \texttt{fetch\_assoc()} per codice più leggibile e flessibile.
+\end{nota}
+
+\section{Transazioni ACID}
+
+\subsection{Teoria Transazioni}
+
+Le transazioni garantiscono le proprietà ACID:
+
+\begin{description}
+    \item[Atomicity:] Tutto o niente (commit completo o rollback totale)
+    \item[Consistency:] Database passa da stato valido a stato valido
+    \item[Isolation:] Transazioni concorrenti non interferiscono
+    \item[Durability:] Commit permanente anche dopo crash
+\end{description}
+
+\subsection{Implementazione Transazioni}
+
+\begin{lstlisting}[language=PHP, caption={Transazione trasferimento denaro}]
+<?php
+$from_account = 101;
+$to_account = 202;
+$amount = 100.00;
+
+// Inizia transazione
+$mysqli->begin_transaction();
+
+try {
+    // 1. Sottrai dal conto origine
+    $stmt = $mysqli->prepare('UPDATE accounts
+                              SET balance = balance - ?
+                              WHERE account_id = ? AND balance >= ?');
+    $stmt->bind_param('did', $amount, $from_account, $amount);
+    $stmt->execute();
+
+    if ($stmt->affected_rows === 0) {
+        throw new Exception('Saldo insufficiente o account non trovato');
+    }
+
+    // 2. Aggiungi al conto destinazione
+    $stmt = $mysqli->prepare('UPDATE accounts
+                              SET balance = balance + ?
+                              WHERE account_id = ?');
+    $stmt->bind_param('di', $amount, $to_account);
+    $stmt->execute();
+
+    if ($stmt->affected_rows === 0) {
+        throw new Exception('Account destinazione non trovato');
+    }
+
+    // 3. Log transazione
+    $stmt = $mysqli->prepare('INSERT INTO transactions
+                              (from_account, to_account, amount, timestamp)
+                              VALUES (?, ?, ?, NOW())');
+    $stmt->bind_param('iid', $from_account, $to_account, $amount);
+    $stmt->execute();
+
+    // Tutto OK: COMMIT
+    $mysqli->commit();
+    echo "Trasferimento di €$amount completato con successo!";
+
+} catch (Exception $e) {
+    // Errore: ROLLBACK (annulla tutte le modifiche)
+    $mysqli->rollback();
+    error_log('Transaction failed: ' . $e->getMessage());
+    echo "Errore durante il trasferimento: " . $e->getMessage();
+}
+?>
+\end{lstlisting}
+
+\begin{attenzione}
+SEMPRE usare transazioni per operazioni multi-step critiche:
+\begin{itemize}
+    \item Trasferimenti bancari
+    \item Ordini e-commerce (ordine + decremento stock + pagamento)
+    \item Registrazioni con tabelle correlate
+\end{itemize}
+\end{attenzione}
+
+\section{Sicurezza: Prevenire SQL Injection}
+
+\subsection{SQL Injection: Il Problema}
+
+\begin{lstlisting}[language=PHP, caption={VULNERABILE - NON USARE MAI}]
+<?php
+// CODICE VULNERABILE
+$email = $_GET['email'];  // Input utente NON sanitizzato
+
+$sql = "SELECT * FROM users WHERE email = '$email'";
+$result = $mysqli->query($sql);
+
+// Input malevolo: ' OR '1'='1
+// Query diventa: SELECT * FROM users WHERE email = '' OR '1'='1'
+// Risultato: TUTTI gli utenti restituiti!
+
+// Input malevolo: '; DROP TABLE users; --
+// Query diventa: SELECT * FROM users WHERE email = ''; DROP TABLE users; --'
+// Risultato: TABELLA DISTRUTTA!
+?>
+\end{lstlisting}
+
+\subsection{Soluzione: Query Preparate}
+
+\begin{lstlisting}[language=PHP, caption={SICURO - Prepared Statements}]
+<?php
+// CODICE SICURO
+$email = $_GET['email'];  // Input utente (può essere qualsiasi cosa)
+
+$stmt = $mysqli->prepare('SELECT * FROM users WHERE email = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+// Anche con input malevolo: ' OR '1'='1
+// Il valore viene trattato come STRINGA LETTERALE:
+// SELECT * FROM users WHERE email = "' OR '1'='1"
+// Risultato: cerca email che sia letteralmente "' OR '1'='1" (nessun match)
+?>
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=REGOLA D'ORO]
+\textbf{MAI concatenare input utente nelle query SQL!}
+
+\begin{itemize}
+    \item ❌ \texttt{"SELECT * FROM users WHERE id = " . \$\_GET['id']}
+    \item ❌ \texttt{"UPDATE users SET name = '\$name'"}
+    \item ✅ \texttt{prepare('SELECT * FROM users WHERE id = ?')}
+    \item ✅ \texttt{prepare('UPDATE users SET name = ?')}
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Altri Livelli di Sicurezza}
+
+\begin{lstlisting}[language=PHP, caption={Defense in depth}]
+<?php
+// 1. Validazione input
+$email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
+if (!$email) {
+    die('Email non valida');
+}
+
+// 2. Sanitizzazione (opzionale, prepared statements sono sufficienti)
+$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+
+// 3. Query preparata (protezione principale)
+$stmt = $mysqli->prepare('SELECT id FROM users WHERE email = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+
+// 4. Output encoding
+$result = $stmt->get_result();
+if ($row = $result->fetch_assoc()) {
+    echo htmlspecialchars($row['email']);  // Previene XSS
+}
+?>
+\end{lstlisting}
+
+\section{Error Handling}
+
+\subsection{Configurazione Error Reporting}
+
+\begin{lstlisting}[language=PHP, caption={Configura mysqli error mode}]
+<?php
+// Report exceptions per tutti gli errori MySQLi
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+// Ora MySQLi lancia exceptions invece di warnings
+try {
+    $mysqli = new mysqli('localhost', 'user', 'wrong_pass', 'db');
+    // Se fallisce, lancia Exception invece di Warning
+} catch (mysqli_sql_exception $e) {
+    error_log('DB Error: ' . $e->getMessage());
+    die('Database connection failed');
+}
+?>
+\end{lstlisting}
+
+\subsection{Gestione Errori Robusta}
+
+\begin{lstlisting}[language=PHP, caption={Try-catch con logging}]
+<?php
+function createUser($username, $email, $password_hash) {
+    global $mysqli;
+
+    try {
+        $stmt = $mysqli->prepare('INSERT INTO users (username, email, password_hash)
+                                  VALUES (?, ?, ?)');
+
+        $stmt->bind_param('sss', $username, $email, $password_hash);
+        $stmt->execute();
+
+        $user_id = $stmt->insert_id;
+        $stmt->close();
+
+        return [
+            'success' => true,
+            'user_id' => $user_id,
+            'message' => 'Utente creato con successo'
+        ];
+
+    } catch (mysqli_sql_exception $e) {
+        // Log dettagliato per debug
+        error_log('Create user failed: ' . $e->getMessage());
+        error_log('Code: ' . $e->getCode());
+
+        // Messaggio generico all'utente
+        $message = 'Errore durante la creazione utente';
+
+        // Gestisci errori specifici
+        if ($e->getCode() === 1062) {  // Duplicate entry
+            $message = 'Username o email già esistenti';
+        }
+
+        return [
+            'success' => false,
+            'message' => $message
+        ];
+    }
+}
+?>
+\end{lstlisting}
+
+\section{Esempio Completo: Sistema CRUD Utenti}
+
+\begin{lstlisting}[language=PHP, caption={UserRepository.php}]
+<?php
+class UserRepository {
+    private $mysqli;
+
+    public function __construct($mysqli) {
+        $this->mysqli = $mysqli;
+    }
+
+    public function create($username, $email, $password) {
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $stmt = $this->mysqli->prepare('INSERT INTO users
+                                        (username, email, password_hash, created_at)
+                                        VALUES (?, ?, ?, NOW())');
+        $stmt->bind_param('sss', $username, $email, $password_hash);
+        $stmt->execute();
+
+        return $stmt->insert_id;
+    }
+
+    public function findById($id) {
+        $stmt = $this->mysqli->prepare('SELECT id, username, email, created_at
+                                        FROM users WHERE id = ?');
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function findByEmail($email) {
+        $stmt = $this->mysqli->prepare('SELECT * FROM users WHERE email = ?');
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function update($id, $username, $email) {
+        $stmt = $this->mysqli->prepare('UPDATE users
+                                        SET username = ?, email = ?, updated_at = NOW()
+                                        WHERE id = ?');
+        $stmt->bind_param('ssi', $username, $email, $id);
+        $stmt->execute();
+
+        return $stmt->affected_rows;
+    }
+
+    public function delete($id) {
+        $stmt = $this->mysqli->prepare('DELETE FROM users WHERE id = ?');
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+
+        return $stmt->affected_rows;
+    }
+
+    public function getAll($limit = 100, $offset = 0) {
+        $stmt = $this->mysqli->prepare('SELECT id, username, email, created_at
+                                        FROM users
+                                        ORDER BY created_at DESC
+                                        LIMIT ? OFFSET ?');
+        $stmt->bind_param('ii', $limit, $offset);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $users = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $users[] = $row;
+        }
+
+        return $users;
+    }
+}
+?>
+\end{lstlisting}
+
+\section{Ottimizzazione Query}
+
+\subsection{Uso di EXPLAIN}
+
+\begin{lstlisting}[language=SQL, caption={Analizzare piano esecuzione}]
+EXPLAIN SELECT u.*, COUNT(p.id) AS post_count
+FROM users u
+LEFT JOIN posts p ON u.id = p.user_id
+WHERE u.is_active = 1
+GROUP BY u.id;
+\end{lstlisting}
+
+\subsection{Indici}
+
+\begin{lstlisting}[language=SQL, caption={Creare indici}]
+-- Indice singola colonna (query WHERE/ORDER BY)
+CREATE INDEX idx_email ON users(email);
+CREATE INDEX idx_created_at ON users(created_at);
+
+-- Indice composto (query con AND)
+CREATE INDEX idx_active_created ON users(is_active, created_at);
+
+-- Indice UNIQUE
+CREATE UNIQUE INDEX idx_username_unique ON users(username);
+
+-- Full-text search
+CREATE FULLTEXT INDEX idx_content_fulltext ON posts(title, content);
+\end{lstlisting}
+
+\begin{nota}
+Troppi indici rallentano INSERT/UPDATE. Indicizza solo colonne usate frequentemente in WHERE, JOIN, ORDER BY.
+\end{nota}
+
+\section{Troubleshooting}
+
+\subsection{Errori Comuni}
+
+\textbf{1. "Commands out of sync"}
+
+Causa: Non hai chiamato \texttt{fetch\_all()} o \texttt{free()} prima di eseguire nuova query.
+
+Soluzione:
+\begin{lstlisting}[language=PHP]
+$result->free();  // Libera risultato prima di nuova query
+\end{lstlisting}
+
+\textbf{2. "MySQL server has gone away"}
+
+Causa: Timeout connessione o query troppo pesante.
+
+Soluzione:
+\begin{lstlisting}[language=PHP]
+// Verifica connessione
+if (!$mysqli->ping()) {
+    $mysqli->close();
+    $mysqli = new mysqli(...);  // Riconnetti
+}
+\end{lstlisting}
+
+\textbf{3. Caratteri strani (mojibake)}
+
+Causa: Charset non UTF-8.
+
+Soluzione:
+\begin{lstlisting}[language=PHP]
+$mysqli->set_charset('utf8mb4');  // SEMPRE dopo connect
+\end{lstlisting}
 
 \section{Esercizi}
+
+\subsection{Esercizio 1 (Base)}
+Crea una tabella \texttt{products} e implementa funzioni CRUD:
 \begin{itemize}
-  \item Implementa paginazione server-side con LIMIT/OFFSET.
-  \item Aggiungi indici e confronta piani di esecuzione con \texttt{EXPLAIN}.
+    \item addProduct(\$name, \$price, \$stock)
+    \item getProductById(\$id)
+    \item updateProduct(\$id, \$name, \$price, \$stock)
+    \item deleteProduct(\$id)
+\end{itemize}
+
+\subsection{Esercizio 2 (Intermedio)}
+Implementa sistema blog con paginazione:
+\begin{itemize}
+    \item Tabelle: users, posts, comments
+    \item getPosts(\$page, \$perPage)
+    \item getPostWithComments(\$post\_id)
+    \item addComment(\$post\_id, \$user\_id, \$text)
+\end{itemize}
+
+\subsection{Esercizio 3 (Avanzato)}
+Sistema e-commerce con transazioni:
+\begin{itemize}
+    \item placeOrder(\$user\_id, \$cart) - usa transazione per: creare ordine, decrementare stock, creare order\_items
+    \item Se stock insufficiente: rollback completo
+    \item Log tutte le transazioni
+\end{itemize}
+
+\section{Progetto: Gestionale Biblioteca}
+
+Implementa sistema completo con:
+
+\textbf{Tabelle}:
+\begin{itemize}
+    \item books (id, title, author, isbn, available\_copies)
+    \item users (id, name, email, password\_hash)
+    \item loans (id, book\_id, user\_id, loan\_date, due\_date, return\_date)
+\end{itemize}
+
+\textbf{Funzionalità}:
+\begin{itemize}
+    \item Registrazione/Login utenti
+    \item Cerca libri (titolo, autore, ISBN)
+    \item Presta libro (transazione: decrementa available\_copies, crea loan)
+    \item Restituisci libro (transazione: incrementa available\_copies, aggiorna loan)
+    \item Report: libri più prestati, utenti con prestiti in ritardo
 \end{itemize}
 
 \section{Verifica}
+
+\begin{enumerate}
+    \item Qual è la differenza tra MySQLi e PDO?
+    \item Perché le query preparate prevengono SQL Injection?
+    \item Cosa sono le proprietà ACID delle transazioni?
+    \item Quando usare \texttt{commit()} vs \texttt{rollback()}?
+    \item Cosa fa \texttt{affected\_rows} vs \texttt{insert\_id}?
+    \item Differenza tra \texttt{bind\_result()} e \texttt{get\_result()}?
+    \item Perché impostare charset a \texttt{utf8mb4}?
+    \item Come ottimizzare una query lenta?
+\end{enumerate}
+
+\section{Best Practices Riepilogo}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Checklist MySQLi]
 \begin{itemize}
-  \item Quali rischi introduce la concatenazione di input utente?
-  \item Perché \texttt{utf8mb4} è preferibile a \texttt{utf8}?
+    \item[$\square$] Usa SEMPRE query preparate per input utente
+    \item[$\square$] Imposta charset utf8mb4
+    \item[$\square$] Abilita error reporting con exceptions
+    \item[$\square$] Usa transazioni per operazioni multi-step
+    \item[$\square$] Log errori, non esporli all'utente
+    \item[$\square$] Chiudi statements e connessioni
+    \item[$\square$] Usa indici per colonne in WHERE/JOIN
+    \item[$\square$] Valida input prima del database
+    \item[$\square$] Escape output con htmlspecialchars()
+    \item[$\square$] Usa connection pooling per performance
+    \item[$\square$] Evita SELECT * in produzione
+    \item[$\square$] Implementa paginazione per grandi dataset
 \end{itemize}
+\end{tcolorbox}
 
 \section{Riferimenti}
+
 \begin{itemize}
-  \item Manuale PHP — MySQLi: \url{https://www.php.net/mysqli}
-  \item MySQL Doc — Prepared Statements: \url{https://dev.mysql.com/doc/}
+    \item PHP Manual - MySQLi: \url{https://www.php.net/manual/en/book.mysqli.php}
+    \item MySQL Documentation: \url{https://dev.mysql.com/doc/}
+    \item OWASP SQL Injection Prevention: \url{https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html}
 \end{itemize}
