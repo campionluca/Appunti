@@ -1,0 +1,435 @@
+% Espansione Teorica per React - Virtual DOM e Architettura
+% Da integrare nel capitolo 01_introduzione_react.tex
+
+\section{Fondamenti Teorici del Virtual DOM}
+
+\subsection{Il Problema della Manipolazione del DOM}
+
+Prima di React, l'aggiornamento dell'interfaccia utente richiedeva manipolazione diretta del DOM (Document Object Model), che è intrinsecamente costoso.
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Problema: Costo delle Operazioni DOM]
+Le operazioni sul DOM sono computazionalmente costose perché:
+\begin{itemize}
+    \item \textbf{Reflow}: Ricalcolo del layout dell'intera pagina
+    \item \textbf{Repaint}: Ridisegno degli elementi visibili
+    \item \textbf{Sincronizzazione}: Blocking operations sul main thread
+    \item \textbf{Complessità}: Albero DOM profondo con migliaia di nodi
+\end{itemize}
+
+\textbf{Costi tipici}:
+\begin{itemize}
+    \item \texttt{getElementById()}: $O(1)$ - hash lookup
+    \item \texttt{getElementsByClassName()}: $O(n)$ - linear scan
+    \item \texttt{querySelector()}: $O(n \cdot m)$ - CSS matching
+    \item \texttt{innerHTML = ...}: $O(n)$ + reflow + repaint
+    \item \texttt{appendChild()}: $O(1)$ + potential reflow
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Esempio di Inefficienza}:
+
+\begin{lstlisting}[language=JavaScript, caption=Manipolazione DOM inefficiente]
+// Aggiornare 1000 elementi con jQuery
+for (let i = 0; i < 1000; i++) {
+    $('#item-' + i).text('Updated');  // 1000 reflows!
+    $('#item-' + i).addClass('active');  // Altri 1000 reflows!
+}
+
+// Ogni operazione causa:
+// 1. Query del DOM
+// 2. Modifica del nodo
+// 3. Reflow del layout
+// 4. Repaint dell'elemento
+
+// Tempo totale: ~500ms su desktop, ~2000ms su mobile
+\end{lstlisting}
+
+\subsection{Virtual DOM: L'Astrazione Rivoluzionaria}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Definizione: Virtual DOM]
+Il \textbf{Virtual DOM} è una rappresentazione leggera e in-memory dell'albero DOM reale.
+
+\textbf{Formalmente}: Un Virtual DOM è un albero di oggetti JavaScript plain dove ogni nodo rappresenta un elemento UI:
+
+\begin{lstlisting}[language=JavaScript]
+const vnode = {
+    type: 'div',
+    props: {
+        className: 'container',
+        id: 'main'
+    },
+    children: [
+        {
+            type: 'h1',
+            props: {},
+            children: ['Hello World']
+        },
+        {
+            type: 'p',
+            props: { className: 'text' },
+            children: ['Content']
+        }
+    ]
+};
+\end{lstlisting}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item $O(1)$ creazione nodi (solo oggetti JS)
+    \item $O(1)$ accesso e modifica
+    \item Nessun reflow/repaint
+    \item Diffing algoritmico ottimizzato
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Algoritmo di Riconciliazione (Reconciliation)}
+
+\subsubsection{Il Problema del Tree Diffing}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Complessità del Tree Diffing]
+\textbf{Problema}: Dati due alberi $T_1$ e $T_2$, trovare la sequenza minima di operazioni (inserimenti, eliminazioni, spostamenti) per trasformare $T_1$ in $T_2$.
+
+\textbf{Soluzione ottima}: Algoritmi state-of-the-art hanno complessità $O(n^3)$ (algoritmo di Zhang-Shasha).
+
+\textbf{Problema pratico}: Per un'app con 1000 nodi, $1000^3 = 10^9$ operazioni $\approx$ 1 secondo. Troppo lento per UI interattive!
+\end{tcolorbox}
+
+\subsubsection{L'Euristica di React: Diffing in O(n)}
+
+React usa euristiche intelligenti per ridurre la complessità a $O(n)$:
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Assunzioni Euristiche di React]
+\begin{enumerate}
+    \item \textbf{Cross-Component}: Elementi di tipo diverso producono alberi completamente diversi
+    \[
+    \langle \texttt{div} \rangle \neq \langle \texttt{span} \rangle \implies \text{sostituisci sottoalbero}
+    \]
+
+    \item \textbf{Keys Stabili}: Sviluppatori forniscono chiavi univoche per elementi in liste
+    \[
+    \texttt{key="id-123"} \implies \text{stesso elemento logico}
+    \]
+
+    \item \textbf{Livello per Livello}: Confronto solo nodi allo stesso livello (nessun matching cross-level)
+\end{enumerate}
+\end{tcolorbox}
+
+\textbf{Pseudocodice dell'Algoritmo di Diffing}:
+
+\begin{lstlisting}[caption=Simplified React Reconciliation]
+function reconcile(oldVNode, newVNode):
+    // Caso 1: Tipi diversi -> rimpiazza intero sottoalbero
+    if oldVNode.type !== newVNode.type:
+        return REPLACE(oldVNode, newVNode)  // O(1)
+
+    // Caso 2: Stesso tipo -> aggiorna props
+    if oldVNode.type == newVNode.type:
+        updateProps(oldVNode.props, newVNode.props)  // O(p)
+
+        // Caso 3: Riconcilia children
+        reconcileChildren(oldVNode.children, newVNode.children)
+
+function reconcileChildren(oldChildren, newChildren):
+    // Con keys: O(n) usando hash map
+    if hasKeys(newChildren):
+        childrenMap = createKeyMap(oldChildren)
+        for each newChild in newChildren:
+            oldChild = childrenMap[newChild.key]
+            if oldChild:
+                reconcile(oldChild, newChild)
+            else:
+                INSERT(newChild)
+
+    // Senza keys: O(n) confronto posizionale
+    else:
+        for i = 0 to max(oldChildren.length, newChildren.length):
+            reconcile(oldChildren[i], newChildren[i])
+\end{lstlisting}
+
+\textbf{Analisi di Complessità}:
+
+\begin{align*}
+T(n) &= T(\text{confronto nodo}) + T(\text{children}) \\
+&= O(1) + n \cdot T(n/k) \quad \text{(k figli medi)} \\
+&= O(n) \quad \text{(linearità garantita)}
+\end{align*}
+
+\subsection{React Fiber: Architettura di Scheduling Avanzata}
+
+\subsubsection{Il Problema del Rendering Sincrono}
+
+Prima di Fiber (React 15 e precedenti):
+
+\begin{lstlisting}[language=JavaScript, caption=Problema del Rendering Bloccante]
+function renderComponent(component):
+    // Rendering sincrono ricorsivo
+    vdom = component.render()  // Crea Virtual DOM
+    diff = reconcile(oldVDOM, vdom)  // Calcola differenze
+    commit(diff)  // Applica modifiche al DOM
+
+    // Problema: tutto in un solo frame (16ms)!
+    // Se il componente ha molti figli:
+    // - Nessuna possibilità di interruzione
+    // - UI bloccata durante calcolo
+    // - Frame rate scende < 60fps
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Problema: Dropped Frames]
+\textbf{Target}: 60 FPS $\implies$ 16.67ms per frame
+
+\textbf{Problema}: Render complesso può richiedere 50-100ms
+\[
+\text{Dropped Frames} = \left\lfloor \frac{T_{\text{render}}}{16.67\text{ms}} \right\rfloor
+\]
+
+Esempio: 100ms render $\implies$ 6 frame droppati $\implies$ Janky UI
+\end{tcolorbox}
+
+\subsubsection{Fiber: Work Units e Scheduling}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Architettura Fiber]
+\textbf{Fiber} è un'architettura di rendering che divide il lavoro in \textbf{units} interrompibili.
+
+\textbf{Fiber Node} rappresenta un'unità di lavoro:
+
+\begin{lstlisting}[language=JavaScript]
+type Fiber = {
+    type: ComponentType,  // Tipo componente
+    return: Fiber,        // Parent fiber
+    child: Fiber,         // Primo figlio
+    sibling: Fiber,       // Prossimo sibling
+    alternate: Fiber,     // Current ↔ WorkInProgress
+    effectTag: number,    // Tipo aggiornamento
+    nextEffect: Fiber,    // Lista effetti
+    memoizedState: any,   // Stato attuale
+    pendingProps: any,    // Nuove props
+    // ... altri campi
+};
+\end{lstlisting}
+
+\textbf{Algoritmo di Scheduling}:
+
+\begin{lstlisting}[caption=Fiber Work Loop]
+function workLoop(deadline):
+    while nextUnitOfWork && shouldYield(deadline):
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork)
+
+    // Se completato: commit phase (sincrona)
+    if !nextUnitOfWork && workInProgressRoot:
+        commitRoot()
+
+function shouldYield(deadline):
+    return deadline.timeRemaining() < 1  // 1ms buffer
+
+// Scheduler usa requestIdleCallback o MessageChannel
+requestIdleCallback(workLoop)
+\end{lstlisting}
+\end{tcolorbox}
+
+\textbf{Fasi di Render}:
+
+\begin{enumerate}
+    \item \textbf{Render Phase} (interrompibile):
+    \begin{itemize}
+        \item Costruzione Fiber tree
+        \item Riconciliazione
+        \item Calcolo effetti
+        \item $O(n)$ ma distribuito su più frame
+    \end{itemize}
+
+    \item \textbf{Commit Phase} (atomica):
+    \begin{itemize}
+        \item Applicazione modifiche DOM
+        \item Esecuzione effects
+        \item $O(m)$ dove $m$ = nodi modificati
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Concurrent Rendering (React 18+)}
+
+\subsubsection{Priority Queues e Interruzioni}
+
+\begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Concurrent Features]
+React 18 introduce \textbf{Concurrent Rendering} con priorità multiple:
+
+\textbf{Livelli di Priorità}:
+\begin{enumerate}
+    \item \textbf{Immediate} (99): Eventi input utente (click, keyboard)
+    \item \textbf{UserBlocking} (98): Hover, scroll
+    \item \textbf{Normal} (97): Network responses, transizioni
+    \item \textbf{Low} (96): Analytics, logging
+    \item \textbf{Idle} (95): Background work
+\end{enumerate}
+
+\textbf{Algoritmo di Scheduling}:
+
+\begin{lstlisting}[caption=Priority-Based Scheduling]
+class ConcurrentScheduler:
+    priorityQueue: MinHeap<Task>  // Min-heap per priorità
+
+    function scheduleTask(task, priority):
+        task.expirationTime = now() + getPriority(priority)
+        priorityQueue.insert(task)
+
+    function workLoop():
+        while task = priorityQueue.extractMin():
+            if now() >= task.expirationTime:
+                // Expired: esegui immediatamente
+                performTask(task)
+            else:
+                // Non expired: controlla interruzioni
+                if hasHigherPriorityWork():
+                    priorityQueue.insert(task)  // Rimetti in coda
+                    break
+                performTask(task)
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Principi di Programmazione Funzionale in React}
+
+\subsubsection{Purezza e Idempotenza}
+
+\begin{tcolorbox}[colback=cyan!10, colframe=cyan!60, title=Definizione: Componente Puro]
+Un componente React è \textbf{puro} se:
+\[
+\forall \text{ props } p, \text{ state } s: \quad \text{render}(p, s) = \text{render}(p, s)
+\]
+
+Ovvero: stessi input $\implies$ stesso output (senza side effects).
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item \textbf{Memoization}: $O(1)$ se props/state non cambiano
+    \item \textbf{Testabilità}: Nessun stato nascosto
+    \item \textbf{Debugging}: Riproducibilità garantita
+    \item \textbf{Concurrent Safety}: Nessuna race condition
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Esempio di Impurità vs Purezza}:
+
+\begin{lstlisting}[language=JavaScript, caption=Impure vs Pure Components]
+// ❌ IMPURE: Side effect e stato globale
+let counter = 0;
+function ImpureComponent() {
+    counter++;  // Side effect!
+    return <div>{counter}</div>;
+}
+
+// ✅ PURE: Nessun side effect
+function PureComponent({ count }) {
+    return <div>{count}</div>;
+}
+
+// React può ottimizzare:
+const MemoizedPure = React.memo(PureComponent);
+// Se count non cambia: skip re-render (O(1) check)
+\end{lstlisting}
+
+\subsubsection{Composizione Funzionale}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Higher-Order Components (HOC)}
+Un \textbf{HOC} è una funzione pura che:
+\[
+\text{HOC}: \text{Component} \rightarrow \text{Component}
+\]
+
+\textbf{Formalmente}:
+\begin{lstlisting}[language=JavaScript]
+type HOC<P, R> = (Component<P>) => Component<R>
+
+// Esempio: withLoading HOC
+function withLoading<P>(Component: ComponentType<P>) {
+    return function WithLoadingComponent(props: P & { loading: boolean }) {
+        if (props.loading) {
+            return <Spinner />;
+        }
+        return <Component {...props} />;
+    };
+}
+
+// Composizione:
+const Enhanced = withLoading(withAuth(withAnalytics(MyComponent)))
+// = compose(withLoading, withAuth, withAnalytics)(MyComponent)
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Confronto Architetturale: React vs Angular vs Vue}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Feature} & \textbf{React} & \textbf{Angular} & \textbf{Vue} \\
+\hline
+\hline
+\textbf{Paradigma} & Funzionale & OOP & Misto \\
+\hline
+\textbf{Data Flow} & Unidirezionale & Two-way binding & Bidirezionale \\
+\hline
+\textbf{Virtual DOM} & Sì (Fiber) & No (Incremental DOM) & Sì \\
+\hline
+\textbf{Diff Complexity} & $O(n)$ & $O(n \log n)$ & $O(n)$ \\
+\hline
+\textbf{Change Detection} & Riconciliazione & Zone.js & Reattività \\
+\hline
+\textbf{Linguaggio} & JSX + TS & TypeScript & Templates + TS \\
+\hline
+\textbf{Learning Curve} & Media & Alta & Bassa \\
+\hline
+\textbf{Bundle Size (min)} & ~40KB & ~160KB & ~30KB \\
+\hline
+\textbf{Rendering Mode} & Concurrent & Synchronous & Synchronous \\
+\hline
+\end{tabular}
+\caption{Confronto architetturale framework moderni}
+\end{table}
+
+\textbf{Complessità Asintotica del Rendering}:
+
+\begin{align*}
+\text{React (Fiber):} &\quad O(n) \text{ distribuito su } k \text{ frame} \\
+\text{Angular (Ivy):} &\quad O(n \log n) \text{ (dirty checking + zones)} \\
+\text{Vue 3:} &\quad O(n) \text{ (proxy-based reactivity)}
+\end{align*}
+
+\subsection{Teoremi di Ottimizzazione}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Teorema: React Memoization]
+\textbf{Teorema}: Dato un componente puro $C$ con props $p$ e children $c$:
+
+Se $p_{i} = p_{i+1}$ e $c_{i} = c_{i+1}$ (reference equality), allora:
+\[
+\text{render}_i = \text{render}_{i+1} \implies T_{\text{render}_{i+1}} = O(1)
+\]
+
+\textbf{Dimostrazione}:
+\begin{enumerate}
+    \item $\text{React.memo}(C)$ crea wrapper che confronta props
+    \item Confronto usa $\texttt{Object.is}()$ $\implies O(1)$ per reference
+    \item Se uguali: ritorna vdom cached $\implies$ skip render $\implies O(1)$
+    \item Se diversi: re-render normale $\implies O(n)$
+\end{enumerate}
+
+\textbf{Risparmio atteso}:
+\[
+E[T] = p \cdot O(1) + (1-p) \cdot O(n)
+\]
+Dove $p$ = probabilità che props non cambino
+
+Per UI tipiche: $p \approx 0.8 \implies$ 80\% risparmio!
+\end{tcolorbox}
+
+\section*{Conclusione}
+
+L'architettura di React è fondata su solide basi teoriche:
+
+\begin{itemize}
+    \item \textbf{Virtual DOM}: Astrazione che riduce costo operazioni da $O(n \cdot m)$ a $O(n)$
+    \item \textbf{Riconciliazione}: Euristica $O(n)$ invece di soluzione ottima $O(n^3)$
+    \item \textbf{Fiber}: Scheduling interrompibile con priority queues
+    \item \textbf{Concurrent Rendering}: Multitasking cooperativo per UI responsive
+    \item \textbf{Purezza Funzionale}: Memoization e composizione per performance
+\end{itemize}
+
+Questi principi rendono React non solo un framework pratico, ma anche un esempio di come la teoria informatica influenzi direttamente lo sviluppo software moderno.
