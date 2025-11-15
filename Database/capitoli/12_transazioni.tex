@@ -142,19 +142,11 @@ COMMIT;
 
 \section{Livelli di Isolamento}
 
-Il livello di isolamento determina come le transazioni concorrenti interagiscono. Un isolamento più alto garantisce meno anomalie, ma riduce le prestazioni.
+Il livello di isolamento è un parametro cruciale che determina come le transazioni concorrenti interagiscono e si influenzano reciprocamente. Esiste un compromesso intrinseco: un isolamento più elevato garantisce risultati più coerenti e riduce le anomalie, ma al costo di ridotte prestazioni generali dovute al maggiore locking e sincronizzazione.
 
 \subsection{Anomalie di Concorrenza}
 
-Prima di descrivere i livelli, ecco le anomalie che possono verificarsi:
-
-\begin{description}
-    \item[\textbf{Dirty Read}] Una transazione legge dati non ancora committati scritti da un'altra transazione. Se quella transazione fa ROLLBACK, i dati letti erano "sporchi".
-
-    \item[\textbf{Non-Repeatable Read}] Una transazione legge la stessa riga due volte e ottiene risultati diversi perché un'altra transazione ha modificato i dati nel mezzo.
-
-    \item[\textbf{Phantom Read}] Una transazione legge un insieme di righe due volte e ottiene risultati diversi perché un'altra transazione ha inserito/eliminato righe nel mezzo.
-\end{description}
+Prima di esplorare i livelli di isolamento, è essenziale comprendere le anomalie che possono emergere in ambienti concorrenti. Una \textbf{dirty read} si verifica quando una transazione legge dati non ancora committati scritti da un'altra transazione. Se quella transazione successivamente esegue ROLLBACK, i dati letti dalla prima transazione erano "sporchi" e non rappresentavano uno stato valido del database. Una \textbf{non-repeatable read} (o lettura non ripetibile) accade quando una transazione legge la stessa riga due volte nel corso della transazione e ottiene risultati diversi, perché un'altra transazione ha modificato i dati nel mezzo. Una \textbf{phantom read} (o lettura fantasma) è una situazione più sottile dove una transazione legge un insieme di righe due volte e ottiene conteggi o risultati diversi, perché un'altra transazione ha inserito o eliminato righe che corrispondono ai criteri di selezione nel mezzo.
 
 \subsection{Livelli di Isolamento in SQL}
 
@@ -391,15 +383,4 @@ UPDATE cliente SET saldo = saldo - 100 WHERE idCliente = 1;
 
 \section{Riepilogo Concetti Chiave}
 
-\begin{description}
-    \item[\textbf{Transazione}] Unità di lavoro atomica che raggruppa una o più operazioni SQL.
-    \item[\textbf{ACID}] Proprietà che garantiscono affidabilità: Atomicità, Coerenza, Isolamento, Durabilità.
-    \item[\textbf{COMMIT}] Comando che salva permanentemente le modifiche della transazione.
-    \item[\textbf{ROLLBACK}] Comando che annulla tutte le modifiche della transazione.
-    \item[\textbf{SAVEPOINT}] Punto di salvataggio per rollback parziale all'interno di una transazione.
-    \item[\textbf{Livello di Isolamento}] Grado in cui le transazioni sono isolate l'una dall'altra.
-    \item[\textbf{Deadlock}] Situazione in cui due transazioni aspettano reciprocamente, bloccandosi a vicenda.
-    \item[\textbf{Dirty Read}] Anomalia: leggere dati non committati.
-    \item[\textbf{Non-Repeatable Read}] Anomalia: leggere dati diversi nella stessa transazione.
-    \item[\textbf{Phantom Read}] Anomalia: ottenere risultati diversi per lo stesso query a causa di inserimenti/eliminazioni.
-\end{description}
+Una \textbf{transazione} è l'unità di lavoro fondamentale in un database, una sequenza atomica che raggruppa una o più operazioni SQL in un'unità indivisibile. Le proprietà \textbf{ACID} definiscono i requisiti che garantiscono l'affidabilità delle transazioni: atomicità, coerenza, isolamento e durabilità. Il comando \textbf{COMMIT} salva permanentemente tutte le modifiche della transazione nel database, rendendole irrevocabili. Il comando \textbf{ROLLBACK} annulla completamente tutte le modifiche della transazione, riportando il database allo stato precedente. Un \textbf{SAVEPOINT} è un punto di salvataggio intermedio che consente rollback parziale, permettendo di annullare solo parte della transazione mentre si mantengono le operazioni precedenti. Il \textbf{livello di isolamento} definisce il grado in cui le transazioni concorrenti sono isolate l'una dall'altra, bilanciando consistenza e prestazioni. Un \textbf{deadlock} è una situazione critica dove due o più transazioni aspettano reciprocamente risorse che l'altra tiene in lock, causando un blocco indefinito. Una \textbf{dirty read} è un'anomalia dove una transazione legge dati non committati. Una \textbf{non-repeatable read} è un'anomalia dove lettere ripetute dello stesso dato producono risultati diversi. Una \textbf{phantom read} è un'anomalia dove ripetute query sullo stesso insieme di dati producono conteggi o risultati diversi a causa di inserimenti o eliminazioni nel mezzo.

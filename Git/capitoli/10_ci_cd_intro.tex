@@ -21,23 +21,9 @@ Continuous Integration (CI) e Continuous Deployment (CD) sono pratiche fondament
 
 \textbf{Definizione}: Pratica di integrare codice nel repository principale frequentemente (più volte al giorno), con verifica automatica tramite build e test.
 
-\textbf{Workflow tradizionale (senza CI)}:
-\begin{enumerate}
-    \item Developer scrive codice per giorni/settimane
-    \item Commit e push
-    \item Integrazione manuale con codice di altri
-    \item Scoperta di bug e conflitti
-    \item Fix lunghi e dolorosi
-\end{enumerate}
+Il workflow tradizionale senza CI presenta problemi significativi. Tipicamente, uno sviluppatore lavora sul codice per giorni o addirittura settimane in isolamento prima di fare commit e push. A quel punto inizia l'integrazione manuale con il codice scritto da altri membri del team, processo durante il quale emergono bug e conflitti che erano rimasti nascosti. I fix richiesti sono spesso lunghi e dolorosi perché il codice non è più fresco nella memoria dello sviluppatore e i problemi si sono accumulati.
 
-\textbf{Workflow con CI}:
-\begin{enumerate}
-    \item Developer scrive codice
-    \item Commit e push frequenti (più volte al giorno)
-    \item CI server automaticamente: compila, testa, verifica
-    \item Feedback immediato su errori
-    \item Fix veloce (codice fresco in memoria)
-\end{enumerate}
+Al contrario, il workflow con CI trasforma radicalmente questo processo. Lo sviluppatore continua a scrivere codice ma fa commit e push frequenti, múltiple volte al giorno. Ad ogni push, il server CI interviene automaticamente compilando il codice, eseguendo i test e verificando che tutto funzioni. Questo fornisce feedback immediato su eventuali errori, permettendo fix rapidi mentre il codice è ancora fresco nella memoria dello sviluppatore. I problemi vengono identificati e risolti quando sono piccoli, prima che si accumulino e diventino complessi.
 
 \subsection{Continuous Deployment (CD)}
 

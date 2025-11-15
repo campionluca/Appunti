@@ -14,13 +14,7 @@ La scelta tra array e liste dipende dalle operazioni che dobbiamo eseguire più 
 Un \textbf{array} è una struttura dati che memorizza $n$ elementi dello stesso tipo in posizioni di memoria contigue. Ogni elemento è identificato da un \textbf{indice} intero compreso tra $0$ e $n-1$ (o tra $1$ e $n$ a seconda della convenzione).
 \end{definizione}
 
-\textbf{Proprietà fondamentali:}
-\begin{itemize}
-    \item \textbf{Dimensione fissa}: La dimensione dell'array è determinata alla creazione
-    \item \textbf{Accesso diretto}: L'elemento in posizione $i$ è accessibile in tempo $O(1)$
-    \item \textbf{Memoria contiguità}: Gli elementi occupano celle consecutive in memoria
-    \item \textbf{Tipo omogeneo}: Tutti gli elementi hanno lo stesso tipo
-\end{itemize}
+\textbf{Proprietà fondamentali:} Gli array possiedono quattro proprietà distintive. In primo luogo, hanno una \textbf{dimensione fissa}: quando l'array viene creato, la sua dimensione è determinata una volta per tutte e non può essere modificata successivamente. In secondo luogo, consentono \textbf{accesso diretto} a qualsiasi elemento, permettendo di raggiungere l'elemento in posizione $i$ in tempo costante $O(1)$. Una conseguenza della loro implementazione è che gli elementi occupano \textbf{celle consecutive in memoria}, il che consente il calcolo rapido dell'indirizzo di ogni elemento tramite una semplice formula aritmetica. Infine, gli array richiedono \textbf{tipo omogeneo}: tutti gli elementi devono avere lo stesso tipo di dato.
 
 \textbf{Rappresentazione in memoria:}
 
@@ -115,12 +109,7 @@ def RicercaLineare(A, n, chiave):
     return -1
 \end{lstlisting}
 
-\textbf{Analisi:}
-\begin{itemize}
-    \item Caso migliore: $\Theta(1)$ (elemento in prima posizione)
-    \item Caso peggiore: $\Theta(n)$ (elemento assente o in ultima posizione)
-    \item Caso medio: $\Theta(n)$
-\end{itemize}
+\textbf{Analisi:} La ricerca lineare manifesta comportamenti diversi a seconda della posizione dell'elemento. Nel caso migliore, l'elemento si trova in prima posizione e la ricerca termina con complessità $\Theta(1)$. Nel caso peggiore, che si verifica quando l'elemento non è presente o si trova in ultima posizione, l'algoritmo deve esaminare tutti gli $n$ elementi, richiedendo complessità $\Theta(n)$. Nel caso medio, assumendo che l'elemento sia presente con distribuzione uniforme, il numero atteso di confronti è $\Theta(n)$.
 
 \textbf{Ricerca binaria} (array ordinato):
 
@@ -214,12 +203,7 @@ def Inserimento(A, n, i, valore):
     return n + 1
 \end{lstlisting}
 
-\textbf{Analisi:}
-\begin{itemize}
-    \item Caso migliore: $\Theta(1)$ (inserimento in coda)
-    \item Caso peggiore: $\Theta(n)$ (inserimento in testa, richiede shift di tutti gli elementi)
-    \item Caso medio: $\Theta(n)$
-\end{itemize}
+\textbf{Analisi:} L'inserimento in una posizione arbitraria presenta complessità variabili. Nel caso migliore, l'inserimento avviene in coda (dove non è necessario alcuno shift), con complessità $\Theta(1)$. Nel caso peggiore, inserire un elemento in testa richiede di spostare tutti gli $n$ elementi esistenti verso destra, risultando in complessità $\Theta(n)$. Nel caso medio, assumendo distribuzione uniforme della posizione di inserimento, il numero atteso di shift è $n/2$, mantenendo complessità $\Theta(n)$.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -263,23 +247,13 @@ def Cancellazione(A, n, i):
     return n - 1  // nuova dimensione
 \end{lstlisting}
 
-\textbf{Analisi:} Analoga all'inserimento.
-\begin{itemize}
-    \item Caso migliore: $\Theta(1)$ (cancellazione dell'ultimo elemento)
-    \item Caso peggiore: $\Theta(n)$ (cancellazione del primo elemento)
-    \item Caso medio: $\Theta(n)$
-\end{itemize}
+\textbf{Analisi:} L'analisi della cancellazione rispecchia quella dell'inserimento, poiché entrambe le operazioni richiedono shift di elementi. Nel caso migliore, cancellare l'ultimo elemento non richiede alcuno shift, con complessità $\Theta(1)$. Nel caso peggiore, cancellare il primo elemento costringe a spostare tutti i rimanenti $n-1$ elementi verso sinistra, risultando in complessità $\Theta(n)$. Nel caso medio, la complessità rimane $\Theta(n)$.
 
 \subsection{Array dinamici}
 
 Gli array statici hanno dimensione fissa, il che è limitante. Gli \textbf{array dinamici} (dynamic arrays, in C++ \texttt{std::vector}, in Java \texttt{ArrayList}, in Python \texttt{list}) risolvono questo problema.
 
-\textbf{Strategia di raddoppio:}
-\begin{itemize}
-    \item Quando l'array è pieno, allochiamo un nuovo array di dimensione doppia
-    \item Copiamo tutti gli elementi nel nuovo array
-    \item Deallochiamo il vecchio array
-\end{itemize}
+\textbf{Strategia di raddoppio:} Quando l'array raggiunge la sua capacità massima e deve accogliere un nuovo elemento, si alloca un nuovo array di dimensione doppia rispetto al precedente. Successivamente, tutti gli elementi dell'array originale vengono copiati nel nuovo array, e il vecchio array viene deallocato. Questo meccanismo, sebbene possa sembrare costoso per singoli inserimenti (che occasionalmente richiedono $O(n)$), risulta straordinariamente efficiente in analisi ammortizzata, come dimostreremo.
 
 \begin{lstlisting}[style=pseudocode]
 def InserimentoDinamico(A, n, capacità, valore):
@@ -351,12 +325,7 @@ Cancellazione & $O(n)$ & $O(n)$ \\
 \subsection{Definizione e struttura}
 
 \begin{definizione}[Lista concatenata semplice]
-Una \textbf{lista concatenata semplice} è una sequenza di nodi, dove ogni nodo contiene:
-\begin{itemize}
-    \item Un \textbf{dato} (valore memorizzato)
-    \item Un \textbf{puntatore} al nodo successivo
-\end{itemize}
-Il primo nodo è chiamato \textbf{testa} (head), l'ultimo puntatore è \texttt{NULL}.
+Una \textbf{lista concatenata semplice} è una sequenza di nodi, dove ogni nodo contiene due elementi essenziali: un \textbf{dato} (il valore memorizzato) e un \textbf{puntatore} al nodo successivo nella sequenza. Il primo nodo della lista è speciale e viene chiamato \textbf{testa} (head), mentre l'ultimo nodo ha il suo puntatore impostato a \texttt{NULL} per indicare la fine della lista.
 \end{definizione}
 
 \textbf{Struttura del nodo:}
@@ -604,18 +573,7 @@ class NodoDoppio:
 \end{tikzpicture}
 \end{center}
 
-\textbf{Vantaggi:}
-\begin{itemize}
-    \item Scorrimento bidirezionale
-    \item Cancellazione di un nodo dato il puntatore al nodo in $O(1)$
-    \item Inserimento prima di un nodo in $O(1)$
-\end{itemize}
-
-\textbf{Svantaggi:}
-\begin{itemize}
-    \item Maggiore uso di memoria (un puntatore in più per nodo)
-    \item Maggiore complessità nel mantenere l'invariante dei puntatori
-\end{itemize}
+\textbf{Vantaggi e svantaggi:} Le liste doppie offrono tre vantaggi significativi rispetto alle liste semplici. Primo, consentono lo \textbf{scorrimento bidirezionale}: è possibile muoversi avanti e indietro nella lista con uguale facilità. Secondo, permettono la \textbf{cancellazione di un nodo} in tempo $O(1)$ se disponiamo già di un puntatore al nodo da cancellare, poiché possiamo accedere direttamente ai nodi precedente e successivo. Terzo, agevolano l'\textbf{inserimento prima di un nodo} in tempo costante. D'altro canto, le liste doppie richiedono \textbf{maggiore uso di memoria} a causa del puntatore aggiuntivo per ogni nodo, e comportano \textbf{maggiore complessità nel mantenere gli invarianti} dei puntatori durante le operazioni di modifica.
 
 \subsubsection{Cancellazione dato il nodo (lista doppia)}
 
@@ -793,10 +751,4 @@ Array e liste concatenate sono le strutture dati lineari fondamentali. La scelta
 
 Molte strutture dati complesse (stack, code, hash table con chaining) sono costruite su questi fondamenti.
 
-\textbf{Punti chiave:}
-\begin{itemize}
-    \item Array: $O(1)$ accesso, $O(n)$ inserimento/cancellazione
-    \item Liste: $O(1)$ inserimento/cancellazione in testa, $O(n)$ accesso
-    \item Liste doppie: $O(1)$ cancellazione dato il nodo
-    \item Array dinamici: $O(1)$ inserimento ammortizzato
-\end{itemize}
+\textbf{Punti chiave:} Le caratteristiche distintive delle strutture lineari esaminate meritano una revisione. Gli array eccellono nell'accesso rapido ($O(1)$) ma penalizzano inserimenti e cancellazioni ($O(n)$). Le liste concatenate invertono questo compromesso, permettendo operazioni di inserimento e cancellazione in testa in tempo $O(1)$, ma richiedendo accesso sequenziale ($O(n)$) a elementi arbitrari. Le liste doppie aggiungono la proprietà speciale di permettere la cancellazione di un nodo in $O(1)$ se conosciamo già il nodo. Infine, gli array dinamici offrono il meglio di due mondi: accesso rapido come gli array statici e inserimenti ammortizzati in $O(1)$ grazie alla strategia di raddoppio.

@@ -620,33 +620,47 @@ while True:
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Best Practices]
-\begin{itemize}
-  \item Sempre rispetta robots.txt e Terms of Service
-  \item Usa User-Agent header descrittivo (evita ban)
-  \item Implementa rate limiting (1-2 requests/second max)
-  \item Usa retry con exponential backoff
-  \item Gestisci timeout (max 10-30 secondi)
-  \item Salva dati incrementalmente (no perdi tutto se crash)
-  \item Log errori per debugging
-  \item Usa selectors CSS robusti (class, id, data attributes)
-  \item Valida dati prima di salvare
-  \item Non scrapare durante picchi di traffico
-\end{itemize}
+Il rispetto di robots.txt e Terms of Service è un requisito etico e legale fondamentale: ignorare queste policy può portare a ban dell'IP o azioni legali. Verificare sempre cosa è permesso scrapare prima di iniziare.
+
+L'uso di un User-Agent header descrittivo che identifichi il proprio scraper aiuta a evitare ban automatici e permette ai webmaster di contattarti se necessario. Header generici o assenti sono spesso bloccati.
+
+Implementare rate limiting è essenziale per non sovraccaricare i server target. Un limite di 1-2 richieste al secondo è generalmente ragionevole, ma dovrebbe essere ridotto per siti più piccoli o aumentato solo se esplicitamente permesso.
+
+La strategia di retry con exponential backoff gestisce errori temporanei di rete in modo intelligente, aumentando progressivamente il tempo di attesa tra tentativi per non aggravare problemi di carico del server.
+
+Gestire timeout appropriati (tipicamente 10-30 secondi) previene che lo scraper rimanga bloccato indefinitamente su richieste lente o server non responsivi.
+
+Salvare dati incrementalmente anziché accumulare tutto in memoria e scrivere alla fine previene la perdita totale dei dati in caso di crash, permettendo di riprendere da dove ci si è fermati.
+
+Il logging degli errori è fondamentale per debugging e monitoraggio, permettendo di identificare pattern di fallimento e problemi ricorrenti con specifici siti o selectors.
+
+L'uso di selectors CSS robusti basati su attributi stabili (id, data attributes) piuttosto che classi generate dinamicamente riduce la fragilità dello scraper rispetto a cambiamenti del sito.
+
+Validare i dati estratti prima di salvarli garantisce che solo dati corretti e completi vengano persistiti, evitando corruzioni del dataset.
+
+Infine, evitare di scrapare durante picchi di traffico (ad esempio ore di punta) riduce l'impatto sul server target e diminuisce le probabilità di essere rilevati come bot malevoli.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Errori Comuni]
-\begin{itemize}
-  \item Ignorare robots.txt (rischio ban)
-  \item Troppi requests troppo velocemente (ban IP)
-  \item Selectors fragili (class="btn-primary-2024-v3")
-  \item Non gestire errori di rete
-  \item Non usare timeout (script bloccati)
-  \item Hardcodare selectors (cambiano spesso)
-  \item Non validare dati estratti
-  \item Non usare sessions (perdere cookies/auth)
-  \item Scrapare dati personali senza consenso (GDPR!)
-  \item Non gestire encoding (caratteri corrotti)
-\end{itemize}
+Ignorare robots.txt è uno degli errori più gravi, comportando rischio di ban immediato e potenziali conseguenze legali. Verificare sempre le policy prima di scrapare.
+
+Inviare troppi requests troppo velocemente è una pratica che porta rapidamente al ban dell'IP. I server rilevano facilmente pattern di traffico non umani e implementano protezioni automatiche.
+
+L'uso di selectors fragili basati su classi CSS generate automaticamente (come "btn-primary-2024-v3") rende lo scraper estremamente vulnerabile a rotture quando il sito viene aggiornato. Preferire selectors stabili basati su semantica o data attributes.
+
+Non gestire gli errori di rete porta a crash dello scraper su problemi temporanei facilmente risolvibili con retry. Ogni richiesta HTTP può fallire e deve essere gestita appropriatamente.
+
+Non usare timeout causa script che rimangono bloccati indefinitamente su connessioni lente o server non responsivi, consumando risorse inutilmente.
+
+Hardcodare selectors CSS nel codice invece di configurarli esternamente rende necessario ricompilare ogni volta che i selectors cambiano, aumentando la manutenzione.
+
+Non validare i dati estratti porta ad accumulare dati incompleti o corrotti nel dataset, che devono poi essere puliti manualmente in post-processing.
+
+Non usare sessions HTTP fa perdere cookies e stato di autenticazione tra richieste, rendendo impossibile scrapare siti che richiedono login o mantengono stato di sessione.
+
+Scrapare dati personali senza consenso esplicito viola il GDPR e altre normative sulla privacy, con conseguenze legali potenzialmente gravi.
+
+Infine, non gestire correttamente l'encoding dei caratteri porta a dati corrotti con caratteri speciali renderizzati incorrettamente, specialmente per lingue non inglesi.
 \end{tcolorbox}
 
 \section{Esercizi}

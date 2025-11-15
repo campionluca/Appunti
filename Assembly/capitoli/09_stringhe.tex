@@ -6,12 +6,7 @@ Le istruzioni su stringhe dell'8086 operano su sequenze di byte o word in memori
 
 \section{Registri per Stringhe}
 
-\begin{itemize}
-    \item \textbf{SI}: Source Index (DS:SI per default)
-    \item \textbf{DI}: Destination Index (ES:DI sempre)
-    \item \textbf{CX}: Contatore per prefissi REP
-    \item \textbf{DF}: Direction Flag (0=incrementa, 1=decrementa)
-\end{itemize}
+Le operazioni su stringhe dell'8086 richiedono l'utilizzo di registri specializzati coordinati tra loro. Il registro \textbf{SI} (Source Index) agisce come indice sorgente e opera principalmente nel segmento DS:SI per default, permettendo di leggere i dati dalla memoria. Il registro \textbf{DI} (Destination Index) funge da indice destinazione e utilizza sempre il segmento ES:DI, specificando dove i dati devono essere scritti o confrontati. Il registro \textbf{CX} (Count) svolge un ruolo cruciale nei prefissi REP, fungendo da contatore che specifica quante volte ripetere l'operazione su stringhe prima di terminare. Infine, il \textbf{DF} (Direction Flag) del registro FLAGS controlla la direzione dell'operazione: quando DF è 0 i registri SI e DI vengono incrementati (operazione in avanti), mentre quando DF è 1 vengono decrementati (operazione all'indietro).
 
 \subsection{CLD e STD}
 

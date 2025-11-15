@@ -18,34 +18,15 @@ DDL (Data Definition Language) è il linguaggio SQL per definire la struttura de
 
 \subsection{Tipi numerici}
 
-\begin{description}
-    \item[\textbf{INT}] Numero intero a 4 byte. Range: -2.147.483.648 a 2.147.483.647
-    \item[\textbf{SMALLINT}] Numero intero a 2 byte. Range: -32.768 a 32.767
-    \item[\textbf{BIGINT}] Numero intero a 8 byte. Per numeri molto grandi
-    \item[\textbf{DECIMAL(p,s)}] Numero decimale con precisione (p) e scala (s). Es: DECIMAL(10,2)
-    \item[\textbf{FLOAT, DOUBLE}] Numeri decimali in virgola mobile. Meno precisi di DECIMAL
-    \item[\textbf{TINYINT}] Numero intero a 1 byte. Range: -128 a 127 (o 0-255 se UNSIGNED)
-\end{description}
+MySQL offre una ricca varietà di tipi numerici per memorizzare diverse classi di numeri in modo efficiente. Il tipo \textbf{INT} è il tipo intero più comune, allocando 4 byte e supportando valori nell'intervallo da -2.147.483.648 a 2.147.483.647. Il tipo \textbf{SMALLINT} è una variante compatta che utilizza 2 byte, supportando intervalli ridotti da -32.768 a 32.767, utile per risparmiare spazio quando i valori sono noti essere piccoli. Al contrario, \textbf{BIGINT} impiega 8 byte e è progettato per numeri molto grandi che superano la capacità di INT. Per numeri decimali, \textbf{DECIMAL(p,s)} consente precisione specifica, dove p rappresenta la precisione totale e s la scala decimale; ad esempio, DECIMAL(10,2) può memorizzare numeri fino a 10 cifre con 2 decimali. I tipi \textbf{FLOAT e DOUBLE} gestiscono numeri decimali in virgola mobile, offrendo una maggiore gamma di valori ma con minore precisione rispetto a DECIMAL, rendendoli meno appropriati per operazioni finanziarie. Infine, \textbf{TINYINT} è il tipo intero più compatto, usando solo 1 byte e supportando l'intervallo da -128 a 127, o da 0 a 255 se dichiarato come UNSIGNED.
 
 \subsection{Tipi stringa}
 
-\begin{description}
-    \item[\textbf{CHAR(n)}] Stringa a lunghezza fissa di n caratteri. Spreca spazio se la stringa è più breve
-    \item[\textbf{VARCHAR(n)}] Stringa a lunghezza variabile fino a n caratteri. Efficiente
-    \item[\textbf{TEXT}] Stringa di lunghezza variabile lunga (fino a 4 GB)
-    \item[\textbf{BLOB}] Dati binari (immagini, file)
-    \item[\textbf{ENUM}] Stringa da un set predefinito. Es: ENUM('Attivo', 'Inattivo')
-\end{description}
+Per i dati testuali, MySQL offre diverse opzioni ottimizzate per diversi scenari. \textbf{CHAR(n)} memorizza stringhe a lunghezza fissa di esattamente n caratteri, allocando sempre lo spazio completo anche se la stringa effettiva è più breve, causando spreco di memoria se le stringhe hanno lunghezze variabili. \textbf{VARCHAR(n)} è la scelta moderna preferita, memorizando stringhe di lunghezza variabile fino a n caratteri e occupando spazio pari alla lunghezza effettiva, risultando molto più efficiente. \textbf{TEXT} memorizza stringhe di lunghezza variabile molto lunga, fino a 4 GB, ideale per contenuti di grandi dimensioni come descrizioni lunghe o articoli. \textbf{BLOB} è dedicato ai dati binari come immagini, file audio e altro contenuto non testuale. Infine, \textbf{ENUM} rappresenta una stringa selezionata da un set predefinito di valori, ad esempio ENUM('Attivo', 'Inattivo'), fornendo validazione a livello di colonna.
 
 \subsection{Tipi data/ora}
 
-\begin{description}
-    \item[\textbf{DATE}] Data in formato YYYY-MM-DD
-    \item[\textbf{TIME}] Ora in formato HH:MM:SS
-    \item[\textbf{DATETIME}] Data e ora in formato YYYY-MM-DD HH:MM:SS
-    \item[\textbf{TIMESTAMP}] Data e ora con timestamp Unix. Auto-aggiornamento
-    \item[\textbf{YEAR}] Anno in formato YYYY
-\end{description}
+MySQL fornisce tipi specializzati per gestire date e orari con precisione. \textbf{DATE} memorizza unicamente la data nel formato standard YYYY-MM-DD, occupando lo spazio minimo dedicato alle sole informazioni cronologiche. \textbf{TIME} memorizza unicamente l'ora nel formato HH:MM:SS, utile quando la data non è rilevante. \textbf{DATETIME} combina data e ora nel formato YYYY-MM-DD HH:MM:SS, fornendo sia informazioni temporali che cronologiche in una singola colonna. \textbf{TIMESTAMP} memorizza data e ora con riferimento al timestamp Unix (secondi dal 1° gennaio 1970) e offre la caratteristica unica di aggiornamento automatico, utile per monitorare quando un record è stato creato o modificato per l'ultima volta. Infine, \textbf{YEAR} memorizza soltanto l'anno nel formato YYYY, occupando spazio minimo quando solo l'anno è rilevante.
 
 \section{CREATE TABLE}
 
@@ -362,14 +343,7 @@ CREATE INDEX idx_membro_email ON membro(email);
 \section*{Riepilogo concetti chiave}
 
 \begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
-\begin{itemize}
-    \item \textbf{CREATE TABLE} definisce la struttura della tabella con attributi e vincoli
-    \item I \textbf{vincoli} (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL, DEFAULT) garantiscono integrità
-    \item \textbf{ALTER TABLE} modifica tabelle esistenti (aggiunta, modifica, eliminazione colonne)
-    \item \textbf{DROP} elimina tabelle, colonne, indici (irreversibile!)
-    \item Scegliere \textbf{tipi di dati appropriati} ottimizza spazio e velocità
-    \item \textbf{Indici} accelerano ricerche e devono essere creati strategicamente
-\end{itemize}
+Il comando \textbf{CREATE TABLE} è lo strumento fondamentale per definire la struttura della tabella con attributi e vincoli. I \textbf{vincoli} (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, NOT NULL, DEFAULT) sono meccanismi essenziali che garantiscono integrità dei dati prevenendo stati incoerenti. \textbf{ALTER TABLE} fornisce la flessibilità di modificare tabelle esistenti attraverso operazioni di aggiunta, modifica e eliminazione di colonne senza ricreare l'intera struttura. Il comando \textbf{DROP} consente di eliminare tabelle, colonne e indici, operazione che è definitivamente irreversibile e richiede estrema cautela. La scelta appropriata di \textbf{tipi di dati} non è semplicemente una questione di correttezza, ma influenza significativamente l'ottimizzazione dello spazio su disco e della velocità di elaborazione. Infine, gli \textbf{indici} accelerano le ricerche e devono essere creati strategicamente basandosi su modelli di accesso reali per massimizzare il beneficio.
 \end{tcolorbox}
 
 \section*{Esercizi}

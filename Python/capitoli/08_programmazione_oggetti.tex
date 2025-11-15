@@ -21,11 +21,15 @@ Applicare correttamente OOP aiuta a organizzare sistemi complessi, isolare respo
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Principi di design OOP]
-- SRP: ogni classe deve avere una responsabilità chiara.
-- Composizione \textit{over} ereditarietà per flessibilità.
-- LSP: le sottoclassi devono rispettare i contratti della base.
-- Incapsula stato, esponi metodi chiari e invarianti.
-- Usa \texttt{dataclasses} per oggetti-dato semplici.
+Il \textbf{Single Responsibility Principle (SRP)} stabilisce che ogni classe deve avere una responsabilità chiara e ben definita, facilitando la comprensione e la manutenzione del codice.
+
+La \textbf{composizione dovrebbe essere preferita all'ereditarietà} quando si progettano relazioni tra classi, poiché offre maggiore flessibilità e riduce l'accoppiamento. L'ereditarietà va riservata ai casi in cui esiste una vera relazione "è un" tra le classi.
+
+Il \textbf{Liskov Substitution Principle (LSP)} richiede che le sottoclassi rispettino sempre i contratti della classe base, garantendo che possano essere usate in modo intercambiabile senza alterare la correttezza del programma.
+
+L'\textbf{incapsulamento} è fondamentale: mantenere lo stato interno privato ed esporre solo metodi pubblici chiari che rispettano gli invarianti della classe protegge da modifiche inconsistenti e semplifica l'uso dell'API.
+
+Per oggetti-dati semplici, le \texttt{dataclasses} riducono significativamente il boilerplate, generando automaticamente metodi come \verb|__init__|, \verb|__repr__| e \verb|__eq__|.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -78,10 +82,13 @@ class User:
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
-- Modellare entità di dominio (\texttt{Ordine}, \texttt{Prodotto}, \texttt{Utente}).
-- Adapter/Strategy per variare comportamento in runtime.
-- Value Object immutabili per sicurezza e testabilità.
-- Astrazioni per driver (DB, API) con implementazioni intercambiabili.
+La programmazione a oggetti è particolarmente efficace per modellare entità di dominio come \texttt{Ordine}, \texttt{Prodotto} e \texttt{Utente}, permettendo di rappresentare la logica di business in modo naturale e intuitivo attraverso classi che incapsulano dati e comportamenti.
+
+I pattern come Adapter e Strategy sfruttano il polimorfismo per variare il comportamento in runtime, consentendo di selezionare dinamicamente algoritmi o implementazioni diverse senza modificare il codice cliente.
+
+L'uso di Value Object immutabili migliora la sicurezza e la testabilità del codice, eliminando effetti collaterali indesiderati e semplificando il ragionamento sul flusso dei dati.
+
+Le astrazioni per driver di database o API permettono di definire interfacce stabili con implementazioni intercambiabili, facilitando testing con mock e permettendo di sostituire provider esterni senza impatto sul resto del sistema.
 \end{tcolorbox}
 
 \section{Esercizi}
@@ -98,21 +105,26 @@ Hai applicato i concetti chiave di OOP in Python.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Modellazione di dominio (ordini, utenti, prodotti).
-- UI e componenti riutilizzabili con pattern OOP.
-- Estensioni e plugin tramite interfacce e astrazioni.
-- Testare comportamenti con polimorfismo/mocking.
+La programmazione orientata agli oggetti trova applicazione naturale nella modellazione di domini complessi, dove entità come ordini, utenti e prodotti vengono rappresentate come classi che incapsulano sia dati che comportamenti, rendendo il codice più vicino al problema reale.
+
+Nello sviluppo di interfacce utente, l'OOP permette di creare componenti riutilizzabili basati su pattern consolidati, favorendo la composizione di elementi UI complessi da blocchi più semplici e facilitando la manutenzione.
+
+I sistemi estensibili beneficiano particolarmente dell'OOP attraverso interfacce e astrazioni ben definite, che permettono l'implementazione di plugin e estensioni senza modificare il codice esistente, seguendo il principio Open/Closed.
+
+Dal punto di vista del testing, il polimorfismo e il mocking sono strumenti essenziali: la capacità di sostituire implementazioni concrete con mock objects permette di testare comportamenti in isolamento, migliorando qualità e affidabilità del software.
 \end{tcolorbox}
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-\item \textbf{Composizione vs ereditarietà}: privilegiare composizione per flessibilità; usare ereditarietà quando c'è una relazione “è un”.
-  \item \textbf{Dataclass}: generano boilerplate per classi di dati; controllare immutabilità con \verb|frozen=True|.
-  \item \textbf{Proprietà e incapsulamento}: \verb|@property| per interfacce pulite; validare invarianti.
-\item \textbf{Dunder methods}: implementare \verb|__repr__|, \verb|__eq__| e \verb|__hash__| in base all'identità del dominio.
-  \item \textbf{Type hints}: agevolano strumenti statici; mantenere annotazioni aggiornate e coerenti.
-\end{itemize}
+La scelta tra \textbf{composizione ed ereditarietà} è una decisione di design fondamentale. La composizione dovrebbe essere privilegiata per la sua flessibilità, mentre l'ereditarietà va riservata ai casi in cui esiste una vera relazione "è un" tra le classi.
+
+Le \textbf{dataclass} sono uno strumento potente per ridurre il boilerplate nelle classi di dati, generando automaticamente metodi comuni. L'immutabilità può essere enforced con il parametro \verb|frozen=True|, creando Value Objects sicuri.
+
+L'uso di \textbf{proprietà e incapsulamento} con il decoratore \verb|@property| permette di esporre interfacce pulite mantenendo il controllo sugli accessi agli attributi. È importante validare gli invarianti della classe in getter e setter per garantire consistenza.
+
+I \textbf{metodi speciali (dunder methods)} come \verb|__repr__|, \verb|__eq__| e \verb|__hash__| dovrebbero essere implementati in base all'identità del dominio: oggetti che rappresentano la stessa entità devono essere uguali, e oggetti usabili come chiavi di dizionario devono essere hashable e immutabili.
+
+L'uso di \textbf{type hints} agevola strumenti di analisi statica e migliora la documentazione del codice. È essenziale mantenere le annotazioni aggiornate e coerenti con l'implementazione per evitare confusione.
 \end{tcolorbox}
 
 \paragraph{Progettazione} Definire responsabilità piccole e coese, evitare classi “tuttofare”. Integrare test di unità per gli invarianti principali.

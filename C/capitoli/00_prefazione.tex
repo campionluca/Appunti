@@ -7,16 +7,7 @@ Questo libro nasce dall'esigenza di fornire agli studenti del terzo anno dell'Is
 
 \section*{Perché Studiare il C?}
 
-Il linguaggio C, nato nei primi anni '70 nei laboratori Bell, è ancora oggi uno dei linguaggi più utilizzati e influenti nella storia dell'informatica. Nonostante la sua età, il C rimane attuale per diversi motivi:
-
-\begin{itemize}
-    \item \textbf{Fondamenta solide}: Il C insegna i concetti fondamentali della programmazione procedurale e della gestione della memoria.
-    \item \textbf{Efficienza}: È uno dei linguaggi più veloci ed efficienti, utilizzato per sistemi operativi, driver e software embedded.
-    \item \textbf{Portabilità}: Il codice C può essere compilato su praticamente qualsiasi piattaforma.
-    \item \textbf{Controllo}: Offre un controllo diretto sull'hardware e sulla memoria.
-    \item \textbf{Base per altri linguaggi}: C++, Java, C\# e molti altri linguaggi derivano dal C o ne condividono la sintassi.
-    \item \textbf{Richiesto nel mondo professionale}: Molte aziende cercano programmatori C, specialmente nei settori automotive, aerospaziale, telecomunicazioni e sistemi embedded.
-\end{itemize}
+Il linguaggio C, nato nei primi anni '70 nei laboratori Bell della AT\&T, è ancora oggi uno dei linguaggi più utilizzati e influenti nella storia dell'informatica. Nonostante la sua età, il C rimane straordinariamente attuale per molteplici ragioni. Innanzitutto, il C fornisce le \textbf{fondamenta solide} della programmazione, insegnandovi i concetti fondamentali della programmazione procedurale e della gestione della memoria direttamente, senza gli "aiutini" che linguaggi moderni vi forniscono. In termini di prestazioni, il C è uno dei linguaggi più \textbf{efficienti} ed è per questo motivo ampiamente utilizzato per la realizzazione di sistemi operativi, driver hardware e software embedded dove la velocità è critica. Un grande vantaggio del C è la sua \textbf{portabilità}: il codice C può essere compilato e eseguito su praticamente qualsiasi piattaforma, da computer desktop a microcontrollori, consentendo una vera "write once, compile anywhere" philosophy. Il C offre inoltre un \textbf{controllo diretto} sull'hardware e sulla memoria, permettendovi di ottimizzare il codice al massimo livello di dettaglio. Molti linguaggi moderni, tra cui C++, Java e C\#, \textbf{derivano dal C} o ne condividono la sintassi, quindi imparare il C vi fornirà una base solida per apprendere quasi qualsiasi altro linguaggio. Infine, il C rimane \textbf{richiesto nel mondo professionale}: molte aziende, specialmente nei settori automotive, aerospaziale, telecomunicazioni e sistemi embedded, cercano continuamente programmatori competenti in C.
 
 \begin{nota}
 Imparare il C vi renderà programmatori migliori, indipendentemente dal linguaggio che userete in futuro. Il C vi obbliga a comprendere realmente cosa succede "sotto il cofano" del computer.
@@ -24,16 +15,9 @@ Imparare il C vi renderà programmatori migliori, indipendentemente dal linguagg
 
 \section*{A Chi si Rivolge Questo Libro}
 
-Questo materiale è stato pensato specificamente per studenti del terzo anno di un Istituto Tecnico con indirizzo informatico. I prerequisiti richiesti sono:
+Questo materiale è stato pensato specificamente per studenti del terzo anno di un Istituto Tecnico con indirizzo informatico. Per affrontare con successo questo corso, è necessario possedere una \textbf{conoscenza di base della matematica}, in particolare aritmetica e algebra elementare, per comprendere le espressioni e i calcoli che affronteremo. Dovete avere sviluppato una buona \textbf{capacità di ragionamento logico}, in quanto la programmazione è fondamentalmente il trasformare la logica in codice. È importante avere una certa \textbf{familiarità con l'uso del computer}, compresa la capacità di navigare il file system, usare il terminale/prompt dei comandi e lanciare programmi. Infine, ma non meno importante, dovete avere una genuina \textbf{voglia di imparare e sperimentare}, poiché la programmazione è un'attività che richiede curiosità e la volontà di scoprire come le cose funzionano.
 
-\begin{itemize}
-    \item Conoscenza di base della matematica (aritmetica, algebra elementare)
-    \item Capacità di ragionamento logico
-    \item Familiarità con l'uso del computer
-    \item Voglia di imparare e sperimentare
-\end{itemize}
-
-\textbf{Non è richiesta} alcuna esperienza precedente di programmazione. Partiremo dalle basi e procederemo gradualmente verso argomenti più complessi.
+Tuttavia, \textbf{non è richiesta} alcuna esperienza precedente di programmazione. Questo corso è progettato per i principianti assoluti, e partiremo dalle basi più elementari, procedendo gradualmente verso argomenti più complessi e sofisticati.
 
 \section*{Struttura del Libro}
 
@@ -73,27 +57,12 @@ Non limitarti a leggere passivamente. Prendi appunti, sottolinea, fai schemi. Ce
 \subsection*{2. Scrivi il Codice}
 
 \begin{attenzione}
-NON copiare e incollare il codice dagli esempi! Digitalo personalmente, carattere per carattere. Questo ti aiuterà a:
-\begin{itemize}
-    \item Memorizzare la sintassi
-    \item Notare i dettagli
-    \item Fare esperienza con gli errori di compilazione
-    \item Sviluppare "memoria muscolare" per la programmazione
-\end{itemize}
+NON copiare e incollare il codice dagli esempi! Digitalo personalmente, carattere per carattere. Questo semplice atto di digitazione manuale ha importanti benefici didattici. In primo luogo, vi aiuterà a \textbf{memorizzare la sintassi} del linguaggio, poiché il vostro cervello processerà ogni carattere. Inoltre, dovrete \textbf{notare i dettagli}, come la posizione di ogni parentesi, punto e virgola o operatore, il che vi renderà consapevoli di sottili particolarità del linguaggio. Digitando il codice manualmente, farete esperienza con gli errori di compilazione in modo naturale, imparando a leggere e interpretare i messaggi di errore. Infine, svilupperete quella che i programmatori chiamano "memoria muscolare" - un'intuizione automatica di come scrivere il codice correttamente.
 \end{attenzione}
 
 \subsection*{3. Sperimenta}
 
-Una volta che un esempio funziona:
-\begin{itemize}
-    \item Modificalo
-    \item Prova a "romperlo"
-    \item Cambia i valori
-    \item Aggiungi funzionalità
-    \item Chiediti "cosa succede se..."
-\end{itemize}
-
-La sperimentazione è fondamentale per l'apprendimento della programmazione.
+Una volta che un esempio funziona correttamente, non fermatevi lì. La vera apprendimento avviene quando iniziate a sperimentare. \textbf{Modificate il codice} in modo deliberato per vedere come cambiano i risultati. \textbf{Provate a "romperlo"} intenzionalmente - cambiate operatori, rimuovete righe, vedete cosa succede quando il programma fallisce; questo vi insegnerà quali parti del codice sono critiche. \textbf{Cambiate i valori} per capire come il programma reagisce a input diversi. \textbf{Aggiungete funzionalità} al programma - magari fate sì che accetti input diversi, che stampi informazioni aggiuntive, o che faccia calcoli più complessi. Soprattutto, \textbf{chiedetevi "cosa succede se..."} continuamente. Questa curiosità è il motore dell'apprendimento della programmazione. La sperimentazione non è una distrazione dal vostro studio - è il vostro studio principale.
 
 \subsection*{4. Fai Gli Esercizi}
 
@@ -117,15 +86,7 @@ Gli esercizi sono organizzati in tre livelli:
 \subsection*{5. Gestisci gli Errori}
 
 \begin{nota}
-Gli errori sono \textbf{normali} e \textbf{utili}! Ogni programmatore, dal principiante al professionista, incontra continuamente errori. La differenza sta nel saperli affrontare:
-
-\begin{itemize}
-    \item Leggi attentamente i messaggi di errore del compilatore
-    \item Google è tuo amico: cerca l'errore online
-    \item Controlla riga per riga il codice
-    \item Usa printf per "debuggare" e capire cosa sta succedendo
-    \item Chiedi aiuto ai compagni o all'insegnante
-\end{itemize}
+Gli errori sono \textbf{normali} e \textbf{utili}! Ogni programmatore, dal principiante al professionista, incontra continuamente errori. La differenza tra un programmatore esperto e uno inesperto non è che il primo non fa errori, ma che sa come affrontarli efficacemente. Quando incontrate un errore, \textbf{leggete attentamente i messaggi di errore del compilatore}: il compilatore sta cercando di dirvi esattamente cosa è andato storto, di solito con il numero di linea e una descrizione del problema. Non abbiate paura di usare Google o risorse online quando siete bloccati - \textbf{Google è vostro amico}, e cercare l'errore online vi darà spesso la risposta istantaneamente, poiché qualcuno ha probabilmente incontrato lo stesso problema prima di voi. Quando cercate di capire cosa non funziona, \textbf{controllate il codice riga per riga}, idealmente con un amico che vi aiuta, poiché gli occhi di qualcun altro possono spesso notare errori che voi avete tralasciato. Un'ottima tecnica è \textbf{usare printf per "debuggare"}, cioè inserire statement che stampano i valori delle variabili in punti strategici del codice, per capire cosa sta realmente succedendo durante l'esecuzione. Infine, non siate riluttanti a \textbf{chiedere aiuto ai compagni o all'insegnante}: la collaborazione è una parte essenziale della programmazione nel mondo reale.
 \end{nota}
 
 \subsection*{6. Pratica Costante}

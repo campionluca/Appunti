@@ -15,13 +15,7 @@ Al termine di questo capitolo sarai in grado di:
 
 In Java, uno \textbf{stream} (flusso) è una sequenza di dati che può essere letta o scritta. Gli stream forniscono un modo uniforme per lavorare con diverse sorgenti e destinazioni di dati: file, connessioni di rete, array in memoria, ecc.
 
-Esistono due tipi principali di stream:
-
-\begin{itemize}
-    \item \textbf{Stream di byte} (byte streams): lavorano con dati binari, un byte alla volta. Sono le classi che terminano con \texttt{InputStream} o \texttt{OutputStream}.
-
-    \item \textbf{Stream di caratteri} (character streams): lavorano con dati testuali, gestendo automaticamente la codifica dei caratteri. Sono le classi che terminano con \texttt{Reader} o \texttt{Writer}.
-\end{itemize}
+Esistono due tipi principali di stream in Java, ciascuno adatto a esigenze diverse. Gli \textbf{stream di byte} (byte streams) lavorano direttamente con dati binari, elaborando un byte alla volta. Questi stream sono rappresentati da classi che terminano con \texttt{InputStream} oppure \texttt{OutputStream}, secondo che si tratti di lettura o scrittura. Gli \textbf{stream di caratteri} (character streams) sono invece specializzati per lavorare con dati testuali. La loro caratteristica principale è che gestiscono automaticamente la codifica dei caratteri, convertendo tra i byte grezzi e i caratteri Unicode del linguaggio Java. Le classi che implementano gli stream di caratteri terminano con \texttt{Reader} per la lettura e \texttt{Writer} per la scrittura.
 
 \begin{nota}
 Gli stream di byte sono più versatili e possono gestire qualsiasi tipo di file, ma per file di testo è preferibile usare stream di caratteri che gestiscono correttamente encoding come UTF-8.
@@ -405,27 +399,11 @@ I \textbf{file di testo} memorizzano dati in formato leggibile da esseri umani, 
 
 \subsubsection{Caratteristiche dei file di testo}
 
-\begin{itemize}
-    \item \textbf{Leggibilità umana:} Possono essere aperti e modificati con qualsiasi editor di testo
-    \item \textbf{Portabilità:} Funzionano su qualsiasi piattaforma, indipendentemente dal linguaggio
-    \item \textbf{Interoperabilità:} Facili da processare con script, tool Unix, Excel, ecc.
-    \item \textbf{Debugging semplice:} È possibile ispezionare direttamente il contenuto
-    \item \textbf{Separatori di riga:} Gestione di newline (\texttt{\textbackslash n}, \texttt{\textbackslash r\textbackslash n})
-    \item \textbf{Encoding:} Necessità di specificare la codifica caratteri (UTF-8, ecc.)
-\end{itemize}
+I file di testo possiedono diverse caratteristiche distintive che li rendono particolari per determinati usi. In primo luogo, offrono \textbf{leggibilità umana}: possono essere aperti e modificati direttamente con qualsiasi editor di testo standard senza necessità di tool specializzati. Forniscono anche \textbf{portabilità}, funzionando su qualsiasi piattaforma (Windows, macOS, Linux) indipendentemente dal linguaggio di programmazione utilizzato per crearli. I file di testo garantiscono \textbf{interoperabilità} eccellente: sono facilissimi da processare con script shell, tool Unix, foglio di calcolo come Excel, e molti altri strumenti di terze parti. Questo facilita enormemente lo \textbf{debugging semplice}, poiché è possibile ispezionare direttamente il contenuto del file per capire cosa è stato salvato. Un aspetto tecnico importante è la \textbf{gestione dei separatori di riga}: i file di testo devono gestire diverse convenzioni per le newline (\texttt{\textbackslash n} su Unix/Linux, \texttt{\textbackslash r\textbackslash n} su Windows). Infine, è necessario occuparsi dell'\textbf{encoding}: il programmatore deve specificare la codifica caratteri da usare (UTF-8, ASCII, ISO-8859-1, ecc.) per garantire che i caratteri non-ASCII siano salvati e letti correttamente.
 
 \subsubsection{Quando usare file di testo}
 
-I file di testo sono la scelta ideale per:
-
-\begin{itemize}
-    \item \textbf{File di configurazione:} properties, ini, yaml, json, xml
-    \item \textbf{Log applicativi:} tracciamento eventi e debugging
-    \item \textbf{Dati tabulari:} CSV, TSV per export verso Excel/database
-    \item \textbf{Documentazione:} markdown, plain text
-    \item \textbf{Scambio dati tra linguaggi diversi:} JSON, XML
-    \item \textbf{Archiviazione long-term:} dati che devono essere accessibili per anni
-\end{itemize}
+I file di testo sono la scelta ideale per numerosi scenari applicativi. Sono perfetti per \textbf{file di configurazione} come properties, ini, yaml, json, xml, dove è necessario leggere e modificare parametri di configurazione in modo facile e accessibile. Sono la soluzione naturale per \textbf{log applicativi}, permettendo di tracciare gli eventi durante l'esecuzione del programma e facilitando il debugging tramite ispezionamento diretto dei file di log. Per \textbf{dati tabulari}, i file di testo in formato CSV o TSV sono la scelta standard per esportare dati verso Excel o database, garantendo massima compatibilità. Sono appropriati per \textbf{documentazione}, come file markdown e plain text, che devono essere leggibili da esseri umani. Per \textbf{scambio dati tra linguaggi diversi}, JSON e XML sono formati di testo standard che permetto a programmi scritti in linguaggi diversi di comunicare. Infine, per \textbf{archiviazione long-term}, i file di testo garantiscono che i dati rimangono accessibili per anni senza rischi di incompatibilità, grazie alla loro natura universale e al supporto diffuso.
 
 \subsubsection{Vantaggi e svantaggi}
 
@@ -454,13 +432,7 @@ La \textbf{serializzazione} è il processo di conversione di un oggetto Java in 
 
 \subsubsection{Cos'è la serializzazione}
 
-La serializzazione permette di:
-\begin{itemize}
-    \item Salvare lo \textbf{stato completo} di un oggetto (valori di tutti i campi)
-    \item Preservare la \textbf{struttura dei dati} (tipo, relazioni tra oggetti)
-    \item Gestire automaticamente \textbf{grafi di oggetti} (oggetti che referenziano altri oggetti)
-    \item Mantenere \textbf{l'identità degli oggetti} (se A e B puntano allo stesso oggetto C, dopo deserializzazione questa relazione è preservata)
-\end{itemize}
+La serializzazione è un meccanismo potente che offre diversi vantaggi nella persistenza dei dati. Innanzitutto, permette di salvare lo \textbf{stato completo} di un oggetto, includendo i valori di tutti i campi, in modo che l'oggetto possa essere perfettamente ricostruito in seguito. Preserva la \textbf{struttura dei dati}, mantenendo il tipo dell'oggetto e le relazioni tra diversi oggetti, cosa fondamentale per strutture dati complesse. La serializzazione gestisce automaticamente \textbf{grafi di oggetti}, permettendo di salvare interi alberi o reti di oggetti che referenziano gli uni gli altri. Un aspetto particolare è che mantiene l'\textbf{identità degli oggetti}: se due riferimenti A e B puntano al medesimo oggetto C nel momento della serializzazione, dopo la deserializzazione questa relazione di condivisione viene preservata, anziché creare due copie indipendenti dell'oggetto.
 
 \subsubsection{L'interfaccia Serializable}
 
@@ -483,24 +455,9 @@ public class Studente implements Serializable {
 
 \subsubsection{Come funziona la serializzazione}
 
-Quando serializzi un oggetto, Java:
+Durante il processo di serializzazione, Java esegue una serie di passaggi ben definiti. Innanzitutto, scrive i \textbf{metadata} della classe, cioè informazioni critiche come il nome della classe, la versione, e la struttura dei campi. Successivamente, scrive i \textbf{valori di tutti i campi} non marcati come transient, preservando lo stato completo dell'istanza. Se un campo contiene a sua volta un oggetto, Java lo \textbf{serializza ricorsivamente}, garantendo che interi grafi di oggetti vengano salvati completamente. Un aspetto sofisticato è la \textbf{gestione dei riferimenti circolari}: Java memorizza ogni oggetto una sola volta nel file, anche se è referenziato da più posizioni, evitando loop infiniti e duplicazioni. Il risultato è uno \textbf{stream binario compatto} ottimizzato per la memorizzazione.
 
-\begin{enumerate}
-    \item Scrive i \textbf{metadata} della classe (nome, versione, struttura)
-    \item Scrive i \textbf{valori di tutti i campi} non-transient
-    \item Se un campo è un oggetto, lo \textbf{serializza ricorsivamente}
-    \item Gestisce riferimenti circolari memorizzando ogni oggetto una sola volta
-    \item Crea uno stream binario compatto
-\end{enumerate}
-
-Durante la deserializzazione:
-
-\begin{enumerate}
-    \item Legge i metadata e verifica la compatibilità della classe
-    \item Alloca memoria per l'oggetto \textbf{senza chiamare il costruttore}
-    \item Popola i campi con i valori deserializzati
-    \item Ricostruisce i riferimenti tra oggetti
-\end{enumerate}
+Durante la deserializzazione, il processo è inverso ma simmetrico. Java legge i metadata dalla classe e verifica la compatibilità con la versione della classe nel progetto corrente. In seguito, alloca memoria per l'oggetto, e questo è un aspetto importante: non chiama il costruttore, ma direttamente popola i campi con i valori deserializzati salvati precedentemente. Infine, Java ricostruisce i \textbf{riferimenti tra oggetti}, ripristinando la stessa struttura di connessione che esisteva al momento della serializzazione.
 
 \subsubsection{ObjectOutputStream e ObjectInputStream}
 
@@ -841,13 +798,7 @@ A volte non tutti i campi di un oggetto devono essere salvati. La keyword \textt
 
 Campi marcati come \texttt{transient} vengono ignorati durante la serializzazione. Dopo la deserializzazione, avranno il valore di default del loro tipo (0 per numeri, null per oggetti, false per boolean).
 
-\textbf{Quando usare transient:}
-\begin{itemize}
-    \item Dati \textbf{derivati/calcolabili} (es. età calcolata da data nascita)
-    \item \textbf{Cache} temporanee (ricostruibili dopo il caricamento)
-    \item Informazioni \textbf{sensibili} (password, token) da non persistere
-    \item Riferimenti a risorse \textbf{non serializzabili} (thread, connessioni DB, stream)
-\end{itemize}
+\textbf{Quando usare transient:} Dovresti marcare un campo come transient quando contiene dati \textbf{derivati/calcolabili}, come l'età di una persona calcolata dalla data di nascita, dato che può essere ricalcolato facilmente al momento della deserializzazione. Usa transient per \textbf{cache} temporanee, che sono facilmente ricostruibili dopo il caricamento dell'oggetto. È cruciale per informazioni \textbf{sensibili} come password e token di autenticazione, che non dovrebbero mai essere persisted su disco. Infine, usa transient per \textbf{riferimenti a risorse non serializzabili} come thread, connessioni a database, o stream, che non possono essere serializzati e causerebbero eccezioni.
 
 \textbf{Esempio:}
 \begin{lstlisting}
@@ -874,21 +825,9 @@ Ogni classe serializzabile dovrebbe dichiarare esplicitamente un \texttt{serialV
 private static final long serialVersionUID = 1L;
 \end{lstlisting}
 
-\textbf{Perché è importante:}
-\begin{itemize}
-    \item Java genera automaticamente un UID basato sulla struttura della classe
-    \item Se modifichi la classe (aggiungi campo, cambi tipo), l'UID cambia
-    \item Deserializzare con UID diverso causa \texttt{InvalidClassException}
-    \item Dichiararlo esplicitamente ti permette di controllare la compatibilità
-\end{itemize}
+\textbf{Perché è importante:} Per comprendere l'importanza del serialVersionUID, è necessario capire come Java gestisce la compatibilità tra versioni. Java genera automaticamente un UID basato sulla struttura della classe, calcolandolo dalle firme dei metodi e dai nomi dei campi. Se modifichi la classe durante lo sviluppo, ad esempio aggiungendo un nuovo campo o cambiando il tipo di un campo esistente, l'UID generato automaticamente cambia. Quando la JVM tenta di deserializzare un oggetto serializzato con una versione precedente della classe, gli UID non corrispondono e genera un'eccezione \texttt{InvalidClassException}. Dichiarare esplicitamente il serialVersionUID ti permette di controllare manualmente la compatibilità tra versioni: puoi aggiornare solo il campo quando decidi consapevolmente di introdurre un cambiamento incompatibile, anziché romperlo per ogni modifica.
 
-\textbf{Gestione evoluzione classe:}
-\begin{itemize}
-    \item \textbf{Compatibile:} aggiungere campi (avranno valore default)
-    \item \textbf{Compatibile:} rendere campi transient
-    \item \textbf{Incompatibile:} cambiare tipo di un campo
-    \item \textbf{Incompatibile:} rimuovere campi non-transient
-\end{itemize}
+\textbf{Gestione evoluzione classe:} Non tutte le modifiche a una classe serializzata sono uguali dal punto di vista della compatibilità con versioni precedenti. Modifiche \textbf{compatibili} includono l'aggiungere nuovi campi alla classe: i dati deserializzati avranno il valore di default per i nuovi campi. Un'altra modifica compatibile è rendere transient uno o più campi esistenti. Al contrario, modifiche \textbf{incompatibili} includono il cambio del tipo di un campo esistente, che rende impossibile mappare i dati serializzati al nuovo tipo, oppure la rimozione di campi non-transient, dato che i dati serializzati contengono ancora quei campi che la nuova classe non si aspetta.
 
 \textbf{Best practice:} Quando modifichi una classe serializzata, incrementa il serialVersionUID solo se vuoi forzare incompatibilità. Altrimenti mantieni lo stesso valore per permettere deserializzazione (con limitazioni).
 

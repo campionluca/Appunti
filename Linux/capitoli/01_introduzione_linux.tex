@@ -11,16 +11,9 @@ La storia di Linux inizia con Unix. Nel 1969, presso i Bell Labs di AT\&T, Ken T
 Unix nacque inizialmente come progetto personale di Ken Thompson, che voleva continuare a giocare al videogioco "Space Travel" dopo la cancellazione del progetto Multics. Per farlo, riscrisse il gioco per un computer PDP-7 inutilizzato, e insieme creò un sistema operativo minimale. Il nome "Unix" è un gioco di parole su "Multics" (Multiplexed Information and Computing Service).
 \end{tcolorbox}
 
-\textbf{Caratteristiche innovative di Unix:}
+Unix si distingueva dalle altre soluzioni dell'epoca per un insieme di innovazioni rivoluzionarie. Il sistema era concepito come multitasking e multiutente: poteva eseguire simultaneamente molteplici processi e permettere a diversi utenti di lavorare sullo stesso computer senza interferire l'uno con l'altro. Un'altra caratteristica fondamentale era il filesystem gerarchico, che organizzava tutti i file e le directory in una struttura ad albero, rendendo la navigazione logica e intuitiva.
 
-\begin{itemize}
-    \item Sistema multitasking e multiutente
-    \item Filesystem gerarchico
-    \item File di testo per configurazione
-    \item Shell come interfaccia utente programmabile
-    \item Pipe per concatenare comandi
-    \item Portabilità (dopo la riscrittura in C nel 1973)
-\end{itemize}
+La filosofia dei file di testo per la configurazione era semplice ma rivoluzionaria: anziché usare database binari complessi, Unix immagazzinava tutte le impostazioni di sistema in file di testo leggibili e modificabili. La shell non era una semplice interfaccia utente, ma un vero e proprio linguaggio di programmazione, permettendo agli utenti di scrivere script e automatizzare compiti. Un'innovazione particolarmente elegante era il concetto di pipe, che permetteva di concatenare comandi tra loro, facendo fluire l'output di un comando direttamente nell'input di un altro. Infine, dopo la riscrittura del kernel in linguaggio C nel 1973, Unix acquisì una straordinaria portabilità, potendo essere compilato e eseguito su diverse architetture hardware senza modifiche significative al codice sorgente.
 
 \subsection{La Nascita di Linux}
 
@@ -104,49 +97,17 @@ Linux è organizzato in livelli gerarchici:
 
 \subsection{Il Kernel}
 
-Il \textbf{kernel} è il cuore del sistema operativo. Responsabilità principali:
+Il \textbf{kernel} è il cuore pulsante del sistema operativo, responsabile di coordinare e gestire tutte le risorse fondamentali del computer.
 
-\begin{enumerate}
-    \item \textbf{Gestione Processi}
-    \begin{itemize}
-        \item Scheduling: quale processo eseguire e quando
-        \item Context switching tra processi
-        \item Creazione e terminazione processi
-        \item Comunicazione inter-processo (IPC)
-    \end{itemize}
+La \textbf{gestione dei processi} rappresenta una delle funzioni più critiche del kernel. Attraverso lo scheduling, il kernel decide intelligentemente quale processo deve essere eseguito e quando, garantendo che tutti i processi ricevano un'equa porzione di tempo CPU. Il context switching permette di alternare rapidamente tra processi diversi, creando l'illusione che molti programmi stiano eseguendo simultaneamente. Il kernel si occupa anche della creazione e terminazione dei processi durante il loro intero ciclo di vita, e facilita la comunicazione inter-processo (IPC) quando i processi necessitano di scambiarsi dati o sincronizzarsi.
 
-    \item \textbf{Gestione Memoria}
-    \begin{itemize}
-        \item Allocazione e deallocazione memoria
-        \item Memoria virtuale e paginazione
-        \item Protezione memoria tra processi
-        \item Caching e buffering
-    \end{itemize}
+La \textbf{gestione della memoria} è fondamentale per l'efficienza del sistema. Il kernel alloca dinamicamente memoria ai processi quando ne hanno bisogno e la dealloca quando non serve più. Implementa la memoria virtuale e la paginazione, permettendo ai programmi di utilizzare più memoria di quella fisicamente disponibile e isolando lo spazio di indirizzamento di ogni processo. La protezione della memoria impedisce a un processo di accedere alla memoria di altri processi, garantendo stabilità e sicurezza. Inoltre, sofisticati meccanismi di caching e buffering ottimizzano le prestazioni minimizzando gli accessi lenti al disco.
 
-    \item \textbf{Gestione File System}
-    \begin{itemize}
-        \item Astrazione dei filesystem (VFS)
-        \item Supporto multi-filesystem (ext4, XFS, Btrfs, NFS...)
-        \item Caching dei metadati
-        \item Gestione permessi e ownership
-    \end{itemize}
+Il sottosistema di \textbf{gestione del file system} fornisce un'astrazione unificata attraverso il VFS (Virtual File System), permettendo di utilizzare filesystem diversi in modo trasparente. Linux supporta una vasta gamma di filesystem, da ext4 e XFS per dischi locali, a Btrfs per funzionalità avanzate, fino a NFS per filesystem di rete. Il caching intelligente dei metadati accelera le operazioni sui file, mentre la gestione di permessi e ownership garantisce la sicurezza dei dati.
 
-    \item \textbf{Gestione Dispositivi}
-    \begin{itemize}
-        \item Driver per hardware
-        \item Interfaccia unificata via /dev/
-        \item Gestione interrupt
-        \item Direct Memory Access (DMA)
-    \end{itemize}
+La \textbf{gestione dei dispositivi} fornisce un'interfaccia unificata per l'hardware del sistema. I driver traducono le richieste generiche in operazioni specifiche per ogni dispositivo hardware. L'interfaccia unificata via /dev/ permette di interagire con l'hardware come se fossero file normali. Il kernel gestisce gli interrupt hardware, rispondendo tempestivamente agli eventi dei dispositivi, e coordina il Direct Memory Access (DMA) che permette ai dispositivi di trasferire dati direttamente in memoria senza coinvolgere la CPU.
 
-    \item \textbf{Networking}
-    \begin{itemize}
-        \item Stack TCP/IP completo
-        \item Routing e firewall (netfilter/iptables)
-        \item Socket API
-        \item Supporto protocolli multipli
-    \end{itemize}
-\end{enumerate}
+Infine, il sottosistema di \textbf{networking} implementa uno stack TCP/IP completo, supportando la comunicazione di rete a tutti i livelli. Il routing e le funzionalità di firewall attraverso netfilter e iptables permettono di controllare il flusso dei pacchetti di rete. La Socket API fornisce un'interfaccia di programmazione elegante per le applicazioni di rete, mentre il supporto per protocolli multipli garantisce interoperabilità con sistemi eterogenei.
 
 \subsection{Kernel Space vs User Space}
 
@@ -165,35 +126,16 @@ dmesg | head -20
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Kernel vs User Space]
-\textbf{Kernel Space}:
-\begin{itemize}
-    \item Esecuzione privilegiata (ring 0)
-    \item Accesso diretto all'hardware
-    \item Memoria protetta
-    \item Bug possono causare kernel panic
-\end{itemize}
+Il sistema Linux implementa una separazione fondamentale tra due spazi di esecuzione distinti per garantire stabilità e sicurezza.
 
-\textbf{User Space}:
-\begin{itemize}
-    \item Esecuzione non privilegiata (ring 3)
-    \item Accesso hardware via system call
-    \item Isolamento tra processi
-    \item Crash di un processo non affetta il sistema
-\end{itemize}
+Il \textbf{Kernel Space} opera con esecuzione privilegiata (ring 0 nell'architettura x86), godendo di accesso diretto e illimitato a tutto l'hardware del sistema. La memoria del kernel è protetta e inaccessibile dai processi utente, garantendo l'integrità delle strutture dati critiche. Tuttavia, questa potenza comporta una grande responsabilità: qualsiasi bug nel codice kernel può causare un kernel panic, bloccando l'intero sistema e richiedendo un riavvio.
+
+Il \textbf{User Space}, al contrario, ospita tutte le applicazioni utente con esecuzione non privilegiata (ring 3). I processi in user space non possono accedere direttamente all'hardware, ma devono richiedere servizi al kernel attraverso system call ben definite. Ogni processo è isolato dagli altri, garantendo che non possano interferire reciprocamente. Questa architettura assicura che il crash di un singolo processo non comprometta la stabilità del kernel o degli altri processi in esecuzione, mantenendo il sistema robusto e affidabile.
 \end{tcolorbox}
 
 \section{Distribuzioni Linux}
 
-Una \textbf{distribuzione} (o "distro") è un sistema operativo completo basato sul kernel Linux, che include:
-
-\begin{itemize}
-    \item Kernel Linux
-    \item Software GNU e altre utility
-    \item Package manager
-    \item Desktop environment (opzionale)
-    \item Applicazioni preinstallate
-    \item Installer e configurazione
-\end{itemize}
+Una \textbf{distribuzione} (o "distro") è un sistema operativo completo basato sul kernel Linux, che assembla componenti diversi in un ecosistema integrato e funzionale. Al centro troviamo il kernel Linux stesso, che fornisce le funzionalità di base del sistema operativo. Intorno a questo nucleo si integra il software GNU e altre utility essenziali per le operazioni quotidiane: shell, compilatori, editor di testo e strumenti di sistema. Ogni distribuzione include un package manager specifico che semplifica l'installazione, l'aggiornamento e la rimozione del software. Per le distribuzioni desktop, un desktop environment opzionale fornisce l'interfaccia grafica utente, spaziando da soluzioni complete come GNOME a alternative leggere come LXDE. La distribuzione include anche una selezione curata di applicazioni preinstallate scelte per il target specifico di utenti, e fornisce un installer intuitivo con strumenti di configurazione che facilitano l'installazione e la gestione del sistema.
 
 \subsection{Famiglie di Distribuzioni}
 
@@ -304,15 +246,7 @@ yay -S nome-pacchetto-aur          # Installa da AUR
 
 La \textbf{shell} è l'interfaccia a riga di comando che permette di interagire con il sistema operativo.
 
-\subsection{Tipi di Shell}
-
-\begin{itemize}
-    \item \textbf{sh} (Bourne Shell): shell originale Unix
-    \item \textbf{bash} (Bourne Again Shell): shell standard su Linux
-    \item \textbf{zsh} (Z Shell): estensioni avanzate, popolare su macOS
-    \item \textbf{fish} (Friendly Interactive Shell): syntax highlighting, autosuggestions
-    \item \textbf{dash} (Debian Almquist Shell): leggera, usata per script di sistema
-\end{itemize}
+Nel corso degli anni sono state sviluppate numerose shell, ognuna con caratteristiche proprie. La \textbf{sh} (Bourne Shell) è stata la shell originale di Unix, creata da Stephen Bourne. La \textbf{bash} (Bourne Again Shell) è diventata lo standard de facto su Linux, offrendo estensioni rispetto alla shell originale mantenendo la compatibilità all'indietro. La \textbf{zsh} (Z Shell) aggiunge estensioni avanzate e features interattive, ed è diventata particolarmente popolare su macOS. Per coloro che cercano un'esperienza ancora più moderna e intuitiva, \textbf{fish} (Friendly Interactive Shell) offre syntax highlighting automatico e suggerimenti intelligenti. Infine, \textbf{dash} (Debian Almquist Shell) è una shell leggera e veloce, spesso usata per l'esecuzione di script di sistema dove la leggerezza è prioritaria rispetto alle feature avanzate.
 
 \subsection{Bash: La Shell Standard}
 
@@ -683,19 +617,9 @@ sayHello
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo esplorato:
+In questo capitolo abbiamo intrapreso un viaggio affascinante attraverso la storia e l'architettura di Linux. Abbiamo visto come Unix sia nato dai laboratori di AT\&T e come Linus Torvalds, armato di passione e creatività, lo abbia trasformato in un sistema operativo libero e aperto. Abbiamo esplorato l'architettura affascinante del sistema Linux, organizzato in livelli gerarchici dal kernel fino alle applicazioni utente, e approfondito il ruolo cruciale che il kernel svolge nel gestire processori, memoria, file system, dispositivi e networking. Le distribuzioni Linux rappresentano diverse filosofie e target di utenti, da quelle orientate alla stabilità come Debian, a quelle all'avanguardia come Fedora, fino a quelle per specialisti come Kali Linux. Abbiamo imparato a conoscere Bash, la shell più diffusa, con i suoi strumenti di navigazione nella history dei comandi, il job control, e le variabili d'ambiente che permettono di personalizzare e estendere il nostro ambiente di lavoro. Infine, abbiamo scoperto come configurare e personalizzare i nostri file di configurazione per adattare il sistema alle nostre esigenze.
 
-\begin{itemize}
-    \item La storia di Unix e Linux: dalle origini ai giorni nostri
-    \item L'architettura a livelli del sistema Linux
-    \item Il ruolo del kernel e le sue responsabilità
-    \item Le principali famiglie di distribuzioni e come scegliere
-    \item La shell Bash: prompt, history, job control
-    \item Variabili d'ambiente e PATH
-    \item File di configurazione e personalizzazione
-\end{itemize}
-
-Avete ora una solida comprensione teorica del sistema Linux. Nel prossimo capitolo inizieremo a sporcarci le mani con i comandi fondamentali per navigare e manipolare il filesystem.
+Possedete ora una solida comprensione teorica del sistema Linux, dalle sue radici storiche fino alle sue implementazioni moderne. Nel prossimo capitolo inizieremo a sporcarci le mani con i comandi fondamentali che vi permetteranno di navigare e manipolare il filesystem con facilità e precisione.
 
 \begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
 Nel Capitolo 2 impareremo i comandi base di Linux: come navigare nel filesystem, creare e manipolare file e directory, cercare file e ottenere aiuto dalla documentazione.

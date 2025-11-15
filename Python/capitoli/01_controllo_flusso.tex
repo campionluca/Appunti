@@ -104,14 +104,17 @@ Hai visto le strutture di controllo principali per governare il flusso del progr
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{Condizionali}: usare \verb|if/elif/else| con condizioni semplici; scomporre condizioni complesse in variabili intermedie per leggibilità.
-  \item \textbf{Short-circuit}: \verb|and| e \verb|or| interrompono la valutazione non appena l'esito è determinato; sfruttarlo con attenzione.
-  \item \textbf{Cicli}: \verb|for| su sequenze/iterabili, \verb|while| per condizioni generali; utilizzare \verb|break|/\verb|continue| con parsimonia.
-  \item \textbf{Clausola else su for/while}: eseguita se il ciclo termina senza \verb|break|; utile per rilevare mancate condizioni.
-  \item \textbf{Range}: ricordare che \verb|range(n)| esclude \verb|n|; preferire enumeration con \verb|enumerate| al mantenere contatori manuali.
-  \item \textbf{Operatore walrus (:=)}: può rendere più espressivi alcuni pattern di lettura/validazione, evitare abusi che riducono la chiarezza.
-\end{itemize}
+I \textbf{condizionali} sono la base del controllo del flusso. È fondamentale usare \verb|if/elif/else| con condizioni semplici e leggibili; quando una condizione diventa complessa, è consigliabile scomporla in variabili intermedie che documentino l'intenzione del codice.
+
+Un concetto importante riguarda lo \textbf{short-circuit} degli operatori logici. Gli operatori \verb|and| e \verb|or| interrompono la valutazione non appena l'esito è determinato, il che ha implicazioni sia per le prestazioni sia per la semantica del codice. Questo meccanismo può essere sfruttato intenzionalmente, ma deve essere fatto con consapevolezza per evitare comportamenti inattesi.
+
+Quando si scrive codice iterativo, la scelta tra \textbf{cicli} \verb|for| e \verb|while| dipende dalla natura del problema: \verb|for| è preferito quando si itera su sequenze o iterabili definiti, mentre \verb|while| è più adatto per condizioni generali. Gli statement \verb|break| e \verb|continue| permettono di controllare il flusso, ma dovrebbero essere usati con parsimonia per evitare di rendere il codice difficile da seguire.
+
+Una caratteristica spesso trascurata è la \textbf{clausola else su for/while}, che viene eseguita se il ciclo termina senza incontrare un \verb|break|. Questo è particolarmente utile per rilevare quando una condizione di ricerca non è stata soddisfatta, eliminando la necessità di flag booleani.
+
+Lavorando con \verb|range|, è importante ricordare che \verb|range(n)| esclude \verb|n|, il che può causare errori off-by-one se non si fa attenzione. Inoltre, è preferibile usare l'enumerazione con \verb|enumerate| piuttosto che mantenere contatori manuali.
+
+L'\textbf{operatore walrus (:=)}, introdotto in Python 3.8, consente di assegnare e usare un valore nella stessa espressione. Può rendere più espressivi alcuni pattern di lettura e validazione, ma il suo abuso riduce la chiarezza del codice; deve essere usato con discernimento.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Per chi viene da C/Java/JS: tradurre i pattern]
@@ -157,10 +160,13 @@ else:
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Idiomi utili e anti-pattern]
-- \textbf{Guard clauses}: esci presto da funzioni per ridurre annidamento.  
-- \textbf{Validazioni}: definisci predicate chiari, evita condizioni composte difficili da leggere.  
-- \textbf{Accumulazione}: usa `sum`, `any`, `all` e `itertools` al posto di loop manuali quando opportuno.  
-- \textbf{Anti-pattern}: loop con indice+lookup quando bastano iterabili; annidamenti profondi senza fattorizzare funzioni ausiliarie.
+Le \textbf{guard clauses} sono un pattern elegante per ridurre l'annidamento dei condizionali. Invece di nidificare blocchi if/else profondamente, è possibile controllare le precondizioni in anticipo e tornare o sollevare eccezioni subito se non sono soddisfatte. Questo rende il codice più leggibile e facile da seguire.
+
+Quando si implementano \textbf{validazioni}, è importante definire predicati chiari e leggibili. Evitare condizioni composte troppo complicate; se necessario, estrarre la logica in funzioni ausiliarie con nomi espliciti che comunichino l'intento.
+
+Per le operazioni di \textbf{accumulazione}, Python offre funzioni built-in come `sum`, `any` e `all`, nonché il modulo `itertools` che forniscono soluzioni ottimizzate ed espressive. Usare queste al posto di loop manuali non solo è più idiomatico, ma spesso più efficiente.
+
+Infine, è importante essere consapevoli degli \textbf{anti-pattern}: usare loop con indice+lookup quando si potrebbe iterare direttamente su elementi, o permettere che l'annidamento dei condizionali diventi troppo profondo senza fattorizzare funzioni ausiliarie, rende il codice difficile da mantenere. Queste pratiche dovrebbero essere evitate attivamente durante lo sviluppo.
 \end{tcolorbox}
 
 \paragraph{Pattern raccomandati} Sostituire annidamenti profondi con return anticipati o funzioni ausiliarie. Separare la costruzione dei dati dalla loro validazione, riducendo la complessità cognitiva.

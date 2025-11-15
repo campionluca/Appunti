@@ -7,23 +7,11 @@ Il \textbf{Responsive Web Design} (RWD) è un approccio al web design che garant
 
 \subsection{Principi Fondamentali}
 
-Il responsive design si basa su tre pilastri:
-
-\begin{enumerate}
-  \item \textbf{Griglia fluida}: Layout basato su percentuali invece di pixel fissi
-  \item \textbf{Immagini flessibili}: Immagini che si adattano al contenitore (\texttt{max-width: 100\%})
-  \item \textbf{Media queries}: Regole CSS che si applicano solo a determinate dimensioni schermo
-\end{enumerate}
+Il responsive design si basa su tre pilastri fondamentali che lavorano insieme per creare esperienze ottimali su tutti i dispositivi. Il primo pilastro è la griglia fluida, che utilizza layout basati su percentuali invece di pixel fissi, permettendo agli elementi di adattarsi proporzionalmente alle dimensioni dello schermo. Il secondo pilastro comprende le immagini flessibili, che si adattano automaticamente al loro contenitore utilizzando proprietà come \texttt{max-width: 100\%}, evitando che le immagini eccedano i limiti del loro container. Il terzo e ultimo pilastro sono le media queries, regole CSS condizionali che si applicano solo a determinate dimensioni dello schermo, permettendo di modificare il layout e gli stili in base al dispositivo utilizzato.
 
 \subsection{Perché è Importante}
 
-\begin{itemize}
-  \item \textbf{Traffico mobile}: Oltre il 60\% del traffico web proviene da dispositivi mobili
-  \item \textbf{SEO}: Google penalizza siti non mobile-friendly
-  \item \textbf{User Experience}: Utenti abbandonano siti non ottimizzati per mobile
-  \item \textbf{Costi}: Una soluzione invece di due siti separati (desktop + mobile)
-  \item \textbf{Manutenzione}: Un solo codebase da aggiornare
-\end{itemize}
+Il responsive design non è più una semplice opzione, ma una necessità imprescindibile nel web moderno. Dal punto di vista del traffico, oltre il 60\% del traffico web proviene da dispositivi mobili, il che significa che ignorare i mobile user significa perdere la maggior parte dei tuoi visitatori. Per quanto riguarda la SEO, è importante sapere che Google penalizza attivamente i siti che non sono mobile-friendly, influenzando negativamente il tuo ranking nei risultati di ricerca. L'esperienza utente è fondamentale: molti utenti abbandonano immediatamente siti non ottimizzati per mobile, causando perdite significative di conversioni. Dal punto di vista economico, il responsive design offre un grande vantaggio: puoi mantenere una sola soluzione web che funziona su tutti i dispositivi, invece di sviluppare e gestire due siti separati (uno per desktop e uno per mobile). Infine, la manutenzione è semplificata poiché hai un solo codebase da aggiornare e mantenere, riducendo i costi e i tempi di sviluppo.
 
 \section{Meta Tag Viewport}
 
@@ -71,15 +59,7 @@ Il meta tag viewport è \textbf{obbligatorio} per il responsive design. Controll
 
 \subsection{Mobile-First Approach}
 
-Design che parte da mobile (320px) e scala verso desktop. \textbf{Questo è l'approccio consigliato}.
-
-\textbf{Vantaggi}:
-\begin{itemize}
-  \item Priorità ai contenuti essenziali
-  \item Performance migliori su mobile (meno CSS da sovrascrivere)
-  \item Progressive enhancement: aggiungi funzionalità per schermi grandi
-  \item SEO-friendly (Google usa mobile-first indexing)
-\end{itemize}
+Design che parte da mobile (320px) e scala verso desktop. \textbf{Questo è l'approccio consigliato}. L'approccio mobile-first offre numerosi vantaggi rispetto all'alternativa tradizionale. Innanzitutto, ti costringe a dare priorità ai contenuti essenziali, riducendo il clutter e migliorando la chiarezza complessiva del sito. Dal punto di vista delle performance, i siti mobile-first hanno performance migliori su dispositivi mobili perché c'è meno CSS da sovrascrivere con media queries successive. L'approccio si basa sul concetto di progressive enhancement: parti da un'esperienza minimalista su mobile e aggiungi gradualmente funzionalità e complessità via via che gli schermi diventano più grandi. Infine, questo approccio è SEO-friendly poiché Google utilizza mobile-first indexing, il che significa che il motore di ricerca indicizza principalmente la versione mobile del tuo sito, premiando i designer che seguono questo approccio.
 
 \begin{lstlisting}[language=CSS]
 /* Mobile first: base per tutti i dispositivi */
@@ -432,13 +412,7 @@ HTML5 permette di specificare immagini diverse per risoluzioni diverse:
 \end{lstlisting}
 
 \textbf{Spiegazione}:
-\begin{itemize}
-  \item \texttt{srcset}: Lista di immagini con larghezze (400w, 800w, 1200w)
-  \item \texttt{sizes}: Istruzioni su quando usare quale immagine
-  \item \texttt{(max-width: 768px) 100vw}: Su mobile, immagine = 100\% viewport width
-  \item \texttt{50vw}: Su desktop, immagine = 50\% viewport width
-  \item Browser sceglie automaticamente l'immagine ottimale
-\end{itemize}
+L'attributo \texttt{srcset} fornisce al browser una lista di immagini con le rispettive larghezze indicate in pixel width (400w, 800w, 1200w), offrendo diverse versioni della stessa immagine ottimizzate per risoluzioni differenti. L'attributo \texttt{sizes} contiene le istruzioni che guidano il browser nella scelta di quale immagine utilizzare in base alle condizioni dello schermo. La direttiva \texttt{(max-width: 768px) 100vw} specifica che su dispositivi mobile l'immagine dovrebbe occupare il 100\% della larghezza del viewport, mentre il valore \texttt{50vw} indica che su desktop l'immagine dovrebbe occupare il 50\% della larghezza del viewport. Con queste informazioni, il browser può scegliere automaticamente l'immagine più appropriata in base alla densità di pixel dello schermo e alle dimensioni del viewport, ottimizzando le performance.
 
 \subsection{Picture Element}
 
@@ -568,11 +542,7 @@ h2 { font-size: 1.5rem; } /* 24px */
 
 \subsection{Dimensioni Minime Touch Target}
 
-Le linee guida WCAG raccomandano:
-\begin{itemize}
-  \item \textbf{Minimo}: 44×44 pixel (Apple), 48×48 pixel (Google)
-  \item \textbf{Consigliato}: 48×48 pixel con 8px di spazio tra elementi
-\end{itemize}
+Le linee guida WCAG forniscono raccomandazioni precise per garantire l'accessibilità degli elementi interattivi sui dispositivi touch. La dimensione minima consigliata varia leggermente tra le piattaforme: Apple raccomanda 44×44 pixel mentre Google suggerisce 48×48 pixel. Tuttavia, la best practice consigliata è di utilizzare una dimensione di 48×48 pixel per tutti gli elementi touch, accompagnata da uno spazio di almeno 8px tra elementi adiacenti per evitare tocchi accidentali e migliorare l'usabilità complessiva.
 
 \begin{lstlisting}[language=CSS]
 /* ❌ Troppo piccolo per touch */

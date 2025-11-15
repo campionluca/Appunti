@@ -22,13 +22,7 @@ Al termine di questo capitolo sarai in grado di:
 
 \subsection{Perché Usare i Puntatori?}
 
-\begin{itemize}
-    \item Manipolazione diretta della memoria
-    \item Passaggio efficiente di dati alle funzioni
-    \item Allocazione dinamica della memoria
-    \item Implementazione di strutture dati complesse
-    \item Accesso efficiente agli array
-\end{itemize}
+I puntatori offrono numerosi vantaggi che li rendono una caratteristica essenziale del linguaggio C. Innanzitutto, consentono la \textbf{manipolazione diretta della memoria}, permettendo ai programmatori di accedere e modificare i dati a livello di indirizzo di memoria, il che è importante per compiti a basso livello come la programmazione di driver o sistemi embedded. In secondo luogo, permettono il \textbf{passaggio efficiente di dati alle funzioni}: invece di copiare grandi strutture dati, è possibile passare un puntatore, risparmiando tempo e memoria. Inoltre, i puntatori abilitano l'\textbf{allocazione dinamica della memoria}, permettendo al programma di richiedere memoria durante l'esecuzione anziché all'avvio, il che è essenziale per lavorare con quantità di dati sconosciute in anticipo. I puntatori sono anche fondamentali per l'\textbf{implementazione di strutture dati complesse} come liste collegate, alberi e grafi, che richiedono il collegamento dinamico tra elementi. Infine, facilitano l'\textbf{accesso efficiente agli array}, poiché il nome di un array è in realtà un puntatore al primo elemento.
 
 \begin{attenzione}
 I puntatori sono potenti ma possono causare errori gravi se usati incorrettamente. È fondamentale comprenderli bene prima di usarli.
@@ -93,13 +87,7 @@ Ogni programma C utilizza diverse aree di memoria, ognuna con uno scopo specific
 \end{tikzpicture}
 \end{center}
 
-\begin{description}
-    \item[Text Segment:] Contiene il codice eseguibile del programma (istruzioni macchina). Area read-only.
-    \item[Data Segment:] Contiene variabili globali e statiche inizializzate esplicitamente nel codice.
-    \item[BSS Segment:] Contiene variabili globali e statiche non inizializzate (inizializzate a zero automaticamente).
-    \item[Heap:] Area di memoria per allocazione dinamica (malloc, calloc). Cresce verso indirizzi più alti.
-    \item[Stack:] Contiene variabili locali, parametri delle funzioni e indirizzi di ritorno. Cresce verso indirizzi più bassi.
-\end{description}
+Il \textbf{Text Segment} è la sezione che contiene il codice eseguibile del programma, cioè le istruzioni macchina compilate dal codice sorgente C. Questa area è in sola lettura (read-only) per garantire che il codice non venga accidentalmente modificato durante l'esecuzione. Il \textbf{Data Segment} memorizza le variabili globali e statiche che sono inizializzate esplicitamente nel codice sorgente, come ad esempio una variabile globale dichiarata come \texttt{int x = 5}. Il \textbf{BSS Segment} contiene le variabili globali e statiche che non sono esplicitamente inizializzate nel codice; il sistema operativo inizializza automaticamente queste variabili a zero. L'\textbf{Heap} è l'area di memoria riservata per l'allocazione dinamica, dove le funzioni \texttt{malloc}, \texttt{calloc} e \texttt{realloc} allocano memoria durante l'esecuzione del programma; l'heap cresce verso indirizzi di memoria più alti. Lo \textbf{Stack} è la zona di memoria che contiene le variabili locali delle funzioni, i parametri passati alle funzioni, e gli indirizzi di ritorno delle chiamate di funzione; lo stack cresce verso indirizzi di memoria più bassi, il che significa che quando una funzione viene chiamata, lo stack cresce, e quando ritorna, si contrae.
 
 \begin{nota}
 I puntatori possono referenziare memoria in qualsiasi segmento, ma è importante comprendere il ciclo di vita della memoria:
@@ -135,10 +123,7 @@ Indirizzo di x: 0x7ffeeb3c4a4c
 
 \subsection{Operatori dei Puntatori}
 
-\begin{itemize}
-    \item \texttt{\&} (operatore di indirizzo del linguaggio C): restituisce l'indirizzo di memoria di una variabile
-    \item \texttt{*} (operatore di dereferenziazione del linguaggio C): accede al valore contenuto all'indirizzo puntato da un puntatore
-\end{itemize}
+Il linguaggio C fornisce due operatori fondamentali per lavorare con i puntatori. L'operatore \texttt{\&} è l'\textbf{operatore di indirizzo}: applicato a una variabile, restituisce l'indirizzo di memoria dove quella variabile è memorizzata. Ad esempio, se \texttt{x} è una variabile intera, \texttt{\&x} restituisce l'indirizzo di memoria di \texttt{x}. L'operatore \texttt{*} è l'\textbf{operatore di dereferenziazione}: applicato a un puntatore, accede al valore contenuto all'indirizzo di memoria puntato dal puntatore. Se \texttt{ptr} è un puntatore che punta a \texttt{x}, allora \texttt{*ptr} restituisce il valore di \texttt{x}. Questi due operatori sono inversi l'uno dell'altro: \texttt{*(\&x)} è equivalente a \texttt{x}.
 
 \section{Dichiarazione e Inizializzazione}
 

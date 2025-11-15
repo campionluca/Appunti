@@ -8,14 +8,9 @@ Una gestione degli errori chiara e consistente è fondamentale per l'esperienza 
 \subsection{Caratteristiche di un Buon Error Response}
 
 \begin{tcolorbox}[title=Requisiti Error Response]
-\begin{itemize}
-\item \textbf{Status HTTP corretto}: Usa il codice di stato appropriato
-\item \textbf{Messaggio chiaro}: Spiega cosa è andato storto
-\item \textbf{Codice errore}: Identificatore machine-readable
-\item \textbf{Dettagli}: Informazioni aggiuntive per il debugging
-\item \textbf{Azioni suggerite}: Come risolvere il problema
-\item \textbf{Consistenza}: Stessa struttura per tutti gli errori
-\end{itemize}
+Un error response efficace deve soddisfare diversi requisiti fondamentali. Innanzitutto, deve utilizzare lo \textbf{status HTTP corretto}, sfruttando la semantica standardizzata dei codici di stato per comunicare immediatamente la natura del problema. Il \textbf{messaggio chiaro} deve spiegare in termini comprensibili cosa è andato storto, evitando gergo tecnico eccessivo quando possibile. Essenziale è includere un \textbf{codice errore} machine-readable che permetta ai client di implementare logica di gestione programmatica degli errori specifici.
+
+I \textbf{dettagli} aggiuntivi devono fornire informazioni utili per il debugging, come campi che hanno fallito la validazione o parametri non validi, senza però esporre informazioni sensibili o dettagli interni del sistema. Particolarmente apprezzate dagli sviluppatori sono le \textbf{azioni suggerite} che indicano come risolvere il problema o quali passi intraprendere successivamente. Infine, la \textbf{consistenza} nella struttura degli errori è cruciale: tutti gli errori devono seguire lo stesso formato, rendendo prevedibile e semplice la loro gestione nel codice client.
 \end{tcolorbox}
 
 \subsection{Cosa NON Fare}

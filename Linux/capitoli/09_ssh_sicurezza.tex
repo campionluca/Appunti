@@ -11,15 +11,12 @@ In questo capitolo approfondiremo la generazione e gestione delle chiavi SSH, co
 \end{tcolorbox}
 
 \section{Obiettivi di Apprendimento}
-\begin{itemize}
-    \item Generare e gestire coppie di chiavi SSH (RSA, Ed25519).
-    \item Configurare autenticazione senza password.
-    \item Utilizzare SSH config per gestire connessioni multiple.
-    \item Implementare port forwarding e tunneling SSH.
-    \item Configurare e hardening SSH server.
-    \item Proteggere sistema con firewall e fail2ban.
-    \item Implementare best practice di sicurezza.
-\end{itemize}
+
+In questo capitolo approfondiremo l'arte e la scienza della sicurezza attraverso SSH. Impareremo a generare e gestire coppie di chiavi SSH, sia utilizzando il tradizionale RSA che l'algoritmo moderno Ed25519, creando le fondamenta di una comunicazione crittograficamente sicura. Scopriremo come configurare l'autenticazione senza password, eliminando la necessità di ricordare password complesse per ogni connessione.
+
+La gestione di connessioni multiple a diversi server diventa elegante quando impariamo a utilizzare SSH config, un file di configurazione che centralizza le impostazioni delle nostre connessioni. Analizzeremo le tecniche avanzate di port forwarding e tunneling SSH, che permettono non solo di accedere a servizi remoti, ma anche di tunnelizzare connessioni attraverso host intermedi per sicurezza e praticità. Andremo oltre il client SSH per imparare come configurare e rafforzare il server SSH stesso, implementando hardening techniques che aumentano la resistenza agli attacchi.
+
+Infine, amplieremo il nostro arsenale di sicurezza imparando a proteggere il sistema con firewall e fail2ban, strumenti che aggiungono strati di protezione attorno ai nostri server. Tutto questo si conclude con l'implementazione di best practice di sicurezza che trasformeranno i vostri sistemi in fortezze digitali resistenti e affidabili.
 
 \section{SSH Keys: Autenticazione a Chiave Pubblica}
 
@@ -951,17 +948,11 @@ fi
 \end{lstlisting}
 
 \section{Riepilogo}
-Hai imparato:
-\begin{itemize}
-\item Generare e gestire chiavi SSH (RSA, Ed25519)
-\item Configurare autenticazione senza password
-\item Usare SSH config per gestione server multipli
-\item Implementare port forwarding (local, remote, dynamic)
-\item Configurare e hardening SSH server
-\item Proteggere sistema con firewall (UFW, iptables)
-\item Implementare fail2ban contro brute force
-\item Best practice sicurezza e auditing
-\end{itemize}
+Questo capitolo ci ha fornito gli strumenti per trasformare i nostri sistemi in fortezze digitali sicure e resilienti. Abbiamo padroneggiato la generazione e gestione di chiavi SSH, utilizzando sia il tradizionale RSA che il moderno Ed25519, creando le fondamenta di un'autenticazione crittograficamente robusta. La configurazione dell'autenticazione senza password non solo ha migliorato la sicurezza eliminando le vulnerabilità delle password, ma ha anche reso il nostro workflow più fluido e efficiente.
+
+La gestione di server multipli è diventata elegante grazie alla padronanza del file SSH config, che centralizza e semplifica tutte le nostre connessioni. Abbiamo acquisito competenze avanzate nell'implementazione di port forwarding in tutte le sue forme - local, remote e dynamic - permettendoci di accedere a servizi remoti in modo sicuro e di creare tunnel sofisticati attraverso firewall e NAT. La configurazione e l'hardening del server SSH stesso ci ha trasformato da semplici utenti a veri amministratori della sicurezza, capaci di implementare politiche rigorose che resistono agli attacchi.
+
+La protezione del sistema attraverso firewall come UFW e iptables aggiunge strati di difesa, mentre fail2ban fornisce protezione automatica contro attacchi brute force. Infine, l'adozione di best practice di sicurezza e auditing ci permette di mantenere una postura di sicurezza proattiva, identificando e mitigando vulnerabilità prima che possano essere sfruttate.
 
 \section{Riferimenti}
 \begin{itemize}

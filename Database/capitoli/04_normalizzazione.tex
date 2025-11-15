@@ -65,12 +65,7 @@ Se cancello l'ultimo prodotto fornito da un fornitore, perdo anche i dati del fo
 La forma normale più basilare: \textbf{una relazione è in 1NF se tutti gli attributi contengono solo valori atomici} (non divisibili).
 
 \subsection{Requisiti}
-\begin{itemize}
-    \item Nessun attributo può contenere liste o insiemi di valori
-    \item Nessun attributo ripetuto
-    \item Ogni riga deve avere lo stesso numero di colonne
-    \item Nessun gruppo ripetuto
-\end{itemize}
+Per soddisfare la prima forma normale, una relazione deve rispettare requisiti fondamentali che garantiscono l'atomicità dei dati. Nessun attributo può contenere liste o insiemi di valori, ma solo valori singoli e divisibili. Non devono esserci attributi ripetuti nella struttura della tabella, evitando ridondanza strutturale. Ogni riga deve avere lo stesso numero di colonne, mantenendo l'omogeneità della struttura relazionale. Inoltre, non devono esistere gruppi ripetuti che potrebbero violare la forma tabulare standard.
 
 \subsection{Esempio di violazione 1NF}
 
@@ -131,13 +126,7 @@ CREATE TABLE iscrizione (
 
 \section{Seconda Forma Normale (2NF)}
 
-Una relazione è in 2NF se:
-\begin{enumerate}
-    \item È in 1NF
-    \item \textbf{Ogni attributo non-chiave è dipendente dalla chiave primaria completa}, non solo da parte di essa.
-\end{enumerate}
-
-\textbf{Problema}: Dipendenza parziale. Un attributo non-chiave dipende solo da una parte della chiave primaria.
+Una relazione è in 2NF quando soddisfa due condizioni essenziali. La prima è che la relazione deve già trovarsi in 1NF, garantendo l'atomicità dei valori. La seconda e decisiva è che \textbf{ogni attributo non-chiave deve essere dipendente dalla chiave primaria completa}, non solo da una parte di essa. Questo requisito elimina un problema specifico noto come \textbf{dipendenza parziale}, in cui un attributo non-chiave dipende soltanto da una porzione della chiave primaria. Tale situazione crea ridondanze e anomalie nei dati che la 2NF è progettata a eliminare.
 
 \subsection{Esempio di violazione 2NF}
 
@@ -175,13 +164,7 @@ CREATE TABLE iscrizione (
 
 \section{Terza Forma Normale (3NF)}
 
-Una relazione è in 3NF se:
-\begin{enumerate}
-    \item È in 2NF
-    \item \textbf{Nessun attributo non-chiave dipende da un altro attributo non-chiave}.
-\end{enumerate}
-
-\textbf{Problema}: Dipendenza transitiva. Un attributo non-chiave dipende funzionalmente da un altro attributo non-chiave.
+Una relazione è in 3NF quando si realizzano due fondamentali requisiti. Innanzitutto, deve essere già in 2NF, assicurando la corretta strutturazione della chiave primaria composta. In secondo luogo, e questo è il criterio distintivo della 3NF, \textbf{nessun attributo non-chiave deve dipendere da un altro attributo non-chiave}. Questo requisito affronta il problema della \textbf{dipendenza transitiva}, una situazione complessa dove un attributo non-chiave dipende funzionalmente da un altro attributo non-chiave anziché direttamente dalla chiave primaria. Eliminando queste dipendenze transitive si consegue un modello notevolmente più efficiente e privo di anomalie.
 
 \subsection{Esempio di violazione 3NF}
 
@@ -216,12 +199,7 @@ CREATE TABLE ordine (
 
 \section{Forma Normale di Boyce-Codd (BCNF)}
 
-Una relazione è in BCNF se:
-\begin{itemize}
-    \item Per ogni dipendenza funzionale X -> Y, X è una chiave candidata.
-\end{itemize}
-
-BCNF è una forma più stringente di 3NF. La maggior parte dei database in 3NF è già in BCNF.
+Una relazione è in BCNF quando soddisfa un criterio rigoroso: \textbf{per ogni dipendenza funzionale X -> Y, X deve essere una chiave candidata}. Questo requisito garantisce che soltanto le chiavi determinino altri attributi, eliminando completamente le anomalie. BCNF rappresenta una forma più stringente e rigorosa rispetto a 3NF, applicando restrizioni aggiuntive per conseguire un livello di normalizzazione ancora superiore. Tuttavia, nella pratica, la grande maggioranza dei database relazionali che si conformano a 3NF soddisfa già automaticamente i requisiti della BCNF, rendendo questa forma normals ulteriori raramente necessaria.
 
 \subsection{Esempio di violazione BCNF}
 
@@ -240,26 +218,13 @@ Allora idCorso determina orario, ma idCorso non è una chiave candidata. Violazi
 \section{Procedura di Normalizzazione}
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Passi di normalizzazione]
-\begin{enumerate}
-    \item \textbf{Identifica dipendenze funzionali}: Quali attributi determinano quali altri.
-    \item \textbf{Applica 1NF}: Assicura valori atomici.
-    \item \textbf{Applica 2NF}: Elimina dipendenze parziali.
-    \item \textbf{Applica 3NF}: Elimina dipendenze transitive.
-    \item \textbf{Applica BCNF}: Se necessario, per relazioni più complesse.
-\end{enumerate}
+Il processo di normalizzazione segue una sequenza metodica e progressiva. Si inizia identificando tutte le \textbf{dipendenze funzionali}, determinando quali attributi controllano funzionalmente quali altri attributi. Successivamente, si \textbf{applica 1NF} assicurando che tutti i valori siano atomici e non divisibili. Il passo seguente consiste nell'\textbf{applicare 2NF}, eliminando sistematicamente le dipendenze parziali dalla chiave primaria. Si procede quindi con l'\textbf{applicazione di 3NF}, rimuovendo le dipendenze transitive tra attributi non-chiave. Infine, se la struttura della relazione è particolarmente complessa, si \textbf{applica BCNF} per conseguire il massimo livello di normalizzazione possibile.
 \end{tcolorbox}
 
 \section*{Riepilogo concetti chiave}
 
 \begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
-\begin{itemize}
-    \item Una \textbf{dipendenza funzionale} X -> Y significa che X determina Y
-    \item La \textbf{1NF} richiede valori atomici (no liste)
-    \item La \textbf{2NF} elimina dipendenze parziali dalla chiave primaria
-    \item La \textbf{3NF} elimina dipendenze transitive tra attributi non-chiave
-    \item La \textbf{BCNF} è una versione più stringente di 3NF
-    \item La normalizzazione riduce ridondanze e anomalie
-\end{itemize}
+Una \textbf{dipendenza funzionale} X -> Y rappresenta una relazione fondamentale dove X determina funzionalmente Y. La \textbf{1NF} stabilisce il requisito base richiedendo che tutti i valori siano atomici, eliminando liste e strutture non divisibili. La \textbf{2NF} avanza da questo fondamento eliminando le dipendenze parziali che collegano attributi non-chiave a parti della chiave primaria. La \textbf{3NF} approfondisce ulteriormente il processo eliminando le dipendenze transitive tra attributi non-chiave, assicurando che ogni attributo dipenda direttamente dalla chiave primaria. La \textbf{BCNF} rappresenta una versione ancora più stringente di 3NF, applicabile a situazioni particolarmente complesse. Nel complesso, il processo di normalizzazione riduce significativamente le ridondanze e le anomalie dei dati, producendo schemi più efficienti e manutenibili.
 \end{tcolorbox}
 
 \section*{Esercizi}

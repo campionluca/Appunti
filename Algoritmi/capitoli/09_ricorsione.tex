@@ -913,23 +913,11 @@ def safe_deep_recursion(n):
 
 \subsection{Quando Evitare la Ricorsione}
 
-Usa iterazione se:
-\begin{itemize}
-    \item La profondità è molto grande ($> 1000$)
-    \item La ricorsione è tail-recursive (converti in loop)
-    \item Non serve la struttura ricorsiva per chiarezza
-    \item Le prestazioni sono critiche
-\end{itemize}
+Esistono situazioni in cui l'approccio iterativo è preferibile a quello ricorsivo. Quando la profondità della ricorsione può diventare molto grande (superiore a 1000 livelli), il rischio di stack overflow rende l'iterazione una scelta più sicura. Nel caso di ricorsione tail-recursive, dove l'ultima operazione della funzione è la chiamata ricorsiva stessa, è opportuno convertire la soluzione in un loop iterativo, ottenendo gli stessi risultati con maggiore efficienza. L'iterazione dovrebbe essere preferita anche quando la struttura ricorsiva non aggiunge chiarezza alla soluzione: in questi casi, il costo computazionale della ricorsione non è giustificato da un miglioramento della leggibilità del codice. Infine, quando le prestazioni sono un fattore critico, l'overhead delle chiamate ricorsive (creazione di stack frame, salvataggio di contesto) può rendere l'approccio iterativo significativamente più veloce.
 
 \subsection{Quando Preferire la Ricorsione}
 
-Usa ricorsione se:
-\begin{itemize}
-    \item Il problema è naturalmente ricorsivo (alberi, grafi)
-    \item La soluzione iterativa è molto complessa
-    \item Serve backtracking
-    \item La chiarezza del codice è prioritaria
-\end{itemize}
+La ricorsione è la scelta naturale in diverse situazioni specifiche. Quando il problema ha una struttura intrinsecamente ricorsiva, come accade con alberi e grafi, la soluzione ricorsiva riflette direttamente la natura del problema, risultando elegante e intuitiva. Anche quando la soluzione iterativa equivalente sarebbe eccessivamente complessa, con gestione manuale di stack e stato, la ricorsione offre un'alternativa molto più comprensibile. Il backtracking è un altro contesto in cui la ricorsione eccelle: la capacità di esplorare diverse possibilità e tornare indietro automaticamente grazie allo stack delle chiamate rende la ricorsione quasi indispensabile per questo tipo di algoritmi. Infine, quando la chiarezza e la manutenibilità del codice sono prioritarie rispetto alle prestazioni pure, la ricorsione permette di esprimere la soluzione in modo più diretto e comprensibile, facilitando la comprensione della logica algoritmica.
 
 \section{Esercizi}
 

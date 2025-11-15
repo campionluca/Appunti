@@ -5,15 +5,9 @@
 
 Un \textbf{processo} è un'istanza di un programma in esecuzione. Linux è un sistema multitasking che esegue centinaia di processi simultaneamente.
 
-\subsection{Concetti Fondamentali}
+Ogni processo in Linux è caratterizzato da diversi attributi fondamentali che ne definiscono l'identità e il comportamento. Il \textbf{PID (Process ID)} è un identificatore numerico univoco assegnato dal sistema operativo a ogni processo: questo numero serve come riferimento principale per interagire con il processo. Strettamente correlato è il \textbf{PPID (Parent PID)}, che identifica il processo genitore da cui è stato generato il processo corrente, stabilendo così una gerarchia di processi. Un processo è sempre associato a un \textbf{UID/GID} (user ID e group ID), che rappresentano l'utente e il gruppo che lo hanno lanciato e che determinano i permessi con cui il processo può operare.
 
-\begin{itemize}
-    \item \textbf{PID (Process ID)}: identificatore numerico univoco
-    \item \textbf{PPID (Parent PID)}: PID del processo genitore
-    \item \textbf{UID/GID}: utente e gruppo che eseguono il processo
-    \item \textbf{Stato}: running, sleeping, stopped, zombie
-    \item \textbf{Priorità}: nice value (-20 a 19, minore = maggior priorità)
-\end{itemize}
+Lo \textbf{stato} di un processo definisce cosa sta attualmente facendo: un processo può essere in stato running se attivamente in esecuzione, sleeping se in attesa di un evento, stopped se sospeso, o zombie se ha terminato ma aspetta che il processo genitore legga il suo stato di uscita. Infine, la \textbf{priorità} di un processo, espressa come nice value, varia da -20 (priorità massima) a 19 (priorità minima), determinando quanto tempo CPU il kernel assegnerà al processo. Un nice value più basso significa maggiore priorità e più risorse CPU assegnate.
 
 \begin{lstlisting}[style=bash]
 # Visualizza PID della shell corrente
@@ -374,15 +368,7 @@ kill -9 1234       # SIGKILL solo se necessario
 kill -9 1234       # Può lasciare file corrotti, lock, etc.
 \end{lstlisting}
 
-SIGTERM permette al processo di:
-\begin{itemize}
-    \item Salvare dati
-    \item Chiudere file aperti
-    \item Rilasciare risorse
-    \item Terminare connessioni correttamente
-\end{itemize}
-
-SIGKILL termina immediatamente senza cleanup.
+SIGTERM permette al processo di terminare in modo pulito e ordinato: può salvare i dati ancora in memoria, chiudere correttamente tutti i file aperti evitando corruzione, rilasciare risorse come memoria e lock, e terminare le connessioni di rete in modo elegante notificando le controparti. Al contrario, SIGKILL termina il processo immediatamente senza dare alcuna possibilità di cleanup, potenzialmente lasciando file corrotti, lock bloccati e connessioni aperte.
 \end{tcolorbox}
 
 \subsection{killall e pkill}
@@ -930,21 +916,13 @@ ps aux | grep [p]rocess_name | awk '{sum+=$3} END {print sum "%"}'
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo imparato:
+In questo capitolo abbiamo approfondito la gestione dei processi, una competenza critica per chiunque lavori con Linux. Abbiamo iniziato con i fondamentali concetti di PID e PPID, e come i processi formano una gerarchia gerarchica nel sistema. Abbiamo imparato a riconoscere gli stati dei processi e come variano durante il loro ciclo di vita.
 
-\begin{itemize}
-    \item \textbf{Concetti}: PID, PPID, stati processi, gerarchia
-    \item \textbf{ps}: visualizzare processi con varie opzioni
-    \item \textbf{top/htop}: monitoring interattivo
-    \item \textbf{kill}: inviare segnali (SIGTERM, SIGKILL, etc.)
-    \item \textbf{killall/pkill}: terminare processi per nome
-    \item \textbf{jobs}: gestire job della shell
-    \item \textbf{fg/bg}: spostare processi tra foreground e background
-    \item \textbf{nohup/disown}: processi persistenti
-    \item \textbf{nice/renice}: gestire priorità
-\end{itemize}
+Abbiamo esplorato il comando ps, uno degli strumenti più versatili per visualizzare informazioni dettagliate sui processi in esecuzione, con innumerevoli opzioni per filtrare e formattare l'output. Per una visione più dinamica e interattiva, abbiamo scoperto top e htop, che forniscono un monitoraggio in tempo reale delle risorse di sistema e dei processi. Abbiamo poi imparato a controllare i processi usando kill, un comando potente per inviare segnali, dalla richiesta gentile SIGTERM alla terminazione forzata SIGKILL. Per operazioni sulle più esecuzioni di processi, killall e pkill offrono il vantaggio di operare su nomi di processi anziché su PID.
 
-La gestione efficace dei processi è essenziale per amministrare sistemi Linux e ottimizzare le performance.
+La gestione dei job della shell è diventata naturale grazie ai comandi jobs, fg e bg, che permettono di spostare processi tra foreground e background, sospenderli e riprenderli. Abbiamo scoperto come nohup e disown permettono di creare processi che persistono anche dopo la chiusura della sessione di shell. Infine, nice e renice ci hanno mostrato come controllare la priorità dei processi, permettendoci di influenzare come il kernel assegna il tempo CPU.
+
+La gestione efficace dei processi è assolutamente essenziale per amministrare sistemi Linux in modo robusto e per ottimizzare le performance del sistema operativo in diverse condizioni di carico.
 
 \begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
 Nel Capitolo 5 entreremo nel mondo del Bash Scripting: variabili, strutture di controllo, loop, funzioni e parametri per automatizzare task complessi.

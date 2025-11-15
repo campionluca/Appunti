@@ -99,13 +99,15 @@ Hai imparato a gestire e sollevare eccezioni correttamente.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-  \item \textbf{try/except/else/finally}: \verb|else| esegue se non ci sono eccezioni; \verb|finally| sempre per cleanup.
-  \item \textbf{Eccezioni personalizzate}: definire gerarchie chiare; documentare quando e perché vengono sollevate.
-  \item \textbf{Raising e reraising}: \verb|raise| per propagare; conservare il traceback con \verb|raise| senza argomenti nel blocco \verb|except|.
-\item \textbf{EAFP vs LBYL}: preferire "it's easier to ask forgiveness than permission" con gestione puntuale delle eccezioni.
-  \item \textbf{Logging}: usare il modulo \verb|logging| per diagnosi e telemetria, evitare \verb|print| in codice di libreria.
-\end{itemize}
+La struttura \textbf{try/except/else/finally} fornisce un controllo granulare del flusso di eccezione. Il blocco \verb|else| viene eseguito solo se il blocco \verb|try| non ha generato eccezioni, mentre \verb|finally| viene eseguito sempre, indipendentemente dal risultato. Questo pattern è essenziale per gestione complessa di errori e cleanup di risorse.
+
+Le \textbf{eccezioni personalizzate} permettono di creare gerarchie significative che riflettono la semantica del dominio. È importante definire gerarchie chiare e documentare quando e perché vengono sollevate, facilitando il debugging e la gestione degli errori.
+
+Quando si sollevano eccezioni, la distinzione tra \textbf{raising e reraising} è importante. Usare \verb|raise| per propagare un'eccezione originale, mentre \verb|raise| senza argomenti nel blocco \verb|except| conserva il traceback originale, fondamentale per diagnosi.
+
+Un principio fondamentale in Python è \textbf{EAFP vs LBYL} (Easier to Ask Forgiveness than Permission vs Look Before You Leap). Python incoraggia l'approccio EAFP: tentare l'operazione e gestire l'eccezione se necessario, piuttosto che controllare le precondizioni esplicitamente.
+
+Per la \textbf{gestione dei log}, è opportuno usare il modulo \verb|logging| per diagnosi e telemetria, evitando \verb|print| nel codice di libreria. Questo permette ai consumatori di controllare come e dove vengono registrati i messaggi.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Per chi viene da C/Java/JS: modello eccezioni, retry e logging}]
@@ -144,9 +146,11 @@ def fetch_with_retry(fn, attempts=3, delay=0.5):
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Idiomi: EAFP, traduzione errori, context manager}]
-- \textbf{EAFP}: prova e gestisci l'eccezione dove ha senso, invece di pre‑controllare ovunque.
-- \textbf{Traduzione}: traduci eccezioni tecniche in errori di dominio (con messaggi utili).  
-- \textbf{Context manager}: usa `with` per risorse e per garantire rollback/cleanup automatici.
+L'approccio \textbf{EAFP} (Easier to Ask Forgiveness than Permission) incoraggia a tentare un'operazione e gestire le eccezioni nel punto in cui hanno senso, piuttosto che controllare ogni precondizione esplicitamente. Questo rende il codice più leggibile e rende la logica di errore centralizzata nel punto di uso.
+
+La \textbf{traduzione} di eccezioni tecniche in errori di dominio è una pratica importante. Catturare eccezioni di basso livello e trasformarle in eccezioni di dominio significative, con messaggi utili e informativi, migliora l'esperienza dello sviluppatore che usa il codice.
+
+L'uso di \textbf{context manager} con `with` non è solo per risorse come file. È possibile creare context manager personalizzati per garantire rollback automatici, setup/teardown di stati, e cleanup di risorse in modo dichiarativo e affidabile.
 \end{tcolorbox}
 
 \paragraph{Consigli} Controllare granularità degli \verb|except|, evitare catture generiche; assicurare messaggi di errore chiari e azionabili.

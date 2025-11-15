@@ -16,13 +16,7 @@ Il modello logico traduce il modello concettuale (diagrammi ER) in un modello im
 \section{Il Modello Relazionale}
 
 \subsection{Componenti fondamentali}
-Il modello relazionale è basato su tre concetti chiave:
-
-\begin{description}
-    \item[\textbf{Relazione (Tabella)}] Una collezione di tuple (righe) con lo stesso insieme di attributi (colonne).
-    \item[\textbf{Attributo (Colonna)}] Una proprietà della relazione con un nome e un dominio (tipo di dato).
-    \item[\textbf{Tupla (Riga)}] Un record che contiene un valore per ogni attributo.
-\end{description}
+Il modello relazionale si fonda su tre concetti strutturali essenziali. Una \textbf{relazione} (o tabella) è una collezione organizzata di tuple (righe) che condividono lo stesso insieme di attributi (colonne), formando una struttura bidimensionale coerente. Un \textbf{attributo} (o colonna) rappresenta una proprietà della relazione, caratterizzato da un nome distintivo e un dominio che specifica il tipo di dato che può contenere. Una \textbf{tupla} (o riga) è un record che contiene un valore specifico per ogni attributo della relazione, rappresentando una singola istanza dell'entità modellata.
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio: Tabella Cliente]
 \begin{center}
@@ -55,12 +49,7 @@ Ogni attributo ha un \textbf{dominio}, cioè l'insieme di valori che può assume
 \section{Chiavi nel Modello Relazionale}
 
 \subsection{Chiave Primaria}
-Una \textbf{chiave primaria} è un attributo (o insieme di attributi) che:
-\begin{itemize}
-    \item Identifica univocamente ogni tupla della relazione
-    \item Non può contenere valori NULL
-    \item Non può avere duplicati
-\end{itemize}
+Una \textbf{chiave primaria} è un attributo o insieme di attributi con caratteristiche fondamentali per l'integrità del database. Innanzitutto, identifica univocamente ogni tupla della relazione, assicurando che non ci siano due record identici. In secondo luogo, non può contenere valori NULL, garantendo che ogni record sia sempre identificabile. Infine, non può avere duplicati, rafforzando il vincolo di unicità che è essenziale per il funzionamento corretto del sistema.
 
 \begin{lstlisting}[language=SQL, caption=Dichiarazione di chiave primaria]
 CREATE TABLE cliente (
@@ -304,14 +293,7 @@ CREATE TABLE iscrizione (
 \section*{Riepilogo concetti chiave}
 
 \begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
-\begin{itemize}
-    \item Una \textbf{relazione} è una tabella con attributi e tuple
-    \item La \textbf{chiave primaria} identifica univocamente ogni tupla
-    \item La \textbf{chiave esterna} collega tabelle diverse mantenendo l'integrità referenziale
-    \item I \textbf{vincoli di integrità} garantiscono la coerenza dei dati
-    \item Le relazioni N:M richiedono una \textbf{tabella di giunzione}
-    \item Ogni diagramma ER viene tradotto sistematicamente in tabelle relazionali
-\end{itemize}
+Una \textbf{relazione} nel modello logico rappresenta una tabella strutturata con attributi (colonne) e tuple (righe). La \textbf{chiave primaria} riveste un ruolo cruciale identificando univocamente ogni tupla e garantendo l'integrità dell'entità. Una \textbf{chiave esterna} collega tabelle diverse mantenendo l'integrità referenziale, assicurando che i riferimenti rimangono coerenti. I \textbf{vincoli di integrità} sono regole che garantiscono la coerenza e la validità dei dati in tutte le operazioni. Le relazioni N:M, caratterizzate da una complessità maggiore, richiedono la creazione di una \textbf{tabella di giunzione} che decomppone la relazione complessa in due relazioni più semplici. Ogni diagramma ER viene tradotto sistematicamente e metodicamente in un insieme di tabelle relazionali, preservando la semantica e le relazioni del modello concettuale.
 \end{tcolorbox}
 
 \section*{Esercizi}

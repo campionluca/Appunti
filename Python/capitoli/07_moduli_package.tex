@@ -21,11 +21,15 @@ Un buon design dei package rende il codice estensibile e manutenibile, facilitan
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Strutturazione e convenzioni]
-- Usa import assoluti per chiarezza (evita ambiguità dei relativi profondi).
-- Mantieni \texttt{\_\_init\_\_} minimale: re-export selettivo e costanti.
-- Progetta API di package: cosa esporre dal livello radice e cosa no.
-- Evita side-effect all'import: inizializza risorse su richiesta.
-- Documenta dipendenze interne tra moduli per ridurre accoppiamento.
+La scelta tra \textbf{import assoluti e relativi} è importante per la chiarezza. Gli import assoluti dovrebbero essere preferiti poiché evitano ambiguità derivanti da import relativi profondi, rendendo il codice più leggibile e manutenibile.
+
+Quando si organizzano package, è importante \textbf{mantenere } \texttt{\_\_init\_\_} \textbf{ minimale}. Il file dovrebbe contenere solo re-export selettivi e costanti del package, evitando logica complessa che rende difficile comprendere l'API.
+
+La \textbf{progettazione dell'API di package} è fondamentale. Decidere consapevolmente cosa esporre dal livello radice e cosa mantenere come implementazione interna (tramite nome prefissato con underscore) crea un'interfaccia pulita per i consumatori.
+
+Un principio importante è evitare \textbf{side-effect all'import}. L'import di un modulo non dovrebbe avere conseguenze osservabili come apertura di file o connessioni di database; queste operazioni dovrebbero essere inizializzate su richiesta esplicita.
+
+Infine, \textbf{documentare le dipendenze interne} tra moduli riduce l'accoppiamento e facilita i refactoring futuri. Una struttura chiara aiuta a evitare cicli di dipendenza.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -79,10 +83,13 @@ print(sys.path)
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
-- Libreria interna di utilità condivisa tra progetti scollegati.
-- Organizzare un'app in sottopackage (\texttt{core}, \texttt{api}, \texttt{cli}).
-- Separare plugin/estensioni caricati dinamicamente.
-- Re-export dell'API pubblica dal package root per UX migliore.
+I moduli e package sono particolarmente utili per creare librerie interne di utilità condivise tra progetti scollegati, centralizzando funzionalità comuni e riducendo duplicazione di codice.
+
+L'organizzazione di applicazioni complesse beneficia della suddivisione in sottopackage tematici come \texttt{core} per la logica centrale, \texttt{api} per le interfacce esterne e \texttt{cli} per comandi da linea di comando, migliorando la navigabilità e la manutenibilità.
+
+La separazione di plugin ed estensioni in moduli dedicati caricabili dinamicamente permette di estendere le funzionalità dell'applicazione senza modificare il core, seguendo il principio Open/Closed.
+
+Infine, il re-export dell'API pubblica dal package root migliora l'esperienza utente, permettendo import concisi come \verb|from mypackage import MyClass| invece di percorsi lunghi come \verb|from mypackage.internal.core import MyClass|.
 \end{tcolorbox}
 
 \section{Esercizi}
@@ -107,12 +114,13 @@ Hai organizzato codice con moduli e package in modo pulito.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-\item \textbf{Import assoluti vs relativi}: preferire import assoluti per chiarezza; relativi utili all'interno di pacchetti.
-\item \verb|__init__.py|: controlla l'esposizione del pacchetto; usare \verb|__all__| per definire API pubblica.
-  \item \textbf{Struttura dei moduli}: separare responsabilità e evitare cicli di dipendenze; predisporre sottopacchetti coerenti.
-  \item \textbf{Ambienti e dipendenze}: congelare versioni con file di requisiti; documentare vincoli e compatibilità.
-\end{itemize}
+La scelta tra \textbf{import assoluti e relativi} è una decisione di design importante. Import assoluti dovrebbero essere preferiti per la loro chiarezza e universalità; import relativi sono utili principalmente all'interno di pacchetti for evitare nomi lunghi, ma possono creare ambiguità se non usati con attenzione.
+
+Il file \verb|__init__.py| è lo strumento principale per \textbf{controllare l'esposizione del pacchetto}. È possibile usare \verb|__all__| per definire esplicitamente l'API pubblica, facendo sì che solo i simboli elencati siano importabili con `from pkg import *`.
+
+Una \textbf{struttura di moduli} ben progettata separa le responsabilità chiaramente e evita cicli di dipendenze che compromettono il mantenimento. Predisporre sottopacchetti coerenti che riflettono la struttura logica del progetto facilita la navigazione e la comprensione.
+
+Infine, \textbf{ambienti e dipendenze} dovrebbero essere gestiti attentamente. Congelare le versioni delle dipendenze in un file di requisiti (come `requirements.txt`) e documentare vincoli di compatibilità assicura che il codice funzioni in modo prevedibile in diversi ambienti.
 \end{tcolorbox}
 
 \paragraph{Distribuzione} Valutare packaging con \verb|pyproject.toml| e strumenti moderni; integrare test e lint nel processo di rilascio.

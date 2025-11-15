@@ -288,13 +288,9 @@ cp --backup=numbered file.txt existing.txt
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Attenzione con cp]
-\begin{itemize}
-    \item \texttt{cp} sovrascrive silenziosamente i file esistenti (usa \texttt{-i} per conferma)
-    \item Per directory, \texttt{-r} o \texttt{-R} è obbligatorio
-    \item \texttt{cp dir1 dir2} si comporta diversamente se dir2 esiste o no
-    \item Se dir2 esiste: crea dir2/dir1
-    \item Se dir2 non esiste: crea dir2 con contenuto di dir1
-\end{itemize}
+È importante comprendere alcuni comportamenti specifici del comando \texttt{cp}. Per impostazione predefinita, \texttt{cp} sovrascrive silenziosamente i file esistenti senza avvertimento: se desiderate una conferma prima della sovrascrittura, usate l'opzione \texttt{-i}. Quando lavorate con directory, l'opzione \texttt{-r} o \texttt{-R} è obbligatoria, altrimenti il comando darà errore.
+
+Un comportamento particolarmente insidioso riguarda il comando \texttt{cp dir1 dir2}: il suo effetto dipende dall'esistenza di dir2. Se dir2 esiste già come directory, il comando crea dir2/dir1 (copia dir1 dentro dir2). Se invece dir2 non esiste, il comando crea dir2 con il contenuto di dir1 (rinominando effettivamente la copia). Fate attenzione a questo comportamento asincrono per evitare sorprese indesiderate.
 \end{tcolorbox}
 
 \subsection{mv - Move/Rename Files and Directories}
@@ -370,16 +366,9 @@ rmdir directory/
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=red!5, colframe=red!60, title=PERICOLO: rm -rf]
-\textbf{Il comando \texttt{rm -rf} è estremamente pericoloso!}
+\textbf{Il comando \texttt{rm -rf} è estremamente pericoloso!} La combinazione di opzioni rende questo comando particolarmente devastante. L'opzione \texttt{-f} non chiede alcuna conferma prima di procedere, eliminando la possibilità di ripensamenti. L'opzione \texttt{-r} causa una cancellazione ricorsiva di tutte le directory e il loro contenuto. Diversamente da molti sistemi operativi, Linux non ha un cestino: una volta eseguito rm -rf, i file sono persi per sempre, senza possibilità di recupero.
 
-\begin{itemize}
-    \item Non chiede conferma (\texttt{-f})
-    \item Cancella ricorsivamente (\texttt{-r})
-    \item Non c'è cestino: i file sono persi per sempre
-    \item Fate SEMPRE doppio check prima di eseguire
-    \item Mai eseguire: \texttt{rm -rf /} o \texttt{rm -rf /*}
-    \item Considerate alias: \texttt{alias rm='rm -i'}
-\end{itemize}
+Per questa ragione, dovete esercitare massima cautela: fate SEMPRE un doppio check sui percorsi e sulle variabili prima di eseguire qualsiasi comando con rm -rf. Mai, e ripeto mai, eseguite comandi come \texttt{rm -rf /} o \texttt{rm -rf /*}, che cancellerebbero l'intero sistema operativo. Una strategia di protezione consigliata è creare un alias nel vostro ~/.bashrc: \texttt{alias rm='rm -i'}, che trasforma rm in una versione interattiva che chiede conferma per ogni file.
 
 Esempio catastrofico da evitare:
 \begin{lstlisting}[style=bash]

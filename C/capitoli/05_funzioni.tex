@@ -3,14 +3,7 @@
 
 \section{Introduzione alle Funzioni}
 
-Le funzioni sono blocchi di codice riutilizzabili che eseguono un compito specifico. Permettono di:
-
-\begin{itemize}
-    \item Organizzare il codice in modo modulare
-    \item Evitare la duplicazione del codice
-    \item Rendere il programma più leggibile e manutenibile
-    \item Facilitare il testing e il debugging
-\end{itemize}
+Le funzioni sono blocchi di codice riutilizzabili che eseguono un compito specifico e ben definito. Esse consentono di organizzare il codice in modo modulare, dividendo un programma complesso in piccole unità logiche e facilmente gestibili. Le funzioni evitano la duplicazione del codice: invece di scrivere lo stesso codice più volte, è possibile definire una funzione una sola volta e riutilizzarla in diversi punti del programma. Questo approccio rende il programma più leggibile e facile da manutenere, poiché le modifiche a un'operazione comune devono essere apportate in un solo luogo. Inoltre, le funzioni facilitano il testing e il debugging, poiché è possibile testare e correggere ogni funzione singolarmente prima di integrarla nel resto del programma.
 
 \begin{nota}
 Ogni programma C ha almeno una funzione: la funzione \texttt{main()}, che è il punto di ingresso del programma.
@@ -42,13 +35,7 @@ tipo_ritorno nome_funzione(parametri) {
 
 \subsection{Componenti di una Funzione}
 
-\begin{enumerate}
-    \item \textbf{Tipo di ritorno}: il tipo di dato restituito dalla funzione
-    \item \textbf{Nome}: identificatore della funzione
-    \item \textbf{Parametri}: input della funzione (opzionali)
-    \item \textbf{Corpo}: blocco di codice da eseguire
-    \item \textbf{Return}: valore restituito (se non void)
-\end{enumerate}
+Una funzione è composta da cinque elementi strutturali che ne definiscono il comportamento e l'interfaccia. Il \textbf{tipo di ritorno} specifica il tipo di dato che la funzione restituisce al chiamante, permettendo al compilatore di verificare la correttezza dei tipi e consentendo al programma di sapere come gestire il risultato. Il \textbf{nome} è un identificatore univoco che permette di riferirsi alla funzione nel codice. I \textbf{parametri} sono i dati in ingresso alla funzione, passati dal chiamante e resi disponibili al corpo della funzione; i parametri sono opzionali, poiché una funzione può non averne alcuno. Il \textbf{corpo} è il blocco di codice delimitato dalle parentesi graffe che contiene le istruzioni da eseguire quando la funzione viene chiamata. Infine, l'istruzione \textbf{return} specifica il valore restituito al chiamante; è obbligatoria per funzioni con tipo di ritorno diverso da \texttt{void}, mentre per le funzioni \texttt{void} è opzionale.
 
 \subsection{Esempio Semplice}
 

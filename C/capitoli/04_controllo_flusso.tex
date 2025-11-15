@@ -3,13 +3,7 @@
 
 \section{Introduzione}
 
-Il controllo di flusso permette di modificare l'ordine di esecuzione delle istruzioni in un programma. Senza strutture di controllo, le istruzioni verrebbero eseguite sequenzialmente dall'inizio alla fine. Le strutture di controllo permettono di:
-
-\begin{itemize}
-    \item Prendere decisioni (istruzioni condizionali)
-    \item Ripetere blocchi di codice (cicli)
-    \item Saltare parti di codice
-\end{itemize}
+Il controllo di flusso è il meccanismo che permette di modificare l'ordine di esecuzione delle istruzioni in un programma. Senza strutture di controllo, le istruzioni verrebbero eseguite sequenzialmente dall'inizio alla fine, limitando considerevolmente la capacità espressiva dei programmi. Le strutture di controllo permettono di prendere decisioni nel codice attraverso istruzioni condizionali (come \texttt{if} e \texttt{switch}), di ripetere blocchi di codice utilizzando cicli (come \texttt{for}, \texttt{while}, \texttt{do-while}), e di saltare parti di codice quando necessario.
 
 Il controllo di flusso è fondamentale per creare programmi dinamici e interattivi. Immagina di scrivere un programma che valuta i voti degli studenti: senza istruzioni condizionali, non potresti distinguere tra sufficiente e insufficiente. Oppure pensa a un programma che deve elaborare 100 numeri: senza cicli, dovresti scrivere la stessa istruzione 100 volte!
 
@@ -407,11 +401,7 @@ for (inizializzazione; condizione; incremento) {
 
 \subsubsection{Componenti del for}
 
-\begin{enumerate}
-    \item \textbf{Inizializzazione}: eseguita una sola volta all'inizio
-    \item \textbf{Condizione}: controllata prima di ogni iterazione
-    \item \textbf{Incremento}: eseguito dopo ogni iterazione
-\end{enumerate}
+Il ciclo \texttt{for} è composto da tre componenti essenziali, ognuno dei quali svolge un ruolo specifico nel controllo del ciclo. L'\textbf{inizializzazione} è eseguita una sola volta, all'inizio del ciclo, e tipicamente imposta la variabile contatore al suo valore iniziale. La \textbf{condizione} è controllata prima di ogni iterazione: se la condizione è vera, il corpo del ciclo viene eseguito; se è falsa, il ciclo termina. L'\textbf{incremento} è eseguito dopo ogni iterazione e solitamente incrementa o decrementa la variabile contatore, permettendo così di avanzare verso la condizione di terminazione del ciclo.
 
 \subsubsection{Esempi}
 
@@ -577,28 +567,24 @@ L'uso di \texttt{goto} è generalmente sconsigliato perché rende il codice diff
 
 \subsection{Quando usare quale ciclo}
 
-\begin{itemize}
-    \item \textbf{for}: quando conosci il numero di iterazioni
-    \begin{lstlisting}
-    for (int i = 0; i < 10; i++) {
-        // Esegui 10 volte
-    }
-    \end{lstlisting}
-
-    \item \textbf{while}: quando la condizione deve essere controllata prima
-    \begin{lstlisting}
-    while (numero != 0) {
-        // Potrebbe non eseguire mai
-    }
-    \end{lstlisting}
-
-    \item \textbf{do-while}: quando vuoi eseguire almeno una volta
-    \begin{lstlisting}
-    do {
-        // Esegue sempre almeno una volta
-    } while (condizione);
-    \end{lstlisting}
-\end{itemize}
+La scelta tra i diversi tipi di cicli dipende dalla natura del problema che stai cercando di risolvere. Utilizza il ciclo \texttt{for} quando conosci in anticipo il numero esatto di iterazioni che devi eseguire:
+\begin{lstlisting}
+for (int i = 0; i < 10; i++) {
+    // Esegui 10 volte
+}
+\end{lstlisting}
+Scegli il ciclo \texttt{while} quando la condizione di terminazione deve essere controllata prima di ogni iterazione, poiché il corpo potrebbe non eseguirsi nemmeno una volta se la condizione è inizialmente falsa:
+\begin{lstlisting}
+while (numero != 0) {
+    // Potrebbe non eseguire mai
+}
+\end{lstlisting}
+Infine, utilizza il ciclo \texttt{do-while} quando devi garantire che il corpo del ciclo venga eseguito almeno una volta, indipendentemente dalla condizione iniziale:
+\begin{lstlisting}
+do {
+    // Esegue sempre almeno una volta
+} while (condizione);
+\end{lstlisting}
 
 \subsection{Equivalenza tra i Cicli}
 

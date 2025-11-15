@@ -876,13 +876,7 @@ Heap Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(1)$ & No & Sì \\
 
 \subsection{Quando Usare Quale Algoritmo}
 
-\begin{itemize}
-    \item \textbf{Insertion Sort}: piccoli array ($n < 50$), array quasi ordinati
-    \item \textbf{Merge Sort}: quando serve stabilità e $O(n \log n)$ garantito, linked list
-    \item \textbf{Quick Sort}: caso generale, migliori prestazioni medie
-    \item \textbf{Heap Sort}: quando serve $O(n \log n)$ garantito con $O(1)$ spazio
-    \item \textbf{Bubble/Selection Sort}: solo per scopi didattici o casi molto particolari
-\end{itemize}
+La scelta dell'algoritmo di ordinamento più appropriato dipende dalle caratteristiche specifiche del problema. \textbf{Insertion Sort} è l'opzione migliore per array di piccole dimensioni (tipicamente con $n < 50$ elementi) o per array che sono già quasi ordinati, dove sfrutta la sua natura adattiva per ottenere prestazioni quasi lineari. \textbf{Merge Sort} dovrebbe essere preferito quando è essenziale la stabilità dell'ordinamento e si richiede una complessità $O(n \log n)$ garantita nel caso peggiore; è inoltre particolarmente adatto per ordinare linked list grazie alla sua natura di divide-et-impera. \textbf{Quick Sort} rappresenta la scelta standard per il caso generale, offrendo le migliori prestazioni medie nella pratica grazie all'eccellente località dei riferimenti in memoria. \textbf{Heap Sort} è la scelta ideale quando è necessario garantire $O(n \log n)$ nel caso peggiore utilizzando solo $O(1)$ spazio ausiliario, evitando così i problemi di memoria di Merge Sort. Infine, \textbf{Bubble Sort} e \textbf{Selection Sort} dovrebbero essere utilizzati esclusivamente per scopi didattici o in casi molto particolari dove la semplicità del codice prevale sull'efficienza.
 
 \section{Algoritmi Ibridi}
 

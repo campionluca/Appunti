@@ -34,12 +34,7 @@ Tecnologia & NMOS 3 µm \\
 
 \subsection{Organizzazione interna}
 
-L'8086 utilizza un'architettura pipeline a due stadi:
-
-\begin{itemize}
-    \item \textbf{Bus Interface Unit (BIU)}: Gestisce il prelievo delle istruzioni dalla memoria
-    \item \textbf{Execution Unit (EU)}: Esegue le istruzioni decodificate
-\end{itemize}
+L'8086 utilizza un'architettura pipeline a due stadi per migliorare le prestazioni. La \textbf{Bus Interface Unit (BIU)} è responsabile del prelievo delle istruzioni dalla memoria e della loro gestione, permettendo il prefetching di più istruzioni. L'\textbf{Execution Unit (EU)} invece esegue le istruzioni decodificate. Questi due componenti funzionano in parallelo: mentre l'EU esegue un'istruzione, la BIU già precarica la prossima, creando un effetto pipeline che migliora significativamente la velocità di esecuzione.
 
 \begin{center}
 \begin{tikzpicture}[
@@ -181,16 +176,7 @@ I flag \textbf{TF}, \textbf{IF} e \textbf{DF} sono \emph{flag di controllo} impo
 
 \section{Pinout e segnali}
 
-L'8086 ha 40 pin divisi in:
-
-\begin{itemize}
-    \item \textbf{AD0-AD15}: Bus multiplexato indirizzo/dati (16 bit)
-    \item \textbf{A16-A19}: Bit superiori indirizzo (4 bit)
-    \item \textbf{Control signals}: \texttt{ALE}, \texttt{RD}, \texttt{WR}, \texttt{IO/M}, etc.
-    \item \textbf{Interrupt}: \texttt{INTR}, \texttt{NMI}, \texttt{INTA}
-    \item \textbf{Power}: \texttt{VCC}, \texttt{GND}
-    \item \textbf{Clock}: \texttt{CLK}
-\end{itemize}
+L'8086 è un circuito integrato a 40 pin organizzati in diverse categorie funzionali. Il \textbf{bus AD0-AD15} è un bus multiplexato a 16 bit che trasporta sia indirizzi che dati. I \textbf{bit A16-A19} rappresentano i 4 bit superiori dell'indirizzo e vengono utilizzati per estendere la capacità di indirizzamento fino ai 20 bit necessari. I \textbf{segnali di controllo} incluono ALE (Address Latch Enable), RD (Read), WR (Write) e IO/M per controllare le operazioni di lettura/scrittura e per distinguere tra accessi a memoria e porta I/O. I pin di \textbf{interrupt} comprendono INTR (interrupt mascherabile), NMI (non-maskable interrupt) e INTA (interrupt acknowledge) per la gestione degli interrupt hardware. Infine, sono presenti pin di \textbf{alimentazione} (VCC e GND) e il pin di \textbf{clock} (CLK) per la sincronizzazione del processore.
 
 \begin{nota}
 Il bus AD0-AD15 è \textbf{multiplexato}: trasporta indirizzi durante T1 e dati durante T2-T4 del ciclo bus. Il segnale ALE (Address Latch Enable) indica quando il bus contiene un indirizzo valido.
@@ -198,15 +184,7 @@ Il bus AD0-AD15 è \textbf{multiplexato}: trasporta indirizzi durante T1 e dati 
 
 \section{Compatibilità e successori}
 
-L'8086 ha dato origine a una famiglia di processori:
-
-\begin{itemize}
-    \item \textbf{8088}: Variante con bus dati a 8 bit (usato nell'IBM PC)
-    \item \textbf{80186/80188}: Versioni migliorate con periferiche integrate
-    \item \textbf{80286}: Modalità protetta, 16 MB indirizzabili
-    \item \textbf{80386}: Prima CPU x86 a 32 bit
-    \item \textbf{Pentium e successivi}: Evoluzione moderna dell'architettura x86
-\end{itemize}
+L'8086 ha dato origine a un'importante famiglia di processori che ha dominato il mercato dei personal computer per decenni. L'\textbf{8088} è una variante con bus dati ridotto a 8 bit, diventato famoso perché scelto da IBM per il suo primo personal computer. I modelli \textbf{80186 e 80188} rappresentano versioni migliorate dell'architettura originale, integrate con periferiche direttamente nel chip. L'\textbf{80286} ha introdotto la modalità protetta e ha ampliato la memoria indirizzabile a 16 MB, segnando l'inizio dell'evoluzione verso processori più potenti. L'\textbf{80386} è stato il primo processore della famiglia x86 a operare completamente a 32 bit, permettendo il multitasking e protettive mode avanzate. Infine, i processori \textbf{Pentium e successivi} rappresentano l'evoluzione moderna dell'architettura x86, mantenendo comunque la retrocompatibilità con il codice Assembly 8086.
 
 \begin{definizione}
 La \textbf{retrocompatibilità} dell'architettura x86 permette ai processori moderni di eseguire codice Assembly 8086 in \emph{modalità reale} (real mode).
@@ -214,13 +192,7 @@ La \textbf{retrocompatibilità} dell'architettura x86 permette ai processori mod
 
 \section{Riepilogo}
 
-\begin{itemize}
-    \item L'8086 è un processore a 16 bit con bus indirizzi a 20 bit
-    \item Può indirizzare 1 MB di memoria tramite segmentazione
-    \item Utilizza pipeline BIU/EU per migliorare le performance
-    \item Il registro FLAGS contiene 9 flag di stato e controllo
-    \item È il capostipite dell'architettura x86 ancora in uso
-\end{itemize}
+Il microprocessore Intel 8086 rappresenta una pietra miliare dell'informatica moderna come processore a 16 bit con bus indirizzi a 20 bit. Grazie al suo innovativo modello di memoria segmentata, è in grado di indirizzare fino a 1 MB di memoria, superando così i limiti dei processori a 16 bit che normalmente non potevano accedere a più di 64 KB. L'architettura sfrutta un'innovativa pipeline BIU/EU che consente al processore di migliorare significativamente le prestazioni eseguendo il prefetching delle istruzioni in parallelo alla loro esecuzione. Il registro FLAGS del 8086 contiene 9 importanti flag di stato e controllo che permettono al programmatore di monitorare i risultati delle operazioni e controllare il comportamento del processore. Infine, l'8086 rimane il capostipite dell'architettura x86 che ancora oggi domina il mercato dei processori per personal computer, dimostrando la genialità del suo design.
 
 \section{Esercizi}
 

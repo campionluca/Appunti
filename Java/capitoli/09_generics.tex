@@ -87,7 +87,7 @@ public class EsempoGenerics {
 }
 \end{lstlisting}
 
-Questo esempio introduce la sintassi base dei Generics. La classe \texttt{Contenitore<T>} dichiara un \textbf{type parameter} \texttt{T} che rappresenta un tipo generico. Quando istanzi la classe con \texttt{new Contenitore<String>()}, il compilatore sostituisce tutte le occorrenze di \texttt{T} con \texttt{String}. Allo stesso modo, \texttt{new Contenitore<Integer>()} sostituisce \texttt{T} con \texttt{Integer}. Il vantaggio principale è la \textbf{type safety}: il compilatore sa che il metodo \texttt{setElemento()} accetta un \texttt{String} nel primo caso e un \texttt{Integer} nel secondo, e che il metodo \texttt{getElemento()} ritorna il tipo corretto senza necessità di casting esplicito.
+Questo esempio introduce la sintassi base dei Generics in modo completo. La classe \texttt{Contenitore<T>} dichiara un \textbf{type parameter} \texttt{T} che rappresenta un tipo generico, permettendo alla classe di lavorare con qualsiasi tipo di dato. Quando istanzi la classe con \texttt{new Contenitore<String>()}, il compilatore sostituisce tutte le occorrenze di \texttt{T} con \texttt{String} in quel contesto specifico. Allo stesso modo, \texttt{new Contenitore<Integer>()} sostituisce \texttt{T} con \texttt{Integer}, creando essenzialmente una versione specializzata della classe per integer. Il vantaggio principale è la \textbf{type safety}: il compilatore sa con certezza che il metodo \texttt{setElemento()} accetta un \texttt{String} nel primo caso e un \texttt{Integer} nel secondo, permettendoti di scrivere codice type-safe già al momento della compilazione. Il metodo \texttt{getElemento()} ritorna il tipo corretto senza necessità di casting esplicito: il compilatore sa che restituisce String nel primo caso e Integer nel secondo, prevenendo errori runtime e ClassCastException.
 
 \subsection{Multipli type parameters}
 
@@ -400,14 +400,7 @@ public class WildcardSuper {
 Il lower bounded wildcard \texttt{<? super Number>} significa: "un tipo sconosciuto che è Number o una sua superclasse". Questo pattern è utile quando vuoi aggiungere elementi a una collezione. Nel metodo \texttt{aggiungiNumeri()}, puoi aggiungere \texttt{Number} o qualsiasi sua sottoclasse perché la lista è in grado di contenerli. Tuttavia, quando leggi da una lista con lower bounded wildcard, puoi solo ottenere \texttt{Object}, perché non conosci la classe genitore esatta.
 
 \begin{nota}
-Regola PECS (Producer Extends, Consumer Super):
-\begin{itemize}
-    \item Usa \texttt{<? extends T>} quando \textbf{leggi} da una collezione (producer)
-    \item Usa \texttt{<? super T>} quando \textbf{scrivi} in una collezione (consumer)
-    \item Usa \texttt{<?> } quando non leggi né scrivi (unbounded)
-\end{itemize}
-
-Questa regola aiuta a scrivere API generiche flessibili e type-safe.
+Regola PECS (Producer Extends, Consumer Super): Per scrivere API generiche flessibili e type-safe, è importante seguire una regola mnemonica utile. Dovresti usare \texttt{<? extends T>} quando \textbf{leggi} da una collezione, poiché in questo contesto la collezione è un producer (produttrice) di dati: sai che contiene elementi di tipo T o sottotipi di T, e vuoi leggere valori che tratti come T. Usa \texttt{<? super T>} quando \textbf{scrivi} in una collezione, poiché in questo caso la collezione è un consumer (consumatore) di dati: deve accettare elementi di tipo T, quindi deve essere capace di contenere T e tutti i suoi supertipi. Usa \texttt{<?> } (unbounded wildcard) quando non leggi né scrivi da una collezione, ma vuoi solo operazioni di cui conosci il numero di elementi o altre operazioni che non dipendono dal tipo. Questa regola mnemonica (PECS) aiuta a scrivere API generiche flessibili che accettano una varietà di tipi mantenendo la type-safety al momento della compilazione.
 \end{nota}
 
 \section{Type Erasure}
@@ -539,27 +532,10 @@ Passa liste diverse al metodo e verifica i risultati.
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo esplorato i Generics in Java:
-
-\begin{itemize}
-    \item \textbf{Classi generiche}: parametrizzazione di classi con \texttt{<T>}
-    \item \textbf{Metodi generici}: parametrizzazione di metodi indipendenti dalla classe
-    \item \textbf{Bounded type parameters}: vincoli sui type parameters con \texttt{extends}
-    \item \textbf{Multiple bounds}: vincoli a più interfacce con \texttt{&}
-    \item \textbf{Wildcards}: \texttt{<?>}, \texttt{<? extends T>}, \texttt{<? super T>} per flessibilità
-    \item \textbf{Type erasure}: il meccanismo di implementazione che rimuove le informazioni di tipo a runtime
-    \item \textbf{Type safety}: verifiche a compile-time che prevengono ClassCastException
-\end{itemize}
+In questo capitolo abbiamo esplorato i Generics in Java, un argomento fondamentale della programmazione moderna. Abbiamo imparato le \textbf{classi generiche} e come parametrizzare le classi con type parameters come \texttt{<T>} per rendendole riutilizzabili con diversi tipi di dati. Abbiamo visto i \textbf{metodi generici} e come parametrizzare metodi indipendentemente dalla classe, permettendo ai metodi di operare su tipi generici. Abbiamo approfondito i \textbf{bounded type parameters} e come usare vincoli con la keyword \texttt{extends} per limitare quali tipi possono essere usati come type arguments. Abbiamo trattato i \textbf{multiple bounds} che permettono di vincolare un type parameter a più interfacce usando la sintassi \texttt{&}. Abbiamo esplorato i \textbf{wildcards} nelle loro tre forme: \texttt{<?>} per unbounded, \texttt{<? extends T>} per upper bounded, e \texttt{<? super T>} per lower bounded, tutti strumenti per aggiungere flessibilità alle API generiche. Abbiamo compreso il \textbf{type erasure}, il meccanismo di implementazione che rimuove le informazioni di tipo a livello di bytecode per mantenere compatibilità backward. Infine, abbiamo visto come i Generics forniscono \textbf{type safety} con verifiche a compile-time che prevengono ClassCastException a runtime.
 
 I Generics sono fondamentali per scrivere codice Java sicuro e riusabile, e sono usati estensivamente nelle API di Java (Collections, Streams, etc.).
 
 \begin{nota}
-Concetti correlati:
-\begin{itemize}
-    \item \textbf{Collections Framework}: utilizza estesamente i Generics (\autoref{cap:collections_framework})
-    \item \textbf{Stream API}: sfrutta i Generics per operazioni dichiarative (\autoref{cap:stream_api})
-    \item \textbf{Design Patterns}: molti pattern usano Generics per implementazioni type-safe
-\end{itemize}
-
-Questi argomenti approfondiscono ulteriormente l'uso dei Generics in contesti pratici.
+Concetti correlati: I Generics non esistono in isolamento, ma sono fondamentali per molti altri argomenti avanzati di Java. Il \textbf{Collections Framework} utilizza estesamente i Generics per fornire API type-safe per lavorare con collezioni come List, Set, e Map, garantendo che i dati rimangono coerenti e prevenendo errori di tipo. La \textbf{Stream API} sfrutta pesantemente i Generics per operazioni dichiarative su flussi di dati, permettendoti di comporre trasformazioni di dati in modo elegante e type-safe. Molti \textbf{design pattern} moderni usano i Generics per fornire implementazioni type-safe e riusabili, dalla Factory al Singleton, dal Decorator al Strategy. Questi argomenti approfondiscono ulteriormente l'uso dei Generics in contesti pratici di sviluppo Java professionale.
 \end{nota}

@@ -10,14 +10,7 @@ PHP (Hypertext Preprocessor) è uno dei linguaggi più utilizzati nel web develo
 
 \section*{Prerequisiti}
 
-Prima di affrontare questo corso è necessario avere:
-
-\begin{itemize}
-    \item Conoscenza di HTML e CSS
-    \item Nozioni di base di programmazione (variabili, cicli, funzioni)
-    \item Familiarità con il concetto client-server
-    \item Comprensione dei database relazionali (consigliato)
-\end{itemize}
+Prima di affrontare questo corso è necessario avere conoscenze di HTML e CSS, fondamentali per comprendere come PHP interagisce con il markup e lo stile delle pagine web. È inoltre richiesta una solida base di programmazione che includa la comprensione di concetti essenziali come variabili, cicli e funzioni. Infine, è importante avere familiarità con il concetto client-server per capire l'architettura delle applicazioni web, anche se una comprensione dei database relazionali è consigliata ma non strettamente obbligatoria all'inizio.
 
 \section*{Obiettivi del corso}
 
@@ -34,25 +27,9 @@ Al termine del corso lo studente sarà in grado di:
 
 \section*{Perché PHP?}
 
-\textbf{Vantaggi di PHP}:
-\begin{itemize}
-    \item \textbf{Facilità di apprendimento}: Sintassi intuitiva per chi conosce C/Java
-    \item \textbf{Ampia diffusione}: Hosting economico, vasta community, abbondanza risorse
-    \item \textbf{Integrazione database}: Supporto nativo MySQL, PostgreSQL, SQLite
-    \item \textbf{Framework potenti}: Laravel, Symfony, CodeIgniter
-    \item \textbf{CMS popolari}: WordPress, Drupal, Joomla basati su PHP
-    \item \textbf{Performance}: PHP 7/8 ha migliorato drasticamente velocità e efficienza
-\end{itemize}
+\textbf{Vantaggi di PHP}: PHP offre numerosi vantaggi che lo rendono il linguaggio ideale per lo sviluppo web. Innanzitutto, presenta una sintassi intuitiva particolarmente accessibile per chi ha già esperienza con C o Java. La sua ampia diffusione garantisce un hosting economico, una vasta community di sviluppatori e un'abbondanza di risorse disponibili online. PHP fornisce anche un supporto nativo eccellente per l'integrazione con database come MySQL, PostgreSQL e SQLite, permettendo di lavorare facilmente con i dati. Inoltre, è supportato da framework potenti e moderni quali Laravel, Symfony e CodeIgniter che accelerano lo sviluppo. Molti sistemi di gestione contenuti populari come WordPress, Drupal e Joomla sono costruiti su PHP. Infine, le versioni recenti PHP 7 e 8 hanno migliorato notevolmente le performance, la velocità di esecuzione e l'efficienza generale della piattaforma.
 
-\textbf{Applicazioni reali}:
-\begin{itemize}
-    \item Siti web dinamici e portali
-    \item E-commerce (Magento, WooCommerce)
-    \item Sistemi di gestione contenuti (CMS)
-    \item API REST per applicazioni mobile
-    \item Pannelli di amministrazione
-    \item Sistemi di autenticazione e autorizzazione
-\end{itemize}
+\textbf{Applicazioni reali}: Le competenze PHP apre le porte a moltissime opportunità professionali. PHP viene utilizzato per sviluppare siti web dinamici e portali di ogni tipo, piattaforme e-commerce come Magento e WooCommerce, sistemi di gestione contenuti professionali, API REST per applicazioni mobile e per l'integrazione tra servizi, pannelli di amministrazione e sistemi di gestione backend, oltre a complessi sistemi di autenticazione e autorizzazione per proteggere le applicazioni web.
 
 \section*{Struttura del manuale}
 
@@ -72,22 +49,11 @@ Per seguire il corso è necessario disporre di:
 
 \subsection*{Ambiente di sviluppo locale}
 
-\textbf{Opzione 1: XAMPP} (consigliato per Windows)
-\begin{itemize}
-    \item Apache web server
-    \item PHP 7.4+ o 8.x
-    \item MySQL/MariaDB
-    \item phpMyAdmin
-    \item Download: \url{https://www.apachefriends.org/}
-\end{itemize}
+\textbf{Opzione 1: XAMPP} (consigliato per Windows): XAMPP è una distribuzione completa che include il server Apache web, PHP nella versione 7.4 o superiore fino alle versioni 8.x, il sistema di gestione database MySQL o MariaDB, e phpMyAdmin per la gestione grafica dei database. Questa soluzione all-in-one è disponibile per il download presso \url{https://www.apachefriends.org/}.
 
-\textbf{Opzione 2: MAMP} (macOS)
-\begin{itemize}
-    \item Simile a XAMPP, ottimizzato per Mac
-    \item Download: \url{https://www.mamp.info/}
-\end{itemize}
+\textbf{Opzione 2: MAMP} (macOS): Per gli sviluppatori che utilizzano macOS, MAMP offre una soluzione simile a XAMPP ma ottimizzata specificamente per il sistema operativo Apple, rendendo l'installazione e la configurazione più fluida. È disponibile presso \url{https://www.mamp.info/}.
 
-\textbf{Opzione 3: LAMP Stack} (Linux)
+\textbf{Opzione 3: LAMP Stack} (Linux):
 \begin{verbatim}
 sudo apt update
 sudo apt install apache2 php libapache2-mod-php mysql-server
@@ -97,26 +63,11 @@ sudo systemctl start mysql
 
 \subsection*{Editor e IDE}
 
-\begin{itemize}
-    \item \textbf{VS Code} con estensioni:
-    \begin{itemize}
-        \item PHP Intelephense
-        \item PHP Debug
-        \item MySQL (per query)
-    \end{itemize}
-    \item \textbf{PHPStorm}: IDE professionale (licenza studenti gratuita)
-    \item \textbf{Sublime Text} con Package Control
-    \item \textbf{Notepad++} (opzione base)
-\end{itemize}
+Per la stesura del codice, sono disponibili diverse opzioni a seconda delle preferenze e delle esigenze. \textbf{VS Code} è un editor leggero e moderno che con le opportune estensioni (PHP Intelephense per il supporto PHP, PHP Debug per il debugging, e MySQL per gestire query) offre un'esperienza di sviluppo completa e piacevole. \textbf{PHPStorm} è un IDE professionale completo sviluppato specificamente per PHP, che offre una licenza gratuita per studenti e fornisce funzionalità avanzate come il refactoring intelligente e il debugging integrato. \textbf{Sublime Text} è un'altra opzione popolare che, quando configurato con Package Control, permette di installare estensioni per il supporto PHP. Infine, \textbf{Notepad++} rappresenta un'opzione più basilare ma comunque funzionale per chi desidera iniziare con uno strumento minimalista.
 
 \subsection*{Strumenti di testing}
 
-\begin{itemize}
-    \item \textbf{Browser DevTools}: Chrome/Firefox Developer Tools
-    \item \textbf{Postman}: Testing API e richieste HTTP
-    \item \textbf{XAMPP Control Panel}: Gestione servizi Apache/MySQL
-    \item \textbf{phpMyAdmin}: Interfaccia web per MySQL
-\end{itemize}
+Per il testing e il debugging, diversi strumenti facilitano il lavoro dello sviluppatore. \textbf{Browser DevTools}, disponibili in Chrome e Firefox Developer Tools, consentono di ispezionare il codice HTML, CSS e JavaScript, nonché monitorare le richieste HTTP e le risposte del server. \textbf{Postman} è uno strumento specializzato per testare API e costruire richieste HTTP complesse, permettendo di simulare client avanzati senza scrivere codice. \textbf{XAMPP Control Panel} fornisce un'interfaccia grafica per avviare, fermare e gestire i servizi Apache e MySQL, semplificando notevolmente la gestione dell'ambiente di sviluppo locale. Infine, \textbf{phpMyAdmin} è un'interfaccia web intuitiva per interagire con i database MySQL, permettendo di eseguire query, creare tabelle e gestire i dati direttamente dal browser.
 
 \section*{Convenzioni tipografiche}
 
@@ -132,18 +83,7 @@ Il codice presentato include commenti su vulnerabilità e best practices di sicu
 
 \section*{Focus sulla Sicurezza}
 
-Questo corso dedica ampio spazio alla sicurezza web, coprendo:
-
-\begin{itemize}
-    \item \textbf{OWASP Top 10 2021}: Le 10 vulnerabilità più critiche
-    \item \textbf{Input Validation}: Sanitizzazione e validazione input utente
-    \item \textbf{Output Encoding}: Prevenzione XSS con htmlspecialchars()
-    \item \textbf{Prepared Statements}: Protezione da SQL Injection
-    \item \textbf{CSRF Tokens}: Prevenzione Cross-Site Request Forgery
-    \item \textbf{Secure Sessions}: Gestione sicura sessioni utente
-    \item \textbf{File Upload Security}: Validazione tipo, dimensione, path traversal
-    \item \textbf{Password Hashing}: Uso di password\_hash() e password\_verify()
-\end{itemize}
+Questo corso dedica ampio spazio alla sicurezza web, un aspetto fondamentale nello sviluppo di applicazioni robuste e affidabili. Il curriculum affronta le vulnerabilità incluse nell'OWASP Top 10 2021, le dieci minacce di sicurezza più critiche per le applicazioni web moderne. Un focus particolare è dedicato alla validazione e sanitizzazione degli input forniti dagli utenti, componente essenziale per prevenire molti attacchi. Viene affrontato anche il concetto di output encoding, utilizzando funzioni come htmlspecialchars() per prevenire attacchi XSS (Cross-Site Scripting). Il corso insegna l'utilizzo di prepared statements per proteggere il database da SQL injection, una delle vulnerabilità più pericolose. Sono inoltre coperti i token CSRF (Cross-Site Request Forgery) per proteggere le applicazioni dalla falsificazione di richieste cross-site, la gestione sicura delle sessioni utente con appropriate impostazioni di sicurezza, le best practices per il file upload includendo validazione del tipo, della dimensione e la prevenzione di path traversal attacks, e infine le tecniche corrette di hashing delle password utilizzando funzioni come password_hash() e password_verify().
 
 \section*{Metodologia didattica}
 
@@ -190,40 +130,17 @@ Il corso include progetti applicativi reali:
 
 \section*{Certificazioni e sbocchi}
 
-Competenze PHP aprono opportunità professionali:
-\begin{itemize}
-    \item \textbf{Web Developer} (full-stack o backend)
-    \item \textbf{WordPress Developer}
-    \item \textbf{Laravel Developer}
-    \item \textbf{Security Analyst} (penetration testing)
-    \item \textbf{DevOps Engineer} (deployment, CI/CD)
-\end{itemize}
+Competenze PHP aprono numerose opportunità professionali nel mercato del lavoro. Gli studenti potranno intraprendere carriere come Web Developer specializzato nello sviluppo full-stack o backend, WordPress Developer per la creazione e personalizzazione di siti basati su WordPress, Laravel Developer per lo sviluppo di applicazioni enterprise-grade, Security Analyst con focus su penetration testing e sicurezza web, oppure DevOps Engineer specializzato nel deployment e nella configurazione di pipeline CI/CD.
 
-Certificazioni rilevanti:
-\begin{itemize}
-    \item Zend Certified PHP Engineer
-    \item Laravel Certification
-    \item OWASP Web Security Certification
-\end{itemize}
+Le certificazioni riconosciute dal settore che possono seguire il corso includono la certificazione Zend Certified PHP Engineer che attesta le competenze professionali in PHP, la Laravel Certification per chi desideri specializzarsi nel framework Laravel, e la OWASP Web Security Certification che riconosce le competenze di sicurezza web acquisite durante il corso.
 
 \section*{Note per i docenti}
 
-Il materiale è strutturato per:
-\begin{itemize}
-    \item 40-60 ore di lezione (teoria + laboratorio)
-    \item Approccio hands-on con esercitazioni pratiche
-    \item Enfasi su sicurezza e best practices industria
-    \item Preparazione a scenari reali e progetti aziendali
-\end{itemize}
+Il materiale è strutturato per un corso che comprende 40-60 ore totali di insegnamento, combinando teoria e laboratorio pratico in modo equilibrato. L'approccio è decisamente hands-on, con numerose esercitazioni pratiche che permettono agli studenti di applicare immediatamente i concetti appresi. Viene posto un'enfasi particolare sulla sicurezza web e sulle best practices riconosciute dall'industria, preparando gli studenti ad affrontare scenari reali e progetti aziendali autentici.
 
 \section*{Ringraziamenti}
 
-Si ringraziano:
-\begin{itemize}
-    \item La community OWASP per le linee guida di sicurezza
-    \item Gli studenti delle classi precedenti per feedback e suggerimenti
-    \item I contributori open-source di PHP e dei framework
-\end{itemize}
+Si ringrazia la community OWASP per le linee guida di sicurezza fondamentali che hanno ispirato e informato la creazione di questo materiale didattico. Un ringraziamento va anche agli studenti delle classi precedenti i cui feedback e suggerimenti hanno contribuito al miglioramento continuo del corso. Infine, si apprezza il lavoro dei contributori open-source della community PHP e dei principali framework, le cui innovazioni e dedizione rendono possibile la creazione di materiale educativo aggiornato e rilevante.
 
 \vspace{1cm}
 

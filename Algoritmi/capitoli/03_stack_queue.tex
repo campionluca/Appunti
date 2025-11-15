@@ -16,14 +16,7 @@ Uno \textbf{stack} (o pila) è una struttura dati lineare che segue il principio
 
 \textbf{Metafora:} Una pila di piatti. Puoi aggiungere un piatto in cima, e puoi rimuovere solo il piatto in cima.
 
-\textbf{Operazioni fondamentali:}
-\begin{itemize}
-    \item \texttt{push(x)}: Inserisce l'elemento $x$ in cima allo stack
-    \item \texttt{pop()}: Rimuove e restituisce l'elemento in cima
-    \item \texttt{top()}/\texttt{peek()}: Restituisce l'elemento in cima senza rimuoverlo
-    \item \texttt{isEmpty()}: Verifica se lo stack è vuoto
-    \item \texttt{size()}: Restituisce il numero di elementi
-\end{itemize}
+\textbf{Operazioni fondamentali:} Uno stack supporta cinque operazioni principali. L'operazione \texttt{push(x)} inserisce l'elemento $x$ in cima allo stack. L'operazione \texttt{pop()} rimuove l'elemento in cima e lo restituisce al chiamante. L'operazione \texttt{top()} o \texttt{peek()} permette di ispezionare l'elemento in cima senza rimuoverlo. L'operazione \texttt{isEmpty()} verifica se lo stack non contiene elementi. Infine, l'operazione \texttt{size()} restituisce il numero totale di elementi attualmente presenti nello stack.
 
 \textbf{Visualizzazione:}
 
@@ -102,12 +95,7 @@ class StackArray:
         return self.top + 1
 \end{lstlisting}
 
-\textbf{Analisi:}
-\begin{itemize}
-    \item Tutte le operazioni sono $O(1)$
-    \item Spazio: $O(n)$ dove $n$ è la capacità
-    \item Svantaggio: capacità fissa
-\end{itemize}
+\textbf{Analisi:} L'implementazione con array ha caratteristiche prestazionali molto favorevoli. Tutte le operazioni fondamentali---push, pop, peek, isEmpty e size---si eseguono in tempo costante $O(1)$. La complessità spaziale è $O(n)$, dove $n$ rappresenta la capacità massima dello stack. Lo svantaggio principale è la necessità di fissare la capacità al momento della creazione, impedendo lo stack di crescere dinamicamente se riceve più elementi del previsto.
 
 \subsection{Implementazione con lista concatenata}
 
@@ -152,17 +140,7 @@ class StackLista:
         return self.dimensione
 \end{lstlisting}
 
-\textbf{Vantaggi:}
-\begin{itemize}
-    \item Nessuna capacità massima
-    \item Tutte le operazioni sono $O(1)$
-\end{itemize}
-
-\textbf{Svantaggi:}
-\begin{itemize}
-    \item Overhead dei puntatori
-    \item Peggiore località di cache
-\end{itemize}
+\textbf{Vantaggi e svantaggi:} L'implementazione con lista concatenata offre due vantaggi importanti: non esiste una capacità massima predefinita e tutte le operazioni rimangono $O(1)$. Tuttavia, presenta anche due svantaggi significativi. Primo, ogni nodo comporta un overhead dovuto all'immagazzinamento dei puntatori, aumentando l'uso di memoria complessivo. Secondo, la peggiore località di cache nella memoria significa che i nodi non occupano posizioni contigue, penalizzando le prestazioni in ambienti moderni dove la cache della CPU è cruciale.
 
 \subsection{Applicazioni degli stack}
 

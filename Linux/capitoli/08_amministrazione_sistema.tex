@@ -11,14 +11,10 @@ In questo capitolo esploreremo la gestione completa di utenti e gruppi, l'automa
 \end{tcolorbox}
 
 \section{Obiettivi di Apprendimento}
-\begin{itemize}
-    \item Creare e gestire utenti e gruppi di sistema.
-    \item Configurare permessi avanzati (ACL, setuid, setgid).
-    \item Pianificare task automatici con cron e systemd timers.
-    \item Gestire servizi con systemd.
-    \item Analizzare e monitorare log di sistema con journalctl.
-    \item Implementare best practice di sicurezza.
-\end{itemize}
+
+Questo capitolo vi guiderà attraverso le competenze essenziali per amministrare un sistema Linux efficacemente. Impareremo a creare e gestire utenti e gruppi di sistema, fondamentale per controllare chi può accedere al sistema e quali risorse può utilizzare. Andremo oltre i permessi base per configurare permessi avanzati come ACL, setuid e setgid, che offrono un controllo granulare dell'accesso.
+
+L'automazione è al cuore dell'amministrazione di sistema, quindi dedicheremo attenzione alla pianificazione di task automatici utilizzando cron e systemd timers, permettendovi di programmare operazioni ricorrenti senza intervento manuale. Impareremo a gestire i servizi in modo moderno con systemd, comprendendo come avviare, arrestare e monitorare i servizi di sistema. Un amministratore deve anche essere in grado di analizzare e monitorare i log di sistema, competenza che svilupperemo utilizzando journalctl e altri strumenti di analisi. Infine, sintetizzeremo il tutto implementando best practice di sicurezza, creando una cultura di protezione delle risorse di sistema.
 
 \section{Gestione Utenti e Gruppi}
 
@@ -853,15 +849,9 @@ fi
 \end{lstlisting}
 
 \section{Riepilogo}
-Hai imparato a:
-\begin{itemize}
-\item Gestire utenti e gruppi con useradd, usermod, groupadd
-\item Configurare permessi avanzati con ACL e permessi speciali
-\item Automatizzare task con cron e systemd timers
-\item Gestire servizi con systemd
-\item Analizzare log con journalctl e file tradizionali
-\item Monitorare risorse e salute del sistema
-\end{itemize}
+Questo capitolo ci ha trasformato in amministratori di sistema competenti, dotandoci delle competenze essenziali per gestire e mantenere sistemi Linux in modo professionale. Abbiamo padroneggiato la gestione di utenti e gruppi attraverso comandi come \texttt{useradd}, \texttt{usermod} e \texttt{groupadd}, acquisendo il controllo completo sugli accessi al sistema. La configurazione dei permessi non è più un mistero: sappiamo utilizzare ACL per permessi granulari e permessi speciali come SUID, SGID e sticky bit per implementare politiche di sicurezza sofisticate.
+
+L'automazione è ora parte integrante del nostro arsenale: abbiamo imparato a pianificare task ricorrenti con cron e systemd timers, eliminando il lavoro manuale ripetitivo e garantendo che operazioni critiche vengano eseguite puntualmente. La gestione dei servizi attraverso systemd ci permette di controllare con precisione quali programmi devono essere eseguiti all'avvio del sistema e come devono comportarsi in caso di errori. L'analisi dei log, sia tramite il moderno \texttt{journalctl} che attraverso i file tradizionali in /var/log, ci consente di investigare problemi e monitorare l'attività del sistema. Infine, abbiamo sviluppato la capacità di monitorare costantemente le risorse e la salute del sistema, identificando proattivamente problemi prima che diventino critici.
 
 \section{Riferimenti}
 \begin{itemize}

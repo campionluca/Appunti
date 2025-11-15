@@ -48,25 +48,18 @@ Un \textbf{branch} (ramo) in Git è semplicemente un puntatore mobile a un commi
     \caption{Branch come puntatore a commit}
 \end{figure}
 
-\textbf{Concetti chiave}:
-\begin{itemize}
-    \item \textbf{Branch}: Puntatore a un commit specifico
-    \item \textbf{HEAD}: Puntatore al branch corrente (dove sei ora)
-    \item Creare branch è \textbf{istantaneo} (solo creare puntatore)
-    \item Nessun overhead di copia file
-\end{itemize}
+È fondamentale comprendere alcuni concetti chiave del sistema di branching. Un branch non è altro che un puntatore leggero a un commit specifico nella cronologia. HEAD è un puntatore speciale che indica il branch corrente, mostrando dove ti trovi nel repository. Creare un nuovo branch è un'operazione istantanea perché Git semplicemente crea un nuovo puntatore senza duplicare alcun file. Questo design elimina completamente l'overhead di copia file che caratterizza altri sistemi di version control, rendendo il branching in Git estremamente efficiente anche con repository enormi.
 
 \subsection{Perché usare i branch}
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi del Branching]
-\begin{itemize}
-    \item \textbf{Isolamento}: Lavora su feature senza toccare codice stabile
-    \item \textbf{Sperimentazione}: Prova idee senza rischio
-    \item \textbf{Collaborazione}: Team lavora su feature diverse in parallelo
-    \item \textbf{Code review}: Feature branch + pull request
-    \item \textbf{Hotfix}: Fixa bug in produzione senza feature incomplete
-    \item \textbf{Release management}: Branch per versioni diverse
-\end{itemize}
+Il sistema di branching di Git offre numerosi benefici nel workflow di sviluppo. Innanzitutto consente l'isolamento: puoi lavorare su una nuova feature senza rischiare di toccare il codice stabile del branch principale. Questo livello di isolamento rende sicuro sperimentare con idee nuove senza correre il rischio di rompere il progetto.
+
+Il branching facilita la collaborazione in team: múltiple sviluppatori possono lavorare simultaneamente su feature diverse, ognuno nel proprio branch privato, senza interferire reciprocamente. Quando ogni feature è completata e testata, viene integrata nel branch principale.
+
+Il branching abilita i code review attraverso feature branch e pull request: un'altra persona nel team può revisionare il codice scritto prima che venga mergiato nel main.
+
+Sul piano del deployment, i branch permettono di fixare bug urgenti in produzione (hotfix) senza toccare le feature incomplete che sono in sviluppo. Permette anche una gestione efficace di release management mantenendo branch separati per diverse versioni del software.
 \end{tcolorbox}
 
 \begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scenario Tipico]
@@ -274,12 +267,7 @@ $ git log --oneline --graph
 * c1 Initial commit
 \end{lstlisting}
 
-\textbf{Caratteristiche FF merge}:
-\begin{itemize}
-    \item Nessun commit di merge creato
-    \item Storia lineare e pulita
-    \item Possibile solo se nessun commit divergente
-\end{itemize}
+Il fast-forward merge presenta caratteristiche distintive che lo rendono la strategia più semplice. Non viene creato alcun commit di merge: Git semplicemente sposta il puntatore del branch avanti lungo la linea di commit esistente. Questo produce una storia completamente lineare e pulita, facile da leggere e comprendere. Tuttavia, il fast-forward è possibile solo quando non esistono commit divergenti, cioè quando il branch da mergeare discende direttamente dal branch corrente senza che quest'ultimo sia avanzato nel frattempo.
 
 \subsection{Three-Way Merge}
 
@@ -349,13 +337,7 @@ $ git log --oneline --graph
 * c1 Initial commit
 \end{lstlisting}
 
-\textbf{Caratteristiche three-way merge}:
-\begin{itemize}
-    \item Crea merge commit con due parent
-    \item Messaggio auto-generato (modificabile)
-    \item Preserva storia non lineare
-    \item Mostra chiaramente quando feature fu integrata
-\end{itemize}
+Il three-way merge ha caratteristiche che riflettono la sua natura più complessa. Git crea un merge commit speciale con due parent, uno per ciascun branch che viene unito. Il messaggio di questo commit è auto-generato ma rimane modificabile per aggiungere contesto. Questa strategia preserva la storia non lineare del progetto, mostrando chiaramente che lo sviluppo è avvenuto in parallelo. Il merge commit esplicito nella cronologia rende evidente quando una feature è stata integrata nel branch principale, facilitando la comprensione dell'evoluzione del progetto.
 
 \subsection{Forzare merge commit (no fast-forward)}
 

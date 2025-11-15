@@ -15,22 +15,9 @@ POP BX             ; BX = [SS:SP], SP = SP + 2
 
 \subsection{Convenzioni di chiamata}
 
-\textbf{Caller} (chiamante):
-\begin{enumerate}
-    \item Salva registri da preservare
-    \item Passa parametri (stack o registri)
-    \item Esegue CALL
-    \item Recupera risultato
-    \item Ripristina registri
-\end{enumerate}
+Le convenzioni di chiamata definiscono come il codice chiamante e il codice chiamato devono coordinarsi per il passaggio dei parametri e la gestione dei registri. Il \textbf{Caller} (codice chiamante) deve inizialmente \emph{salvare i registri che intende preservare}, poiché la procedura potrebbe modificarli. Successivamente, il \textbf{Caller} \emph{passa i parametri} alla procedura, tipicamente tramite lo stack o direttamente nei registri, in base alla convenzione scelta. L'esecuzione della procedura avviene mediante l'istruzione \texttt{CALL}, che salva automaticamente l'indirizzo di ritorno. Dopo il ritorno della procedura, il \textbf{Caller} \emph{recupera il risultato} (solitamente da AX) e \emph{ripristina i registri salvati} precedentemente.
 
-\textbf{Callee} (procedura chiamata):
-\begin{enumerate}
-    \item Salva registri usati
-    \item Esegue operazioni
-    \item Ripristina registri
-    \item Esegue RET
-\end{enumerate}
+Dal lato del \textbf{Callee} (procedura chiamata), la sequenza è complementare. La procedura \emph{salva i registri che utilizzerà}, preservandone i valori originali per il chiamante. Quindi la procedura \emph{esegue le sue operazioni}, utilizzando i parametri ricevuti e i registri salvati. Prima del termine, la procedura \emph{ripristina i registri salvati}, ripristinandoli al loro stato originale. Infine, la procedura \emph{esegue RET} per trasferire il controllo al chiamante, permettendogli di continuare dall'istruzione successiva a \texttt{CALL}.
 
 \subsection{Passaggio parametri via stack}
 

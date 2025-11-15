@@ -200,13 +200,7 @@ Quando assegni \texttt{p2 = p1}, stai copiando il \textbf{riferimento}, non l'og
 Le classi non sono complete senza costruttori per inizializzare gli oggetti e metodi per definirne il comportamento.
 
 \subsection{Costruttori: L'Inizializzazione degli Oggetti}
-Un \textbf{costruttore} è un metodo speciale che viene invocato automaticamente quando si crea un nuovo oggetto di una classe usando l'operatore \texttt{new}. Il suo scopo principale è inizializzare lo stato dell'oggetto.
-
-\begin{itemize}
-    \item Deve avere lo \textbf{stesso nome} della classe.
-    \item Non ha un \textbf{tipo di ritorno} (nemmeno \texttt{void}).
-    \item Se non viene definito alcun costruttore, Java ne fornisce uno \textbf{di default} (senza parametri).
-\end{itemize}
+Un \textbf{costruttore} è un metodo speciale che viene invocato automaticamente quando si crea un nuovo oggetto di una classe usando l'operatore \texttt{new}. Il suo scopo principale è inizializzare lo stato dell'oggetto. Un costruttore deve avere lo \textbf{stesso nome} della classe che sta inizializzando. A differenza dei metodi ordinari, un costruttore non ha un \textbf{tipo di ritorno}, nemmeno \texttt{void}. Se non viene definito alcun costruttore, Java ne fornisce uno \textbf{di default} senza parametri che inizializza semplicemente gli attributi con i valori di default del loro tipo.
 
 \subsubsection{Costruttore con Parametri}
 Permette di inizializzare gli attributi con valori specifici al momento della creazione dell'oggetto.
@@ -304,11 +298,7 @@ public class TestPersona {
 L'\textbf{overloading} permette di definire più metodi con lo stesso nome all'interno della stessa classe, purché abbiano una \textbf{firma diversa}. La firma di un metodo è determinata dal suo nome e dalla lista dei tipi dei parametri, e dal loro ordine. Il tipo di ritorno non è parte della firma per l'overloading.
 
 \subsubsection{Regole dell'Overloading}
-\begin{itemize}
-    \item Stesso nome del metodo.
-    \item Lista di parametri diversa (numero, tipo o ordine dei tipi).
-    \item Il tipo di ritorno può essere lo stesso o diverso (non influisce sull'overloading).
-\end{itemize}
+L'overloading segue regole precise per distinguere diversi metodi con lo stesso nome. Innanzitutto, i metodi devono avere lo stesso nome. Tuttavia, la loro lista di parametri deve essere diversa, variando nel numero dei parametri, nel tipo dei parametri, o nell'ordine dei tipi. È importante notare che il tipo di ritorno può essere lo stesso o diverso senza influenzare il riconoscimento dell'overloading: il compilatore identifica il metodo corretto basandosi solo sulla firma (nome e parametri), non sul tipo di ritorno.
 
 \subsubsection{Esempio: Overloading di Costruttori nella Classe Persona}
 Abbiamo già visto questo nella classe \texttt{Persona} con il costruttore con parametri e quello di default. Possiamo aggiungere un terzo costruttore:
@@ -375,20 +365,9 @@ public class Calcolatrice {
 I diagrammi UML (Unified Modeling Language) sono uno strumento standard per visualizzare, specificare, costruire e documentare gli artefatti di un sistema software. I diagrammi di classe UML sono particolarmente utili per mostrare le classi, i loro attributi, i loro metodi e le relazioni tra di esse.
 
 \subsection{Sintassi Base del Diagramma di Classe UML}
-Un rettangolo diviso in tre sezioni rappresenta una classe:
-\begin{itemize}
-    \item \textbf{Sezione superiore}: Nome della classe.
-    \item \textbf{Sezione centrale}: Attributi della classe.
-    \item \textbf{Sezione inferiore}: Metodi della classe.
-\end{itemize}
+Un rettangolo diviso in tre sezioni rappresenta una classe in UML. La \textbf{sezione superiore} contiene il nome della classe. La \textbf{sezione centrale} elenca gli attributi della classe con il loro tipo. La \textbf{sezione inferiore} racchiude i metodi della classe con la loro firma (parametri e tipo di ritorno).
 
-\textbf{Visibilità (Modificatori di Accesso) in UML:}
-\begin{itemize}
-    \item \texttt{+ } (public): Accessibile ovunque.
-    \item \texttt{- } (private): Accessibile solo all'interno della classe.
-    \item \texttt{\# } (protected): Accessibile all'interno della classe, nelle sottoclassi e nello stesso package.
-    \item \texttt{\~{}} (package-private/default): Accessibile solo nello stesso package.
-\end{itemize}
+\textbf{Visibilità (Modificatori di Accesso) in UML:} I modificatori di accesso in UML sono rappresentati con simboli speciali per indicare il livello di visibilità. Il simbolo \texttt{+ } (più) rappresenta \textbf{public}, accessibile da qualsiasi altra classe. Il simbolo \texttt{- } (meno) rappresenta \textbf{private}, accessibile solo all'interno della classe stessa. Il simbolo \texttt{\# } (cancelletto) rappresenta \textbf{protected}, accessibile all'interno della classe, nelle sottoclassi e nello stesso package. Il simbolo \texttt{\~{}} (tilde) rappresenta \textbf{package-private} o \textbf{default}, accessibile solo dalle classi dello stesso package.
 
 \subsubsection{Esempio: Diagramma UML della Classe \texttt{Persona}}
 
@@ -460,24 +439,14 @@ public class GestioneClasse {
 }
 \end{lstlisting}
 
-\textbf{Punti Chiave:}
-\begin{itemize}
-    \item Quando si dichiara `Studente[] classe = new Studente[3];`, si crea un array di tre \emph{riferimenti} a `Studente`, ognuno inizializzato a `null`.
-    \item È necessario creare esplicitamente un oggetto `Studente` per ogni posizione dell'array (`classe[0] = new Studente(...)`). Altrimenti, tenteremo di accedere a un oggetto `null`, causando una `NullPointerException`.
-    \item Possiamo accedere agli attributi e invocare i metodi di ogni oggetto nell'array utilizzando la notazione `classe[i].metodo()` o `s.metodo()`.
-\end{itemize}
+\textbf{Punti Chiave:} Quando si dichiara `Studente[] classe = new Studente[3];`, si crea un array di tre \emph{riferimenti} a `Studente`, ognuno inizializzato a `null`. Non crea automaticamente gli oggetti. È quindi necessario creare esplicitamente un oggetto `Studente` per ogni posizione dell'array tramite `classe[0] = new Studente(...)`, altrimenti tenteremo di accedere a un oggetto `null`, causando una `NullPointerException`. Una volta che gli oggetti sono stati creati, possiamo accedere ai loro attributi e invocare i loro metodi utilizzando la notazione `classe[i].metodo()` per l'accesso tramite indice, oppure `s.metodo()` quando iteriamo con un ciclo for-each assegnando ogni elemento a una variabile come `s`.
 
 \section{Metodi Statici, Metodo \texttt{toString()}, Getter e Setter}
 
 Questa sezione approfondisce alcuni metodi e convenzioni importanti per la gestione delle classi.
 
 \subsection{Metodi Statici e Attributi Statici}
-Gli elementi \textbf{statici} (attributi o metodi) appartengono alla classe stessa, non a una specifica istanza (oggetto) della classe. Vengono caricati in memoria una sola volta quando la classe viene caricata e sono condivisi da tutte le istanze della classe.
-
-\begin{itemize}
-    \item Si invocano direttamente sulla classe, non sull'oggetto: `NomeClasse.metodoStatico()` o `NomeClasse.attributoStatico`.
-    \item I metodi statici possono accedere solo ad altri membri statici della classe. Non possono accedere a membri non statici (di istanza) perché questi esistono solo in relazione a un oggetto.
-\end{itemize}
+Gli elementi \textbf{statici} (attributi o metodi) appartengono alla classe stessa, non a una specifica istanza (oggetto) della classe. Vengono caricati in memoria una sola volta quando la classe viene caricata e sono condivisi da tutte le istanze della classe. Gli elementi statici si invocano direttamente sulla classe, non sull'oggetto, utilizzando la sintassi `NomeClasse.metodoStatico()` oppure `NomeClasse.attributoStatico`. Una limitazione importante è che i metodi statici possono accedere solo ad altri membri statici della classe. Non possono accedere a membri non statici (di istanza) perché questi ultimi esistono solo in relazione a uno specifico oggetto, mentre i metodi statici non hanno un contesto di istanza.
 
 \subsubsection{Esempio: Classe \texttt{Contatore} con Membri Statici}
 
@@ -546,12 +515,7 @@ public class Prodotto {
 \end{lstlisting}
 
 \subsection{Getter (Accessors) e Setter (Mutators)}
-I \textbf{getter} e i \textbf{setter} sono metodi pubblici utilizzati per accedere e modificare gli attributi privati di una classe. Sono fondamentali per l'incapsulamento, poiché permettono di controllare come i dati vengono letti e scritti.
-
-\begin{itemize}
-    \item \textbf{Getter}: Metodi che restituiscono il valore di un attributo. Convenzione: `getNomeAttributo()`. Per attributi booleani, spesso `isNomeAttributo()`.
-    \item \textbf{Setter}: Metodi che impostano il valore di un attributo. Convenzione: `setNomeAttributo(tipo valore)`. Possono includere logica di validazione.
-\end{itemize}
+I \textbf{getter} e i \textbf{setter} sono metodi pubblici utilizzati per accedere e modificare gli attributi privati di una classe. Sono fondamentali per l'incapsulamento, poiché permettono di controllare come i dati vengono letti e scritti. I \textbf{getter} sono metodi che restituiscono il valore di un attributo seguendo la convenzione `getNomeAttributo()`, oppure `isNomeAttributo()` per gli attributi di tipo booleano. I \textbf{setter} sono metodi che impostano il valore di un attributo seguendo la convenzione `setNomeAttributo(tipo valore)`. Un aspetto importante è che nei setter è possibile includere logica di validazione per assicurare che solo valori appropriati vengano assegnati agli attributi.
 
 \subsubsection{Esempio: Getter e Setter nella Classe \texttt{Studente}}
 
@@ -824,11 +788,7 @@ public class GestioneParcoVeicoli {
 I \textbf{package} sono un meccanismo di raggruppamento per le classi, le interfacce e le altre entità Java. Servono a organizzare il codice in modo logico e gerarchico, evitando conflitti di nomi e controllando l'accesso. Possiamo pensarli come a delle cartelle all'interno del file system per i nostri file \texttt{.java} e \texttt{.class}.
 
 \subsection{Vantaggi dei Package}
-\begin{enumerate}
-    \item \textbf{Organizzazione}: Raggruppano classi correlate, rendendo il codice più gestibile.
-    \item \textbf{Prevenzione di conflitti di nomi}: Due classi con lo stesso nome possono esistere in package diversi (es. \texttt{java.util.Date} e \texttt{java.sql.Date}).
-    \item \textbf{Controllo degli accessi}: Forniscono un livello di visibilità (\textit{package-private}) che limita l'accesso ai membri all'interno dello stesso package.
-\end{enumerate}
+I package offrono diversi benefici importanti nell'organizzazione del codice. Primo, permettono l'\textbf{organizzazione} del progetto raggruppando classi correlate, rendendo il codice più gestibile e comprensibile in progetti di grandi dimensioni. Secondo, consentono la \textbf{prevenzione di conflitti di nomi}: due classi con lo stesso nome possono coesistere in package diversi, come \texttt{java.util.Date} e \texttt{java.sql.Date} che sono due classi completamente diverse. Terzo, i package forniscono un \textbf{controllo degli accessi} tramite il livello di visibilità \textit{package-private}, che permette alle classi dello stesso package di accedere ai membri dichiarati con questo modificatore, ma non alle classi esterne al package.
 
 \subsection{Dichiarazione e Naming Convention}
 La dichiarazione del package deve essere la \textbf{prima istruzione} non commento in un file sorgente Java.
@@ -884,15 +844,7 @@ public class Calcoli {
 \end{lstlisting}
 
 \subsection{Package Predefiniti di Java}
-Java fornisce una ricca libreria standard organizzata in package, tra cui:
-\begin{itemize}
-    \item \texttt{java.lang}: Classi fondamentali (es. \texttt{String}, \texttt{Math}, \texttt{System}).
-
-    \textbf{Importato automaticamente}.
-    \item \texttt{java.util}: Utilità e strutture dati (es. \texttt{ArrayList}, \texttt{HashMap}, \texttt{Scanner}).
-    \item \texttt{java.io}: Classi per input/output (es. \texttt{File}, \texttt{BufferedReader}).
-    \item \texttt{java.net}: Classi per la programmazione di rete.
-\end{itemize}
+Java fornisce una ricca libreria standard organizzata in numerosi package. Il package \texttt{java.lang} contiene classi fondamentali per la programmazione Java come \texttt{String}, \texttt{Math}, \texttt{System}, ed è speciale perché viene \textbf{importato automaticamente} senza necessità di dichiarare import espliciti. Il package \texttt{java.util} fornisce classi di utilità e strutture dati come \texttt{ArrayList}, \texttt{HashMap}, \texttt{Scanner}, che sono essenziali per la gestione di collezioni e utilità varie. Il package \texttt{java.io} contiene le classi per input e output, permettendo di lavorare con file e stream, come \texttt{File}, \texttt{BufferedReader}, \texttt{FileWriter}. Infine, il package \texttt{java.net} offre le classi necessarie per la programmazione di rete, consentendo la creazione di applicazioni client-server e la comunicazione su internet.
 
 \section{Riepilogo}
 

@@ -11,12 +11,12 @@ Un dizionario (o mappa) è una collezione di coppie (chiave, valore) che support
     \item \texttt{delete(chiave)}: Rimuove la coppia
 \end{itemize}
 
-Le tabelle hash implementano efficientemente queste operazioni tramite una \textbf{funzione hash} che mappa le chiavi in posizioni di un array.
+Le tabelle hash implementano efficientemente queste operazioni tramite una \textbf{funzione hash} che mappa strategicamente le chiavi in posizioni di un array.
 
 \section{Concetti fondamentali}
 
 \begin{definizione}[Funzione hash]
-Una \textbf{funzione hash} è una funzione $h: U \to \{0, 1, \ldots, m-1\}$ che mappa elementi di un universo $U$ (potenzialmente molto grande) in un insieme di dimensione $m$ (relativamente piccola) di posizioni in un array chiamato \textbf{tabella hash}.
+Una \textbf{funzione hash} è una funzione $h: U \to \{0, 1, \ldots, m-1\}$ che trasforma elementi di un universo $U$ (potenzialmente enorme e non limitato) in un insieme ristretto di dimensione $m$ di posizioni all'interno di un array chiamato \textbf{tabella hash}. Questa mappatura comprime l'enorme spazio delle possibili chiavi in un numero gestibile di slot, permettendo un accesso rapido ai dati.
 \end{definizione}
 
 \begin{definizione}[Collisione]
@@ -63,13 +63,7 @@ Una \textbf{collisione} si verifica quando due chiavi diverse $k_1 \neq k_2$ han
 
 \section{Funzioni hash}
 
-Una buona funzione hash deve:
-\begin{enumerate}
-    \item Essere \textbf{deterministica}: Stessa chiave → stesso hash
-    \item Essere \textbf{veloce} da calcolare: $O(1)$
-    \item Distribuire uniformemente le chiavi (minimizzare collisioni)
-    \item Minimizzare il clustering (raggruppamento di chiavi)
-\end{enumerate}
+Una buona funzione hash deve soddisfare quattro proprietà importanti. In primo luogo, deve essere \textbf{deterministica}: una stessa chiave deve sempre produrre lo stesso valore hash, garantendo la prevedibilità e la correttezza delle operazioni. In secondo luogo, deve essere \textbf{veloce da calcolare}, idealmente con complessità $O(1)$, poiché l'efficienza dell'intera operazione di ricerca dipende da questa. In terzo luogo, deve \textbf{distribuire uniformemente} le chiavi tra gli slot disponibili, minimizzando il numero di collisioni. Infine, deve \textbf{minimizzare il clustering}: il raggruppamento di chiavi in regioni contigue della tabella può degradare le prestazioni, specialmente negli schemi di indirizzamento aperto.
 
 \subsection{Metodo della divisione}
 

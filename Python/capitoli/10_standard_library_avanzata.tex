@@ -18,15 +18,17 @@ Dopo questo capitolo saprai:
 
 \section{Teoria}
 
-La libreria standard Python offre moduli potenti per compiti comuni senza dipendenze esterne:
-\begin{itemize}
-  \item \textbf{Evita reinventare la ruota}: soluzioni testate e ottimizzate
-  \item \textbf{Portabilità}: funziona su tutte le piattaforme
-  \item \textbf{Manutenibilità}: codice familiare per altri sviluppatori
-  \item \textbf{Performance}: implementazioni in C per moduli critici
-\end{itemize}
+La libreria standard Python offre moduli potenti per compiti comuni senza necessità di dipendenze esterne, rappresentando un vantaggio significativo del linguaggio.
 
-\textbf{Filosofia}: "Batteries included" — Python include tutto il necessario.
+Il principio di \textbf{evitare di reinventare la ruota} è fondamentale: utilizzare le soluzioni già esistenti nella standard library significa beneficiare di codice testato, ottimizzato e mantenuto dalla comunità Python. Questo riduce la probabilità di bug e migliora la qualità del progetto.
+
+La \textbf{portabilità} è un'altra virtù principale. Le soluzioni standard library funzionano su tutte le piattaforme supportate da Python, eliminando la necessità di implementazioni custom multipiattaforma.
+
+Dal punto di vista della \textbf{manutenibilità}, il codice che usa la standard library è familiare a qualsiasi sviluppatore Python. Questo riduce il carico cognitivo per chi legge il codice e facilita la collaborazione tra team.
+
+Infine, le \textbf{prestazioni} dei moduli standard library sono spesso eccellenti, poiché molti sono implementati in C e ottimizzati per casi d'uso comuni.
+
+La filosofia sottostante è "Batteries included" — Python include tutto il necessario per compiti comuni, eliminando la necessità di cercare e integrare librerie esterne per funzionalità di base.
 
 \section{Collections}
 
@@ -776,33 +778,47 @@ if __name__ == "__main__":
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Best Practices]
-\begin{itemize}
-  \item Preferire pathlib a os.path per operazioni su percorsi
-  \item Usare type hints per documentare contratti di funzioni
-  \item Compilare regex con re.compile() se riusate spesso
-  \item defaultdict evita check "key in dict" ridondanti
-  \item lru\_cache per funzioni pure computazionalmente costose
-  \item JSON per interoperabilità, pickle solo per Python
-  \item argparse per CLI consistenti con --help automatico
-  \item namedtuple per strutture dati immutabili leggibili
-  \item itertools per pipeline di dati memory-efficient
-  \item Timezone-aware datetime per app internazionali
-\end{itemize}
+L'uso di \textbf{pathlib per operazioni su percorsi} dovrebbe essere preferito a os.path, poiché offre un'API orientata agli oggetti più leggibile e composabile.
+
+I \textbf{type hints} sono uno strumento essenziale per documentare i contratti delle funzioni, facilitando comprensione e enabling static analysis.
+
+Quando si lavora con \textbf{espressioni regolari}, compilarle con \verb|re.compile()| è una buona pratica se riutilizzate spesso, evitando di ricompilare ogni volta.
+
+L'uso di \textbf{defaultdict} elimina la necessità di controlli ridondanti "key in dict", semplificando codice che accumula valori in collegamento.
+
+Per funzioni pure e computazionalmente costose, \textbf{lru\_cache} è uno strumento di ottimizzazione potente che memorizza automaticamente i risultati.
+
+Nella serializzazione dati, \textbf{JSON} dovrebbe essere preferito per interoperabilità tra linguaggi; pickle è adatto solo quando si serializza e deserializza esclusivamente in Python.
+
+Per applicazioni CLI, \textbf{argparse} fornisce un framework consistente che genera automaticamente messaggi di aiuto (--help) e gestisce argomenti in modo robusto.
+
+Le \textbf{namedtuple} sono ideali per definire strutture dati immutabili e leggibili, combinando la semplicità di tuple con nomi di campo significativi.
+
+Le pipeline di dati complesse beneficiano dell'uso di \textbf{itertools}, che fornisce composizioni memory-efficient per filtraggio, trasformazione e combinazione.
+
+Infine, quando si lavora con date e orari, usare \textbf{datetime timezone-aware} è essenziale per applicazioni internazionali, evitando ambiguità e errori di conversione.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Errori Comuni]
-\begin{itemize}
-  \item Usare os.path invece di pathlib (meno leggibile)
-  \item Dimenticare maxsize in lru\_cache (memory leak!)
-  \item Pickle di dati non fidati (security risk!)
-  \item Regex senza raw string (r"") — escape issues
-  \item groupby senza ordinamento preventivo (funziona su consecutivi!)
-  \item Naive datetime (senza timezone) per app globali
-  \item JSON di datetime senza serializer custom
-  \item Ignorare .cache\_clear() per test con lru\_cache
-  \item Creare Path con stringhe hardcoded (non portabile!)
-  \item reduce senza valore iniziale (crash su lista vuota)
-\end{itemize}
+Uno dei \textbf{errori comuni} è usare \verb|os.path| invece di \verb|pathlib|, che risulta meno leggibile e meno orientato agli oggetti.
+
+Quando si usa \textbf{lru\_cache}, dimenticare di specificare \verb|maxsize| può causare memory leak, poiché la cache crescerà indefinitamente. È essenziale impostare un limite appropriato.
+
+Un \textbf{rischio di sicurezza critico} è tentare di deserializzare (unpickle) dati non fidati. Pickle è unsafe e può eseguire codice arbitrario; usarlo solo con dati controllati.
+
+Nelle \textbf{espressioni regolari}, omettere il prefisso raw string (r"") può causare problemi di escape, poiché le sequenze come \texttt{\textbackslash d} vengono interpretate come escape Python prima che regex le veda.
+
+L'uso di \textbf{groupby} senza ordinamento preventivo è un'insidia: groupby raggruppa elementi consecutivi, non tutti gli elementi con la stessa chiave. Se necessario raggruppare tutti gli elementi con lo stesso valore di chiave, è necessario ordinare prima.
+
+L'uso di \textbf{datetime naive} (senza informazioni di timezone) è problematico per applicazioni globali, poiché l'interpretazione dipende dal fuso orario locale del sistema. Usare timezone-aware datetime elimina questa ambiguità.
+
+Quando si serializza \textbf{datetime} a JSON, è facile dimenticare che JSON non supporta datetime nativamente. È necessario fornire un custom serializer.
+
+Con \textbf{lru\_cache}, nei test è importante ignare il flag \verb|.cache_clear()| per ripulire la cache tra i test, evitando che i risultati cached da test precedenti influenzino i test successivi.
+
+Quando si \textbf{creano Path}, usare stringhe hardcoded reduce portabilità. Preferire di costruire path usando l'operatore `/` e `Path.home()` o `Path.cwd()` al posto di stringhe hardcoded.
+
+Infine, usare \textbf{reduce senza valore iniziale} può causare crash se la lista è vuota. È sempre saggio fornire un valore iniziale appropriato.
 \end{tcolorbox}
 
 \section{Esercizi}

@@ -17,13 +17,8 @@ Al termine di questo capitolo sarai in grado di:
 Un \textbf{pattern architetturale} è una soluzione consolidata e riutilizzabile per organizzare il codice di un'applicazione software. I pattern architetturali definiscono la struttura generale del sistema e le relazioni tra i suoi componenti (come visto nel \autoref{cap:classi_oggetti_ereditarieta} per la progettazione orientata agli oggetti).
 
 \subsection{Vantaggi dei pattern architetturali}
-\begin{itemize}
-    \item \textbf{Separazione delle responsabilità}: ogni componente ha un ruolo ben definito
-    \item \textbf{Manutenibilità}: modifiche localizzate senza impattare l'intero sistema
-    \item \textbf{Testabilità}: componenti indipendenti sono più facili da testare
-    \item \textbf{Riusabilità}: componenti possono essere riutilizzati in contesti diversi
-    \item \textbf{Scalabilità}: l'applicazione può crescere in modo organizzato
-\end{itemize}
+
+I pattern architetturali offrono una serie di vantaggi significativi nello sviluppo di applicazioni software complesse. Uno dei principali è la \textbf{separazione delle responsabilità}, dove ogni componente ha un ruolo ben definito e specifico, rendendo chiaro dove cercare il codice per una determinata funzionalità. Questo porta direttamente a una migliore \textbf{manutenibilità}: quando hai bisogno di apportare modifiche, queste rimangono localizzate nel componente responsabile senza impattare l'intero sistema. I pattern migliorano notevolmente la \textbf{testabilità}: componenti indipendenti e ben definiti sono molto più facili da testare in isolamento, poiché puoi creare mock e stub dei loro dipendenti. La struttura organizzata facilita anche la \textbf{riusabilità}: componenti ben definiti con responsabilità chiare possono essere riutilizzati in contesti e progetti diversi. Infine, offrono \textbf{scalabilità}: l'applicazione può crescere in modo organizzato aggiungendo nuovi componenti e nuove funzionalità senza necessità di refactoring massicio del codice esistente.
 
 \subsection{Pattern MVC}
 Il pattern \textbf{Model-View-Controller} è uno dei pattern architetturali più diffusi, particolarmente adatto per applicazioni con interfacce grafiche (vedi \autoref{cap:interfacce_grafiche}). Separa l'applicazione in tre componenti distinti con responsabilità specifiche.
@@ -200,39 +195,17 @@ Il pattern MVC risolve questi problemi dividendo l'applicazione in tre component
 \subsection{Model}
 Il \textbf{Model} rappresenta i dati e la logica di business dell'applicazione. È il componente che gestisce le informazioni e le regole di business, indipendentemente dalla rappresentazione visuale.
 
-\textbf{Responsabilità del Model}:
-\begin{itemize}
-    \item Gestire lo stato dell'applicazione (i dati)
-    \item Implementare la logica di business e le regole di validazione
-    \item Notificare i cambiamenti agli osservatori (View)
-    \item Non conoscere né View né Controller (totalmente indipendente dall'interfaccia)
-    \item Essere riutilizzabile in contesti diversi (console, web, mobile)
-\end{itemize}
+\textbf{Responsabilità del Model}: Il Model è responsabile di gestire lo stato dell'applicazione, cioè i dati che rappresentano lo stato corrente del sistema. Deve inoltre implementare la logica di business e le regole di validazione che garantiscono che i dati rimangono in uno stato consistente. Un aspetto importante è che il Model deve notificare i cambiamenti agli osservatori (come la View) in modo che l'interfaccia utente possa aggiornarsi di conseguenza. Crucialmente, il Model non deve conoscere né la View né il Controller, mantenendosi totalmente indipendente dall'interfaccia grafica: questo permette di riutilizzare il Model in contesti completamente diversi (console, applicazioni web, applicazioni mobile, API REST) senza alcuna modifica.
 
 \subsection{View}
 La \textbf{View} è responsabile della presentazione dei dati all'utente. È il componente che gestisce l'interfaccia grafica e l'interazione con l'utente (vedi \autoref{cap:interfacce_grafiche}).
 
-\textbf{Responsabilità della View}:
-\begin{itemize}
-    \item Visualizzare i dati del Model in modo appropriato
-    \item Catturare l'input dell'utente (click, digitazione, ecc.)
-    \item Aggiornare la visualizzazione quando il Model cambia
-    \item Non contenere logica di business (solo presentazione)
-    \item Delegare le azioni dell'utente al Controller
-\end{itemize}
+\textbf{Responsabilità della View}: La View è responsabile di visualizzare i dati del Model in modo appropriato all'utente, presentando le informazioni attraverso componenti grafici intuitivi. Deve catturare l'input dell'utente in tutte le sue forme (click di mouse, digitazione da tastiera, selection da menu, ecc.). Una responsabilità cruciale è aggiornare la visualizzazione quando il Model cambia, garantendo che l'interfaccia rimane sempre sincronizzata con lo stato attuale dell'applicazione. La View deve evitare assolutamente di contenere logica di business, limitandosi solo alla presentazione: non dovrebbe validare i dati, calcolare valori, o implementare regole di business. Infine, tutte le azioni dell'utente catturate dalla View devono essere delegate al Controller per essere gestite appropriatamente.
 
 \subsection{Controller}
 Il \textbf{Controller} fa da intermediario tra Model e View. È il componente che coordina le interazioni e gestisce il flusso dell'applicazione.
 
-\textbf{Responsabilità del Controller}:
-\begin{itemize}
-    \item Ricevere e interpretare l'input dalla View
-    \item Modificare il Model in risposta agli input dell'utente
-    \item Aggiornare la View quando necessario
-    \item Coordinare le interazioni tra Model e View
-    \item Gestire la logica di controllo del flusso (non la logica di business)
-    \item Conoscere sia il Model che la View per coordinarli
-\end{itemize}
+\textbf{Responsabilità del Controller}: Il Controller è responsabile di ricevere e interpretare l'input dalla View, traducendo le azioni dell'utente in comandi per il Model. Deve modificare il Model in risposta agli input dell'utente, orchestrando le operazioni necessarie. Un ruolo importante è aggiornare la View quando necessario dopo che il Model è stato modificato, garantendo che l'interfaccia rimane sincronizzata. Il Controller funge da coordinatore delle interazioni tra Model e View, gestendo il flusso di comunicazione tra i due. È importante notare che il Controller gestisce solo la logica di controllo del flusso (quali operazioni eseguire e in quale ordine), non la logica di business vera e propria, che rimane nel Model. A differenza del Model che deve essere isolato dall'interfaccia, il Controller può e deve conoscere sia il Model che la View per coordinarli effettivamente.
 
 \section{Esempio pratico: TodoList MVC}
 
@@ -741,12 +714,7 @@ public class TodoModelTest {
 }
 \end{lstlisting}
 
-\textbf{Vantaggi}:
-\begin{itemize}
-    \item Test rapidi senza avviare l'interfaccia grafica
-    \item Maggiore affidabilità del codice
-    \item Facilita il refactoring
-\end{itemize}
+\textbf{Vantaggi}: La separazione del Model dalla View fornisce numerosi vantaggi pratici. Innanzitutto, i test sono \textbf{rapidi} poiché non è necessario avviare l'intera interfaccia grafica: puoi testare la logica direttamente con semplici asserzioni. Questo porta a una \textbf{maggiore affidabilità del codice}: testare componenti in isolamento cattura i bug più efficacemente rispetto ai test dell'interfaccia grafica che sono lenti e fragili. Infine, la separazione \textbf{facilita il refactoring}: puoi modificare il Model sapendo che non stai rompendo la View, e viceversa, perché sono completamente disaccoppiati.
 
 \subsubsection{Accoppiamento loose coupling}
 
@@ -778,12 +746,7 @@ public class TodoController {
 }
 \end{lstlisting}
 
-\textbf{Vantaggi}:
-\begin{itemize}
-    \item Facile sostituire implementazioni (es. GUI Swing con JavaFX)
-    \item Facilita il testing con mock objects
-    \item Maggiore flessibilità e manutenibilità
-\end{itemize}
+\textbf{Vantaggi}: L'uso di interfacce per il loose coupling offre flessibilità architettonica significativa. È \textbf{facile sostituire implementazioni} quando i requisiti cambiano: per esempio, puoi rimpiazzare una GUI sviluppata con Swing con una sviluppata in JavaFX senza toccare il Model o il Controller, perché dipendono dalla stessa interfaccia. Ciò \textbf{facilita il testing con mock objects}: puoi creare implementazioni fittizie delle interfacce che simulano il comportamento, permettendoti di testare il Controller isolatamente da Model e View reali. Globalmente, il loose coupling garantisce \textbf{maggiore flessibilità e manutenibilità}: il sistema diventa più resiliente ai cambiamenti perché le dipendenze sono gestite attraverso contratti (interfacce) anziché implementazioni concrete.
 
 \subsubsection{Observer pattern per aggiornamenti}
 
@@ -836,13 +799,7 @@ public class TodoViewObserver extends JFrame implements PropertyChangeListener {
 }
 \end{lstlisting}
 
-\textbf{Vantaggi}:
-\begin{itemize}
-    \item La View si aggiorna automaticamente quando il Model cambia
-    \item Elimina la necessità di chiamate esplicite \texttt{aggiornaView()}
-    \item Supporta multiple View sincronizzate sullo stesso Model
-    \item Implementa il principio "Don't call us, we'll call you"
-\end{itemize}
+\textbf{Vantaggi}: L'implementazione del pattern Observer con il Model fornisce benefici significativi nell'architettura dell'applicazione. La View \textbf{si aggiorna automaticamente quando il Model cambia}, senza necessità di pull esplicito dei dati: non appena il Model modifica i dati, notifica automaticamente tutti i listener registrati. Ciò \textbf{elimina la necessità di chiamate esplicite} come \texttt{aggiornaView()}: il Controller non deve ricordarsi di aggiornare manualmente la View dopo ogni operazione sul Model. Il pattern \textbf{supporta multiple View sincronizzate sullo stesso Model}: diverse interfacce grafiche possono rimanere tutte aggiornate allo stesso stato, utile per applicazioni con viste multiple dello stesso dato. Infine, questo approccio \textbf{implementa il principio "Don't call us, we'll call you"}: la View non chiama il Model per verificare se è cambiato (polling inefficiente), ma è il Model che chiama la View per notificare i cambiamenti (push efficiente).
 
 \subsection{Diagramma di sequenza: flusso MVC}
 
@@ -951,38 +908,15 @@ Il seguente diagramma mostra il flusso tipico di un'interazione nel pattern MVC 
 \end{enumerate}
 
 \begin{nota}
-\textbf{Vantaggi del flusso Observer}:
-\begin{itemize}
-    \item Il Controller non deve chiamare esplicitamente \texttt{aggiornaView()}
-    \item Multiple View possono rimanere sincronizzate automaticamente
-    \item Il Model rimane indipendente dalla View
-    \item Segue il principio Hollywood: "Don't call us, we'll call you"
-\end{itemize}
+\textbf{Vantaggi del flusso Observer}: L'implementazione del flusso Observer nel pattern MVC fornisce vantaggi architetturali significativi. Il Controller non deve chiamare esplicitamente \texttt{aggiornaView()} dopo ogni operazione sul Model: la notifica automatica del Model gestisce tutto. Multiple View possono rimanere sincronizzate automaticamente sullo stesso Model senza sforzi aggiuntivi di coordinamento. Il Model rimane completamente indipendente dalla View anche in questo scenario avanzato: non conosce l'esistenza della View, ma comunica solo tramite il pattern Observer. Questo approccio segue il principio Hollywood: "Don't call us, we'll call you", dove la View non interroga costantemente il Model, ma rimane in ascolto dei cambiamenti che il Model le notifica proattivamente.
 \end{nota}
 
 \section{Riepilogo}
 
-In questo capitolo abbiamo studiato il pattern architetturale Model-View-Controller, fondamentale per la progettazione di applicazioni moderne:
-
-\begin{itemize}
-    \item \textbf{Pattern architetturali}: soluzioni consolidate per organizzare il codice delle applicazioni
-    \item \textbf{Problemi delle applicazioni monolitiche}: forte accoppiamento, scarsa manutenibilità, impossibilità di riutilizzo
-    \item \textbf{Model}: gestisce i dati e la logica di business, completamente indipendente dall'interfaccia grafica
-    \item \textbf{View}: gestisce la presentazione dei dati e la cattura dell'input utente tramite componenti grafici
-    \item \textbf{Controller}: coordina Model e View, gestendo il flusso dell'applicazione
-    \item \textbf{Vantaggi MVC}: separazione delle responsabilità, testabilità, riusabilità, manutenibilità, scalabilità
-    \item \textbf{Comunicazione tra componenti}: il Controller chiama metodi del Model e della View per coordinare le interazioni
-\end{itemize}
+In questo capitolo abbiamo studiato il pattern architetturale Model-View-Controller, fondamentale per la progettazione di applicazioni moderne. I \textbf{pattern architetturali} sono soluzioni consolidate e riutilizzabili per organizzare il codice delle applicazioni di grandi dimensioni. Abbiamo visto i \textbf{problemi delle applicazioni monolitiche}, dove il codice è mescolato in una singola classe, causando forte accoppiamento, scarsa manutenibilità e impossibilità di riutilizzo. Il \textbf{Model} è il componente che gestisce i dati e la logica di business, rimanendo completamente indipendente dall'interfaccia grafica per garantire riusabilità. La \textbf{View} è responsabile della presentazione dei dati all'utente e della cattura dell'input tramite componenti grafici, senza contenere logica di business. Il \textbf{Controller} funge da coordinatore di Model e View, gestendo il flusso dell'applicazione e mediando le interazioni. I \textbf{vantaggi MVC} includono una chiara separazione delle responsabilità, testabilità migliorata dei componenti, riusabilità del Model in diversi contesti, manutenibilità semplificata, e scalabilità dell'applicazione. La \textbf{comunicazione tra componenti} avviene quando il Controller chiama metodi del Model per modificare i dati e della View per aggiornare l'interfaccia, coordinando così le interazioni tra i tre componenti.
 
 Il pattern MVC è fondamentale per costruire applicazioni scalabili e manutenibili, ed è alla base di molti framework moderni (Spring MVC per Java, Django per Python, Ruby on Rails, ASP.NET MVC, e molti altri).
 
 \begin{nota}
-Varianti del pattern MVC:
-\begin{itemize}
-    \item \textbf{MVP} (Model-View-Presenter): il Presenter media tutta la comunicazione
-    \item \textbf{MVVM} (Model-View-ViewModel): binding bidirezionale tra View e ViewModel
-    \item \textbf{MVI} (Model-View-Intent): flusso unidirezionale per applicazioni reactive
-\end{itemize}
-
-Questi pattern estendono i concetti di MVC per scenari specifici.
+Varianti del pattern MVC: Il pattern MVC ha ispirato diverse varianti che si adattano a specifici contesti e paradigmi di programmazione. Il pattern \textbf{MVP} (Model-View-Presenter) mantiene la stessa separazione di MVC ma introduce una differenza importante: il Presenter media tutta la comunicazione tra Model e View, aumentando il controllo sulla logica di coordinamento. Il pattern \textbf{MVVM} (Model-View-ViewModel) introduce il concetto di ViewModel, uno strato intermedio che espone i dati in un formato adatto alla View; una caratteristica chiave è il binding bidirezionale tra View e ViewModel, dove i cambiamenti in uno si riflettono automaticamente nell'altro senza necessità di codice esplicito. Il pattern \textbf{MVI} (Model-View-Intent) è pensato per applicazioni reactive e implementa un flusso unidirezionale: l'utente invia intent (intenzioni), la logica produce un nuovo modello, la View si aggiorna conseguentemente, creando un flusso predicibile e facilmente testabile. Questi pattern estendono i concetti fondamentali di MVC adattandoli a scenari specifici e paradigmi di sviluppo moderni.
 \end{nota}

@@ -17,10 +17,13 @@ Flask è adatto a API e piccoli siti, microservizi e prototipi veloci con una cu
 
 \section{Concetti Fondamentali}
 \begin{tcolorbox}[title=Struttura di app e ciclo richiesta]
-- App factory (\texttt{create\_app}) e blueprint per modularità.
-- Context di applicazione e richiesta, gestione \texttt{g}/\texttt{session}.
-- Routing e metodi HTTP, validazione input e sicurezza.
-- Template Jinja2: separazione presentazione/logica.
+L'uso della \textbf{app factory} (pattern \texttt{create\_app}) e dei blueprint è essenziale per applicazioni Flask non banali. Questo pattern consente di creare istanze separate di app per test e configurazioni diverse, e permette di modularizzare il codice in blueprint che raggruppano rotte correlate.
+
+Comprendere i \textbf{context di applicazione e richiesta} è cruciale. Flask mantiene context thread-local per l'app e per la richiesta corrente, che consentono di accedere a dati globali senza passarli esplicitamente. Le variabili \texttt{g} e \texttt{session} permettono di archiviare dati per richiesta e per utente rispettivamente.
+
+Il \textbf{routing} e i \textbf{metodi HTTP} sono il cuore di qualsiasi app web. Definire rotte che rispondono ai metodi HTTP appropriati (GET, POST, PUT, DELETE) e implementare una \textbf{validazione input} robusta è essenziale per la sicurezza e l'affidabilità.
+
+L'uso di \textbf{template Jinja2} consente una chiara separazione tra presentazione e logica. Anziché concatenare HTML in Python, Jinja2 permette di definire template che ricevono dati e generano HTML dinamico.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -100,13 +103,15 @@ Hai definito una piccola app Flask con rotte e template.
 
 \section{Approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
-\begin{itemize}
-\item \textbf{App factory}: creare l'app con funzioni per configurazioni diverse (test, prod).
-  \item \textbf{Blueprints}: modularizzare viste e API; isolare dipendenze.
-  \item \textbf{Contesto di richiesta}: gestire \verb|request|/\verb|g|/\verb|session| in modo sicuro; evitare globali.
-  \item \textbf{Template Jinja2}: separare presentazione; validare input e proteggere da XSS/CSRF.
-  \item \textbf{Testing}: usare il test client; verificare percorsi e stati; integrare CI.
-\end{itemize}
+Il pattern \textbf{app factory} consente di creare l'app con funzioni dedicate, permettendo diverse configurazioni per test e produzione. Questo migliora la testabilità e la flessibilità dell'applicazione.
+
+I \textbf{blueprint} sono un meccanismo per modularizzare viste e API, consentendo di raggruppare rotte correlate e isolare dipendenze. Questo rende le applicazioni più scalabili e manutenibili.
+
+La gestione del \textbf{contesto di richiesta} è fondamentale in Flask. L'oggetto \verb|request| contiene i dati della richiesta HTTP, mentre \verb|g| serve per archiviare dati per richiesta e \verb|session| per dati persistenti tra richieste. È importante gestire questi in modo sicuro e evitare variabili globali che rendono il codice difficile da testare.
+
+Quando si usano \textbf{template Jinja2}, è importante separare chiaramente la presentazione dalla logica. Inoltre, Jinja2 fornisce escape automatico di default per proteggere da XSS; tuttavia, è necessario implementare protezioni CSRF e validare l'input lato server.
+
+Il \textbf{testing} di applicazioni Flask dovrebbe usare il test client fornito da Flask per verificare percorsi, metodi HTTP e stati. Integrare test nel processo CI garantisce che regressioni siano rilevate immediatamente.
 \end{tcolorbox}
 
 \paragraph{Deployment} Differenziare configurazione sviluppo/produzione, log, e gestione errori; preferire server WSGI adeguati e reverse proxy.

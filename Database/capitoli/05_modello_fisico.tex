@@ -16,13 +16,7 @@ Il modello fisico descrive come i dati sono effettivamente memorizzati e organiz
 \section{Memorizzazione dei Dati}
 
 \subsection{Struttura di memorizzazione}
-I dati vengono memorizzati in blocchi (pagine) sul disco:
-\begin{itemize}
-    \item \textbf{Blocco}: unità minima di trasferimento tra disco e memoria (tipicamente 4-16 KB)
-    \item \textbf{Pagina}: blocco logico del DBMS
-    \item \textbf{Record}: singola tupla della tabella
-    \item \textbf{Campo}: singolo attributo di un record
-\end{itemize}
+I dati vengono memorizzati in una gerarchia ben organizzata all'interno del disco. Un \textbf{blocco} rappresenta l'unità minima di trasferimento tra disco e memoria, tipicamente dimensionato tra 4 e 16 KB per ottimizzare le operazioni di I/O. Una \textbf{pagina} è il corrispondente concetto logico all'interno del DBMS, fungendo da container strutturato dei dati. Un \textbf{record} è la singola tupla della tabella, contenente una riga completa di dati. Infine, un \textbf{campo} rappresenta il singolo attributo di un record, cioè il più piccolo elemento di dato identificabile all'interno della struttura.
 
 \begin{figure}[h]
     \centering
@@ -46,29 +40,17 @@ I dati vengono memorizzati in blocchi (pagine) sul disco:
 \end{figure}
 
 \subsection{Tipi di accesso}
-\begin{description}
-    \item[\textbf{Sequential access}]: Leggere i record uno dopo l'altro sequenzialmente. Lento per record specifici.
-    \item[\textbf{Random access}]: Accedere direttamente a un record senza leggerne altri. Veloce ma necessita di indici.
-\end{description}
+Esistono due modelli fondamentali di accesso ai dati che differiscono significativamente in termini di efficienza. L'\textbf{accesso sequenziale} implica leggere i record uno dopo l'altro in sequenza, scorrendo l'intera struttura dati. Questo metodo è lento quando si ricerca un record specifico, poiché potrebbe richiedere di esaminare un numero enorme di record prima di trovare quello desiderato. L'\textbf{accesso casuale} consente invece di accedere direttamente a un record specifico senza doverne leggere altri, risultando molto più veloce; tuttavia, questa velocità richiede la disponibilità di strutture ausiliarie come gli indici che guidano il DBMS direttamente al dato cercato.
 
 \section{Indici}
 
 Un \textbf{indice} è una struttura dati che accelera il recupero di record da una tabella. Funziona come un indice di un libro: invece di leggere tutte le pagine, consulti l'indice per trovare la pagina che cerchi.
 
 \subsection{Vantaggi degli indici}
-\begin{itemize}
-    \item Accelera ricerche e filtri (WHERE)
-    \item Accelera ordinamenti (ORDER BY)
-    \item Accelera join tra tabelle
-    \item Supporta query range (es. WHERE prezzo BETWEEN 10 AND 100)
-\end{itemize}
+Gli indici offrono benefici significativi per le operazioni di lettura del database. La loro funzione primaria è accelerare notevolmente le ricerche e i filtri espressi nelle clausole WHERE, permettendo al DBMS di localizzare rapidamente i record corrispondenti senza dover scansionare l'intera tabella. Questo vantaggio si estende agli ordinamenti (ORDER BY), poiché gli indici mantengono i dati in ordine predeterminato, eliminando la necessità di costosi ordinamenti runtime. Gli indici ottimizzano inoltre le operazioni di join tra tabelle, facilitando l'abbinamento veloce di record correlati attraverso le chiavi, riducendo drasticamente il tempo di esecuzione delle query che combinano più tabelle. Infine, supportano efficacemente le query range, dove è necessario recuperare intervalli di valori, come nella clausola WHERE prezzo BETWEEN 10 AND 100, permettendo al database di identificare rapidamente i record che cadono nell'intervallo specificato.
 
 \subsection{Svantaggi degli indici}
-\begin{itemize}
-    \item Occupano spazio aggiuntivo su disco
-    \item Ralentano INSERT, UPDATE, DELETE (l'indice deve essere aggiornato)
-    \item Richiedono manutenzione periodica
-\end{itemize}
+Nonostante i vantaggi sostanziali, gli indici comportano anche costi significativi che devono essere attentamente considerati nella progettazione del database. Gli indici occupano spazio aggiuntivo considerevole su disco, poiché mantengono una copia organizzata dei dati indicizzati insieme ai puntatori ai record reali, aumentando i requisiti complessivi di storage del sistema. Più criticamente, gli indici ralentano le operazioni di scrittura quali INSERT, UPDATE e DELETE, poiché ogni modifica ai dati richiede che anche l'indice venga aggiornato per mantenere la consistenza, moltiplicando il lavoro necessario per ogni operazione di modifica. Questo overhead diventa particolarmente significativo quando una tabella ha molti indici. Inoltre, gli indici richiedono manutenzione periodica per mantenere l'efficienza nel tempo, attraverso operazioni come la ricostruzione e la riorganizzazione, consumando risorse computazionali che potrebbero altrimenti essere dedicate a servire query degli utenti.
 
 \subsection{Tipi di indici}
 
@@ -145,18 +127,10 @@ EXPLAIN SELECT * FROM cliente WHERE email = 'mario@email.com';
 Una \textbf{vista materializzata} è il risultato di una query pre-calcolato e memorizzato fisicamente sul disco. A differenza di una vista normale, occupa spazio e deve essere aggiornato.
 
 \subsection{Vantaggi}
-\begin{itemize}
-    \item Query molto veloce (dati pre-calcolati)
-    \item Riduce carico computazionale
-    \item Utile per query complesse su dati storici
-\end{itemize}
+Le viste materializzate offrono prestazioni eccezionali per determinati tipi di query, rappresentando una soluzione ottimale in specifici scenari d'uso. Il loro vantaggio principale è la velocità di risposta: poiché i dati sono già pre-calcolati e memorizzati fisicamente sul disco, le query possono restituire risultati quasi istantaneamente, eliminando completamente il bisogno di rielaborazione al momento della richiesta. Questo si traduce in una riduzione significativa del carico computazionale del DBMS, liberando cicli di CPU e risorse I/O che possono essere dedicate ad altre operazioni critiche. Le viste materializzate sono particolarmente preziose per query complesse che coinvolgono aggregazioni su grandi volumi di dati storici, dove i risultati rimangono relativamente stabili nel tempo e la precisione al millisecondo non è essenziale. In contesti di business intelligence e reporting, dove le stesse query complesse vengono eseguite ripetutamente da molti utenti, i benefici in termini di performance possono essere drammatici.
 
 \subsection{Svantaggi}
-\begin{itemize}
-    \item Occupa spazio su disco
-    \item Deve essere aggiornato periodicamente
-    \item Dati possono essere non aggiornati (stali)
-\end{itemize}
+Nonostante i vantaggi sostanziali di performance, le viste materializzate presentano limitazioni e costi che devono essere attentamente valutati. Il primo svantaggio è l'occupazione di spazio su disco in modo permanente: ogni vista materializzata essenzialmente duplica i dati, aumentando significativamente i requisiti complessivi di storage del sistema, specialmente quando si materializzano aggregazioni di tabelle molto grandi. Più importante dal punto di vista della correttezza dei dati, le viste materializzate devono essere aggiornate periodicamente per mantenere la coerenza con i dati sottostanti che cambiano nel tempo, richiedendo procedure di refresh pianificate che consumano risorse e devono essere coordinate attentamente. Questo introduce il problema della "staleness": tra un refresh e l'altro, i dati nella vista materializzata possono diventare obsoleti, creando una finestra di tempo dove i risultati delle query non riflettono lo stato attuale e più recente del database, potenzialmente portando a decisioni basate su informazioni non aggiornate.
 
 \subsection{Esempio di vista materializzata}
 
@@ -247,11 +221,7 @@ PARTITIONS 4;  -- 4 partizioni
 \end{lstlisting}
 
 \subsection{Vantaggi del partizionamento}
-\begin{itemize}
-    \item Query più veloci (scansione solo partizioni rilevanti)
-    \item Manutenzione più agevole (backup per partizione)
-    \item Scalabilità orizzontale
-\end{itemize}
+Il partizionamento offre benefici strategici per sistemi di grandi dimensioni. Consente query molto più veloci limitando la scansione solo alle partizioni rilevanti, evitando di esaminare l'intera tabella. Facilita la manutenzione attraverso operazioni per partizione singola, rendendo i backup e il recupero molto più agevoli e gestibili. Offre inoltre la capacità di scalabilità orizzontale, permettendo al sistema di distribuire dati e carico di lavoro su multiple partizioni e potenzialmente su più server.
 
 \section{Ottimizzazione di Query}
 
@@ -266,12 +236,7 @@ WHERE c.città = 'Milano'
 ORDER BY o.dataOrdine DESC;
 \end{lstlisting}
 
-L'output mostra:
-\begin{itemize}
-    \item Quale indice viene usato
-    \item Quante righe vengono esaminate
-    \item Il costo relativo di ogni operazione
-\end{itemize}
+L'output del comando EXPLAIN fornisce informazioni critiche per l'ottimizzazione. Identifica quale indice viene utilizzato durante l'esecuzione della query, o se viene eseguita una scansione completa della tabella. Mostra quante righe vengono esaminate per produrre il risultato, un indicatore importante dell'efficienza. Visualizza anche il costo relativo di ogni operazione, permettendo di identificare i colli di bottiglia nel piano di esecuzione.
 
 \subsection{Statistiche e manutenzione}
 
@@ -289,14 +254,7 @@ SHOW TABLE STATUS FROM database_name;
 \section*{Riepilogo concetti chiave}
 
 \begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
-\begin{itemize}
-    \item I dati sono memorizzati in \textbf{pagine/blocchi} sul disco
-    \item Gli \textbf{indici} accelerano ricerche, JOIN e ordinamenti
-    \item Le \textbf{viste materializzate} pre-calcolano risultati frequenti
-    \item Il \textbf{partizionamento} divide grandi tabelle in parti più piccole
-    \item Bilanciare velocità di lettura (indici) con velocità di scrittura
-    \item Monitorare con EXPLAIN e statistiche per identificare colli di bottiglia
-\end{itemize}
+I dati sono strutturati e memorizzati efficientemente in \textbf{pagine e blocchi} sul disco, secondo una gerarchia organizzata che ottimizza l'accesso. Gli \textbf{indici} rappresentano strutture cruciali che accelerano notevolmente ricerche, operazioni JOIN e ordinamenti, sebbene richiedano compromessi in termini di spazio e velocità di scrittura. Le \textbf{viste materializzate} pre-calcolano e memorizzano risultati di query frequenti, offendo prestazioni eccezionali al costo della storicità dei dati. Il \textbf{partizionamento} divide grandi tabelle in parti gestibili più piccole, migliorando performance e manutenibilità. Una considerazione fondamentale è il bilanciamento tra la velocità di lettura, ottimizzata dagli indici, e la velocità di scrittura, rallentata dagli stessi. Infine, monitorare il performance reale con EXPLAIN e statistiche è essenziale per identificare colli di bottiglia e ottimizzare continuamente il sistema.
 \end{tcolorbox}
 
 \section*{Esercizi}

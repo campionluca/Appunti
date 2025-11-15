@@ -3,15 +3,7 @@
 
 \section{Introduzione ai Makefile}
 
-Un Makefile è uno strumento che automatizza il processo di compilazione e costruzione (build) di un progetto C. Permette di:
-
-\begin{itemize}
-    \item Automatizzare comandi di compilazione complessi
-    \item Gestire dipendenze tra file oggetto e sorgenti
-    \item Compilare solo i file modificati
-    \item Executare test e pulizia automaticamente
-    \item Rendere il progetto portabile e facile da distribuire
-\end{itemize}
+Un Makefile è uno strumento che automatizza il processo di compilazione e costruzione (build) di un progetto C, semplificando enormemente la gestione di progetti complessi. Esso consente di \textbf{automatizzare comandi di compilazione complessi} che altrimenti richiederebbero di essere digitati manualmente ogni volta; invece di scrivere lunghe linee di comando, è possibile semplicemente digitare \texttt{make}. Un Makefile permette anche di \textbf{gestire dipendenze tra file oggetto e sorgenti}, tracciando quali file sorgenti devono essere compilati per creare ciascun file oggetto. Grazie a questa gestione delle dipendenze, è possibile \textbf{compilare solo i file modificati}, risparmiando tempo nei progetti grandi dove ricompilare tutto da zero richiederebbe minuti. Inoltre, un Makefile ben strutturato consente di \textbf{eseguire test e pulizia automaticamente}, con comandi come \texttt{make test} e \texttt{make clean}. Infine, i Makefile rendono il progetto \textbf{portabile e facile da distribuire}, poiché uno sviluppatore può compilare il progetto su un'altra macchina semplicemente digitando \texttt{make}, senza dover ricordare la sintassi esatta della compilazione.
 
 \begin{nota}
 Un Makefile usa il comando \texttt{make} per eseguire le regole definite. La sintassi è sensibile alle tabulazioni (tab, non spazi).
@@ -40,12 +32,7 @@ target: dipendenze
 	comando2
 \end{lstlisting}
 
-Una regola Makefile contiene:
-\begin{enumerate}
-    \item \textbf{target}: il nome del file o dell'azione da creare
-    \item \textbf{dipendenze}: file da cui dipende il target
-    \item \textbf{comandi}: comandi da eseguire (con tabulazione iniziale)
-\end{enumerate}
+Una regola Makefile è composta da tre elementi fondamentali. Il \textbf{target} è il nome del file o dell'azione che si desidera creare o eseguire; ad esempio, nel caso di un file eseguibile, il target è il nome del programma finale. Le \textbf{dipendenze} sono i file da cui dipende il target, cioè i file che devono esistere o essere aggiornati prima di creare il target; se il target dipende da \texttt{main.o} e \texttt{funzioni.o}, allora questi sono i file di dipendenza. I \textbf{comandi} sono le linee di shell da eseguire per creare il target; è essenziale che ogni linea di comando inizi con una tabulazione (tab), non con spazi, altrimenti make genererà un errore.
 
 \subsection{Esempio Semplice}
 

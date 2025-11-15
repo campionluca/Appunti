@@ -39,10 +39,8 @@ MOV DL, CH        ; DL = CH (byte alto di CX)
 \end{lstlisting}
 
 \textbf{Vantaggi}:
-\begin{itemize}
-    \item Velocissime (nessun accesso a memoria)
-    \item Istruzioni compatte (1-2 byte)
-\end{itemize}
+
+L'indirizzamento a registro offre vantaggi significativi dal punto di vista delle performance. Le operazioni tra registri sono \emph{velocissime} poiché non richiedono alcun accesso alla memoria, permettendo al processore di completare l'operazione interamente all'interno del chip. Inoltre, le istruzioni che utilizzano l'indirizzamento a registro sono particolarmente \emph{compatte}, occupando solamente 1-2 byte, il che significa che il programma occupa meno spazio in memoria e viene caricato più rapidamente dalla memoria durante il prefetch.
 
 \subsection{3. Direct Addressing (Indirizzamento Diretto)}
 
@@ -90,12 +88,8 @@ L'indirizzo è contenuto in un registro (BX, SI, DI, BP).
 \textbf{Sintassi}: \texttt{MOV dest, [registro]}
 
 \textbf{Registri utilizzabili}:
-\begin{itemize}
-    \item \texttt{[BX]} — segmento DS (default)
-    \item \texttt{[SI]} — segmento DS
-    \item \texttt{[DI]} — segmento DS
-    \item \texttt{[BP]} — segmento SS (eccezione!)
-\end{itemize}
+
+L'indirizzamento indiretto a registro supporta quattro registri specifici, ognuno con il proprio segmento predefinito. Il registro \texttt{[BX]} utilizza il segmento DS come default, rendendolo ideale per l'accesso ai dati generici. Il registro \texttt{[SI]} (Source Index) utilizza anch'esso il segmento DS per default. Similmente, \texttt{[DI]} (Destination Index) fa riferimento al segmento DS. Un'importante eccezione è rappresentata da \texttt{[BP]} (Base Pointer), che utilizza il segmento SS (Stack Segment) come default anzichè DS, poiché è comunemente usato per accedere ai parametri e alle variabili locali che risiedono nello stack piuttosto che nel segmento dati.
 
 \begin{lstlisting}
 MOV BX, 1000h
@@ -188,13 +182,8 @@ MOV AX, matrix[SI+0]   ; Elemento (1,0)
 Combina un registro base (BX o BP) con un registro indice (SI o DI) e opzionalmente un offset.
 
 \textbf{Sintassi}:
-\begin{itemize}
-    \item \texttt{[BX+SI]}
-    \item \texttt{[BX+DI]}
-    \item \texttt{[BP+SI]}
-    \item \texttt{[BP+DI]}
-    \item \texttt{[BX+SI+offset]}
-\end{itemize}
+
+L'indirizzamento base + indice supporta diverse combinazioni di registri per adattarsi a vari scenari. È possibile combinare il registro base BX con il registro indice SI (\texttt{[BX+SI]}), oppure BX con DI (\texttt{[BX+DI]}). Alternativamente, si può utilizzare il registro base BP con SI (\texttt{[BP+SI]}) o BP con DI (\texttt{[BP+DI]}). Per accessi ancora più flessibili, è possibile aggiungere anche un offset costante a queste combinazioni, come in \texttt{[BX+SI+offset]}, permettendo di calcolare indirizzi complessi che combinano tre elementi: un registro base, un registro indice e un valore immediato.
 
 \begin{lstlisting}
 MOV AX, [BX+SI]       ; AX = DS:(BX+SI)
@@ -354,13 +343,7 @@ Le operazioni tra registri sono le più veloci. Minimizzare gli accessi a memori
 
 \section{Riepilogo}
 
-\begin{itemize}
-    \item L'8086 supporta 7 modalità di indirizzamento
-    \item Immediate e Register sono le più veloci (nessun accesso a memoria)
-    \item BX, SI, DI usano segmento DS; BP usa SS
-    \item Based Indexed permette array multidimensionali e struct complesse
-    \item Override di segmento con prefissi ES:, DS:, CS:, SS:
-\end{itemize}
+L'8086 supporta \emph{7 modalità di indirizzamento diverse}, ognuna ottimizzata per specifici scenari di programmazione. Le modalità \emph{Immediate e Register sono le più veloci} poiché non richiedono accessi alla memoria, permettendo al processore di completare le operazioni in pochi cicli di clock. Quando si lavora con la memoria, è importante ricordare che i registri \texttt{BX}, \texttt{SI} e \texttt{DI} utilizzano il segmento DS come default, mentre \texttt{BP} utilizza il segmento SS, una distinzione critica per evitare errori di indirizzamento. La modalità \emph{Based Indexed è particolarmente potente} in quanto permette l'accesso a array multidimensionali e strutture dati complesse attraverso la combinazione di un registro base, un registro indice e un offset costante. Quando è necessario accedere a dati in segmenti diversi da quelli predefiniti, è possibile \emph{fare un override del segmento} utilizzando i prefissi \texttt{ES:}, \texttt{DS:}, \texttt{CS:} e \texttt{SS:} direttamente nell'istruzione.
 
 \section{Esercizi}
 
