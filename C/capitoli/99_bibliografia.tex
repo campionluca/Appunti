@@ -1,350 +1,782 @@
 \chapter*{Bibliografia e Risorse}
 \addcontentsline{toc}{chapter}{Bibliografia e Risorse}
 
+\section*{Manuali Ufficiali e Standard}
+
+\begin{enumerate}
+    \item \textbf{ISO C Standard Documents} \\
+    Documentazione ufficiale ISO \\
+    \url{https://www.iso.org/standard/74528.html}
+
+    \item \textbf{C Reference at cppreference.com} \\
+    Documentazione completa C89-C23 \\
+    \url{https://en.cppreference.com/w/c} \\
+    \emph{La migliore reference online per C moderno}
+
+    \item \textbf{GNU C Library Manual} \\
+    Manuale glibc completo \\
+    \url{https://www.gnu.org/software/libc/manual/} \\
+    \emph{Indispensabile per programmazione Linux}
+
+    \item \textbf{C Standard Library Reference} \\
+    Riferimento funzioni standard \\
+    \url{https://www.cplusplus.com/reference/clibrary/}
+\end{enumerate}
+
 \section*{Libri di Testo}
 
 \subsection*{Testi Fondamentali}
 
 \begin{enumerate}
-    \item \textbf{Kernighan, B. W., \& Ritchie, D. M.} (1988). \textit{The C Programming Language} (2nd ed.). Prentice Hall.
-    \begin{itemize}
-        \item Il libro classico scritto dai creatori del linguaggio C
-        \item Considerato la "bibbia" del C
-        \item Copre tutte le caratteristiche fondamentali del linguaggio
-    \end{itemize}
+    \item \textbf{The C Programming Language} (2nd Edition) \\
+    Brian W. Kernighan, Dennis M. Ritchie \\
+    Prentice Hall, 1988 \\
+    ISBN: 978-0131103627 \\
+    \emph{Il libro classico scritto dai creatori del C. Considerato la "bibbia" del C. Copre C89/ANSI C con esempi concisi ed eleganti.}
 
-    \item \textbf{King, K. N.} (2008). \textit{C Programming: A Modern Approach} (2nd ed.). W. W. Norton \& Company.
-    \begin{itemize}
-        \item Approccio moderno alla programmazione in C
-        \item Molti esempi pratici ed esercizi
-        \item Ottimo per principianti
-    \end{itemize}
+    \item \textbf{C Programming: A Modern Approach} (2nd Edition) \\
+    K. N. King \\
+    W. W. Norton \& Company, 2008 \\
+    ISBN: 978-0393979503 \\
+    \emph{Approccio moderno e didattico. Copre C89, C99. Eccellente per principianti con molti esempi ed esercizi.}
 
-    \item \textbf{Deitel, P., \& Deitel, H.} (2015). \textit{C How to Program} (8th ed.). Pearson.
-    \begin{itemize}
-        \item Trattazione completa con approccio didattico
-        \item Numerosi esempi e case study
-        \item Include esercizi graduali
-    \end{itemize}
+    \item \textbf{C How to Program} (9th Edition) \\
+    Paul Deitel, Harvey Deitel \\
+    Pearson, 2021 \\
+    ISBN: 978-0136873464 \\
+    \emph{Trattazione completa con approccio "live-code". Include C11, C17, sicurezza, IoT.}
+
+    \item \textbf{C Primer Plus} (6th Edition) \\
+    Stephen Prata \\
+    Addison-Wesley, 2013 \\
+    ISBN: 978-0321928429 \\
+    \emph{Tutorial dettagliato con più di 1000 pagine. Copre C11. Ottimo per autodidatti.}
+
+    \item \textbf{Head First C} \\
+    David Griffiths, Dawn Griffiths \\
+    O'Reilly Media, 2012 \\
+    ISBN: 978-1449399917 \\
+    \emph{Approccio visuale e coinvolgente. Ideale per chi impara meglio con diagrammi e immagini.}
+\end{enumerate}
+
+\subsection*{Testi Intermedi}
+
+\begin{enumerate}
+    \item \textbf{Programming in C} (4th Edition) \\
+    Stephen G. Kochan \\
+    Addison-Wesley, 2014 \\
+    ISBN: 978-0321776419 \\
+    \emph{Approccio step-by-step con progressione graduale}
+
+    \item \textbf{C Programming Absolute Beginner's Guide} (3rd Edition) \\
+    Greg Perry, Dean Miller \\
+    Que Publishing, 2013 \\
+    ISBN: 978-0789751980
+
+    \item \textbf{Practical C Programming} (3rd Edition) \\
+    Steve Oualline \\
+    O'Reilly Media, 1997 \\
+    ISBN: 978-1565923065
 \end{enumerate}
 
 \subsection*{Testi Avanzati}
 
 \begin{enumerate}
-    \item \textbf{Kochan, S. G.} (2014). \textit{Programming in C} (4th ed.). Addison-Wesley.
-    \item \textbf{Prata, S.} (2013). \textit{C Primer Plus} (6th ed.). Addison-Wesley.
-    \item \textbf{Summit, S.} (1995). \textit{C Programming FAQs}. Addison-Wesley.
+    \item \textbf{Expert C Programming: Deep C Secrets} \\
+    Peter van der Linden \\
+    Prentice Hall, 1994 \\
+    ISBN: 978-0131774292 \\
+    \emph{Svela i segreti del C. Copre comportamenti non ovvi, design decisioni, aneddoti storici.}
+
+    \item \textbf{Advanced Programming in the UNIX Environment} (3rd Edition) \\
+    W. Richard Stevens, Stephen A. Rago \\
+    Addison-Wesley, 2013 \\
+    ISBN: 978-0321637734 \\
+    \emph{La bibbia della system programming UNIX/Linux con C}
+
+    \item \textbf{The Linux Programming Interface} \\
+    Michael Kerrisk \\
+    No Starch Press, 2010 \\
+    ISBN: 978-1593272203 \\
+    \emph{1500+ pagine su Linux/UNIX system programming}
+
+    \item \textbf{21st Century C} (2nd Edition) \\
+    Ben Klemens \\
+    O'Reilly Media, 2014 \\
+    ISBN: 978-1491904442 \\
+    \emph{C moderno con strumenti contemporanei (Autotools, Valgrind, GDB)}
+
+    \item \textbf{C Traps and Pitfalls} \\
+    Andrew Koenig \\
+    Addison-Wesley, 1989 \\
+    ISBN: 978-0201179286 \\
+    \emph{Errori comuni e come evitarli}
+
+    \item \textbf{Understanding and Using C Pointers} \\
+    Richard Reese \\
+    O'Reilly Media, 2013 \\
+    ISBN: 978-1449344184 \\
+    \emph{Guida completa ai puntatori in C}
 \end{enumerate}
 
-\section*{Risorse Online}
-
-\subsection*{Tutorial e Guide}
+\subsection*{Algoritmi e Strutture Dati}
 
 \begin{enumerate}
-    \item \textbf{Learn-C.org}
-    \begin{itemize}
-        \item \url{https://www.learn-c.org/}
-        \item Tutorial interattivo gratuito
-        \item Esercizi pratici con verifica automatica
-    \end{itemize}
+    \item \textbf{Algorithms in C, Parts 1-5} (3rd Edition) \\
+    Robert Sedgewick \\
+    Addison-Wesley, 2001 \\
+    ISBN: 978-0201756081
 
-    \item \textbf{GeeksforGeeks - C Programming}
-    \begin{itemize}
-        \item \url{https://www.geeksforgeeks.org/c-programming-language/}
-        \item Articoli approfonditi su ogni aspetto del C
-        \item Molti esempi e spiegazioni
-    \end{itemize}
+    \item \textbf{Mastering Algorithms with C} \\
+    Kyle Loudon \\
+    O'Reilly Media, 1999 \\
+    ISBN: 978-1565924536
 
-    \item \textbf{Tutorialspoint - C Programming}
-    \begin{itemize}
-        \item \url{https://www.tutorialspoint.com/cprogramming/}
-        \item Tutorial completo con esempi
-        \item Possibilità di compilare online
-    \end{itemize}
-
-    \item \textbf{C Programming at Programiz}
-    \begin{itemize}
-        \item \url{https://www.programiz.com/c-programming}
-        \item Guide chiare per principianti
-        \item Esempi pratici e ben commentati
-    \end{itemize}
+    \item \textbf{Data Structures Using C} \\
+    Aaron M. Tenenbaum, Yedidyah Langsam, Moshe J. Augenstein \\
+    Prentice Hall, 1990 \\
+    ISBN: 978-0131997467
 \end{enumerate}
 
-\subsection*{Documentazione di Riferimento}
+\section*{Tutorial e Corsi Online}
 
-\begin{enumerate}
-    \item \textbf{cppreference.com}
-    \begin{itemize}
-        \item \url{https://en.cppreference.com/w/c}
-        \item Documentazione completa e accurata
-        \item Include C11 e C17
-    \end{itemize}
+\subsection*{Piattaforme Gratuite}
 
-    \item \textbf{C Standard Library Reference}
-    \begin{itemize}
-        \item \url{https://www.cplusplus.com/reference/clibrary/}
-        \item Riferimento per tutte le funzioni standard
-        \item Esempi per ogni funzione
-    \end{itemize}
-\end{enumerate}
+\begin{itemize}
+    \item \textbf{Learn-C.org} \\
+    \url{https://www.learn-c.org/} \\
+    Tutorial interattivo con esercizi verificati automaticamente
 
-\subsection*{Piattaforme di Pratica}
+    \item \textbf{Programiz C Programming} \\
+    \url{https://www.programiz.com/c-programming} \\
+    Guide chiare per principianti con esempi ben commentati
 
-\begin{enumerate}
-    \item \textbf{HackerRank}
-    \begin{itemize}
-        \item \url{https://www.hackerrank.com/domains/c}
-        \item Sfide di programmazione in C
-        \item Livelli di difficoltà progressivi
-    \end{itemize}
+    \item \textbf{GeeksforGeeks C Programming} \\
+    \url{https://www.geeksforgeeks.org/c-programming-language/} \\
+    Articoli approfonditi su ogni aspetto del C, algoritmi, strutture dati
 
-    \item \textbf{LeetCode}
-    \begin{itemize}
-        \item \url{https://leetcode.com/}
-        \item Problemi di algoritmi e strutture dati
-        \item Supporto per C
-    \end{itemize}
+    \item \textbf{Tutorialspoint C Programming} \\
+    \url{https://www.tutorialspoint.com/cprogramming/} \\
+    Tutorial completo con compiler online integrato
 
-    \item \textbf{Codewars}
-    \begin{itemize}
-        \item \url{https://www.codewars.com/}
-        \item Kata (esercizi) di vari livelli
-        \item Sistema di ranking e progressione
-    \end{itemize}
+    \item \textbf{C Programming at W3Schools} \\
+    \url{https://www.w3schools.com/c/} \\
+    Tutorial interattivo con "Try it Yourself" editor
 
-    \item \textbf{Project Euler}
-    \begin{itemize}
-        \item \url{https://projecteuler.net/}
-        \item Problemi matematici da risolvere con programmazione
-        \item Ottimo per migliorare il problem solving
-    \end{itemize}
+    \item \textbf{SoloLearn C} \\
+    \url{https://www.sololearn.com/} \\
+    App mobile per imparare C
 
-    \item \textbf{Codeforces}
-    \begin{itemize}
-        \item \url{https://codeforces.com/}
-        \item Competizioni di programmazione
-        \item Archivio di problemi storici
-    \end{itemize}
-\end{enumerate}
+    \item \textbf{Codecademy Learn C} \\
+    \url{https://www.codecademy.com/learn/learn-c} \\
+    Corso interattivo per principianti
+
+    \item \textbf{CS50 Harvard} \\
+    \url{https://cs50.harvard.edu/} \\
+    Corso introduttivo CS con C (gratuito su edX)
+\end{itemize}
+
+\subsection*{Piattaforme Premium}
+
+\begin{itemize}
+    \item \textbf{Udemy}: C Programming For Beginners (Tim Buchalka)
+    \item \textbf{Pluralsight}: C Programming Language Fundamentals
+    \item \textbf{LinkedIn Learning}: Learning C
+    \item \textbf{Coursera}: C for Everyone (Duke University)
+    \item \textbf{edX}: CS50 Introduction to Computer Science (Harvard)
+\end{itemize}
+
+\subsection*{YouTube Channels}
+
+\begin{itemize}
+    \item \textbf{freeCodeCamp.org}: \url{https://www.youtube.com/c/Freecodecamp} \\
+    Tutorial C completi (4-10 ore)
+
+    \item \textbf{Jacob Sorber}: \url{https://www.youtube.com/c/JacobSorber} \\
+    C programming concepts, system programming
+
+    \item \textbf{Code Vault}: \url{https://www.youtube.com/c/CodeVault} \\
+    Advanced C programming, multithreading, sockets
+
+    \item \textbf{The Cherno}: \url{https://www.youtube.com/c/TheChernoProject} \\
+    C/C++ programming (focus game dev)
+
+    \item \textbf{Neso Academy}: \url{https://www.youtube.com/c/nesoacademy} \\
+    Corso C completo con teoria e pratica
+
+    \item \textbf{Derek Banas}: \url{https://www.youtube.com/c/derekbanas} \\
+    C in One Video (crash course)
+
+    \item \textbf{Caleb Curry}: \url{https://www.youtube.com/c/CalebTheVideoMaker2} \\
+    C Programming Tutorial for Beginners
+\end{itemize}
 
 \section*{Strumenti di Sviluppo}
 
 \subsection*{Compilatori}
 
-\begin{enumerate}
-    \item \textbf{GCC (GNU Compiler Collection)}
-    \begin{itemize}
-        \item Disponibile su Linux, macOS, Windows
-        \item Open source e molto diffuso
-        \item \url{https://gcc.gnu.org/}
-    \end{itemize}
+\begin{itemize}
+    \item \textbf{GCC (GNU Compiler Collection)}: \url{https://gcc.gnu.org/} \\
+    Compilatore open source più diffuso. Standard su Linux. \\
+    Install: \texttt{sudo apt-get install gcc} (Ubuntu/Debian)
 
-    \item \textbf{Clang}
-    \begin{itemize}
-        \item Compilatore moderno con ottimi messaggi di errore
-        \item Integrato in Xcode su macOS
-        \item \url{https://clang.llvm.org/}
-    \end{itemize}
+    \item \textbf{Clang/LLVM}: \url{https://clang.llvm.org/} \\
+    Compilatore moderno con messaggi di errore eccellenti. Standard su macOS.
 
-    \item \textbf{Microsoft Visual C++}
-    \begin{itemize}
-        \item Compilatore Microsoft per Windows
-        \item Integrato in Visual Studio
-    \end{itemize}
-\end{enumerate}
+    \item \textbf{Microsoft Visual C++ (MSVC)}: \\
+    Compilatore Microsoft integrato in Visual Studio. Windows.
+
+    \item \textbf{Intel C++ Compiler (ICC)}: \url{https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compiler.html} \\
+    Ottimizzazioni avanzate per CPU Intel
+
+    \item \textbf{TCC (Tiny C Compiler)}: \url{https://bellard.org/tcc/} \\
+    Compilatore C ultra-veloce e leggero
+\end{itemize}
 
 \subsection*{IDE (Integrated Development Environment)}
 
-\begin{enumerate}
-    \item \textbf{Visual Studio Code}
-    \begin{itemize}
-        \item Editor leggero e versatile
-        \item Estensioni per C/C++
-        \item \url{https://code.visualstudio.com/}
-    \end{itemize}
+\begin{itemize}
+    \item \textbf{Visual Studio Code}: \url{https://code.visualstudio.com/} \\
+    Editor leggero con estensioni: C/C++, Code Runner, C/C++ IntelliSense
 
-    \item \textbf{Code::Blocks}
-    \begin{itemize}
-        \item IDE gratuito specifico per C/C++
-        \item Interfaccia semplice
-        \item \url{http://www.codeblocks.org/}
-    \end{itemize}
+    \item \textbf{CLion}: \url{https://www.jetbrains.com/clion/} \\
+    IDE professionale JetBrains (gratuito per studenti con GitHub Student Pack)
 
-    \item \textbf{CLion}
-    \begin{itemize}
-        \item IDE professionale di JetBrains
-        \item Gratuito per studenti
-        \item \url{https://www.jetbrains.com/clion/}
-    \end{itemize}
+    \item \textbf{Visual Studio Community}: \url{https://visualstudio.microsoft.com/} \\
+    IDE Microsoft completo (Windows, gratuito)
 
-    \item \textbf{Dev-C++}
-    \begin{itemize}
-        \item IDE semplice per Windows
-        \item Buono per principianti
-        \item \url{https://www.bloodshed.net/devcpp.html}
-    \end{itemize}
-\end{enumerate}
+    \item \textbf{Code::Blocks}: \url{http://www.codeblocks.org/} \\
+    IDE gratuito cross-platform specifico per C/C++
+
+    \item \textbf{Dev-C++}: \url{https://www.bloodshed.net/devcpp.html} \\
+    IDE semplice per Windows, ottimo per principianti
+
+    \item \textbf{Eclipse CDT}: \url{https://www.eclipse.org/cdt/} \\
+    Plugin C/C++ per Eclipse
+
+    \item \textbf{NetBeans}: \url{https://netbeans.apache.org/} \\
+    Supporto C/C++ con plugin
+
+    \item \textbf{Vim / Neovim}: Editor console potente (curva apprendimento ripida)
+    \item \textbf{Emacs}: Editor ultra-configurabile
+\end{itemize}
 
 \subsection*{Compilatori Online}
 
-\begin{enumerate}
-    \item \textbf{OnlineGDB}
+\begin{itemize}
+    \item \textbf{OnlineGDB}: \url{https://www.onlinegdb.com/} \\
+    Compiler + debugger online con supporto GDB
+
+    \item \textbf{Replit}: \url{https://replit.com/} \\
+    Ambiente sviluppo cloud completo
+
+    \item \textbf{Compiler Explorer (Godbolt)}: \url{https://godbolt.org/} \\
+    Visualizza assembly generato da compilatori diversi
+
+    \item \textbf{JDoodle}: \url{https://www.jdoodle.com/c-online-compiler}
+
+    \item \textbf{Programiz Online C Compiler}: \url{https://www.programiz.com/c-programming/online-compiler/}
+
+    \item \textbf{TutorialsPoint Online C Compiler}: \url{https://www.tutorialspoint.com/compile_c_online.php}
+\end{itemize}
+
+\subsection*{Debugging e Profiling}
+
+\begin{itemize}
+    \item \textbf{GDB (GNU Debugger)}: \url{https://www.gnu.org/software/gdb/} \\
+    Debugger a riga di comando potentissimo \\
+    GUI: DDD, Nemiver, KDbg
+
+    \item \textbf{LLDB}: \url{https://lldb.llvm.org/} \\
+    Debugger LLVM, integrato Xcode
+
+    \item \textbf{Valgrind}: \url{https://valgrind.org/} \\
+    Analisi memoria, memory leak detection, profiling \\
+    Tool: Memcheck, Cachegrind, Callgrind, Helgrind
+
+    \item \textbf{AddressSanitizer (ASan)}: \\
+    Rilevazione errori memoria (buffer overflow, use-after-free) \\
+    Integrato in GCC/Clang: \texttt{-fsanitize=address}
+
+    \item \textbf{UndefinedBehaviorSanitizer (UBSan)}: \\
+    Rileva undefined behavior: \texttt{-fsanitize=undefined}
+
+    \item \textbf{gprof}: \url{https://sourceware.org/binutils/docs/gprof/} \\
+    Profiler GNU per analisi performance
+
+    \item \textbf{Perf}: \url{https://perf.wiki.kernel.org/} \\
+    Profiler Linux performance analysis
+
+    \item \textbf{Dr. Memory}: \url{https://drmemory.org/} \\
+    Memory debugger per Windows/Linux/macOS
+\end{itemize}
+
+\subsection*{Static Analysis Tools}
+
+\begin{itemize}
+    \item \textbf{Cppcheck}: \url{http://cppcheck.sourceforge.net/} \\
+    Static analysis per C/C++ (rileva bug, undefined behavior)
+
+    \item \textbf{Clang Static Analyzer}: \url{https://clang-analyzer.llvm.org/} \\
+    Analisi statica integrata Clang
+
+    \item \textbf{Coverity Scan}: \url{https://scan.coverity.com/} \\
+    Static analysis commerciale (gratuito per open source)
+
+    \item \textbf{SonarQube}: \url{https://www.sonarqube.org/} \\
+    Code quality analysis platform
+
+    \item \textbf{Splint}: \url{http://www.splint.org/} \\
+    Secure programming lint (annotation-assisted)
+
+    \item \textbf{PC-lint}: \url{https://www.gimpel.com/} \\
+    Static analysis commerciale
+\end{itemize}
+
+\subsection*{Build Systems}
+
+\begin{itemize}
+    \item \textbf{Make}: Build automation tradizionale
+    \item \textbf{CMake}: \url{https://cmake.org/} \\
+    Build system generator cross-platform
+    \item \textbf{Autotools}: \url{https://www.gnu.org/software/automake/} \\
+    GNU build system (autoconf, automake, libtool)
+    \item \textbf{Meson}: \url{https://mesonbuild.com/} \\
+    Build system moderno e veloce
+    \item \textbf{Ninja}: \url{https://ninja-build.org/} \\
+    Build system ultra-veloce
+\end{itemize}
+
+\section*{Piattaforme di Pratica e Challenge}
+
+\begin{itemize}
+    \item \textbf{HackerRank}: \url{https://www.hackerrank.com/domains/c} \\
+    Sfide C con autoverifica
+
+    \item \textbf{LeetCode}: \url{https://leetcode.com/} \\
+    Algoritmi e strutture dati (supporto C)
+
+    \item \textbf{Codewars}: \url{https://www.codewars.com/} \\
+    Kata C di vari livelli (8 kyu → 1 kyu)
+
+    \item \textbf{Exercism C Track}: \url{https://exercism.org/tracks/c} \\
+    Esercizi con mentorship gratuita
+
+    \item \textbf{Project Euler}: \url{https://projecteuler.net/} \\
+    Problemi matematici da risolvere con C
+
+    \item \textbf{Codeforces}: \url{https://codeforces.com/} \\
+    Competizioni programmazione (rating ELO)
+
+    \item \textbf{TopCoder}: \url{https://www.topcoder.com/}
+
+    \item \textbf{AtCoder}: \url{https://atcoder.jp/}
+
+    \item \textbf{SPOJ}: \url{https://www.spoj.com/}
+
+    \item \textbf{CodeChef}: \url{https://www.codechef.com/}
+\end{itemize}
+
+\section*{Standard C}
+
+\subsection*{Evoluzione Standard}
+
+\begin{description}
+    \item[C89/C90 (ANSI C)] Prima standardizzazione (1989/1990)
     \begin{itemize}
-        \item \url{https://www.onlinegdb.com/}
-        \item Compilatore e debugger online
+        \item Standard library (stdio.h, stdlib.h, string.h)
+        \item Function prototypes
+        \item \texttt{void} pointer
     \end{itemize}
 
-    \item \textbf{Repl.it}
+    \item[C99 (ISO/IEC 9899:1999)] Aggiornamento maggiore
     \begin{itemize}
-        \item \url{https://replit.com/}
-        \item Ambiente di sviluppo online completo
+        \item Inline functions
+        \item Variable-length arrays (VLA)
+        \item \texttt{//} comments (stile C++)
+        \item \texttt{long long int}, \texttt{\_Bool}, \texttt{\_Complex}
+        \item \texttt{<stdint.h>}, \texttt{<stdbool.h>}
+        \item Designated initializers: \texttt{struct point p = \{.x=1, .y=2\};}
     \end{itemize}
 
-    \item \textbf{JDoodle}
+    \item[C11 (ISO/IEC 9899:2011)] Focus su concorrenza e sicurezza
     \begin{itemize}
-        \item \url{https://www.jdoodle.com/c-online-compiler}
-        \item Compilatore C online semplice
-    \end{itemize}
-\end{enumerate}
-
-\subsection*{Debugger}
-
-\begin{enumerate}
-    \item \textbf{GDB (GNU Debugger)}
-    \begin{itemize}
-        \item Debugger a riga di comando
-        \item Molto potente
-        \item \url{https://www.gnu.org/software/gdb/}
+        \item Multi-threading: \texttt{<threads.h>}, \texttt{\_Thread\_local}
+        \item Atomic operations: \texttt{<stdatomic.h>}
+        \item Static assertions: \texttt{\_Static\_assert}
+        \item Anonymous structures/unions
+        \item \texttt{\_Generic} (type-generic macros)
+        \item Bounds-checking functions: \texttt{*\_s} variants (optional)
     \end{itemize}
 
-    \item \textbf{Valgrind}
+    \item[C17/C18 (ISO/IEC 9899:2018)] Bug fixes e clarifications
     \begin{itemize}
-        \item Analisi di memoria
-        \item Rileva memory leak
-        \item \url{https://valgrind.org/}
-    \end{itemize}
-\end{enumerate}
-
-\section*{Standard e Specifiche}
-
-\subsection*{Standard C}
-
-\begin{enumerate}
-    \item \textbf{C89/C90} - ANSI C / ISO C
-    \begin{itemize}
-        \item Prima standardizzazione del C
+        \item Nessuna feature nuova, solo correzioni C11
     \end{itemize}
 
-    \item \textbf{C99} - ISO/IEC 9899:1999
+    \item[C23 (ISO/IEC 9899:2023)] Standard più recente (2023)
     \begin{itemize}
-        \item Array a lunghezza variabile
-        \item Commenti in stile C++
-        \item Tipo \texttt{long long}
+        \item \texttt{\_BitInt(N)} arbitrary-width integers
+        \item \texttt{typeof}, \texttt{\_BitInt}
+        \item \texttt{constexpr}
+        \item Digit separators: \texttt{1'000'000}
+        \item Binary literals: \texttt{0b10101010}
+        \item \texttt{nullptr}
     \end{itemize}
-
-    \item \textbf{C11} - ISO/IEC 9899:2011
-    \begin{itemize}
-        \item Supporto multi-threading
-        \item Analisi statica migliorata
-    \end{itemize}
-
-    \item \textbf{C17/C18} - ISO/IEC 9899:2018
-    \begin{itemize}
-        \item Correzioni e chiarimenti su C11
-    \end{itemize}
-\end{enumerate}
+\end{description}
 
 \section*{Community e Forum}
 
-\begin{enumerate}
-    \item \textbf{Stack Overflow}
+\begin{itemize}
+    \item \textbf{Stack Overflow} \\
+    Tag [c]: \url{https://stackoverflow.com/questions/tagged/c} \\
+    Oltre 400,000+ domande su C
+
+    \item \textbf{Reddit r/C\_Programming} \\
+    \url{https://www.reddit.com/r/C_Programming/} \\
+    Community attiva con 180k+ membri
+
+    \item \textbf{C Board} \\
+    \url{https://cboard.cprogramming.com/} \\
+    Forum dedicato C/C++
+
+    \item \textbf{LinuxQuestions.org} \\
+    \url{https://www.linuxquestions.org/questions/programming-9/} \\
+    Forum Linux programming
+
+    \item \textbf{Daniweb C Programming} \\
+    \url{https://www.daniweb.com/programming/software-development/c}
+
+    \item \textbf{Discord Servers}:
     \begin{itemize}
-        \item \url{https://stackoverflow.com/questions/tagged/c}
-        \item Domande e risposte sulla programmazione in C
+        \item The Programmer's Hangout
+        \item C Programming
+        \item Low-Level Programming
     \end{itemize}
+\end{itemize}
 
-    \item \textbf{Reddit - r/C\_Programming}
-    \begin{itemize}
-        \item \url{https://www.reddit.com/r/C_Programming/}
-        \item Community attiva di programmatori C
-    \end{itemize}
+\section*{Blog e Newsletter}
 
-    \item \textbf{C Board}
-    \begin{itemize}
-        \item \url{https://cboard.cprogramming.com/}
-        \item Forum dedicato alla programmazione in C
-    \end{itemize}
-\end{enumerate}
+\begin{itemize}
+    \item \textbf{Fluent C}: \url{https://fluentc.io/} \\
+    Blog moderno su C
 
-\section*{Canali YouTube}
+    \item \textbf{Deep C (and C++)}: \url{https://www.cprogramming.com/}
 
-\begin{enumerate}
-    \item \textbf{freeCodeCamp.org} - Tutorial completi C
-    \item \textbf{The Cherno} - Programmazione C/C++
-    \item \textbf{Jacob Sorber} - C programming concepts
-    \item \textbf{Code Vault} - Advanced C Programming
-\end{enumerate}
+    \item \textbf{Embedded Artistry}: \url{https://embeddedartistry.com/} \\
+    Embedded C programming
 
-\section*{Best Practices e Style Guide}
+    \item \textbf{Preshing on Programming}: \url{https://preshing.com/} \\
+    Low-level programming, concurrency
 
-\begin{enumerate}
-    \item \textbf{GNU Coding Standards}
-    \begin{itemize}
-        \item \url{https://www.gnu.org/prep/standards/}
-        \item Standard di codifica GNU
-    \end{itemize}
+    \item \textbf{LWN.net}: \url{https://lwn.net/} \\
+    Linux kernel, system programming
 
-    \item \textbf{Linux Kernel Coding Style}
-    \begin{itemize}
-        \item \url{https://www.kernel.org/doc/html/latest/process/coding-style.html}
-        \item Style guide del kernel Linux
-    \end{itemize}
+    \item \textbf{comp.lang.c FAQ}: \url{http://c-faq.com/} \\
+    FAQ storica del newsgroup comp.lang.c
+\end{itemize}
 
-    \item \textbf{MISRA C}
-    \begin{itemize}
-        \item Standard per C sicuro in sistemi critici
-        \item Usato nell'automotive e aerospace
-    \end{itemize}
-\end{enumerate}
+\section*{Best Practices e Style Guides}
+
+\begin{itemize}
+    \item \textbf{GNU Coding Standards} \\
+    \url{https://www.gnu.org/prep/standards/} \\
+    Convenzioni GNU Project
+
+    \item \textbf{Linux Kernel Coding Style} \\
+    \url{https://www.kernel.org/doc/html/latest/process/coding-style.html} \\
+    Style guide kernel Linux (tabs, 80 col)
+
+    \item \textbf{Google C++ Style Guide} \\
+    \url{https://google.github.io/styleguide/cppguide.html} \\
+    Include convenzioni C (naming, formatting)
+
+    \item \textbf{NASA C Style Guide} \\
+    \url{https://ntrs.nasa.gov/citations/20080039927} \\
+    Coding standard per software critico
+
+    \item \textbf{MISRA C} \\
+    \url{https://www.misra.org.uk/} \\
+    Standard automotive/aerospace (safety-critical systems)
+
+    \item \textbf{CERT C Coding Standard} \\
+    \url{https://wiki.sei.cmu.edu/confluence/display/c/} \\
+    Secure coding rules (Carnegie Mellon)
+
+    \item \textbf{Embedded C Coding Standard} \\
+    Michael Barr \\
+    Standard per embedded systems
+\end{itemize}
 
 \section*{Progetti Open Source in C}
 
-Studiare codice di qualità è un ottimo modo per imparare:
+Studiare codice di qualità:
 
-\begin{enumerate}
-    \item \textbf{Linux Kernel} - \url{https://github.com/torvalds/linux}
-    \item \textbf{Git} - \url{https://github.com/git/git}
-    \item \textbf{SQLite} - \url{https://www.sqlite.org/}
-    \item \textbf{Redis} - \url{https://github.com/redis/redis}
-    \item \textbf{Nginx} - \url{https://github.com/nginx/nginx}
-\end{enumerate}
+\begin{itemize}
+    \item \textbf{Linux Kernel}: \url{https://github.com/torvalds/linux} \\
+    Il progetto C open-source più grande (30M+ linee)
+
+    \item \textbf{Git}: \url{https://github.com/git/git} \\
+    Version control system
+
+    \item \textbf{SQLite}: \url{https://www.sqlite.org/} \\
+    Database embedded più usato al mondo
+
+    \item \textbf{Redis}: \url{https://github.com/redis/redis} \\
+    In-memory data store
+
+    \item \textbf{Nginx}: \url{https://github.com/nginx/nginx} \\
+    Web server ad alte performance
+
+    \item \textbf{PostgreSQL}: \url{https://www.postgresql.org/} \\
+    Database relazionale
+
+    \item \textbf{FFmpeg}: \url{https://github.com/FFmpeg/FFmpeg} \\
+    Multimedia framework
+
+    \item \textbf{cURL}: \url{https://github.com/curl/curl} \\
+    Data transfer library
+
+    \item \textbf{OpenSSL}: \url{https://github.com/openssl/openssl} \\
+    Cryptography library
+
+    \item \textbf{Vim}: \url{https://github.com/vim/vim} \\
+    Text editor
+
+    \item \textbf{tmux}: \url{https://github.com/tmux/tmux} \\
+    Terminal multiplexer
+
+    \item \textbf{fish-shell}: \url{https://github.com/fish-shell/fish-shell} \\
+    User-friendly shell
+\end{itemize}
 
 \section*{Certificazioni}
 
-\begin{enumerate}
-    \item \textbf{C Programming Language Certified Associate (CLA)}
-    \begin{itemize}
-        \item Certificazione entry-level
-        \item Offerta da C++ Institute
-    \end{itemize}
+\begin{itemize}
+    \item \textbf{C Programming Language Certified Associate (CLA)} \\
+    C++ Institute \\
+    \url{https://cppinstitute.org/cla-c-programming-language-certified-associate} \\
+    Entry-level certification
 
-    \item \textbf{C Programming Language Certified Professional (CLP)}
-    \begin{itemize}
-        \item Certificazione avanzata
-        \item Per programmatori esperti
-    \end{itemize}
+    \item \textbf{C Programming Language Certified Professional (CLP)} \\
+    C++ Institute \\
+    Advanced certification
+
+    \item \textbf{CompTIA Linux+} (include C programming)
+
+    \item \textbf{Certified Embedded Systems Engineer}
+\end{itemize}
+
+\section*{Librerie C Utili}
+
+\subsection*{Utility Libraries}
+
+\begin{itemize}
+    \item \textbf{GLib}: \url{https://docs.gtk.org/glib/} \\
+    Utility library GNOME (data structures, string handling)
+
+    \item \textbf{Apache Portable Runtime (APR)}: \url{https://apr.apache.org/}
+
+    \item \textbf{libuv}: \url{https://libuv.org/} \\
+    Async I/O library (usata da Node.js)
+\end{itemize}
+
+\subsection*{Data Structures}
+
+\begin{itemize}
+    \item \textbf{uthash}: \url{https://troydhanson.github.io/uthash/} \\
+    Hash table per C (macro-based, header-only)
+
+    \item \textbf{klib}: \url{https://github.com/attractivechaos/klib} \\
+    Generic data structures (khash, kvec, klist)
+
+    \item \textbf{c-algorithms}: \url{https://fragglet.github.io/c-algorithms/}
+\end{itemize}
+
+\subsection*{Testing}
+
+\begin{itemize}
+    \item \textbf{Unity}: \url{http://www.throwtheswitch.org/unity} \\
+    Unit testing framework per embedded
+
+    \item \textbf{CUnit}: \url{http://cunit.sourceforge.net/}
+
+    \item \textbf{Check}: \url{https://libcheck.github.io/check/}
+
+    \item \textbf{Criterion}: \url{https://github.com/Snaipe/Criterion} \\
+    Modern unit testing framework
+\end{itemize}
+
+\subsection*{JSON}
+
+\begin{itemize}
+    \item \textbf{cJSON}: \url{https://github.com/DaveGamble/cJSON} \\
+    Lightweight JSON parser
+
+    \item \textbf{json-c}: \url{https://github.com/json-c/json-c}
+
+    \item \textbf{Jansson}: \url{https://github.com/akheron/jansson}
+\end{itemize}
+
+\subsection*{Networking}
+
+\begin{itemize}
+    \item \textbf{libcurl}: \url{https://curl.se/libcurl/} \\
+    HTTP/FTP client library
+
+    \item \textbf{libmicrohttpd}: \url{https://www.gnu.org/software/libmicrohttpd/} \\
+    Embedded HTTP server
+
+    \item \textbf{ZeroMQ}: \url{https://zeromq.org/} \\
+    High-performance messaging library
+\end{itemize}
+
+\section*{Embedded C Resources}
+
+\begin{itemize}
+    \item \textbf{Embedded Systems Programming in C} \\
+    Michael Barr \\
+    O'Reilly, 1999
+
+    \item \textbf{Making Embedded Systems} \\
+    Elecia White \\
+    O'Reilly, 2011
+
+    \item \textbf{Embedded.com}: \url{https://www.embedded.com/}
+
+    \item \textbf{Arduino Language Reference}: \url{https://www.arduino.cc/reference/en/}
+
+    \item \textbf{Raspberry Pi C Programming}: \url{https://www.raspberrypi.com/}
+\end{itemize}
+
+\section*{Podcast}
+
+\begin{itemize}
+    \item \textbf{CppCast} (include C topics): \url{https://cppcast.com/}
+    \item \textbf{Embedded.fm}: \url{https://embedded.fm/}
+    \item \textbf{The Changelog}: \url{https://changelog.com/}
+\end{itemize}
+
+\section*{Risorse in Italiano}
+
+\begin{itemize}
+    \item \textbf{HTML.it - Guida C} \\
+    \url{https://www.html.it/guide/guida-linguaggio-c/}
+
+    \item \textbf{MrWebMaster - C} \\
+    \url{https://www.mrw.it/c/}
+
+    \item \textbf{Forum HTML.it - C/C++} \\
+    \url{https://forum.html.it/forum/c-c}
+
+    \item \textbf{C Italia su Facebook} \\
+    Community italiana programmatori C
+\end{itemize}
+
+\section*{Consigli Pratici per Imparare C}
+
+\subsection*{Approccio di Studio}
+
+\begin{enumerate}
+    \item \textbf{Inizia con K\&R o King}: Leggi uno dei testi fondamentali
+    \item \textbf{Scrivi codice quotidianamente}: Almeno 30 minuti al giorno
+    \item \textbf{Risolvi problemi}: HackerRank, LeetCode (20+ problemi)
+    \item \textbf{Usa Valgrind}: Per ogni programma, controlla memory leak
+    \item \textbf{Leggi codice}: Studia progetti open-source (Git, Redis)
+    \item \textbf{Compila con warning}: \texttt{gcc -Wall -Wextra -Werror}
 \end{enumerate}
+
+\subsection*{Progetti Suggeriti}
+
+\begin{enumerate}
+    \item \textbf{Calcolatrice CLI}: Input, parsing, eval espressioni
+    \item \textbf{Todo List}: File I/O, struct, dynamic memory
+    \item \textbf{Text Editor}: Buffer manipulation, file handling
+    \item \textbf{Shell Minimale}: fork, exec, pipe, redirection
+    \item \textbf{Web Server HTTP}: Socket programming, HTTP parsing
+    \item \textbf{Database Key-Value}: Hash table, file persistence
+    \item \textbf{Compression Tool}: Algoritmo Huffman coding
+    \item \textbf{Malloc Implementation}: Custom memory allocator
+\end{enumerate}
+
+\subsection*{Errori Comuni da Evitare}
+
+\begin{itemize}
+    \item \textbf{Buffer overflow}: Usa \texttt{strncpy} invece di \texttt{strcpy}
+    \item \textbf{Memory leak}: Ogni \texttt{malloc} deve avere un \texttt{free}
+    \item \textbf{Dangling pointer}: Non usare puntatori dopo \texttt{free}
+    \item \textbf{Undefined behavior}: Evita array[-1], x/0, uninitialized vars
+    \item \textbf{Portabilità}: Usa \texttt{<stdint.h>} (int32\_t invece di int)
+    \item \textbf{Warning ignorati}: Risolvi TUTTI i warning del compilatore
+\end{itemize}
+
+\section*{Roadmap Apprendimento C}
+
+\subsection*{Livello Principiante (1-3 mesi)}
+
+\begin{itemize}
+    \item Sintassi base: variabili, operatori, control flow
+    \item Funzioni e scope
+    \item Array e stringhe
+    \item Struct
+    \item File I/O (fopen, fread, fwrite)
+    \item \textbf{Progetto}: Calcolatrice, gestionale studenti
+\end{itemize}
+
+\subsection*{Livello Intermedio (3-6 mesi)}
+
+\begin{itemize}
+    \item Puntatori avanzati (double pointer, function pointer)
+    \item Dynamic memory (malloc, calloc, realloc, free)
+    \item Preprocessing (\#define, \#include, conditional compilation)
+    \item Makefile
+    \item Debugging (GDB, Valgrind)
+    \item \textbf{Progetto}: Editor di testo, shell minimale
+\end{itemize}
+
+\subsection*{Livello Avanzato (6-12 mesi)}
+
+\begin{itemize}
+    \item System programming (fork, exec, signals, IPC)
+    \item Networking (socket, TCP/UDP)
+    \item Multithreading (pthread, mutex, semaphore)
+    \item Librerie dinamiche (.so, .dll)
+    \item Profiling e ottimizzazione
+    \item \textbf{Progetto}: Web server, chat multithread, database embedded
+\end{itemize}
 
 \section*{Note Finali}
 
-Questa bibliografia rappresenta solo un punto di partenza. Il mondo della programmazione in C è vasto e in continua evoluzione. Alcuni consigli:
+Questa bibliografia rappresenta un punto di partenza per il tuo viaggio nel mondo della programmazione C. Alcuni consigli finali:
 
 \begin{itemize}
-    \item \textbf{Pratica costante}: la programmazione si impara programmando
-    \item \textbf{Leggi codice}: studia progetti open source ben scritti
-    \item \textbf{Partecipa alle community}: fai domande e aiuta altri
-    \item \textbf{Mantieniti aggiornato}: segui blog e newsletter
-    \item \textbf{Sperimenta}: non aver paura di provare cose nuove
+    \item \textbf{Pratica costante}: 30+ minuti al giorno, consistenza > intensità
+    \item \textbf{Leggi codice di qualità}: Linux kernel, Git, SQLite
+    \item \textbf{Usa strumenti moderni}: Valgrind, ASan, GDB, Clang warnings
+    \item \textbf{Partecipa alle community}: Stack Overflow, Reddit, Discord
+    \item \textbf{Sperimenta}: Non aver paura di rompere le cose
+    \item \textbf{Compila sempre con}: \texttt{gcc -Wall -Wextra -Werror -std=c11 -O2}
+    \item \textbf{Mantieniti aggiornato}: C23, nuove best practices
 \end{itemize}
 
-Ricorda: il miglior programmatore non è quello che conosce tutto, ma quello che sa dove trovare le informazioni quando serve!
+\vspace{1cm}
+
+\begin{center}
+\textit{``C is quirky, flawed, and an enormous success.'' — Dennis Ritchie}
+\end{center}
+
+\begin{center}
+\textit{Il C è il linguaggio dei linguaggi. Impararlo bene richiede tempo,\\
+ma le competenze acquisite dureranno tutta la carriera.}
+\end{center}
+
+\begin{nota}
+\textbf{Risorse Raccomandate per Iniziare}:
+\begin{enumerate}
+    \item Libro: ``C Programming: A Modern Approach'' (K.N. King)
+    \item Tutorial: Learn-C.org (interattivo)
+    \item Pratica: HackerRank C (30+ problemi)
+    \item Tool: GCC + Valgrind + GDB
+    \item Progetto: Calcolatrice CLI con parsing espressioni
+\end{enumerate}
+\end{nota}
