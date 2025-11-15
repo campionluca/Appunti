@@ -65,6 +65,158 @@ Portabilità & Bassa & Alta \\
 \end{itemize}
 \end{tcolorbox}
 
+\subsection{Esempio: Modello ER di un Blog}
+
+Prima di implementare query, è fondamentale progettare la struttura del database. Ecco un esempio di diagramma ER (Entity-Relationship) per un semplice sistema di blog:
+
+\begin{center}
+\begin{tikzpicture}[
+    entity/.style={rectangle, draw, thick, minimum width=3cm, minimum height=0.8cm, fill=blue!20, font=\small\bfseries},
+    attribute/.style={ellipse, draw, minimum width=1.8cm, minimum height=0.6cm, fill=yellow!20, font=\footnotesize},
+    relationship/.style={diamond, draw, thick, minimum width=2cm, minimum height=1cm, fill=green!20, font=\small},
+    pk/.style={attribute, fill=orange!30},
+    fk/.style={attribute, fill=red!20}
+]
+    % Entities
+    \node[entity] (users) at (0,0) {USERS};
+    \node[entity] (posts) at (6,0) {POSTS};
+    \node[entity] (comments) at (6,-4) {COMMENTS};
+
+    % USERS attributes
+    \node[pk] (user_id) at (-2.5,1.5) {\underline{id}};
+    \node[attribute] (user_name) at (0,2) {username};
+    \node[attribute] (user_email) at (2.5,1.5) {email};
+    \node[attribute] (user_pass) at (-2.5,-1.5) {password\_hash};
+    \node[attribute] (user_created) at (2.5,-1.5) {created\_at};
+
+    % POSTS attributes
+    \node[pk] (post_id) at (8.5,1.5) {\underline{id}};
+    \node[attribute] (post_title) at (6,2.5) {title};
+    \node[attribute] (post_content) at (3.5,1) {content};
+    \node[attribute] (post_created) at (8.5,-1) {created\_at};
+    \node[fk] (post_user_fk) at (3.5,-0.5) {user\_id (FK)};
+
+    % COMMENTS attributes
+    \node[pk] (comment_id) at (8.5,-2.5) {\underline{id}};
+    \node[attribute] (comment_content) at (6,-2) {content};
+    \node[attribute] (comment_created) at (8.5,-5) {created\_at};
+    \node[fk] (comment_user_fk) at (3.5,-3) {user\_id (FK)};
+    \node[fk] (comment_post_fk) at (3.5,-4.5) {post\_id (FK)};
+
+    % Relationships
+    \node[relationship] (writes_posts) at (3,0) {scrive};
+    \node[relationship] (writes_comments) at (3,-2.5) {scrive};
+    \node[relationship] (has_comments) at (6,-2) {ha};
+
+    % Connections - Users to Posts
+    \draw[thick] (users) -- (writes_posts);
+    \draw[thick] (writes_posts) -- (posts);
+    \node[above, font=\tiny] at (1.5,0.3) {1};
+    \node[above, font=\tiny] at (4.5,0.3) {N};
+
+    % Connections - Users to Comments
+    \draw[thick] (users) |- (writes_comments);
+    \draw[thick] (writes_comments) -- (comments);
+    \node[left, font=\tiny] at (0.3,-2.2) {1};
+    \node[above, font=\tiny] at (4.5,-2.2) {N};
+
+    % Connections - Posts to Comments
+    \draw[thick] (posts) -- (has_comments);
+    \draw[thick] (has_comments) -- (comments);
+    \node[right, font=\tiny] at (5.7,-0.8) {1};
+    \node[right, font=\tiny] at (5.7,-3.2) {N};
+
+    % Attribute connections
+    \draw (users) -- (user_id);
+    \draw (users) -- (user_name);
+    \draw (users) -- (user_email);
+    \draw (users) -- (user_pass);
+    \draw (users) -- (user_created);
+
+    \draw (posts) -- (post_id);
+    \draw (posts) -- (post_title);
+    \draw (posts) -- (post_content);
+    \draw (posts) -- (post_created);
+    \draw (posts) -- (post_user_fk);
+
+    \draw (comments) -- (comment_id);
+    \draw (comments) -- (comment_content);
+    \draw (comments) -- (comment_created);
+    \draw (comments) -- (comment_user_fk);
+    \draw (comments) -- (comment_post_fk);
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Spiegazione Modello ER]
+\textbf{Entità}:
+\begin{itemize}
+    \item \textbf{USERS}: Utenti del blog (autori e commentatori)
+    \item \textbf{POSTS}: Articoli pubblicati dagli utenti
+    \item \textbf{COMMENTS}: Commenti agli articoli
+\end{itemize}
+
+\textbf{Relazioni}:
+\begin{itemize}
+    \item \textbf{USERS scrive POSTS}: 1:N (un utente può scrivere molti post)
+    \item \textbf{USERS scrive COMMENTS}: 1:N (un utente può scrivere molti commenti)
+    \item \textbf{POSTS ha COMMENTS}: 1:N (un post può avere molti commenti)
+\end{itemize}
+
+\textbf{Attributi}:
+\begin{itemize}
+    \item \textcolor{orange}{\textbf{PK (Primary Key)}}: Chiave primaria sottolineata (es. \underline{id})
+    \item \textcolor{red}{\textbf{FK (Foreign Key)}}: Chiave esterna che referenzia altra tabella
+    \item Ogni entità ha \texttt{created\_at} per timestamp creazione
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Schema SQL corrispondente}
+
+\begin{lstlisting}[language=SQL, caption={Schema database blog}]
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_username (username),
+    INDEX idx_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE posts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE comments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    post_id INT NOT NULL,
+    user_id INT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_post_id (post_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+\end{lstlisting}
+
+\begin{attenzione}
+\textbf{Foreign Key Constraints}:
+\begin{itemize}
+    \item \texttt{ON DELETE CASCADE}: Se elimini un utente, elimina anche i suoi post e commenti
+    \item \texttt{ON DELETE SET NULL}: Alternativa che imposta FK a NULL invece di eliminare
+    \item Usa \texttt{ENGINE=InnoDB} per supportare foreign keys (MyISAM non le supporta)
+    \item Sempre indicizzare colonne FK per performance JOIN
+\end{itemize}
+\end{attenzione}
+
 \section{Connessione al Database}
 
 \subsection{Connessione Base (OOP)}
