@@ -1,107 +1,683 @@
 % Modulo 13 — Automazione e Web Scraping
 \chapter{Automazione e Web Scraping}
 
-\section{Introduzione}
-Automatizzare compiti con script e raccogliere dati dal web.
-
-Questa descrizione copre l'uso di CLI per orchestrare task ripetibili, richieste HTTP robuste con retry/backoff e parsing HTML per estrarre informazioni. Mettiamo l'accento su etica, \texttt{robots.txt}, rate limiting e rispetto dei termini d'uso.
-
-Automazione e scraping abilitano report, aggregazione dati e integrazioni, mantenendo attenzione a performance e correttezza.
-
-\section{Obiettivi di Apprendimento}
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
 \begin{itemize}
-  \item Scrivere script CLI.
-  \item Effettuare richieste HTTP e parsing HTML.
-  \item Gestire job schedulati.
+  \item Automatizzare task con subprocess e schedule
+  \item Effettuare richieste HTTP con requests
+  \item Parsare HTML con BeautifulSoup
+  \item Consumare API REST
+  \item Scrapare siti dinamici con Selenium
+  \item Rispettare etica e robots.txt
+  \item Implementare rate limiting e retry logic
+  \item Salvare dati (CSV, JSON, database)
+  \item Schedulare script automatici
 \end{itemize}
-
-\section{Concetti Fondamentali}
-\begin{tcolorbox}[title=Etica e robustezza nello scraping]
-- Rispetta \texttt{robots.txt}, termini d'uso e rate limiting.
-- Gestisci retry/backoff ed errori di rete.
-- Parsing resiliente (selector stabili, fallback).
-- Salvataggio incrementale e deduplicazione.
 \end{tcolorbox}
 
-\section{Esempi Pratici}
-\subsection{CLI con argparse}
+\section{Automazione con subprocess}
+
+\subsection{Eseguire comandi sistema}
+
 \begin{lstlisting}
-import argparse
-p = argparse.ArgumentParser()
-p.add_argument("name")
-args = p.parse_args(["Ada"])  # esempio
-print("Ciao", args.name)
+import subprocess
+
+# Run command e cattura output
+result = subprocess.run(
+    ["ls", "-la"],
+    capture_output=True,
+    text=True
+)
+
+print(result.stdout)
+print(f"Exit code: {result.returncode}")
+
+# Con check (raise exception se fallisce)
+try:
+    subprocess.run(["git", "status"], check=True)
+except subprocess.CalledProcessError as e:
+    print(f"Command failed with exit code {e.returncode}")
+
+# Con input
+result = subprocess.run(
+    ["grep", "python"],
+    input="python is great\njava is good\n",
+    capture_output=True,
+    text=True
+)
+print(result.stdout)  # python is great
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{argparse} definisce interfacce CLI dichiarative con parsing robusto.
-- Usare tipi, valori di default e help per UX migliore; validare input.
-- Separare parsing (CLI) dalla logica applicativa per testabilità.
-\end{tcolorbox}
+\subsection{Automazione file system}
 
-\subsection{Richieste HTTP}
+\begin{lstlisting}
+import os
+import shutil
+from pathlib import Path
+
+# Backup files
+def backup_directory(source, dest):
+    """Copia directory con backup"""
+    if Path(dest).exists():
+        # Backup esistente
+        backup_path = f"{dest}.backup"
+        shutil.move(dest, backup_path)
+
+    shutil.copytree(source, dest)
+    print(f"Backed up {source} to {dest}")
+
+# Cleanup old files
+def cleanup_old_files(directory, days=30):
+    """Rimuovi file più vecchi di N giorni"""
+    import time
+
+    now = time.time()
+    cutoff = now - (days * 86400)
+
+    for file in Path(directory).glob("*"):
+        if file.is_file() and file.stat().st_mtime < cutoff:
+            print(f"Removing old file: {file}")
+            file.unlink()
+
+# Batch rename
+def batch_rename(directory, pattern, replacement):
+    """Rename files con pattern"""
+    for file in Path(directory).glob(pattern):
+        new_name = file.name.replace(pattern.replace("*", ""), replacement)
+        file.rename(file.parent / new_name)
+        print(f"Renamed: {file.name} → {new_name}")
+\end{lstlisting}
+
+\section{Web Scraping con requests}
+
+\subsection{Installazione}
+
+\begin{lstlisting}[language=bash]
+pip install requests beautifulsoup4 lxml
+\end{lstlisting}
+
+\subsection{GET requests}
+
 \begin{lstlisting}
 import requests
-r = requests.get("https://example.com")
-print(r.status_code)
+
+# GET request semplice
+response = requests.get("https://api.github.com/users/python")
+
+# Check status
+if response.status_code == 200:
+    data = response.json()
+    print(f"Name: {data['name']}")
+    print(f"Repos: {data['public_repos']}")
+else:
+    print(f"Error: {response.status_code}")
+
+# Con parameters
+params = {"q": "python", "sort": "stars"}
+response = requests.get("https://api.github.com/search/repositories", params=params)
+
+# Con headers
+headers = {"User-Agent": "Mozilla/5.0"}
+response = requests.get("https://example.com", headers=headers)
+
+# Con timeout
+try:
+    response = requests.get("https://example.com", timeout=5)
+except requests.Timeout:
+    print("Request timed out")
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{requests} gestisce HTTP in modo semplice; controllare \texttt{status\_code} e errori.
-- Implementare timeout, retry/backoff e headers appropriati; rispettare \texttt{robots.txt}.
-- Serializzare risultati (JSON/CSV) con salvare incrementale e deduplicazione.
-\end{tcolorbox}
+\subsection{POST requests}
 
-\subsection{Parsing HTML}
+\begin{lstlisting}
+# POST con JSON
+data = {"username": "alice", "email": "alice@example.com"}
+response = requests.post(
+    "https://api.example.com/users",
+    json=data,
+    headers={"Content-Type": "application/json"}
+)
+
+# POST con form data
+form_data = {"username": "alice", "password": "secret"}
+response = requests.post("https://example.com/login", data=form_data)
+
+# POST con file upload
+files = {"file": open("document.pdf", "rb")}
+response = requests.post("https://example.com/upload", files=files)
+\end{lstlisting}
+
+\subsection{Sessions e cookies}
+
+\begin{lstlisting}
+# Session mantiene cookies tra requests
+session = requests.Session()
+
+# Login
+session.post("https://example.com/login", data={"user": "alice", "pass": "secret"})
+
+# Richieste successive usano cookies automaticamente
+response = session.get("https://example.com/dashboard")
+
+# Session con headers default
+session.headers.update({"User-Agent": "My Bot 1.0"})
+
+response = session.get("https://example.com/api")
+\end{lstlisting}
+
+\section{BeautifulSoup: Parsing HTML}
+
+\subsection{Basics}
+
 \begin{lstlisting}
 from bs4 import BeautifulSoup
-html = "<h1>Titolo</h1>"
-soup = BeautifulSoup(html, "html.parser")
-print(soup.h1.text)
+import requests
+
+url = "https://example.com"
+response = requests.get(url)
+soup = BeautifulSoup(response.content, "lxml")
+
+# Find elementi
+title = soup.find("title")
+print(title.text)
+
+# Find all
+links = soup.find_all("a")
+for link in links:
+    print(link.get("href"))
+
+# CSS selectors
+articles = soup.select(".article")
+first_paragraph = soup.select_one("p")
+
+# Navigazione
+div = soup.find("div", class_="container")
+h2 = div.find("h2")
+paragraph = h2.find_next_sibling("p")
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{BeautifulSoup} parse HTML e consente selettori robusti; gestire HTML malformato.
-- Preferire selettori stabili (id/class/data-attr) e fallback per cambi di struttura.
-- Isolare estrattori e coprire con test per resilienza.
+\subsection{Esempio: Scraping news}
+
+\begin{lstlisting}
+import requests
+from bs4 import BeautifulSoup
+
+def scrape_news(url):
+    """Scrape news articles"""
+    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+    soup = BeautifulSoup(response.content, "lxml")
+
+    articles = []
+
+    for article in soup.select(".article"):
+        title = article.select_one("h2").text.strip()
+        link = article.select_one("a")["href"]
+        summary = article.select_one(".summary").text.strip()
+
+        articles.append({
+            "title": title,
+            "link": link,
+            "summary": summary
+        })
+
+    return articles
+
+# Uso
+news = scrape_news("https://news.example.com")
+for article in news:
+    print(f"{article['title']}: {article['link']}")
+\end{lstlisting}
+
+\section{API REST}
+
+\subsection{Consumo API GitHub}
+
+\begin{lstlisting}
+import requests
+
+class GitHubAPI:
+    BASE_URL = "https://api.github.com"
+
+    def __init__(self, token=None):
+        self.session = requests.Session()
+        if token:
+            self.session.headers["Authorization"] = f"token {token}"
+
+    def get_user(self, username):
+        response = self.session.get(f"{self.BASE_URL}/users/{username}")
+        response.raise_for_status()
+        return response.json()
+
+    def get_repos(self, username):
+        response = self.session.get(
+            f"{self.BASE_URL}/users/{username}/repos",
+            params={"sort": "updated", "per_page": 100}
+        )
+        response.raise_for_status()
+        return response.json()
+
+# Uso
+api = GitHubAPI()
+user = api.get_user("python")
+print(f"Python organization has {user['public_repos']} public repos")
+
+repos = api.get_repos("python")
+for repo in repos[:5]:
+    print(f"- {repo['name']}: {repo['stargazers_count']} stars")
+\end{lstlisting}
+
+\section{Selenium: Scraping dinamico}
+
+\subsection{Setup}
+
+\begin{lstlisting}[language=bash]
+pip install selenium webdriver-manager
+
+# Download ChromeDriver automaticamente con webdriver-manager
+\end{lstlisting}
+
+\subsection{Basics}
+
+\begin{lstlisting}
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+
+# Setup driver
+driver = webdriver.Chrome(ChromeDriverManager().install())
+
+# Naviga
+driver.get("https://example.com")
+
+# Trova elementi
+title = driver.find_element(By.TAG_NAME, "h1")
+print(title.text)
+
+# Click
+button = driver.find_element(By.ID, "submit-button")
+button.click()
+
+# Input text
+input_field = driver.find_element(By.NAME, "username")
+input_field.send_keys("alice")
+
+# Wait per elemento
+element = WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CLASS_NAME, "result"))
+)
+
+# Screenshot
+driver.save_screenshot("screenshot.png")
+
+# Close
+driver.quit()
+\end{lstlisting}
+
+\section{Etica e Best Practices}
+
+\subsection{robots.txt}
+
+\begin{lstlisting}
+import requests
+from urllib.robotparser import RobotFileParser
+
+def can_fetch(url, user_agent="*"):
+    """Check se posso scrapare URL"""
+    robots_url = f"{url.rstrip('/')}/robots.txt"
+
+    rp = RobotFileParser()
+    rp.set_url(robots_url)
+    rp.read()
+
+    return rp.can_fetch(user_agent, url)
+
+# Uso
+if can_fetch("https://example.com/page"):
+    # OK to scrape
+    response = requests.get("https://example.com/page")
+else:
+    print("Not allowed by robots.txt")
+\end{lstlisting}
+
+\subsection{Rate Limiting}
+
+\begin{lstlisting}
+import time
+import requests
+
+class RateLimitedScraper:
+    def __init__(self, delay=1.0):
+        self.delay = delay
+        self.last_request = 0
+
+    def get(self, url):
+        # Wait se troppo veloce
+        elapsed = time.time() - self.last_request
+        if elapsed < self.delay:
+            time.sleep(self.delay - elapsed)
+
+        self.last_request = time.time()
+        return requests.get(url)
+
+# Uso: max 1 request/second
+scraper = RateLimitedScraper(delay=1.0)
+
+for url in urls:
+    response = scraper.get(url)
+    # Process...
+\end{lstlisting}
+
+\subsection{Retry con backoff}
+
+\begin{lstlisting}
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+def requests_retry_session(
+    retries=3,
+    backoff_factor=0.3,
+    status_forcelist=(500, 502, 504),
+):
+    session = requests.Session()
+
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+
+    return session
+
+# Uso
+session = requests_retry_session()
+response = session.get("https://example.com")
+# Automatically retries on connection errors
+\end{lstlisting}
+
+\section{Salvataggio Dati}
+
+\subsection{CSV}
+
+\begin{lstlisting}
+import csv
+
+# Scrape e salva CSV
+articles = scrape_news("https://news.example.com")
+
+with open("news.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=["title", "link", "summary"])
+    writer.writeheader()
+    writer.writerows(articles)
+\end{lstlisting}
+
+\subsection{JSON}
+
+\begin{lstlisting}
+import json
+
+# Salva JSON
+with open("news.json", "w", encoding="utf-8") as f:
+    json.dump(articles, f, indent=2, ensure_ascii=False)
+
+# Append JSON (JSONLines format)
+with open("news.jsonl", "a", encoding="utf-8") as f:
+    for article in articles:
+        f.write(json.dumps(article, ensure_ascii=False) + "\n")
+\end{lstlisting}
+
+\subsection{Database}
+
+\begin{lstlisting}
+import sqlite3
+
+# Save to SQLite
+conn = sqlite3.connect("news.db")
+cursor = conn.cursor()
+
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS articles (
+        id INTEGER PRIMARY KEY,
+        title TEXT,
+        link TEXT UNIQUE,
+        summary TEXT,
+        scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+""")
+
+for article in articles:
+    cursor.execute(
+        "INSERT OR IGNORE INTO articles (title, link, summary) VALUES (?, ?, ?)",
+        (article["title"], article["link"], article["summary"])
+    )
+
+conn.commit()
+conn.close()
+\end{lstlisting}
+
+\section{Scheduling}
+
+\subsection{Con schedule}
+
+\begin{lstlisting}[language=bash]
+pip install schedule
+\end{lstlisting}
+
+\begin{lstlisting}
+import schedule
+import time
+
+def job():
+    print("Running scraping job...")
+    articles = scrape_news("https://news.example.com")
+    save_to_database(articles)
+    print(f"Scraped {len(articles)} articles")
+
+# Schedule
+schedule.every().hour.do(job)                 # Ogni ora
+schedule.every().day.at("10:30").do(job)      # Ogni giorno alle 10:30
+schedule.every().monday.at("09:00").do(job)   # Ogni lunedì alle 9:00
+
+# Run
+while True:
+    schedule.run_pending()
+    time.sleep(60)  # Check every minute
+\end{lstlisting}
+
+\subsection{Con cron (Linux/Mac)}
+
+\begin{lstlisting}[language=bash]
+# Modifica crontab
+crontab -e
+
+# Run script ogni ora
+0 * * * * /usr/bin/python3 /path/to/scraper.py
+
+# Run ogni giorno alle 2 AM
+0 2 * * * /usr/bin/python3 /path/to/scraper.py
+
+# Run ogni lunedì alle 9 AM
+0 9 * * 1 /usr/bin/python3 /path/to/scraper.py
+
+# Formato: minute hour day month weekday command
+\end{lstlisting}
+
+\section{Progetto Completo: News Aggregator}
+
+\begin{lstlisting}
+import requests
+from bs4 import BeautifulSoup
+import sqlite3
+import schedule
+import time
+from datetime import datetime
+
+class NewsAggregator:
+    def __init__(self, db_path="news.db"):
+        self.db_path = db_path
+        self.setup_database()
+
+    def setup_database(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS articles (
+                id INTEGER PRIMARY KEY,
+                source TEXT,
+                title TEXT,
+                link TEXT UNIQUE,
+                summary TEXT,
+                scraped_at TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+    def scrape_source(self, name, url, selector):
+        """Scrape single source"""
+        try:
+            response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+            soup = BeautifulSoup(response.content, "lxml")
+
+            articles = []
+            for article in soup.select(selector):
+                title = article.select_one("h2").text.strip()
+                link = article.select_one("a")["href"]
+                summary = article.select_one(".summary").text.strip()
+
+                articles.append({
+                    "source": name,
+                    "title": title,
+                    "link": link,
+                    "summary": summary,
+                    "scraped_at": datetime.now()
+                })
+
+            return articles
+
+        except Exception as e:
+            print(f"Error scraping {name}: {e}")
+            return []
+
+    def save_articles(self, articles):
+        """Save to database"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        saved = 0
+        for article in articles:
+            try:
+                cursor.execute(
+                    "INSERT INTO articles (source, title, link, summary, scraped_at) VALUES (?, ?, ?, ?, ?)",
+                    (article["source"], article["title"], article["link"], article["summary"], article["scraped_at"])
+                )
+                saved += 1
+            except sqlite3.IntegrityError:
+                pass  # Duplicate
+
+        conn.commit()
+        conn.close()
+        return saved
+
+    def run(self):
+        """Run scraping job"""
+        sources = [
+            ("TechNews", "https://technews.example.com", ".article"),
+            ("ScienceDaily", "https://sciencedaily.example.com", ".news-item"),
+        ]
+
+        all_articles = []
+        for name, url, selector in sources:
+            print(f"Scraping {name}...")
+            articles = self.scrape_source(name, url, selector)
+            all_articles.extend(articles)
+            time.sleep(1)  # Rate limiting
+
+        saved = self.save_articles(all_articles)
+        print(f"Saved {saved} new articles out of {len(all_articles)}")
+
+# Usage
+aggregator = NewsAggregator()
+
+# Run once
+aggregator.run()
+
+# Schedule
+schedule.every().hour.do(aggregator.run)
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best Practices]
+\begin{itemize}
+  \item Sempre rispetta robots.txt e Terms of Service
+  \item Usa User-Agent header descrittivo (evita ban)
+  \item Implementa rate limiting (1-2 requests/second max)
+  \item Usa retry con exponential backoff
+  \item Gestisci timeout (max 10-30 secondi)
+  \item Salva dati incrementalmente (no perdi tutto se crash)
+  \item Log errori per debugging
+  \item Usa selectors CSS robusti (class, id, data attributes)
+  \item Valida dati prima di salvare
+  \item Non scrapare durante picchi di traffico
+\end{itemize}
 \end{tcolorbox}
 
-\begin{tcolorbox}[title=Casi d'uso]
-- Aggregazione di notizie/titoli con filtri.
-- Monitoraggio prezzi/stock e report periodici.
-- Normalizzazione dati e esportazione CSV.
-- CLI per orchestrare pipeline (scarica, parse, salva).
+\begin{tcolorbox}[title=Errori Comuni]
+\begin{itemize}
+  \item Ignorare robots.txt (rischio ban)
+  \item Troppi requests troppo velocemente (ban IP)
+  \item Selectors fragili (class="btn-primary-2024-v3")
+  \item Non gestire errori di rete
+  \item Non usare timeout (script bloccati)
+  \item Hardcodare selectors (cambiano spesso)
+  \item Non validare dati estratti
+  \item Non usare sessions (perdere cookies/auth)
+  \item Scrapare dati personali senza consenso (GDPR!)
+  \item Non gestire encoding (caratteri corrotti)
+\end{itemize}
 \end{tcolorbox}
 
 \section{Esercizi}
+
+\subsection{Livello Base}
 \begin{enumerate}
-  \item Scrivi uno scraper per titoli di una pagina.
-  \item Salva dati in CSV e controlla duplicati.
-  \item Aggiungi retry/backoff alle richieste.
-  \item Pianifica uno script giornaliero con \texttt{schedule}.
-  \item Crea un CLI con subcomandi (\texttt{add}, \texttt{list}).
+  \item Scrivi script che scarica homepage di 5 siti e salva HTML
+  \item Scrape titoli articoli da news website e salva CSV
+  \item Automatizza backup directory con subprocess
 \end{enumerate}
 
-\section{Riepilogo}
-Hai automatizzato task e raccolto dati di base dal web.
+\subsection{Livello Intermedio}
+\begin{enumerate}
+  \item Implementa rate-limited scraper con retry logic
+  \item Consuma GitHub API e salva repo più starred in database
+  \item Schedule script che scrape ogni ora con schedule
+  \item Parse HTML table e converti in CSV
+\end{enumerate}
 
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-- Monitoraggio e report periodici.
-- ETL leggeri con scraping e normalizzazione.
-- Aggregatori di contenuti e feed.
-- Integrazioni con sistemi interni via CLI.
-\end{tcolorbox}
+\subsection{Livello Avanzato}
+\begin{enumerate}
+  \item Implementa news aggregator completo (3+ sources, DB, scheduling)
+  \item Scrape sito con login usando Selenium
+  \item Crea API wrapper per servizio esterno con caching
+  \item Implementa distributed scraping con multiprocessing
+\end{enumerate}
 
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\section{Riferimenti}
 \begin{itemize}
-\item \textbf{Etica e policy}: rispettare \verb|robots.txt| e termini d'uso; impostare rate limiting.
-  \item \textbf{Parsing HTML}: usare selettori robusti (id/class/data-attr); gestire HTML malformato.
-  \item \textbf{Siti dinamici}: quando necessario, ricorrere a WebDriver; preferire API ufficiali.
-  \item \textbf{Persistenza e cache}: archiviare dati normalizzati; usare cache per ridurre richieste ripetute.
+  \item requests: \url{https://requests.readthedocs.io/}
+  \item BeautifulSoup: \url{https://www.crummy.com/software/BeautifulSoup/bs4/doc/}
+  \item Selenium: \url{https://selenium-python.readthedocs.io/}
+  \item schedule: \url{https://schedule.readthedocs.io/}
 \end{itemize}
-\end{tcolorbox}
-
-\paragraph{Qualità} Loggare richieste, gestire errori di rete, e creare test per estrattori in modo da cogliere cambi di struttura.
-Consulta: \url{https://requests.readthedocs.io/}, \url{https://beautiful-soup-4.readthedocs.io/}.
