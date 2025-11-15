@@ -79,11 +79,8 @@ Roy Fielding definisce sei vincoli che caratterizzano REST:
 \textbf{Principio}: Separazione delle responsabilità tra client (UI) e server (dati/logica).
 
 \textbf{Vantaggi}:
-\begin{itemize}
-    \item Client e server evolvono indipendentemente
-    \item Miglior portabilità UI
-    \item Scalabilità server separata da client
-\end{itemize}
+
+La separazione client-server offre numerosi benefici architetturali. Innanzitutto, client e server possono evolversi indipendentemente l'uno dall'altro, permettendo di aggiornare l'interfaccia utente senza modificare il backend e viceversa. Questa indipendenza porta a una miglior portabilità dell'interfaccia utente, che può essere reimplementata su diverse piattaforme mantenendo lo stesso backend. Inoltre, la scalabilità del server può essere gestita separatamente dalle esigenze del client, consentendo di dimensionare le risorse in modo ottimale per ciascun livello.
 
 \begin{figure}[h]
 \centering
@@ -109,11 +106,8 @@ Roy Fielding definisce sei vincoli che caratterizzano REST:
 \textbf{Principio}: Ogni richiesta deve contenere tutte le informazioni necessarie. Il server non mantiene stato della sessione client.
 
 \textbf{Implicazioni}:
-\begin{itemize}
-    \item Nessuna sessione server-side
-    \item Autenticazione in ogni richiesta (token, API key)
-    \item Client mantiene stato applicazione
-\end{itemize}
+
+Il vincolo stateless ha importanti implicazioni pratiche nell'implementazione delle API. Innanzitutto, non può esistere alcuna sessione server-side che mantenga informazioni tra richieste consecutive dello stesso client. Di conseguenza, l'autenticazione deve essere fornita in ogni singola richiesta, tipicamente attraverso token o API key inclusi negli header HTTP. La responsabilità di mantenere lo stato dell'applicazione ricade interamente sul client, che deve inviare tutte le informazioni contestuali necessarie per processare ogni richiesta.
 
 \begin{lstlisting}[caption=Esempio Stateless: token in ogni richiesta]
 GET /api/v1/orders HTTP/1.1
@@ -125,17 +119,12 @@ Accept: application/json
 \end{lstlisting}
 
 \textbf{Vantaggi}:
-\begin{itemize}
-    \item Scalabilità: qualsiasi server può gestire qualsiasi richiesta
-    \item Affidabilità: nessuna sincronizzazione stato tra server
-    \item Visibilità: request completa per monitoring/debugging
-\end{itemize}
+
+L'approccio stateless porta significativi benefici in termini di scalabilità: poiché ogni richiesta è autocontenuta, qualsiasi server nel pool può gestire qualsiasi richiesta senza necessità di affinità di sessione. Questo migliora notevolmente l'affidabilità del sistema, eliminando la complessità della sincronizzazione dello stato tra server multipli e i problemi correlati alla perdita di sessioni in caso di failover. Inoltre, la completezza di ogni request facilita enormemente le attività di monitoring e debugging, poiché ogni richiesta contiene tutte le informazioni necessarie per comprenderne il contesto.
 
 \textbf{Svantaggi}:
-\begin{itemize}
-    \item Overhead: ripetere dati in ogni richiesta
-    \item Performance: nessuna ottimizzazione basata su stato precedente
-\end{itemize}
+
+Tuttavia, il vincolo stateless introduce anche alcuni svantaggi. Il principale è l'overhead dovuto alla necessità di ripetere gli stessi dati in ogni richiesta, aumentando la dimensione del payload e il traffico di rete. Inoltre, l'assenza di stato server-side impedisce ottimizzazioni basate su richieste precedenti, potenzialmente impattando le performance in scenari dove la conoscenza dello storico potrebbe ridurre elaborazioni ridondanti.
 
 \subsection{3. Cacheable}
 
@@ -206,11 +195,8 @@ HTTP/1.1 304 Not Modified
 \end{figure}
 
 \textbf{Vantaggi}:
-\begin{itemize}
-    \item Scalabilità: aggiungere layer senza modificare client
-    \item Security: firewall e gateway nascondono architettura interna
-    \item Caching centralizzato
-\end{itemize}
+
+L'architettura a strati offre importanti vantaggi in termini di scalabilità ed evoluzione del sistema. È possibile aggiungere nuovi layer intermedi, come cache o load balancer, senza richiedere alcuna modifica ai client esistenti, che rimangono inconsapevoli di questi cambiamenti architetturali. Dal punto di vista della sicurezza, i layer intermedi come firewall e API gateway possono nascondere completamente l'architettura interna del sistema, proteggendo i dettagli implementativi e riducendo la superficie d'attacco. Inoltre, la possibilità di inserire layer di caching centralizzato permette di migliorare le performance globali del sistema senza modificare né i client né i server di origine.
 
 \subsection{5. Uniform Interface}
 
@@ -403,13 +389,7 @@ Content-Type: application/json
 Client può navigare senza conoscere URI structure a priori.
 
 \begin{tcolorbox}[colback=green!5, colframe=green!60, title=Nota pratica]
-La maggior parte delle API moderne si ferma al \textbf{Level 2}. Level 3 (HATEOAS) è raro perché:
-\begin{itemize}
-    \item Complessità implementativa
-    \item Client spesso preferiscono URI hardcoded
-    \item Overhead payload con link
-\end{itemize}
-Tuttavia, HATEOAS è fondamentale per API veramente RESTful e auto-documentanti.
+La maggior parte delle API moderne si ferma al \textbf{Level 2}. Il raggiungimento del Level 3 (HATEOAS) è raro nella pratica per diverse ragioni. La complessità implementativa richiesta per generare dinamicamente i link appropriati in ogni risposta può essere significativa, specialmente in sistemi legacy. Inoltre, molti sviluppatori di client preferiscono utilizzare URI hardcoded nelle loro applicazioni per semplicità e controllo diretto, rendendo meno appetibile l'approccio hypermedia. Infine, l'inclusione dei link in ogni risposta introduce un overhead nel payload che può impattare le performance, specialmente in scenari ad alto traffico. Tuttavia, HATEOAS rimane fondamentale per API veramente RESTful e auto-documentanti, offrendo la massima flessibilità evolutiva e discoverability.
 \end{tcolorbox}
 
 \section{REST vs SOAP vs GraphQL}
@@ -417,13 +397,8 @@ Tuttavia, HATEOAS è fondamentale per API veramente RESTful e auto-documentanti.
 \subsection{SOAP (Simple Object Access Protocol)}
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item Protocollo XML-based
-    \item WSDL per definizione interfaccia
-    \item WS-Security per sicurezza enterprise
-    \item Stateful o stateless
-    \item Overhead elevato
-\end{itemize}
+
+SOAP è un protocollo rigorosamente XML-based che impone una struttura ben definita per i messaggi. Utilizza WSDL (Web Services Description Language) per la definizione formale dell'interfaccia, fornendo un contratto machine-readable che descrive operazioni disponibili, parametri e tipi di dato. Per la sicurezza in ambienti enterprise, SOAP offre WS-Security, uno standard completo che supporta crittografia, firme digitali e gestione delle credenziali. A differenza di REST, SOAP può essere sia stateful che stateless, adattandosi a diversi scenari d'uso. Tuttavia, questa flessibilità e completezza comportano un overhead elevato, sia in termini di dimensione dei messaggi che di complessità di parsing.
 
 \textbf{Esempio SOAP request}:
 \begin{lstlisting}[language=XML]
@@ -454,13 +429,8 @@ Content-Type: application/soap+xml
 \subsection{GraphQL}
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item Query language per API
-    \item Client richiede esattamente dati necessari
-    \item Single endpoint
-    \item Strongly typed schema
-    \item Introspection
-\end{itemize}
+
+GraphQL rappresenta un approccio radicalmente diverso, essendo un query language completo per le API piuttosto che un'architettura o un protocollo. La sua caratteristica distintiva è permettere al client di richiedere esattamente i dati necessari, né più né meno, eliminando i problemi di over-fetching e under-fetching tipici di REST. Utilizza un single endpoint per tutte le operazioni, a differenza della molteplicità di endpoint REST, semplificando la struttura dell'API. Lo schema fortemente tipato garantisce validazione e sicurezza dei dati, mentre la funzionalità di introspection permette ai client di esplorare dinamicamente le capacità dell'API, facilitando lo sviluppo di tool di documentazione e testing automatici.
 
 \textbf{Esempio GraphQL query}:
 \begin{lstlisting}[caption=GraphQL: client specifica campi]
@@ -604,14 +574,10 @@ X-RateLimit-Remaining: 4999
 \end{lstlisting}
 
 \textbf{Caratteristiche notevoli}:
-\begin{itemize}
-    \item URI resource-based: \texttt{/repos/:owner/:repo}
-    \item Versioning in Accept header: \texttt{application/vnd.github.v3+json}
-    \item Rate limiting headers: \texttt{X-RateLimit-*}
-    \item Hypermedia partial: URL reference in response
-    \item Pagination via Link header (RFC 5988)
-    \item Authentication: token-based
-\end{itemize}
+
+L'API di GitHub presenta diverse caratteristiche che la rendono un esempio eccellente di design RESTful. Gli URI sono rigorosamente resource-based, seguendo pattern come \texttt{/repos/:owner/:repo} che identificano chiaramente le risorse. Il versionamento è implementato elegantemente attraverso l'Accept header con media type custom come \texttt{application/vnd.github.v3+json}, evitando di inquinare gli URI. Il rate limiting è comunicato in modo trasparente attraverso header dedicati con prefisso \texttt{X-RateLimit-*}, permettendo ai client di gestire proattivamente i limiti.
+
+L'API implementa hypermedia in forma parziale, includendo URL reference nelle response che facilitano la navigazione tra risorse correlate. La paginazione segue RFC 5988, utilizzando il Link header per fornire i riferimenti alle pagine precedenti, successive e correlate. L'autenticazione è basata su token, conforme al principio stateless, dove ogni richiesta include le credenziali necessarie senza dipendere da sessioni server-side.
 
 \section{Riepilogo}
 

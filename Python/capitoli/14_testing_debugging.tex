@@ -21,14 +21,15 @@ Dopo questo capitolo saprai:
 
 \subsection{Perché testare?}
 
-I test sono fondamentali per:
-\begin{itemize}
-  \item \textbf{Qualità}: Catturare bug prima della produzione
-  \item \textbf{Refactoring sicuro}: Modificare codice con confidenza
-  \item \textbf{Documentazione}: Test come esempi d'uso
-  \item \textbf{Design}: Test influenzano architettura (testabile = modulare)
-  \item \textbf{Regressioni}: Prevenire re-introduzione di bug
-\end{itemize}
+I test sono una componente fondamentale dello sviluppo software moderno per molteplici ragioni. Dal punto di vista della \textbf{qualità}, i test permettono di catturare bug prima che raggiungano la produzione, riducendo significativamente i costi di correzione e i rischi di downtime.
+
+Un vantaggio spesso trascurato è il \textbf{refactoring sicuro}. Modificare il codice esistente diventa molto più sicuro quando si ha una suite di test che verifica che il comportamento rimane corretto dopo le modifiche. Questo aumenta la fiducia durante le operazioni di riprogettazione.
+
+I test servono anche come \textbf{documentazione vivente}. Invece di leggere documentazione che potrebbe essere obsoleta, altri sviluppatori possono studiare i test per capire come usare il codice e quali comportamenti ci si aspetta.
+
+Dal punto di vista architetturale, il \textbf{design} è influenzato dalla testabilità. Codice che è facile da testare tende a essere modulare, ben separato in responsabilità, e meno accoppiato. Questo migliora la qualità complessiva dell'architettura.
+
+Infine, i test sono essenziali per \textbf{prevenire regressioni}, cioè la re-introduzione di bug che era stata corretta in passato. Una suite di test ben mantenuta cattura rapidamente questi problemi.
 
 \subsection{Piramide dei test}
 
@@ -42,26 +43,11 @@ I test sono fondamentali per:
   /--------------\
 \end{verbatim}
 
-\textbf{Unit Tests} (70\%):
-\begin{itemize}
-  \item Testano singola funzione/classe isolatamente
-  \item Veloci (ms), stabili, facili da debuggare
-  \item Mock dependencies esterne
-\end{itemize}
+\textbf{Unit Tests} (70\%): Questi test costituiscono la base della piramide e dovrebbero rappresentare la maggioranza della suite. Testano singole funzioni o classi in completo isolamento, usando mock per le dipendenze esterne. Sono estremamente veloci (millisecondi), stabili e facili da debuggare poiché ogni fallimento indica precisamente quale unità ha un problema.
 
-\textbf{Integration Tests} (20\%):
-\begin{itemize}
-  \item Testano interazione tra componenti
-  \item Database, API, file system reali
-  \item Più lenti, più setup richiesto
-\end{itemize}
+\textbf{Integration Tests} (20\%): Questi test verificano l'interazione tra componenti diversi del sistema, usando risorse reali come database, API esterne e file system. Sono più lenti degli unit test e richiedono più setup, ma catturano bug che emergono dall'integrazione di componenti che funzionano correttamente in isolamento.
 
-\textbf{End-to-End Tests} (10\%):
-\begin{itemize}
-  \item Testano applicazione completa (UI, API, DB)
-  \item Molto lenti, fragili (flaky)
-  \item Solo per flussi critici
-\end{itemize}
+\textbf{End-to-End Tests} (10\%): Rappresentano la punta della piramide e testano l'applicazione completa dal punto di vista dell'utente finale, includendo UI, API e database. Sono molto lenti, fragili e soggetti a fallimenti intermittenti (flaky), quindi dovrebbero essere usati solo per i flussi critici più importanti dell'applicazione.
 
 \section{unittest: Testing Standard Library}
 

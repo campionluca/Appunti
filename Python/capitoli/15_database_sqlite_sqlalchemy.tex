@@ -18,46 +18,29 @@ Dopo questo capitolo saprai:
 
 \section{Introduzione}
 
-I database sono fondamentali per applicazioni moderne. Permettono di:
-\begin{itemize}
-  \item \textbf{Persistenza}: Salvare dati permanentemente
-  \item \textbf{Query}: Cercare e filtrare dati efficientemente
-  \item \textbf{Integrità}: Garantire consistenza con constraints
-  \item \textbf{Concorrenza}: Gestire accessi multipli simultanei
-  \item \textbf{Scalabilità}: Gestire milioni di record
-\end{itemize}
+I database sono una componente fondamentale di qualsiasi applicazione moderna, permettendo di risolvere problemi cruciali nello sviluppo software.
+
+Dal punto di vista della \textbf{persistenza}, i database permettono di salvare dati in modo permanente, consentendo alle applicazioni di mantenere stato oltre il ciclo di esecuzione di un programma.
+
+Una delle funzionalità principali è la capacità di \textbf{eseguire query}, cioè cercare e filtrare dati efficientemente. Anziché cariccare tutto in memoria e filtrare manualmente, i database usano indici e ottimizzatori di query per fornire risultati rapidamente.
+
+L'\textbf{integrità dei dati} è assicurata da vincoli (constraints) come chiavi primarie, chiavi esterne e vincoli di unicità. Questi garantiscono consistenza e validità dei dati nel database.
+
+La \textbf{concorrenza} è un aspetto critico spesso trascurato. I database moderni permettono di gestire accessi multipli simultanei in modo sicuro, usando mecanismi come locking e transazioni.
+
+Infine, la \textbf{scalabilità} è una considerazione importante. Un database ben progettato e dotato di indici appropriati può gestire milioni di record mantenendo performance accettabili.
 
 \subsection{SQLite vs altri database}
 
-\textbf{SQLite}:
-\begin{itemize}
-  \item File-based (un file \texttt{.db})
-  \item Nessun server da configurare
-  \item Ideale per: prototipi, app desktop, testing, embedded systems
-  \item Limiti: concorrenza limitata, no clustering
-\end{itemize}
+\textbf{SQLite} è un database file-based che memorizza tutti i dati in un singolo file \texttt{.db}, senza richiedere un server separato da configurare o gestire. Questa semplicità lo rende ideale per prototipi rapidi, applicazioni desktop, testing e sistemi embedded dove non è necessaria alta concorrenza. Tuttavia, presenta limitazioni significative in termini di concorrenza (scrive bloccanti) e non supporta clustering o distribuzione.
 
-\textbf{PostgreSQL/MySQL}:
-\begin{itemize}
-  \item Client-server architecture
-  \item Alta concorrenza e performance
-  \item Ideale per: produzione, web apps, alta scalabilità
-  \item Richiede: installazione server, configurazione
-\end{itemize}
+\textbf{PostgreSQL e MySQL} utilizzano un'architettura client-server che richiede l'installazione e configurazione di un server database separato. Questa architettura permette alta concorrenza con multiple connessioni simultanee e performance scalabili, rendendoli ideali per ambienti di produzione, applicazioni web e scenari che richiedono alta disponibilità e scalabilità orizzontale.
 
 \subsection{SQL vs ORM}
 
-\textbf{Raw SQL} (sqlite3):
-\begin{itemize}
-  \item Pro: Controllo completo, massima performance
-  \item Contro: Verboso, ripetitivo, SQL injection se non attento
-\end{itemize}
+L'approccio \textbf{Raw SQL} con sqlite3 offre controllo completo sulle query e massima performance, permettendo di ottimizzare ogni aspetto dell'interazione con il database. Tuttavia, richiede scrittura di codice più verboso e ripetitivo, con il rischio costante di SQL injection se non si usano correttamente i prepared statements.
 
-\textbf{ORM} (SQLAlchemy):
-\begin{itemize}
-  \item Pro: Pythonic, type safety, meno boilerplate
-  \item Contro: Curva apprendimento, overhead performance minimo
-\end{itemize}
+L'approccio \textbf{ORM} con SQLAlchemy fornisce un'interfaccia Pythonic che astrae le query SQL in operazioni su oggetti, offrendo type safety e riducendo significativamente il boilerplate. La curva di apprendimento iniziale è più ripida e c'è un overhead di performance minimo, ma i benefici in termini di manutenibilità e produttività generalmente superano questi svantaggi.
 
 \section{SQLite3: Database di Base}
 
@@ -657,33 +640,47 @@ def downgrade():
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Best Practices]
-\begin{itemize}
-  \item Usa prepared statements (sempre!) per evitare SQL injection
-  \item Chiudi sempre connessioni/sessioni (usa context manager)
-  \item Usa transazioni per operazioni multi-step
-  \item Evita N+1 queries con joinedload/selectinload
-  \item Indicizza colonne usate in WHERE, JOIN, ORDER BY
-  \item Usa Alembic per migrazioni (no ALTER TABLE manuale)
-  \item Gestisci eccezioni (IntegrityError, OperationalError)
-  \item Testa query complesse con EXPLAIN QUERY PLAN
-  \item Usa connection pooling in produzione
-  \item Backup database regolarmente
-\end{itemize}
+L'uso di prepared statements è assolutamente obbligatorio per evitare SQL injection, uno dei rischi di sicurezza più gravi nelle applicazioni web. Mai concatenare input dell'utente direttamente nelle query SQL.
+
+Chiudere sempre connessioni e sessioni database è fondamentale per evitare resource leak. L'uso di context manager con \verb|with| garantisce cleanup automatico anche in caso di eccezioni.
+
+Le transazioni devono essere usate per operazioni multi-step che devono essere atomiche: o tutte le operazioni hanno successo, o tutte vengono annullate con rollback, garantendo consistenza dei dati.
+
+Evitare il problema N+1 queries è critico per le performance. Usare \verb|joinedload| o \verb|selectinload| in SQLAlchemy carica i dati correlati in anticipo, evitando query aggiuntive per ogni elemento.
+
+L'indicizzazione delle colonne usate frequentemente in WHERE, JOIN e ORDER BY è essenziale per query veloci. Senza indici appropriati, le query su tabelle grandi diventano inaccettabilmente lente.
+
+Alembic dovrebbe essere usato per tutte le migrazioni di schema, evitando modifiche manuali con ALTER TABLE che possono causare inconsistenze tra ambienti.
+
+La gestione esplicita di eccezioni come \verb|IntegrityError| (violazioni di vincoli) e \verb|OperationalError| (problemi di connessione) permette di gestire errori in modo appropriato anziché crashare.
+
+Testare query complesse con EXPLAIN QUERY PLAN aiuta a identificare bottleneck e verificare che gli indici vengano utilizzati correttamente dall'optimizer.
+
+Il connection pooling in produzione riusa connessioni esistenti invece di crearne nuove per ogni richiesta, migliorando significativamente le performance.
+
+Infine, backup regolari del database sono essenziali per disaster recovery, proteggendo da corruzioni, cancellazioni accidentali e guasti hardware.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Errori Comuni]
-\begin{itemize}
-  \item SQL injection con f-strings invece di ? placeholders
-  \item Dimenticare commit() dopo INSERT/UPDATE/DELETE
-  \item Non chiudere sessioni (resource leak)
-  \item N+1 queries con lazy loading
-  \item Non gestire IntegrityError (UNIQUE, FK violations)
-  \item Usare \texttt{session.query(User).all()} per grandi dataset (usa limit/offset)
-  \item Non usare indici (query lente)
-  \item Modificare schema senza migration (inconsistenze)
-  \item Non usare transazioni per operazioni critiche
-  \item Esporre oggetti SQLAlchemy direttamente in API (usa DTO/serializer)
-\end{itemize}
+L'uso di f-strings per costruire query SQL è un errore gravissimo che apre vulnerabilità a SQL injection. Sempre usare placeholder (?) o prepared statements per parametrizzare le query.
+
+Dimenticare di chiamare \verb|commit()| dopo INSERT, UPDATE o DELETE è un errore comune che fa sì che le modifiche non vengano persistite, causando perdita di dati.
+
+Non chiudere sessioni database porta a resource leak che esaurisce il connection pool, causando errori "too many connections" in produzione.
+
+Il problema N+1 queries con lazy loading degrada drasticamente le performance: caricare 100 utenti con i loro post genera 101 query invece di 2, rallentando l'applicazione.
+
+Non gestire \verb|IntegrityError| per violazioni di vincoli UNIQUE e foreign key porta a crash invece di fornire messaggi di errore utili all'utente.
+
+Usare \verb|.all()| per caricare grandi dataset in memoria causa problemi di memoria e performance. Per dataset grandi, usare pagination con limit/offset.
+
+Non creare indici sulle colonne usate frequentemente nelle query causa scan completi di tabelle, rendendo le query estremamente lente su tabelle grandi.
+
+Modificare lo schema del database manualmente senza migration crea inconsistenze tra ambienti (dev/staging/prod), causando bug difficili da diagnosticare.
+
+Non usare transazioni per operazioni critiche multi-step rischia di lasciare il database in uno stato inconsistente se un'operazione fallisce a metà.
+
+Infine, esporre oggetti SQLAlchemy direttamente come risposta API crea problemi di serializzazione e accoppiamento. Usare sempre DTO o serializer per separare la rappresentazione interna da quella esterna.
 \end{tcolorbox}
 
 \section{Pattern e Best Practices}

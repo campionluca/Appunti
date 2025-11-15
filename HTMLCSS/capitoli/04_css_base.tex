@@ -192,10 +192,7 @@ div {
 \end{center}
 
 \textbf{Calcolo dimensioni totali}:
-\begin{itemize}
-    \item \textbf{content-box} (default): Total width = width + padding + border + margin
-    \item \textbf{border-box}: Total width include padding e border, esclude margin
-\end{itemize}
+Il calcolo delle dimensioni totali di un elemento dipende dal valore della proprietà \texttt{box-sizing}. Con \texttt{content-box} (il valore di default), la larghezza totale si calcola sommando width, padding, border e margin, il che significa che specificare una width di 300px risulterà in un elemento effettivamente più largo una volta aggiunti padding, border e margin. Al contrario, con \texttt{border-box}, la larghezza totale include già padding e border all'interno del valore di width specificato, escludendo solo il margin. Questo rende \texttt{border-box} molto più intuitivo perché il valore di width che specifichi corrisponde alla dimensione visibile dell'elemento, border incluso.
 
 \begin{lstlisting}[language=CSS]
 /* content-box (default): width = solo content */

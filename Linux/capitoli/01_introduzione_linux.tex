@@ -97,49 +97,17 @@ Linux è organizzato in livelli gerarchici:
 
 \subsection{Il Kernel}
 
-Il \textbf{kernel} è il cuore del sistema operativo. Responsabilità principali:
+Il \textbf{kernel} è il cuore pulsante del sistema operativo, responsabile di coordinare e gestire tutte le risorse fondamentali del computer.
 
-\begin{enumerate}
-    \item \textbf{Gestione Processi}
-    \begin{itemize}
-        \item Scheduling: quale processo eseguire e quando
-        \item Context switching tra processi
-        \item Creazione e terminazione processi
-        \item Comunicazione inter-processo (IPC)
-    \end{itemize}
+La \textbf{gestione dei processi} rappresenta una delle funzioni più critiche del kernel. Attraverso lo scheduling, il kernel decide intelligentemente quale processo deve essere eseguito e quando, garantendo che tutti i processi ricevano un'equa porzione di tempo CPU. Il context switching permette di alternare rapidamente tra processi diversi, creando l'illusione che molti programmi stiano eseguendo simultaneamente. Il kernel si occupa anche della creazione e terminazione dei processi durante il loro intero ciclo di vita, e facilita la comunicazione inter-processo (IPC) quando i processi necessitano di scambiarsi dati o sincronizzarsi.
 
-    \item \textbf{Gestione Memoria}
-    \begin{itemize}
-        \item Allocazione e deallocazione memoria
-        \item Memoria virtuale e paginazione
-        \item Protezione memoria tra processi
-        \item Caching e buffering
-    \end{itemize}
+La \textbf{gestione della memoria} è fondamentale per l'efficienza del sistema. Il kernel alloca dinamicamente memoria ai processi quando ne hanno bisogno e la dealloca quando non serve più. Implementa la memoria virtuale e la paginazione, permettendo ai programmi di utilizzare più memoria di quella fisicamente disponibile e isolando lo spazio di indirizzamento di ogni processo. La protezione della memoria impedisce a un processo di accedere alla memoria di altri processi, garantendo stabilità e sicurezza. Inoltre, sofisticati meccanismi di caching e buffering ottimizzano le prestazioni minimizzando gli accessi lenti al disco.
 
-    \item \textbf{Gestione File System}
-    \begin{itemize}
-        \item Astrazione dei filesystem (VFS)
-        \item Supporto multi-filesystem (ext4, XFS, Btrfs, NFS...)
-        \item Caching dei metadati
-        \item Gestione permessi e ownership
-    \end{itemize}
+Il sottosistema di \textbf{gestione del file system} fornisce un'astrazione unificata attraverso il VFS (Virtual File System), permettendo di utilizzare filesystem diversi in modo trasparente. Linux supporta una vasta gamma di filesystem, da ext4 e XFS per dischi locali, a Btrfs per funzionalità avanzate, fino a NFS per filesystem di rete. Il caching intelligente dei metadati accelera le operazioni sui file, mentre la gestione di permessi e ownership garantisce la sicurezza dei dati.
 
-    \item \textbf{Gestione Dispositivi}
-    \begin{itemize}
-        \item Driver per hardware
-        \item Interfaccia unificata via /dev/
-        \item Gestione interrupt
-        \item Direct Memory Access (DMA)
-    \end{itemize}
+La \textbf{gestione dei dispositivi} fornisce un'interfaccia unificata per l'hardware del sistema. I driver traducono le richieste generiche in operazioni specifiche per ogni dispositivo hardware. L'interfaccia unificata via /dev/ permette di interagire con l'hardware come se fossero file normali. Il kernel gestisce gli interrupt hardware, rispondendo tempestivamente agli eventi dei dispositivi, e coordina il Direct Memory Access (DMA) che permette ai dispositivi di trasferire dati direttamente in memoria senza coinvolgere la CPU.
 
-    \item \textbf{Networking}
-    \begin{itemize}
-        \item Stack TCP/IP completo
-        \item Routing e firewall (netfilter/iptables)
-        \item Socket API
-        \item Supporto protocolli multipli
-    \end{itemize}
-\end{enumerate}
+Infine, il sottosistema di \textbf{networking} implementa uno stack TCP/IP completo, supportando la comunicazione di rete a tutti i livelli. Il routing e le funzionalità di firewall attraverso netfilter e iptables permettono di controllare il flusso dei pacchetti di rete. La Socket API fornisce un'interfaccia di programmazione elegante per le applicazioni di rete, mentre il supporto per protocolli multipli garantisce interoperabilità con sistemi eterogenei.
 
 \subsection{Kernel Space vs User Space}
 
@@ -158,35 +126,16 @@ dmesg | head -20
 \end{lstlisting}
 
 \begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Kernel vs User Space]
-\textbf{Kernel Space}:
-\begin{itemize}
-    \item Esecuzione privilegiata (ring 0)
-    \item Accesso diretto all'hardware
-    \item Memoria protetta
-    \item Bug possono causare kernel panic
-\end{itemize}
+Il sistema Linux implementa una separazione fondamentale tra due spazi di esecuzione distinti per garantire stabilità e sicurezza.
 
-\textbf{User Space}:
-\begin{itemize}
-    \item Esecuzione non privilegiata (ring 3)
-    \item Accesso hardware via system call
-    \item Isolamento tra processi
-    \item Crash di un processo non affetta il sistema
-\end{itemize}
+Il \textbf{Kernel Space} opera con esecuzione privilegiata (ring 0 nell'architettura x86), godendo di accesso diretto e illimitato a tutto l'hardware del sistema. La memoria del kernel è protetta e inaccessibile dai processi utente, garantendo l'integrità delle strutture dati critiche. Tuttavia, questa potenza comporta una grande responsabilità: qualsiasi bug nel codice kernel può causare un kernel panic, bloccando l'intero sistema e richiedendo un riavvio.
+
+Il \textbf{User Space}, al contrario, ospita tutte le applicazioni utente con esecuzione non privilegiata (ring 3). I processi in user space non possono accedere direttamente all'hardware, ma devono richiedere servizi al kernel attraverso system call ben definite. Ogni processo è isolato dagli altri, garantendo che non possano interferire reciprocamente. Questa architettura assicura che il crash di un singolo processo non comprometta la stabilità del kernel o degli altri processi in esecuzione, mantenendo il sistema robusto e affidabile.
 \end{tcolorbox}
 
 \section{Distribuzioni Linux}
 
-Una \textbf{distribuzione} (o "distro") è un sistema operativo completo basato sul kernel Linux, che include:
-
-\begin{itemize}
-    \item Kernel Linux
-    \item Software GNU e altre utility
-    \item Package manager
-    \item Desktop environment (opzionale)
-    \item Applicazioni preinstallate
-    \item Installer e configurazione
-\end{itemize}
+Una \textbf{distribuzione} (o "distro") è un sistema operativo completo basato sul kernel Linux, che assembla componenti diversi in un ecosistema integrato e funzionale. Al centro troviamo il kernel Linux stesso, che fornisce le funzionalità di base del sistema operativo. Intorno a questo nucleo si integra il software GNU e altre utility essenziali per le operazioni quotidiane: shell, compilatori, editor di testo e strumenti di sistema. Ogni distribuzione include un package manager specifico che semplifica l'installazione, l'aggiornamento e la rimozione del software. Per le distribuzioni desktop, un desktop environment opzionale fornisce l'interfaccia grafica utente, spaziando da soluzioni complete come GNOME a alternative leggere come LXDE. La distribuzione include anche una selezione curata di applicazioni preinstallate scelte per il target specifico di utenti, e fornisce un installer intuitivo con strumenti di configurazione che facilitano l'installazione e la gestione del sistema.
 
 \subsection{Famiglie di Distribuzioni}
 

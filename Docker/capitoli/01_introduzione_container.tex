@@ -28,13 +28,12 @@ Come i container di spedizione standardizzano il trasporto merci, i container so
 \end{tcolorbox}
 
 \subsection{Caratteristiche principali}
-\begin{enumerate}
-    \item \textbf{Isolamento}: Ogni container ha il proprio filesystem, processi, networking
-    \item \textbf{Portabilità}: "Build once, run anywhere" - funziona su qualsiasi sistema
-    \item \textbf{Leggerezza}: Condivide il kernel dell'host, avvio in secondi
-    \item \textbf{Immutabilità}: L'immagine non cambia, deployment consistenti
-    \item \textbf{Scalabilità}: Facilmente replicabile per gestire carico
-\end{enumerate}
+
+I container Docker si caratterizzano per un insieme di proprietà che li rendono particolarmente adatti agli ambienti di sviluppo e produzione moderni. L'\textbf{isolamento} costituisce una delle caratteristiche fondamentali: ogni container opera con il proprio filesystem dedicato, gestisce i propri processi in modo indipendente e dispone di un proprio stack di networking, garantendo così che le applicazioni non interferiscano tra loro.
+
+La \textbf{portabilità} è espressa efficacemente dal motto "Build once, run anywhere": un container costruito su un sistema può essere eseguito senza modifiche su qualsiasi piattaforma che supporti Docker, eliminando i problemi di compatibilità tra ambienti diversi. La \textbf{leggerezza} deriva dalla condivisione del kernel dell'host, che permette ai container di avviarsi in pochi secondi e di occupare solo lo spazio necessario per l'applicazione e le sue dipendenze, senza il sovraccarico di un sistema operativo completo.
+
+L'\textbf{immutabilità} garantisce che l'immagine del container rimanga invariata durante il suo ciclo di vita, assicurando deployment consistenti e riproducibili. Infine, la \textbf{scalabilità} è intrinseca all'architettura dei container: possono essere facilmente replicati per distribuire il carico di lavoro, permettendo alle applicazioni di adattarsi dinamicamente alle esigenze di traffico e computazione.
 
 \section{Container vs Macchine Virtuali}
 
@@ -94,40 +93,16 @@ Densità & Decine per host & Centinaia per host \\
 \end{table}
 
 \subsection{Virtual Machines}
-\textbf{Vantaggi}:
-\begin{itemize}
-    \item Isolamento completo a livello hardware
-    \item Esecuzione di OS diversi sullo stesso host
-    \item Sicurezza superiore (separazione hypervisor)
-    \item Supporto per applicazioni legacy
-\end{itemize}
 
-\textbf{Svantaggi}:
-\begin{itemize}
-    \item Overhead significativo (ogni VM ha un OS completo)
-    \item Avvio lento (boot del sistema operativo)
-    \item Consumo elevato di risorse (RAM, CPU, disco)
-    \item Portabilità limitata tra hypervisor diversi
-\end{itemize}
+Le macchine virtuali rappresentano un approccio consolidato alla virtualizzazione, con caratteristiche distintive che le rendono appropriate per scenari specifici. L'\textbf{isolamento completo a livello hardware} costituisce il vantaggio principale: ogni VM opera con risorse completamente separate, garantendo che problemi in una VM non possano propagarsi ad altre. La capacità di eseguire \textbf{sistemi operativi diversi sullo stesso host} offre flessibilità massima: è possibile far convivere Windows, Linux e altri OS su una singola macchina fisica. La \textbf{sicurezza superiore}, assicurata dalla separazione fornita dall'hypervisor, rende le VM ideali per ambienti multi-tenant. Infine, il \textbf{supporto per applicazioni legacy} permette di mantenere in esecuzione software datato che richiede specifiche configurazioni OS.
+
+Questi vantaggi comportano però costi considerevoli. L'\textbf{overhead significativo} deriva dal fatto che ogni VM include un sistema operativo completo, consumando gigabyte di spazio e memoria anche per applicazioni minime. L'\textbf{avvio lento} è inevitabile: il boot di un intero sistema operativo richiede tipicamente diversi minuti, rallentando le operazioni di deployment e scaling. Il \textbf{consumo elevato di risorse}---RAM, CPU e disco---limita drasticamente il numero di istanze eseguibili su un singolo server fisico. La \textbf{portabilità limitata tra hypervisor diversi} crea lock-in tecnologico: migrare VM tra VMware, KVM o Hyper-V può richiedere conversioni complesse.
 
 \subsection{Containers}
-\textbf{Vantaggi}:
-\begin{itemize}
-    \item Leggerezza: condividono il kernel dell'host
-    \item Avvio istantaneo (secondi)
-    \item Alta densità: centinaia di container per server
-    \item Portabilità: funzionano ovunque ci sia Docker
-    \item Efficienza: minor spreco di risorse
-    \item CI/CD: integrazione perfetta in pipeline DevOps
-\end{itemize}
 
-\textbf{Svantaggi}:
-\begin{itemize}
-    \item Isolamento meno robusto delle VM
-    \item Stesso kernel dell'host (no OS diversi)
-    \item Sicurezza: vulnerabilità kernel colpisce tutti i container
-    \item Non adatti per applicazioni che richiedono kernel diverso
-\end{itemize}
+I container rappresentano un cambiamento paradigmatico rispetto alle VM, con vantaggi pronunciati in termini di efficienza ed agilità. La \textbf{leggerezza} deriva dalla condivisione del kernel dell'host: i container includono solo l'applicazione e le sue dipendenze dirette, eliminando la duplicazione del sistema operativo. L'\textbf{avvio istantaneo}, misurato in secondi anziché minuti, accelera drammaticamente i cicli di deployment e scaling. L'\textbf{alta densità} permette di eseguire centinaia di container su un singolo server, massimizzando l'utilizzo dell'hardware. La \textbf{portabilità} è eccezionale: un container funziona identicamente su qualsiasi sistema con Docker, dalla workstation dello sviluppatore ai datacenter cloud. L'\textbf{efficienza} si manifesta nel minor spreco di risorse, con CPU e memoria allocate solo dove necessario. L'\textbf{integrazione CI/CD} è naturale: i container si inseriscono perfettamente nelle pipeline DevOps moderne, automatizzando build, test e deployment.
+
+Tuttavia, i container presentano limitazioni intrinseche alla loro architettura. L'\textbf{isolamento meno robusto} rispetto alle VM deriva dalla condivisione del kernel: la separazione avviene a livello processo, non hardware. La necessità di utilizzare lo \textbf{stesso kernel dell'host} impedisce l'esecuzione di sistemi operativi diversi: un host Linux può ospitare solo container Linux. Dal punto di vista della \textbf{sicurezza}, una vulnerabilità nel kernel condiviso può teoricamente compromettere tutti i container in esecuzione. Infine, i container \textbf{non sono adatti per applicazioni che richiedono un kernel diverso} o modifiche a livello sistema, limitandone l'applicabilità in alcuni contesti specializzati.
 
 \begin{nota}
 Container e VM non sono mutualmente esclusivi. Molte architetture moderne usano \textbf{container dentro VM}: le VM forniscono isolamento hardware, i container portano portabilità e densità.
@@ -156,13 +131,7 @@ Container e VM non sono mutualmente esclusivi. Molte architetture moderne usano 
 
 \subsection{2. Microservizi e Scalabilità}
 
-I container sono ideali per architetture a microservizi:
-\begin{itemize}
-    \item \textbf{Isolamento}: Ogni servizio in un container separato
-    \item \textbf{Scalabilità indipendente}: Scala solo i servizi sotto carico
-    \item \textbf{Deployment incrementale}: Aggiorna un servizio alla volta
-    \item \textbf{Resilienza}: Fallimento di un container non compromette il sistema
-\end{itemize}
+I container si rivelano la tecnologia ideale per implementare architetture a microservizi moderne. L'\textbf{isolamento} intrinseco permette di incapsulare ogni servizio in un container separato, con le sue dipendenze specifiche senza conflitti con altri componenti. La \textbf{scalabilità indipendente} rappresenta un vantaggio cruciale: è possibile aumentare le repliche solo dei servizi sotto carico, ottimizzando l'utilizzo delle risorse senza dover scalare l'intera applicazione monolitica. Il \textbf{deployment incrementale} diventa naturale: ogni microservizio può essere aggiornato indipendentemente, permettendo rilasci frequenti senza downtime dell'intero sistema. La \textbf{resilienza} del sistema migliora significativamente: il fallimento di un singolo container può essere gestito automaticamente con restart o replica su altra macchina, senza compromettere i servizi rimanenti.
 
 \begin{lstlisting}[caption=Esempio: Stack microservizi]
 # Frontend
@@ -259,12 +228,8 @@ Costo cloud mensile & \$500 & \$50 & 90\% \\
 \end{figure}
 
 \subsubsection{Docker Client}
-Interfaccia utente per interagire con Docker:
-\begin{itemize}
-    \item Comando \texttt{docker}: CLI principale
-    \item Invia comandi al Docker Daemon via REST API
-    \item Può connettersi a daemon remoti
-\end{itemize}
+
+Il Docker Client costituisce l'interfaccia principale attraverso cui gli utenti interagiscono con Docker. Il comando \texttt{docker} fornisce la CLI (Command Line Interface) completa per tutte le operazioni, dalla gestione delle immagini all'esecuzione dei container. Internamente, il client comunica con il Docker Daemon tramite REST API, permettendo un'architettura distribuita in cui il client può connettersi anche a daemon remoti, facilitando la gestione di infrastrutture Docker multi-host.
 
 \begin{lstlisting}[language=bash]
 # Esempi di comandi client
@@ -275,32 +240,18 @@ $ docker push myapp:latest
 \end{lstlisting}
 
 \subsubsection{Docker Daemon (dockerd)}
-Il cuore di Docker che gestisce:
-\begin{itemize}
-    \item Building, running, distributing container
-    \item Gestione immagini, container, reti, volumi
-    \item Comunicazione con registry per push/pull
-    \item Esposizione REST API per client
-\end{itemize}
+
+Il Docker Daemon rappresenta il cuore pulsante del sistema Docker, operando come processo in background che orchestra tutte le operazioni fondamentali. Si occupa del ciclo di vita completo dei container: building, running e distributing. Gestisce centralmente tutti gli oggetti Docker---immagini, container, reti e volumi---mantenendo lo stato del sistema e garantendo la coerenza delle operazioni. Comunica con i registry esterni per operazioni di push e pull delle immagini, fungendo da intermediario tra lo storage locale e i repository remoti. Espone una REST API completa che permette ai client di inviare comandi e ricevere risposte, abilitando sia l'uso interattivo che l'automazione programmatica.
 
 \subsubsection{Docker Registry}
-Repository per immagini Docker:
-\begin{itemize}
-    \item \textbf{Docker Hub}: Registry pubblico ufficiale
-    \item \textbf{Registry privati}: Harbor, Artifactory, AWS ECR, GCP GCR
-    \item \textbf{Self-hosted}: Registry Docker open source
-\end{itemize}
+
+Un Docker Registry è un sistema di storage e distribuzione per immagini Docker, essenziale per condividere e distribuire applicazioni containerizzate. \textbf{Docker Hub} rappresenta il registry pubblico ufficiale, ospitando milioni di immagini sia ufficiali che create dalla community, accessibili gratuitamente. Per esigenze aziendali e di sicurezza, esistono \textbf{registry privati} professionali come Harbor, Artifactory, AWS ECR e GCP GCR, che offrono controllo accessi, scanning delle vulnerabilità e integrazione con sistemi enterprise. È inoltre possibile deployare un \textbf{registry self-hosted} utilizzando l'implementazione open source fornita da Docker, garantendo controllo completo sui dati e personalizzazione della configurazione.
 
 \subsection{Oggetti Docker}
 
 \subsubsection{Immagini}
-Template \textbf{read-only} per creare container:
-\begin{itemize}
-    \item File system stratificato (layers)
-    \item Definite da un Dockerfile
-    \item Versionabili con tags (latest, v1.0, stable)
-    \item Riutilizzabili e componibili
-\end{itemize}
+
+Le immagini Docker sono template \textbf{read-only} immutabili che servono come base per creare container. La loro struttura si basa su un filesystem stratificato organizzato in layer, dove ogni layer rappresenta una modifica incrementale rispetto al precedente. Le immagini vengono definite attraverso un Dockerfile, che specifica in modo dichiarativo tutti i passi necessari per costruirle. Sono completamente versionabili utilizzando tags semantici come \texttt{latest}, \texttt{v1.0}, o \texttt{stable}, permettendo la gestione controllata delle diverse release. Grazie alla loro natura componibile e riutilizzabile, le immagini possono essere costruite partendo da altre immagini base, promuovendo il riuso del codice e l'efficienza dello storage attraverso la condivisione dei layer comuni.
 
 \begin{lstlisting}[caption=Struttura immagine a layer]
 Layer 5: App code (Python)         10 MB
@@ -313,52 +264,26 @@ Total:                              195 MB
 \end{lstlisting}
 
 \subsubsection{Container}
-Istanza \textbf{eseguibile} di un'immagine:
-\begin{itemize}
-    \item Processo isolato con proprio filesystem
-    \item Layer writable sopra l'immagine
-    \item Effimero: può essere fermato, rimosso, ricreato
-    \item Configurabile: variabili ambiente, porte, volumi
-\end{itemize}
+
+Un container è un'istanza \textbf{eseguibile} di un'immagine Docker, rappresentando un processo isolato in esecuzione. Opera con un proprio filesystem dedicato, completamente separato dagli altri container e dall'host. La sua architettura prevede un layer scrivibile posizionato sopra i layer read-only dell'immagine, permettendo modifiche runtime senza alterare l'immagine originale. I container sono intrinsecamente effimeri: possono essere fermati, rimossi e ricreati a piacimento senza perdita di funzionalità, poiché lo stato persistente risiede in volumi esterni. Sono altamente configurabili attraverso variabili d'ambiente, mapping di porte e montaggio di volumi, permettendo di adattare lo stesso container a contesti differenti senza modificare l'immagine sottostante.
 
 \subsubsection{Volumi}
-Persistenza dati al di fuori del container:
-\begin{itemize}
-    \item Sopravvivono alla cancellazione del container
-    \item Condivisibili tra più container
-    \item Gestiti da Docker (ottimizzazione I/O)
-\end{itemize}
+
+I volumi Docker forniscono un meccanismo robusto per la persistenza dei dati al di fuori del ciclo di vita dei container. A differenza del filesystem del container, i volumi sopravvivono alla cancellazione del container stesso, garantendo che dati critici come database o file di configurazione non vadano persi durante gli aggiornamenti. Possono essere condivisi simultaneamente tra più container, facilitando pattern architetturali in cui diversi servizi necessitano di accedere agli stessi dati. Essendo gestiti direttamente da Docker, beneficiano di ottimizzazioni I/O specifiche per la piattaforma e possono essere facilmente sottoposti a backup, migrazione e restore attraverso comandi Docker dedicati.
 
 \subsubsection{Reti}
-Comunicazione tra container e verso l'esterno:
-\begin{itemize}
-    \item \textbf{Bridge}: Rete privata isolata (default)
-    \item \textbf{Host}: Usa network stack dell'host
-    \item \textbf{Overlay}: Multi-host networking (Swarm/Kubernetes)
-    \item \textbf{None}: Nessun networking
-\end{itemize}
+
+Il sistema di networking di Docker gestisce la comunicazione tra container e verso il mondo esterno attraverso diversi driver di rete. Il driver \textbf{Bridge} crea una rete privata isolata dove i container possono comunicare tra loro, rappresentando la configurazione di default per container standalone. Il driver \textbf{Host} elimina l'isolamento di rete, permettendo al container di utilizzare direttamente lo stack di networking dell'host per ottenere performance massime. Il driver \textbf{Overlay} abilita networking multi-host, essenziale per orchestratori come Docker Swarm e Kubernetes che gestiscono container distribuiti su più macchine fisiche. Infine, il driver \textbf{None} disabilita completamente il networking, utile per container che eseguono elaborazioni isolate senza necessità di comunicazione.
 
 \section{Tecnologie Sottostanti}
 
 \subsection{Namespace Linux}
-Isolamento delle risorse del sistema:
-\begin{itemize}
-    \item \textbf{PID}: Albero processi isolato
-    \item \textbf{Network}: Stack di rete separato
-    \item \textbf{Mount}: Filesystem isolato
-    \item \textbf{UTS}: Hostname e domain name
-    \item \textbf{IPC}: Inter-process communication
-    \item \textbf{User}: Mapping UID/GID
-\end{itemize}
+
+I namespace Linux costituiscono il meccanismo fondamentale che permette l'isolamento delle risorse del sistema nei container. Il namespace \textbf{PID} crea un albero dei processi completamente isolato, dove ogni container vede solo i propri processi con numerazione che parte da 1, ignorando i processi dell'host e degli altri container. Il namespace \textbf{Network} fornisce uno stack di rete separato con le proprie interfacce, tabelle di routing e firewall rules. Il namespace \textbf{Mount} isola il filesystem, permettendo a ogni container di avere il proprio albero di mount point senza interferenze. Il namespace \textbf{UTS} separa hostname e domain name, essenziale per applicazioni che si identificano attraverso questi parametri. Il namespace \textbf{IPC} isola i meccanismi di inter-process communication come code di messaggi e memoria condivisa. Infine, il namespace \textbf{User} permette il mapping di UID/GID, consentendo a un processo di essere root all'interno del container ma non privilegiato sull'host.
 
 \subsection{Control Groups (cgroups)}
-Limitazione e accounting delle risorse:
-\begin{itemize}
-    \item CPU: Limiti di utilizzo processore
-    \item Memoria: Limiti RAM e swap
-    \item I/O: Bandwidth disco
-    \item Network: Bandwidth rete
-\end{itemize}
+
+I Control Groups (cgroups) rappresentano il meccanismo del kernel Linux responsabile della limitazione e dell'accounting delle risorse consumate dai container. Per la \textbf{CPU}, permettono di definire quote precise di utilizzo del processore, garantendo che un container non possa monopolizzare tutte le risorse computazionali. La gestione della \textbf{memoria} include limiti sia per RAM che per swap, prevenendo situazioni di out-of-memory che potrebbero destabilizzare l'intero host. Il controllo dell'\textbf{I/O} limita la bandwidth del disco, evitando che operazioni intensive su disco in un container degradino le performance degli altri. Analogamente, il controllo della \textbf{bandwidth di rete} assicura una distribuzione equa delle risorse di networking tra i container, implementando qualità del servizio e isolamento delle performance.
 
 \begin{lstlisting}[language=bash, caption=Esempio: Limitare risorse container]
 # Limita a 1 CPU e 512 MB RAM

@@ -294,12 +294,7 @@ $ git status
     \caption{Git: Snapshot completi ad ogni commit (giallo = modificato)}
 \end{figure}
 
-\textbf{Vantaggi snapshot}:
-\begin{itemize}
-    \item Checkout velocissimo (copia file, non ricostruisce da delta)
-    \item Branching istantaneo (solo puntatori)
-    \item Integrità garantita (checksum SHA-1 su tutto)
-\end{itemize}
+L'approccio basato su snapshot offre numerosi vantaggi pratici. Il checkout diventa velocissimo perché Git semplicemente copia i file dalla versione richiesta, senza dover ricostruire lo stato applicando una sequenza di delta come fanno altri VCS. Il branching risulta istantaneo poiché creare un nuovo branch significa semplicemente creare un nuovo puntatore, senza duplicazione di file. Infine, l'integrità è garantita dal checksum SHA-1 applicato a ogni oggetto, assicurando che qualsiasi corruzione o modifica non autorizzata venga immediatamente rilevata.
 
 \subsection{Integrità e checksum SHA-1}
 
@@ -312,12 +307,7 @@ b8c9d34 Fix navbar responsive layout
 c7e2a19 Initial commit
 \end{lstlisting}
 
-\textbf{Proprietà SHA-1}:
-\begin{itemize}
-    \item Univoco: Probabilità collisione $\approx$ 0
-    \item Immutabile: Modificare un byte cambia completamente l'hash
-    \item Verificabile: Corruzione dati è immediatamente rilevata
-\end{itemize}
+Il sistema di checksum SHA-1 possiede proprietà fondamentali che garantiscono l'affidabilità di Git. L'hash è univoco: la probabilità di collisione tra due oggetti diversi è praticamente zero, rendendo ogni hash un identificatore sicuro. Il sistema è immutabile: modificare anche un solo byte del contenuto produce un hash completamente diverso, rendendo impossibile alterare dati senza che Git lo rilevi. Questa verificabilità automatica significa che qualsiasi corruzione dei dati viene immediatamente identificata quando Git calcola e confronta i checksum.
 
 \begin{tcolorbox}[colback=green!10, colframe=green!60, title=Best Practice: Integrità]
 Git garantisce che non puoi modificare contenuti senza che Git lo sappia. È praticamente impossibile corrompere dati o avere modifiche non tracciate. Questo rende Git estremamente affidabile per progetti critici.

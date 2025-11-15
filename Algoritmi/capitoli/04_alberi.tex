@@ -360,13 +360,7 @@ def Ricerca(nodo, chiave):
         return Ricerca(nodo.destro, chiave)
 \end{lstlisting}
 
-\textbf{Complessità:}
-\begin{itemize}
-    \item Caso migliore: $O(1)$ (chiave alla radice)
-    \item Caso peggiore: $O(h)$ dove $h$ è l'altezza
-    \item Se bilanciato: $O(\log n)$
-    \item Se sbilanciato (lista): $O(n)$
-\end{itemize}
+\textbf{Complessità:} L'analisi della complessità della ricerca in un BST dipende fortemente dalla struttura dell'albero. Nel caso migliore, quando la chiave cercata si trova alla radice, l'operazione richiede tempo costante $O(1)$. Più in generale, la complessità nel caso peggiore è $O(h)$, dove $h$ rappresenta l'altezza dell'albero, poiché nel peggiore dei casi potremmo dover attraversare un cammino dalla radice fino a una foglia. Se l'albero è bilanciato, l'altezza è logaritmica rispetto al numero di nodi, ottenendo quindi una complessità $O(\log n)$. Tuttavia, quando l'albero è completamente sbilanciato e degenera in una struttura simile a una lista, la complessità peggiora fino a $O(n)$.
 
 \subsubsection{Minimo e massimo}
 
@@ -855,19 +849,6 @@ In-order traversal & Ordinato & Ordinato & Non ordinato \\
 
 \section{Conclusioni}
 
-Gli alberi sono strutture dati potentissime con applicazioni vastissime:
+Gli alberi sono strutture dati potentissime con applicazioni vastissime. I \textbf{BST} (alberi binari di ricerca) trovano impiego naturale nell'implementazione di dizionari, insiemi ordinati e database indicizzati, dove è fondamentale mantenere i dati ordinati consentendo ricerche efficienti. Gli \textbf{alberi AVL} sono la scelta preferita quando è necessario garantire prestazioni ottimali anche nel caso peggiore, grazie al loro bilanciamento automatico che mantiene l'altezza logaritmica. Gli \textbf{heap}, invece, sono ideali per implementare code con priorità e trovano applicazione cruciale nell'algoritmo di ordinamento HeapSort e in algoritmi su grafi come Dijkstra e Prim, dove è essenziale estrarre efficientemente l'elemento con priorità massima o minima.
 
-\begin{itemize}
-    \item \textbf{BST}: Dizionari, insiemi ordinati, database indicizzati
-    \item \textbf{AVL}: Quando servono garanzie worst-case
-    \item \textbf{Heap}: Code con priorità, HeapSort, algoritmi su grafi (Dijkstra, Prim)
-\end{itemize}
-
-\textbf{Punti chiave:}
-\begin{itemize}
-    \item BST: In-order produce sequenza ordinata
-    \item AVL: Bilanciamento automatico con rotazioni
-    \item Heap: Proprietà di heap, rappresentazione con array
-    \item Complessità dipende dall'altezza dell'albero
-    \item Alberi bilanciati garantiscono $O(\log n)$
-\end{itemize}
+\textbf{Punti chiave:} I concetti fondamentali da ricordare sugli alberi riguardano innanzitutto la proprietà caratteristica dei BST, per cui la visita in-ordine produce sempre una sequenza ordinata degli elementi. Gli alberi AVL si distinguono per il loro meccanismo di bilanciamento automatico, realizzato attraverso operazioni di rotazione che mantengono la struttura bilanciata dopo ogni inserimento o cancellazione. Gli heap, invece, si caratterizzano per la proprietà di heap (max o min) e per la loro efficiente rappresentazione mediante array, che consente di navigare facilmente tra nodi padre e figli. Un aspetto cruciale comune a tutte queste strutture è che la complessità delle operazioni dipende strettamente dall'altezza dell'albero: è proprio per questo motivo che gli alberi bilanciati sono così importanti, poiché garantiscono un'altezza logaritmica e quindi una complessità $O(\log n)$ per le operazioni principali.

@@ -8,12 +8,7 @@ HTML (HyperText Markup Language) è il linguaggio di marcatura per creare pagine
 \section{Struttura base di un documento HTML5}
 
 \subsection{Anatomia dei tag HTML}
-Un tag HTML è composto da:
-\begin{itemize}
-  \item \textbf{Tag di apertura}: \texttt{<nome>}
-  \item \textbf{Contenuto}: testo o altri tag annidati
-  \item \textbf{Tag di chiusura}: \texttt{</nome>}
-\end{itemize}
+Un tag HTML è composto da tre parti fondamentali. La prima parte è il tag di apertura, che ha la forma \texttt{<nome>} e indica l'inizio dell'elemento. La seconda parte è il contenuto, che può essere semplice testo o altri tag annidati che formano una struttura gerarchica. Infine, la terza parte è il tag di chiusura, scritto come \texttt{</nome>}, che marca la fine dell'elemento e completa la struttura del tag.
 
 Esempio di tag con contenuto:
 \begin{lstlisting}[language=HTML]
@@ -41,19 +36,9 @@ Anche se HTML5 permette di omettere la chiusura (\texttt{/>}), è consigliabile 
 \begin{nota}
 Nota: In passato si utilizzavano i tag \texttt{<br>} e \texttt{<hr>} per creare interruzioni di riga e linee orizzontali. Queste pratiche sono ora considerate obsolete poiché mescolano presentazione e contenuto. È preferibile utilizzare CSS per gestire lo spazio e le separazioni visive.
 
-Invece di \texttt{<br>}, usa:
-\begin{itemize}
-  \item Elementi blocco appropriati (\texttt{<p>}, \texttt{<div>})
-  \item CSS \texttt{margin} o \texttt{padding}
-  \item Proprietà CSS \texttt{white-space}
-\end{itemize}
+Invece di \texttt{<br>}, puoi utilizzare approcci più semantici come elementi blocco appropriati (\texttt{<p>}, \texttt{<div>}) che creano naturalmente interruzioni di linea, oppure puoi controllare lo spazio verticale attraverso le proprietà CSS \texttt{margin} o \texttt{padding}, o ancora gestire la formattazione del testo con la proprietà CSS \texttt{white-space}.
 
-Invece di \texttt{<hr>}, usa:
-\begin{itemize}
-  \item CSS \texttt{border}
-  \item Elementi semantici con stili appropriati
-  \item \texttt{<section>} o altri elementi strutturali
-\end{itemize}
+Invece di \texttt{<hr>}, dovresti preferire soluzioni CSS come la proprietà \texttt{border} per creare linee divisorie, oppure utilizzare elementi semantici con stili appropriati, o ancora sfruttare elementi strutturali come \texttt{<section>} che forniscono una separazione logica e visiva del contenuto.
 \end{nota}
 
 \subsection{Commenti HTML}
@@ -86,11 +71,7 @@ Gli attributi \texttt{id} e \texttt{class} sono fondamentali per identificare e 
 \end{description}
 
 \begin{nota}
-Differenze principali:
-\begin{itemize}
-  \item \texttt{id}: come la carta d'identità, è unico e identifica un singolo elemento
-  \item \texttt{class}: come un gruppo o categoria, può essere condiviso tra più elementi
-\end{itemize}
+Le differenze principali tra questi due attributi sono concettuali e pratiche. L'attributo \texttt{id} funziona come una carta d'identità: è unico e identifica un singolo elemento specifico nella pagina. Al contrario, l'attributo \texttt{class} funziona come un gruppo o categoria, e può essere condiviso tra più elementi, permettendo di applicare gli stessi stili o comportamenti a diversi componenti della pagina.
 \end{nota}
 
 \subsection{Attributi per collegamenti e risorse}

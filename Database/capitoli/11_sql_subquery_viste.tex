@@ -203,13 +203,7 @@ SELECT * FROM ordine WHERE idCliente IN (
 
 \section{Viste (Views)}
 
-Una vista è una query salvata che può essere usata come una tabella virtuale. Le viste consentono di:
-\begin{itemize}
-    \item Semplificare query complesse
-    \item Riutilizzare logica comune
-    \item Fornire livelli di astrazione (nascondere dettagli di implementazione)
-    \item Gestire la sicurezza (utenti accedono solo a colonne autorizzate)
-\end{itemize}
+Una vista è una query salvata che può essere usata come una tabella virtuale, rappresentando uno strumento potente e versatile nella progettazione di database. Le viste offrono molteplici vantaggi strategici per la gestione dei dati. Innanzitutto, semplificano notevolmente le query complesse, permettendo di incapsulare logica di join e filtri sofisticati in un oggetto riutilizzabile, evitando così la duplicazione di codice SQL complesso in tutta l'applicazione. Questa capacità di riutilizzo della logica comune non solo riduce gli errori, ma facilita anche la manutenzione: modificare una vista aggiorna automaticamente tutte le query che la utilizzano. Le viste forniscono inoltre preziosi livelli di astrazione, nascondendo i dettagli di implementazione delle tabelle sottostanti e permettendo di modificare la struttura fisica del database senza impattare le applicazioni che utilizzano le viste. Infine, le viste rappresentano un meccanismo efficace per gestire la sicurezza dei dati, consentendo di concedere agli utenti l'accesso solo a specifiche colonne o righe filtrate, implementando così il principio del minimo privilegio senza replicare i dati.
 
 \subsection{CREATE VIEW}
 
@@ -407,19 +401,12 @@ GROUP BY idCliente, nome, cognome;
 
 \begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Vantaggi e Svantaggi Viste]
 \textbf{Vantaggi:}
-\begin{itemize}
-    \item Semplificano query complesse
-    \item Migliorano leggibilità
-    \item Facilitano manutenzione
-    \item Nascondono complessità
-\end{itemize}
+
+Le viste apportano benefici significativi alla progettazione e manutenzione del database. Semplificano notevolmente query complesse incapsulando join multipli e logica sofisticata in un singolo oggetto riutilizzabile. Questo migliora la leggibilità del codice, poiché gli sviluppatori possono riferirsi a viste con nomi semantici invece di dover comprendere query SQL complesse. Le viste facilitano la manutenzione centralizzando la logica: modificare una vista aggiorna automaticamente tutte le applicazioni che la utilizzano, eliminando la necessità di modificare query duplicate in più luoghi. Inoltre, nascondono efficacemente la complessità implementativa delle tabelle sottostanti, fornendo un'interfaccia stabile anche quando la struttura fisica del database cambia.
 
 \textbf{Svantaggi:}
-\begin{itemize}
-    \item Prestazioni peggiori per query complicate (non materializate)
-    \item Difficili da debuggare
-    \item Dipendenze sulle tabelle sottostanti
-\end{itemize}
+
+Nonostante i vantaggi, le viste presentano anche limitazioni che devono essere considerate. Le viste non materializzate possono avere prestazioni peggiori per query particolarmente complicate, poiché la query della vista viene eseguita ogni volta che la vista viene interrogata, moltiplicando il lavoro computazionale. Questo overhead può diventare significativo quando si innestano viste su altre viste, creando query estremamente complesse. Le viste possono anche essere difficili da debuggare, specialmente quando gli errori si propagano attraverso più livelli di astrazione, rendendo complessa l'identificazione della causa radice di problemi di performance o risultati errati. Infine, le viste creano dipendenze sulle tabelle sottostanti: modificare la struttura di una tabella base può richiedere di aggiornare tutte le viste che vi fanno riferimento, creando un accoppiamento che deve essere gestito attentamente durante l'evoluzione dello schema.
 \end{tcolorbox}
 
 \section{Riepilogo Concetti Chiave}

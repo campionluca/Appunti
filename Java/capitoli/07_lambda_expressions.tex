@@ -52,12 +52,7 @@ Comparator<Integer> comp1 = (Integer a, Integer b) -> {
 };
 \end{lstlisting}
 
-Questa forma specifica esplicitamente:
-\begin{itemize}
-    \item I tipi dei parametri (\texttt{Integer a} e \texttt{Integer b})
-    \item Le parentesi graffe per il blocco di codice
-    \item L'istruzione \texttt{return} per restituire il valore dell'espressione \texttt{a.compareTo(b)}
-\end{itemize}
+Questa forma specifica esplicitamente diversi elementi della sintassi. I \textbf{tipi dei parametri} sono dichiarati in modo completo (\texttt{Integer a} e \texttt{Integer b}), permettendo al compilatore di verificare il tipo anche senza inferenza. Sono richieste le \textbf{parentesi graffe} per il blocco di codice, indicando che il corpo della lambda contiene più di una semplice espressione. Infine, è presente l'\textbf{istruzione return} per restituire esplicitamente il valore dell'espressione \texttt{a.compareTo(b)}.
 
 \subsection{Forma 2: Sintassi abbreviata}
 
@@ -77,12 +72,7 @@ Il compilatore inferisce automaticamente i tipi dei parametri dal contesto.
 Comparator<Integer> comp3 = (a, b) -> a.compareTo(b);
 \end{lstlisting}
 
-Per espressioni singole:
-\begin{itemize}
-    \item Si omettono le parentesi graffe
-    \item Si omette la parola chiave \texttt{return}
-    \item Il valore dell'espressione è restituito implicitamente
-\end{itemize}
+Quando la lambda contiene una singola espressione, è possibile semplificare ulteriormente la sintassi. Le \textbf{parentesi graffe} possono essere omesse quando il corpo contiene una sola istruzione. La parola chiave \textbf{return} non è necessaria; il compilatore Java capisce implicitamente che il valore dell'espressione deve essere restituito. Di conseguenza, \textbf{il valore dell'espressione è restituito implicitamente} senza necessità di scrittura esplicita.
 
 \begin{nota}
 Quando la lambda ha un solo parametro, si possono omettere anche le parentesi:
@@ -305,19 +295,12 @@ public class ConfrontoActionListener {
 \end{lstlisting}
 
 \subsection{Vantaggi delle lambda}
-\begin{itemize}
-    \item \textbf{Concisione}: meno codice boilerplate
-    \item \textbf{Leggibilità}: focus sull'azione, non sulla struttura
-    \item \textbf{Manutenibilità}: codice più chiaro e diretto
-\end{itemize}
+
+Le lambda expression offrono numerosi vantaggi che le rendono la scelta preferita in molti contesti. Innanzitutto, forniscono \textbf{concisione}: permettono di scrivere con significativamente meno codice boilerplate rispetto alle classi anonime, riducendo il verbosità del codice Java. Migliorano la \textbf{leggibilità}: con le lambda il focus è sull'azione che si sta eseguendo, non sulla struttura sintattica necessaria per implementarla, rendendo il codice più diretto e comprensibile per chi lo legge. Infine, facilitano la \textbf{manutenibilità}: il codice è più chiaro e conciso, rendendo più semplice apportare modifiche e correggere bug in futuro.
 
 \subsection{Quando usare classi anonime}
-Le classi anonime sono ancora utili quando:
-\begin{itemize}
-    \item L'interfaccia ha più di un metodo astratto
-    \item Serve mantenere stato interno complesso
-    \item Si vogliono override multipli o aggiungere campi
-\end{itemize}
+
+Nonostante le lambda siano generalmente preferibili, le classi anonime rimangono utili in diversi scenari. Sono appropriate quando \textbf{l'interfaccia ha più di un metodo astratto}, poiché le lambda in Java possono implementare solo interfacce funzionali (interfacce con un singolo metodo astratto). Sono necessarie quando serve \textbf{mantenere stato interno complesso}, perché le lambda non possono contenere campi membro, mentre le classi anonime sì. Infine, rimangono la scelta giusta quando si desiderano \textbf{override multipli o aggiungere campi personalizzati} alla classe, esigenze che vanno oltre le capacità delle lambda expression.
 
 \section{Esempi avanzati}
 
@@ -578,21 +561,10 @@ public class EsempioStreamAPI {
 
 \subsubsection{Vantaggi degli Stream con lambda}
 
-\begin{itemize}
-    \item \textbf{Codice dichiarativo}: Si specifica \emph{cosa} fare, non \emph{come} farlo
-    \item \textbf{Pipeline leggibili}: Operazioni concatenate che si leggono come frasi
-    \item \textbf{Separazione delle responsabilità}: Ogni operazione ha un compito preciso
-    \item \textbf{Potenziale parallelizzazione}: Usando \texttt{.parallelStream()}, il codice può eseguire in parallelo senza modifiche
-\end{itemize}
+L'utilizzo degli Stream in combinazione con le lambda expression offre numerosi vantaggi nella programmazione Java moderna. Innanzitutto, permettono un approccio \textbf{dichiarativo}: quando usi gli Stream, specifichi \emph{cosa} desideri ottenere piuttosto che il \emph{come} ottenerlo, il che rende il codice più concentrato sulla logica di business. Le operazioni concatenate formano \textbf{pipeline leggibili} che si leggono naturalmente come frasi descrittive dell'elaborazione, facilitando la comprensione del codice anche per chi non lo ha scritto. Ogni operazione nello Stream ha una \textbf{separazione delle responsabilità} ben definita: filter filtra, map trasforma, reduce agrega, ecc., rendendo il codice modulare e facile da testare. Un vantaggio potente è il \textbf{potenziale parallelizzazione}: usando \texttt{.parallelStream()} al posto di \texttt{.stream()}, il codice può automaticamente eseguire in parallelo su più core senza alcuna modifica della logica, facilitando l'ottimizzazione delle performance.
 
 \begin{nota}
-Gli Stream sono una tecnica avanzata. Quando elabori collezioni:
-\begin{itemize}
-    \item Per operazioni semplici, i cicli tradizionali possono essere più chiari
-    \item Per trasformazioni complesse o multiple, gli Stream migliorano la leggibilità
-    \item Gli Stream non modificano la collezione originale (sono immutabili)
-    \item Ogni Stream può essere usato una sola volta
-\end{itemize}
+Gli Stream sono una tecnica avanzata da usare consapevolmente. Quando elabori collezioni, è importante scegliere l'approccio giusto per il contesto. Per operazioni semplici, i cicli tradizionali con \texttt{for} o \texttt{while} possono essere più chiari e diretti rispetto agli Stream. Per trasformazioni complesse o multiple, gli Stream migliorano significativamente la leggibilità rispetto ai loop annidati. Un aspetto fondamentale è che gli Stream non modificano la collezione originale: sono essenzialmente immutabili nel senso che le operazioni producono nuovi Stream o collezioni senza alterare l'origine. Infine, ricorda che ogni Stream può essere usato una sola volta: dopo aver consumato uno Stream con operazioni terminali come \texttt{forEach()} o \texttt{collect()}, non puoi riutilizzarlo.
 \end{nota}
 
 \section{Riepilogo}

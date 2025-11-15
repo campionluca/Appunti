@@ -49,11 +49,8 @@ Un metodo è safe se la sua semantica è \textbf{essenzialmente read-only}. Il c
 \end{tcolorbox}
 
 \textbf{Implicazioni}:
-\begin{itemize}
-    \item Crawler e bot possono chiamare safe methods senza preoccupazioni
-    \item Prefetching e caching sicuri
-    \item Nessun side effect atteso
-\end{itemize}
+
+La proprietà safe ha importanti implicazioni pratiche per l'utilizzo delle API. Crawler web e bot automatici possono invocare safe methods senza preoccupazioni di causare modifiche indesiderate, rendendo sicura l'indicizzazione e l'esplorazione automatica delle risorse. Questa caratteristica permette inoltre alle infrastrutture di rete di implementare strategie di prefetching e caching aggressive, migliorando significativamente le performance senza rischio di alterare lo stato del sistema. Tuttavia, è importante comprendere che l'assenza di side effect è attesa a livello semantico: anche se tecnicamente il server potrebbe registrare log o aggiornare contatori di accesso, questi non dovrebbero influenzare la logica di business o lo stato delle risorse esposte.
 
 \textbf{Nota}: "Safe" è semantico, non garantisce che server non cambi (es: logging, analytics).
 
@@ -114,11 +111,8 @@ Content-Type: application/json
 \end{lstlisting}
 
 \textbf{Perché idempotenza è importante}:
-\begin{itemize}
-    \item \textbf{Retry safety}: Se richiesta fallisce per network error, client può ritentare
-    \item \textbf{Distributed systems}: Garantisce consistency in caso di duplicazione messaggi
-    \item \textbf{Predictability}: Comportamento prevedibile per client
-\end{itemize}
+
+L'idempotenza riveste un ruolo cruciale nella progettazione di API robuste e affidabili. In primo luogo, garantisce la \textbf{retry safety}: quando una richiesta fallisce a causa di errori di rete temporanei, il client può ritentare l'operazione senza timore di causare duplicazioni o inconsistenze nello stato del sistema. Questo è particolarmente importante in ambienti di rete instabili o applicazioni mobile. Nei \textbf{distributed systems}, l'idempotenza assicura la consistency anche in presenza di duplicazione accidentale dei messaggi, scenario comune nelle architetture a microservizi dove middleware di messaggistica potrebbero inviare la stessa richiesta multiple volte. Infine, fornisce \textbf{predictability} nel comportamento dell'API, permettendo ai client di ragionare con maggiore sicurezza sugli effetti delle loro operazioni e semplificando la gestione degli errori e dei retry.
 
 \section{GET - Read}
 
@@ -127,12 +121,8 @@ Content-Type: application/json
 \textbf{Scopo}: Recuperare rappresentazione di una risorsa.
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item Safe: sola lettura
-    \item Idempotent: multiple GET → stesso risultato
-    \item Cacheable: response può essere cached
-    \item NO request body (parametri in query string)
-\end{itemize}
+
+Il metodo GET presenta caratteristiche che lo rendono ideale per operazioni di lettura. Essendo un metodo safe, garantisce operazioni di sola lettura che non modificano lo stato del server, permettendo invocazioni ripetute senza conseguenze. L'idempotenza assicura che richieste GET multiple alla stessa risorsa producano sempre lo stesso risultato, a meno che la risorsa stessa non sia stata modificata da altre operazioni. Le response GET sono naturalmente cacheable, consentendo a browser, proxy e CDN di memorizzare i risultati per migliorare le performance e ridurre il carico sul server. Importante notare che GET non prevede request body: tutti i parametri devono essere passati nella query string dell'URI, il che limita la complessità dei dati trasmissibili ma aumenta la trasparenza e la cacheability.
 
 \subsection{Esempio GET - Singola Risorsa}
 
@@ -244,12 +234,8 @@ Crawler e proxy possono pre-fetch GET, causando eliminazioni/creazioni accidenta
 \textbf{Scopo}: Creare nuova risorsa o eseguire operazione complessa.
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item NOT safe: modifica stato
-    \item NOT idempotent: multiple POST → risorse multiple
-    \item Request body obbligatorio (payload)
-    \item Server assegna ID alla nuova risorsa
-\end{itemize}
+
+POST è un metodo fondamentalmente diverso da GET, in quanto non è safe: il suo scopo esplicito è modificare lo stato del server, tipicamente creando nuove risorse. A differenza di PUT e DELETE, POST non è idempotente: l'esecuzione di richieste POST multiple con lo stesso payload normalmente crea risorse multiple distinte, ciascuna con il proprio identificatore. Il request body è praticamente obbligatorio, contenendo i dati (payload) necessari per creare la nuova risorsa. Una caratteristica distintiva di POST è che il server, non il client, è responsabile di assegnare l'identificatore alla risorsa creata, comunicandolo poi al client attraverso il Location header nella response.
 
 \subsection{Esempio POST - Creazione Risorsa}
 
@@ -364,12 +350,8 @@ Content-Type: application/json
 \textbf{Scopo}: Sostituire interamente una risorsa esistente.
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item NOT safe: modifica stato
-    \item Idempotent: PUT ripetuto → stesso stato
-    \item Request body contiene rappresentazione completa
-    \item Client specifica URI della risorsa
-\end{itemize}
+
+PUT è progettato per operazioni di sostituzione completa ed è quindi non safe, in quanto modifica lo stato del server. La sua caratteristica principale è l'idempotenza: eseguire la stessa richiesta PUT ripetutamente produce sempre lo stesso stato finale, indipendentemente dal numero di esecuzioni. Il request body deve contenere la rappresentazione completa della risorsa come dovrebbe essere dopo l'aggiornamento, non solo i campi modificati. Un aspetto distintivo rispetto a POST è che il client specifica l'URI completo della risorsa target, assumendosi la responsabilità di identificare univocamente la risorsa da aggiornare o creare.
 
 \subsection{PUT vs POST}
 
@@ -457,12 +439,8 @@ HTTP/1.1 200 OK
 \textbf{Scopo}: Modificare \textbf{parzialmente} una risorsa esistente.
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item NOT safe: modifica stato
-    \item Può essere idempotent (dipende da implementazione)
-    \item Request body: solo campi da modificare
-    \item Standard: JSON Patch (RFC 6902) o JSON Merge Patch (RFC 7396)
-\end{itemize}
+
+PATCH è progettato specificamente per modifiche parziali ed è quindi non safe. La sua idempotenza dipende fortemente dall'implementazione: se le operazioni di patch sono descrittive dello stato desiderato finale (es: "imposta email a X"), PATCH può essere idempotente; se invece contengono operazioni relative (es: "incrementa contatore di 1"), l'idempotenza viene violata. Il request body contiene solo i campi che devono essere modificati, lasciando invariati tutti gli altri, riducendo così il traffico di rete rispetto a PUT. Per garantire interoperabilità e semantica chiara, esistono standard formali come JSON Patch (RFC 6902), che definisce operazioni strutturate (add, remove, replace), e JSON Merge Patch (RFC 7396), più semplice ma meno espressivo.
 
 \subsection{PATCH vs PUT}
 
@@ -542,12 +520,8 @@ HTTP/1.1 200 OK
 \textbf{Scopo}: Eliminare una risorsa.
 
 \textbf{Caratteristiche}:
-\begin{itemize}
-    \item NOT safe: modifica stato
-    \item Idempotent: DELETE ripetuto → stesso stato (risorsa assente)
-    \item NO request body (solitamente)
-    \item Response può essere empty (204) o con dettagli (200)
-\end{itemize}
+
+DELETE è ovviamente non safe, poiché il suo scopo è eliminare risorse modificando lo stato del server. Tuttavia, è idempotente: eseguire DELETE ripetutamente sulla stessa risorsa produce sempre lo stesso stato finale, ovvero l'assenza della risorsa. Questo significa che il primo DELETE rimuove la risorsa, mentre le invocazioni successive trovano la risorsa già assente, ma lo stato finale rimane identico. Generalmente DELETE non prevede request body, poiché l'URI identifica univocamente la risorsa da eliminare. La response può assumere diverse forme: tipicamente è vuota con status 204 No Content per confermare l'eliminazione senza ulteriori dettagli, oppure può includere un body con status 200 OK contenente informazioni aggiuntive sull'operazione di eliminazione.
 
 \subsection{Esempio DELETE - Success}
 

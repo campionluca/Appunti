@@ -87,11 +87,8 @@ ping: bad address 'container2'
 \end{lstlisting}
 
 \textbf{Limitazioni default bridge}:
-\begin{itemize}
-    \item No automatic service discovery (DNS)
-    \item Comunicazione solo via IP
-    \item Tutti i container vedono tutti gli altri
-\end{itemize}
+
+Il bridge di default presenta alcune limitazioni significative che ne sconsigliano l'uso in ambienti di produzione. L'assenza di automatic service discovery basato su DNS costringe i container a comunicare tramite indirizzi IP hardcoded, rendendo la configurazione fragile e difficile da mantenere. La comunicazione è possibile esclusivamente via IP, eliminando la possibilità di riferirsi ai container tramite nomi simbolici. Inoltre, tutti i container connessi al bridge di default possono vedere e comunicare con tutti gli altri, mancando di granularità nel controllo dell'isolamento di rete.
 
 \subsection{User-Defined Bridge}
 
@@ -168,23 +165,16 @@ $ curl http://localhost:80
 \end{lstlisting}
 
 \textbf{Vantaggi}:
-\begin{itemize}
-    \item Performance ottimale (no NAT overhead)
-    \item Accesso diretto a tutte le interfacce host
-\end{itemize}
+
+L'uso della host network offre benefici tangibili in termini di performance, eliminando completamente l'overhead del NAT (Network Address Translation) e permettendo al container di operare con latenza minima. Il container ottiene inoltre accesso diretto a tutte le interfacce di rete dell'host, facilitando scenari in cui è necessario interagire con hardware di rete specifico o monitorare tutto il traffico della macchina.
 
 \textbf{Svantaggi}:
-\begin{itemize}
-    \item Nessun isolamento di rete
-    \item Port conflicts se più container usano stessa porta
-    \item Non funziona su Docker Desktop (macOS/Windows)
-\end{itemize}
+
+Questi vantaggi hanno un costo elevato in termini di sicurezza e gestibilità. L'assenza totale di isolamento di rete espone l'host a potenziali rischi se il container viene compromesso. Si creano inevitabili conflitti di porta quando più container tentano di utilizzare la stessa porta, rendendo impossibile eseguire repliche multiple dello stesso servizio. Inoltre, questa modalità non è supportata su Docker Desktop per macOS e Windows, limitandone l'applicabilità in ambienti di sviluppo cross-platform.
 
 \textbf{Quando usarlo}:
-\begin{itemize}
-    \item Performance critiche (monitoring, load balancer)
-    \item Container che gestisce tutto il network stack (VPN, firewall)
-\end{itemize}
+
+L'host network è appropriato per scenari specifici dove le performance sono assolutamente critiche, come sistemi di monitoring che devono analizzare tutto il traffico di rete con latenza minimale, o load balancer ad alte prestazioni. È inoltre indicato per container che devono gestire direttamente l'intero stack di networking dell'host, come soluzioni VPN o firewall che richiedono controllo completo sulle interfacce di rete.
 
 \section{Overlay Network}
 

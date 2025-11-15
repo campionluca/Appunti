@@ -370,11 +370,7 @@ def DFS_Visit(G, u):
     u.tempo_fine = tempo
 \end{lstlisting}
 
-\textbf{Timestamp:}
-\begin{itemize}
-    \item $u.tempo\_scoperta$: Quando $u$ viene scoperto
-    \item $u.tempo\_fine$: Quando l'esplorazione di $u$ termina
-\end{itemize}
+\textbf{Timestamp:} L'algoritmo DFS mantiene due valori temporali per ogni vertice. Il valore $u.tempo\_scoperta$ registra l'istante in cui il vertice $u$ viene scoperto per la prima volta durante la visita, mentre $u.tempo\_fine$ registra il momento in cui l'esplorazione completa di $u$ e di tutti i suoi discendenti termina, permettendo di ricostruire la struttura temporale della visita.
 
 \textbf{Visualizzazione:}
 
@@ -643,23 +639,8 @@ Dimostrare che l'algoritmo di Bellman-Ford è corretto.
 
 \section{Conclusioni}
 
-I grafi sono strutture dati fondamentali con applicazioni vastissime:
+I grafi sono strutture dati fondamentali con applicazioni vastissime. L'algoritmo \textbf{BFS} è particolarmente adatto per trovare cammini minimi in grafi non pesati, analizzare strutture a livelli e determinare se un grafo è bipartito. La \textbf{DFS}, invece, eccelle nella rilevazione di cicli, nel calcolo dell'ordinamento topologico e nell'identificazione di componenti connesse. L'algoritmo di \textbf{Dijkstra} trova applicazione pratica nei navigatori GPS e nei protocolli di routing di rete, dove è necessario trovare percorsi ottimali con pesi non negativi. Infine, \textbf{Bellman-Ford}, pur essendo più lento, è essenziale nei protocolli di routing distribuiti e nell'individuazione di opportunità di arbitraggio valutario, grazie alla sua capacità di gestire pesi negativi e rilevare cicli negativi.
 
-\begin{itemize}
-    \item \textbf{BFS}: Cammini minimi, livelli, bipartitismo
-    \item \textbf{DFS}: Cicli, ordinamento topologico, componenti connesse
-    \item \textbf{Dijkstra}: Navigatori GPS, routing di rete
-    \item \textbf{Bellman-Ford}: Protocolli di routing, arbitraggio valutario
-\end{itemize}
-
-\textbf{Punti chiave:}
-\begin{itemize}
-    \item Liste di adiacenza per grafi sparsi, matrici per grafi densi
-    \item BFS usa coda (FIFO), DFS usa stack (ricorsione)
-    \item BFS trova cammini minimi non pesati
-    \item Dijkstra richiede pesi non negativi
-    \item Bellman-Ford gestisce pesi negativi ma è più lento
-    \item Ordinamento topologico esiste solo per DAG
-\end{itemize}
+\textbf{Punti chiave:} La scelta della rappresentazione del grafo è cruciale: le liste di adiacenza sono preferibili per grafi sparsi, mentre le matrici di adiacenza sono più efficienti per grafi densi. Dal punto di vista degli algoritmi di visita, BFS utilizza una coda FIFO per esplorare il grafo livello per livello, mentre DFS sfrutta uno stack (tipicamente implementato tramite ricorsione) per esplorare in profondità. È importante ricordare che BFS garantisce di trovare cammini minimi in grafi non pesati, mentre per grafi pesati dobbiamo ricorrere ad algoritmi più sofisticati. L'algoritmo di Dijkstra è efficiente ma richiede che tutti i pesi siano non negativi; quando questa condizione non è soddisfatta, è necessario utilizzare Bellman-Ford, che gestisce correttamente pesi negativi ma con una complessità maggiore. Infine, l'ordinamento topologico è un'operazione definita esclusivamente per grafi aciclici orientati (DAG), poiché la presenza di cicli renderebbe impossibile definire un ordinamento lineare coerente.
 
 I grafi sono alla base di molti algoritmi avanzati: minimum spanning trees (Kruskal, Prim), flussi massimi (Ford-Fulkerson), matching, colorazione, e molto altro.

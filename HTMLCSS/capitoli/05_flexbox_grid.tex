@@ -153,11 +153,7 @@ Allineamento lungo l'asse principale:
 \end{lstlisting}
 
 \textbf{Differenze}:
-\begin{itemize}
-  \item \texttt{space-between}: Primo e ultimo elemento attaccati ai bordi
-  \item \texttt{space-around}: Spazio uguale intorno a ogni elemento (bordi = metà spazio)
-  \item \texttt{space-evenly}: Spazio identico ovunque (inclusi bordi)
-\end{itemize}
+Le tre modalità di distribuzione dello spazio si comportano in modi distintivi. Con \texttt{space-between}, il primo e l'ultimo elemento vengono attaccati ai bordi del container, mentre lo spazio viene distribuito uniformemente solo tra gli elementi centrali. La modalità \texttt{space-around} assegna uno spazio uguale intorno a ogni elemento, il che significa che i bordi ricevono metà dello spazio rispetto allo spazio tra gli elementi. Infine, \texttt{space-evenly} distribuisce uno spazio identico ovunque, inclusi i bordi, garantendo che tutte le distanze siano perfettamente uguali.
 
 \subsubsection{5. align-items}
 
@@ -219,11 +215,7 @@ Fattore di crescita (default 0):
 .item3 { flex-grow: 2; } /* Cresce doppio rispetto a item2 */
 \end{lstlisting}
 
-Se spazio disponibile = 300px e item2 ha \texttt{flex-grow: 1} e item3 ha \texttt{flex-grow: 2}:
-\begin{itemize}
-  \item item2 riceve: 300px × (1/3) = 100px
-  \item item3 riceve: 300px × (2/3) = 200px
-\end{itemize}
+Se spazio disponibile = 300px e item2 ha \texttt{flex-grow: 1} e item3 ha \texttt{flex-grow: 2}, la distribuzione dello spazio avviene proporzionalmente. L'item2 riceverà 300px moltiplicato per (1/3), quindi 100px di spazio aggiuntivo. L'item3, avendo un valore di grow doppio, riceverà 300px moltiplicato per (2/3), ottenendo così 200px di spazio aggiuntivo. In questo modo, lo spazio viene distribuito in proporzione ai valori di flex-grow specificati.
 
 \subsubsection{2. flex-shrink}
 
@@ -745,11 +737,7 @@ footer { grid-area: footer; background: #333; color: white; padding: 1rem; }
 \end{lstlisting}
 
 \textbf{Spiegazione \texttt{auto-fill}}:
-\begin{itemize}
-  \item \texttt{auto-fill}: Crea tante colonne quante ci stanno (min 250px)
-  \item \texttt{minmax(250px, 1fr)}: Colonne tra 250px e 1fr
-  \item Risultato: Gallery completamente responsive senza media queries
-\end{itemize}
+Il valore \texttt{auto-fill} crea automaticamente tante colonne quante riescono a entrare nel container, rispettando la dimensione minima di 250px. La funzione \texttt{minmax(250px, 1fr)} definisce che ogni colonna deve avere una larghezza compresa tra 250px (minimo) e 1fr (massimo), permettendo alle colonne di espandersi in modo flessibile. Il risultato finale è una gallery completamente responsive che si adatta automaticamente a diverse dimensioni di schermo senza bisogno di media queries.
 
 \subsubsection{Esempio 3: Dashboard Card Layout}
 
@@ -883,10 +871,7 @@ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 \end{lstlisting}
 
 \textbf{Differenza}:
-\begin{itemize}
-  \item \texttt{auto-fill}: 3 elementi su schermo largo → crea 3 colonne + celle vuote
-  \item \texttt{auto-fit}: 3 elementi su schermo largo → 3 colonne espanse al 100\%
-\end{itemize}
+La distinzione tra \texttt{auto-fill} e \texttt{auto-fit} si manifesta nel comportamento quando c'è spazio extra disponibile. Con \texttt{auto-fill}, se hai 3 elementi su uno schermo largo, verranno create 3 colonne per gli elementi più eventuali celle vuote per riempire lo spazio rimanente, mantenendo la griglia completa. Al contrario, con \texttt{auto-fit}, gli stessi 3 elementi verranno espansi per occupare il 100\% dello spazio disponibile, collassando le celle vuote e permettendo agli elementi di crescere fino a riempire completamente il container.
 
 \section{Esercizi}
 

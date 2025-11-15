@@ -83,10 +83,13 @@ print(sys.path)
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
-- Libreria interna di utilità condivisa tra progetti scollegati.
-- Organizzare un'app in sottopackage (\texttt{core}, \texttt{api}, \texttt{cli}).
-- Separare plugin/estensioni caricati dinamicamente.
-- Re-export dell'API pubblica dal package root per UX migliore.
+I moduli e package sono particolarmente utili per creare librerie interne di utilità condivise tra progetti scollegati, centralizzando funzionalità comuni e riducendo duplicazione di codice.
+
+L'organizzazione di applicazioni complesse beneficia della suddivisione in sottopackage tematici come \texttt{core} per la logica centrale, \texttt{api} per le interfacce esterne e \texttt{cli} per comandi da linea di comando, migliorando la navigabilità e la manutenibilità.
+
+La separazione di plugin ed estensioni in moduli dedicati caricabili dinamicamente permette di estendere le funzionalità dell'applicazione senza modificare il core, seguendo il principio Open/Closed.
+
+Infine, il re-export dell'API pubblica dal package root migliora l'esperienza utente, permettendo import concisi come \verb|from mypackage import MyClass| invece di percorsi lunghi come \verb|from mypackage.internal.core import MyClass|.
 \end{tcolorbox}
 
 \section{Esercizi}

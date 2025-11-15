@@ -8,13 +8,9 @@ Questo capitolo raccoglie le best practices per progettare, implementare e mante
 \subsection{Naming Conventions}
 
 \begin{tcolorbox}[title=Regole per URL]
-\begin{itemize}
-\item Usa \textbf{nomi al plurale} per collezioni: \texttt{/users}, \texttt{/products}
-\item Usa \textbf{kebab-case} per URL multi-parola: \texttt{/order-items}
-\item \textbf{Evita verbi} negli URL (usa HTTP methods)
-\item Usa \textbf{sostantivi} per identificare risorse
-\item Mantieni gerarchia \textbf{massimo 3 livelli}
-\end{itemize}
+La progettazione degli URL REST richiede il rispetto di alcune regole fondamentali per garantire coerenza e usabilità. È essenziale usare \textbf{nomi al plurale} per le collezioni, come \texttt{/users} o \texttt{/products}, rendendo immediatamente chiaro quando si sta lavorando con gruppi di risorse. Per URL che richiedono multiple parole, si deve utilizzare il \textbf{kebab-case} (parole separate da trattino), ad esempio \texttt{/order-items}, che risulta più leggibile e conforme agli standard web.
+
+Un principio cardine è \textbf{evitare verbi} negli URL, delegando l'espressione dell'azione ai metodi HTTP: l'URL deve identificare la risorsa, non l'operazione. Di conseguenza, si devono usare \textbf{sostantivi} per identificare le risorse, mantenendo gli endpoint resource-oriented piuttosto che operation-oriented. Infine, per evitare complessità eccessive e accoppiamento stretto, la gerarchia delle risorse dovrebbe essere mantenuta a \textbf{massimo 3 livelli}, cercando di appiattire la struttura quando possibile attraverso endpoint diretti o query parameters.
 \end{tcolorbox}
 
 \begin{lstlisting}[caption=Esempi Naming - Good vs Bad]
@@ -131,12 +127,9 @@ HATEOAS è un constraint REST che richiede che le risposte includano link per na
 
 \subsection{Benefici HATEOAS}
 
-\begin{itemize}
-\item \textbf{Discoverability}: Client può esplorare API seguendo link
-\item \textbf{Decoupling}: Client meno dipendente da URL hardcoded
-\item \textbf{Evolvibilità}: Server può cambiare URL senza rompere client
-\item \textbf{Self-documenting}: API più facile da capire
-\end{itemize}
+L'implementazione di HATEOAS porta benefici significativi all'architettura dell'API. La \textbf{discoverability} permette ai client di esplorare dinamicamente le capacità dell'API seguendo i link forniti nelle response, scoprendo funzionalità e relazioni senza necessità di documentazione esterna. Il \textbf{decoupling} tra client e server viene rafforzato, poiché i client diventano meno dipendenti da URL hardcoded e possono adattarsi ai cambiamenti della struttura dell'API.
+
+L'\textbf{evolvibilità} del sistema migliora drasticamente: il server può modificare la struttura degli URL o introdurre nuovi endpoint senza rompere i client esistenti, purché i link nelle response vengano aggiornati di conseguenza. Infine, le API diventano più \textbf{self-documenting}, poiché le relazioni tra risorse e le azioni disponibili sono esplicitamente dichiarate nelle response stesse, rendendo l'API più facile da comprendere e utilizzare anche senza documentazione esterna dettagliata.
 
 \subsection{Implementazione}
 
@@ -327,11 +320,9 @@ def get_users():
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Quando Comprimere]
-\begin{itemize}
-\item \textbf{SI}: Response > 500 bytes, JSON, XML, testo
-\item \textbf{NO}: Immagini (già compresse), response piccole (overhead)
-\item \textbf{Algoritmi}: gzip (standard), br (brotli, migliore ratio)
-\end{itemize}
+La compressione dovrebbe essere applicata selettivamente per massimizzare i benefici. È \textbf{consigliata} per response superiori a 500 bytes contenenti dati testuali come JSON, XML o HTML, dove i tassi di compressione possono raggiungere il 70-90\%. Al contrario, \textbf{non} dovrebbe essere usata per immagini, video o altri contenuti già compressi, dove potrebbe paradossalmente aumentare la dimensione, né per response molto piccole dove l'overhead della compressione supera i benefici.
+
+Per quanto riguarda gli \textbf{algoritmi}, gzip rappresenta lo standard de facto, supportato universalmente e offrente un buon compromesso tra velocità e ratio di compressione. Brotli (br) è un'alternativa più recente che offre ratio di compressione superiori, particolarmente efficace per contenuti testuali, ma richiede verifica del supporto client.
 \end{tcolorbox}
 
 \section{CORS (Cross-Origin Resource Sharing)}

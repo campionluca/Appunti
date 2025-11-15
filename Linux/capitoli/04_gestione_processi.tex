@@ -368,15 +368,7 @@ kill -9 1234       # SIGKILL solo se necessario
 kill -9 1234       # Può lasciare file corrotti, lock, etc.
 \end{lstlisting}
 
-SIGTERM permette al processo di:
-\begin{itemize}
-    \item Salvare dati
-    \item Chiudere file aperti
-    \item Rilasciare risorse
-    \item Terminare connessioni correttamente
-\end{itemize}
-
-SIGKILL termina immediatamente senza cleanup.
+SIGTERM permette al processo di terminare in modo pulito e ordinato: può salvare i dati ancora in memoria, chiudere correttamente tutti i file aperti evitando corruzione, rilasciare risorse come memoria e lock, e terminare le connessioni di rete in modo elegante notificando le controparti. Al contrario, SIGKILL termina il processo immediatamente senza dare alcuna possibilità di cleanup, potenzialmente lasciando file corrotti, lock bloccati e connessioni aperte.
 \end{tcolorbox}
 
 \subsection{killall e pkill}

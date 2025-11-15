@@ -18,20 +18,17 @@ Dopo questo capitolo saprai:
 
 \section{Teoria}
 
-Tkinter è la libreria GUI standard di Python (inclusa). Basata su Tk/Tcl, è:
-\begin{itemize}
-  \item \textbf{Cross-platform}: Windows, macOS, Linux
-  \item \textbf{Lightweight}: Nessuna dipendenza esterna
-  \item \textbf{Event-driven}: Main loop gestisce eventi
-  \item \textbf{Semplice}: Ideale per tool, prototipi, utility
-\end{itemize}
+Tkinter è la libreria GUI standard di Python, inclusa di default con l'installazione del linguaggio. Basata su Tk/Tcl, offre diverse caratteristiche che la rendono adatta a molti casi d'uso.
 
-\textbf{Limitazioni}:
-\begin{itemize}
-  \item Look nativo solo con ttk (themed widgets)
-  \item Meno widgets/features vs PyQt/wxPython
-  \item Performance limitata con molti widgets
-\end{itemize}
+Dal punto di vista della \textbf{portabilità}, Tkinter funziona nativamente su Windows, macOS e Linux senza richiedere modifiche al codice, garantendo un'esperienza consistente across piattaforme.
+
+La natura \textbf{lightweight} di Tkinter è un vantaggio significativo: non richiede dipendenze esterne oltre alla distribuzione standard di Python, semplificando deployment e distribuzione delle applicazioni.
+
+L'architettura \textbf{event-driven} è il cuore di Tkinter: un main loop gestisce automaticamente gli eventi dell'interfaccia (click, tastiera, timer), delegando alle callback appropriate la gestione delle interazioni utente.
+
+La \textbf{semplicità} di Tkinter la rende ideale per tool interni, prototipi rapidi e utility, permettendo di creare interfacce funzionali con poco codice.
+
+Tuttavia, Tkinter presenta alcune \textbf{limitazioni} da considerare. Il look nativo moderno è disponibile solo attraverso i themed widgets (ttk), mentre i widget classici hanno un aspetto datato. Rispetto a framework più completi come PyQt o wxPython, Tkinter offre meno widget predefiniti e funzionalità avanzate. Infine, le performance possono degradare quando si gestiscono interfacce con centinaia di widget simultanei.
 
 \section{Finestra Base}
 
@@ -478,33 +475,41 @@ root.mainloop()
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Best Practices]
-\begin{itemize}
-  \item Separa logica business da UI (pattern MVC/MVP)
-  \item Non bloccare main thread (usa threading per I/O)
-  \item Usa ttk widgets per look nativo moderno
-  \item Valida input prima di processare
-  \item Gestisci eccezioni in callbacks
-  \item Usa StringVar/IntVar per dati dinamici
-  \item Organizza codice in classi per app complesse
-  \item Usa grid per form, pack per semplici layout
-  \item Non mescolare pack/grid nello stesso container
-  \item Fai cleanup su close (close files, threads)
-\end{itemize}
+La separazione tra logica di business e interfaccia utente attraverso pattern come MVC o MVP è fondamentale per mantenere il codice testabile e manutenibile. La UI dovrebbe occuparsi solo di presentazione e interazione, delegando la logica a moduli separati.
+
+Un aspetto critico è evitare di bloccare il main thread con operazioni lunghe. Usare threading per I/O e operazioni computazionalmente costose mantiene l'interfaccia reattiva e previene il freeze dell'applicazione.
+
+Per un aspetto moderno e nativo, i widget ttk dovrebbero essere preferiti ai widget classici di Tkinter, offrendo un look più professionale e compatibile con i temi del sistema operativo.
+
+La validazione dell'input prima di processarlo è essenziale per prevenire errori e offrire feedback immediato all'utente. Gestire esplicitamente le eccezioni nelle callback previene crash silenziosi e permette di mostrare messaggi di errore significativi.
+
+L'uso di variabili Tkinter come StringVar e IntVar facilita il binding bidirezionale tra widget e dati, semplificando l'aggiornamento dell'interfaccia quando i dati cambiano.
+
+Per applicazioni complesse, organizzare il codice in classi rende la struttura più chiara e facilita il riuso di componenti. La scelta del layout manager è importante: grid è ideale per form e layout strutturati, mentre pack è più adatto per layout semplici e lineari. È fondamentale non mescolare pack e grid nello stesso container parent, poiché questo causa comportamenti imprevedibili.
+
+Infine, implementare proper cleanup alla chiusura dell'applicazione (chiudere file, terminare thread) previene resource leak e garantisce che l'applicazione termini correttamente.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Errori Comuni]
-\begin{itemize}
-  \item Bloccare main thread con operazioni lunghe
-  \item Mescolare pack e grid nello stesso parent
-  \item Non gestire eccezioni in callbacks
-  \item Usare eval() senza validazione (security!)
-  \item Dimenticare mainloop()
-  \item Creare troppe istanze Tk() (una basta)
-  \item Non configurare grid weights (resize issues)
-  \item Non usare ttk (look old-school)
-  \item Update UI da thread secondari (crash!)
-  \item Memory leak: non cleanup widgets rimossi
-\end{itemize}
+Uno degli errori più comuni è bloccare il main thread con operazioni lunghe, causando il freeze dell'interfaccia e una pessima esperienza utente. Operazioni I/O e calcoli pesanti devono sempre essere eseguiti in thread separati.
+
+Mescolare pack e grid nello stesso parent container è un errore che causa comportamenti imprevedibili nel layout. I due layout manager non possono coesistere nello stesso contenitore.
+
+Non gestire le eccezioni nelle callback porta a crash silenziosi difficili da debuggare. Ogni callback dovrebbe avere proper error handling per catturare e gestire eccezioni.
+
+L'uso di \verb|eval()| senza validazione rappresenta un grave rischio di sicurezza, permettendo l'esecuzione di codice arbitrario. Input dell'utente non deve mai essere passato direttamente a eval.
+
+Dimenticare di chiamare \verb|mainloop()| è un errore da principianti che impedisce all'applicazione di avviarsi, poiché senza il main loop non c'è gestione degli eventi.
+
+Creare multiple istanze di \verb|Tk()| è quasi sempre un errore: un'applicazione Tkinter dovrebbe avere un solo root window. Per finestre secondarie, usare \verb|Toplevel()|.
+
+Non configurare i grid weights porta a problemi di resize: le finestre non si ridimensionano correttamente perché le righe e colonne non sono configurate per espandersi.
+
+Non usare ttk widgets rende l'applicazione visivamente datata, con un look old-school che non si integra bene con i sistemi operativi moderni.
+
+Un errore critico è tentare di aggiornare l'UI da thread secondari, che causa crash e corruzione dello stato. Solo il main thread può manipolare widget; usare \verb|root.after()| per delegare update al main thread.
+
+Infine, i memory leak possono derivare dal non fare cleanup dei widget rimossi dinamicamente. Widget non più usati dovrebbero essere esplicitamente distrutti con \verb|destroy()| per liberare risorse.
 \end{tcolorbox}
 
 \section{Esercizi}
