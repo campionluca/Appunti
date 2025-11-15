@@ -411,6 +411,72 @@ Le transazioni garantiscono le proprietà ACID:
     \item[Durability:] Commit permanente anche dopo crash
 \end{description}
 
+\subsection{Stati di una Transazione}
+
+Una transazione attraversa diversi stati durante il suo ciclo di vita:
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2.5cm,
+    state/.style={rectangle, draw, thick, minimum width=2.5cm, minimum height=1cm, align=center, font=\small\bfseries, rounded corners},
+    active/.style={state, fill=blue!20},
+    partial/.style={state, fill=yellow!30},
+    success/.style={state, fill=green!30},
+    fail/.style={state, fill=red!20},
+    abort/.style={state, fill=gray!30},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Stati
+    \node[active] (active) at (0,0) {ACTIVE\\(Esecuzione)};
+    \node[partial] (partial) at (5,0) {PARTIALLY\\COMMITTED};
+    \node[success] (committed) at (5,-3) {COMMITTED\\(Successo)};
+    \node[fail] (failed) at (0,-3) {FAILED\\(Errore)};
+    \node[abort] (aborted) at (-2.5,-1.5) {ABORTED\\(Rollback)};
+
+    % Transizioni
+    \draw[arrow, blue] (-3,0) -- node[above, font=\footnotesize] {BEGIN TRANSACTION} (active);
+
+    \draw[arrow, blue] (active) -- node[above, font=\footnotesize] {Tutte le operazioni\\eseguite} (partial);
+
+    \draw[arrow, green!60!black, very thick] (partial) -- node[right, font=\footnotesize] {COMMIT\\(scrittura su disco)} (committed);
+
+    \draw[arrow, red] (active) -- node[left, font=\footnotesize] {Errore durante\\esecuzione} (failed);
+
+    \draw[arrow, red] (partial) -| node[near end, right, font=\footnotesize] {Fallimento\\commit} (failed);
+
+    \draw[arrow, red] (failed) -- node[above, font=\footnotesize] {ROLLBACK\\(annulla modifiche)} (aborted);
+
+    % Terminazione
+    \draw[arrow, green!60!black] (committed) -- node[below, font=\footnotesize] {Transazione completata} (8,-3);
+    \draw[arrow, gray] (aborted) -- node[below, font=\footnotesize] {Transazione annullata} (-5.5,-1.5);
+
+    % Legenda
+    \node[below, font=\footnotesize, align=left] at (2.5,-4.5) {
+        \textcolor{blue}{$\rightarrow$ Flusso normale} \quad
+        \textcolor{red}{$\rightarrow$ Gestione errori} \quad
+        \textcolor{green!60!black}{$\rightarrow$ Successo}
+    };
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Spiegazione stati transazione]
+\begin{itemize}
+    \item \textbf{ACTIVE}: Transazione in esecuzione dopo \texttt{BEGIN TRANSACTION}. Le operazioni vengono eseguite ma non sono ancora permanenti.
+
+    \item \textbf{PARTIALLY COMMITTED}: Tutte le operazioni sono state eseguite con successo, ma le modifiche non sono ancora scritte permanentemente su disco.
+
+    \item \textbf{COMMITTED}: Il \texttt{COMMIT} è stato eseguito e tutte le modifiche sono permanenti su disco (ACID Durability). La transazione è completata con successo.
+
+    \item \textbf{FAILED}: Si è verificato un errore durante l'esecuzione o il commit. Le modifiche sono ancora in memoria/log ma non permanenti.
+
+    \item \textbf{ABORTED}: Il \texttt{ROLLBACK} ha annullato tutte le modifiche. Il database torna allo stato precedente alla transazione.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{attenzione}
+In PHP MySQLi, il passaggio da PARTIALLY COMMITTED a COMMITTED avviene automaticamente quando chiami \texttt{\$mysqli->commit()}. Se si verifica un errore prima del commit, devi chiamare esplicitamente \texttt{\$mysqli->rollback()} per passare allo stato ABORTED.
+\end{attenzione}
+
 \subsection{Implementazione Transazioni}
 
 \begin{lstlisting}[language=PHP, caption={Transazione trasferimento denaro}]
