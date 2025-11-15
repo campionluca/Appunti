@@ -1,0 +1,976 @@
+\chapter{CI/CD con Docker}\label{cap:cicd}
+
+\section{Introduzione}
+L'integrazione continua e il deployment continuo (CI/CD) con Docker trasformano il processo di sviluppo, testing e rilascio del software. Questo capitolo esplora pipeline complete con GitHub Actions, GitLab CI, e best practices per containerized workflows.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: CI/CD fundamentals, GitHub Actions workflows, GitLab CI pipelines, Docker build optimization, Multi-stage testing, Security scanning, Container registry management, Deployment automation, Rollback strategies.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Implementare pipeline CI/CD complete per applicazioni Docker
+    \item Ottimizzare Docker builds con layer caching e multi-stage
+    \item Integrare security scanning (Trivy, Snyk) nelle pipeline
+    \item Configurare automated deployments con rollback
+    \item Gestire container registries e image versioning
+\end{itemize}
+
+\section{CI/CD Pipeline Architecture}
+
+\begin{tcolorbox}[title=Fasi Pipeline Tipica]
+\begin{enumerate}
+\item \textbf{Build}: Compilazione applicazione e Docker image
+\item \textbf{Test}: Unit tests, integration tests, e2e tests
+\item \textbf{Security Scan}: Vulnerability scanning di dependencies e image
+\item \textbf{Push}: Pubblicazione image su container registry
+\item \textbf{Deploy}: Deployment automatico su staging/production
+\item \textbf{Verify}: Health checks e smoke tests post-deployment
+\item \textbf{Notify}: Notifiche Slack/Teams/Email
+\end{enumerate}
+\end{tcolorbox}
+
+\section{GitHub Actions Complete Workflow}
+
+\subsection{Multi-Stage CI/CD Pipeline}
+\begin{lstlisting}[language=yaml, caption={GitHub Actions - Complete Production Pipeline}]
+# .github/workflows/docker-ci-cd.yml
+name: Docker CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # JOB 1: Build and Test Application
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better caching
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: |
+          image=moby/buildkit:latest
+          network=host
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Build test image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: test  # Multi-stage build target
+        push: false
+        load: true
+        tags: myapp:test
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+    - name: Run unit tests
+      run: |
+        docker run --rm myapp:test npm run test:unit
+
+    - name: Run integration tests
+      run: |
+        docker-compose -f docker-compose.test.yml up \
+          --abort-on-container-exit \
+          --exit-code-from app
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          coverage/
+          test-results/
+
+    # Rotate cache to prevent unlimited growth
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # JOB 2: Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build image for scanning
+      run: |
+        docker build -t myapp:scan .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: myapp:scan
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+        exit-code: '1'  # Fail on vulnerabilities
+
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Snyk security scan
+      uses: snyk/actions/docker@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        image: myapp:scan
+        args: --severity-threshold=high
+
+    - name: Scan Dockerfile with Hadolint
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: Dockerfile
+        failure-threshold: warning
+
+  # JOB 3: Build and Push Production Image
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push multi-arch image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+        build-args: |
+          BUILD_DATE=${{ github.event.repository.updated_at }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ steps.meta.outputs.version }}
+
+    - name: Sign image with Cosign
+      env:
+        COSIGN_EXPERIMENTAL: 1
+      run: |
+        cosign sign --yes \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+  # JOB 4: Deploy to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: staging
+      url: https://staging.example.com
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Checkout deployment manifests
+      uses: actions/checkout@v4
+      with:
+        repository: myorg/k8s-manifests
+        token: ${{ secrets.DEPLOY_TOKEN }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Configure kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Update image tag
+      run: |
+        cd apps/myapp/staging
+        kustomize edit set image \
+          myapp=${{ needs.build-and-push.outputs.image-tag }}
+
+    - name: Deploy to staging
+      run: |
+        kubectl apply -k apps/myapp/staging
+        kubectl rollout status deployment/myapp -n staging --timeout=5m
+
+    - name: Run smoke tests
+      run: |
+        sleep 30
+        curl -f https://staging.example.com/health || exit 1
+
+    - name: Notify Slack
+      if: always()
+      uses: slackapi/slack-github-action@v1
+      with:
+        payload: |
+          {
+            "text": "Staging deployment: ${{ job.status }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Staging Deployment*\nStatus: ${{ job.status }}\nImage: ${{ needs.build-and-push.outputs.image-tag }}"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # JOB 5: Deploy to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: production
+      url: https://example.com
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout deployment manifests
+      uses: actions/checkout@v4
+      with:
+        repository: myorg/k8s-manifests
+        token: ${{ secrets.DEPLOY_TOKEN }}
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Configure kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG_PROD }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Create deployment backup
+      run: |
+        kubectl get deployment myapp -n production -o yaml > backup-deployment.yaml
+        kubectl get configmap -n production -o yaml > backup-configmap.yaml
+
+    - name: Update image tag
+      run: |
+        cd apps/myapp/production
+        kustomize edit set image \
+          myapp=${{ needs.build-and-push.outputs.image-tag }}
+
+    - name: Deploy to production (Blue-Green)
+      run: |
+        # Deploy to green environment
+        kubectl apply -k apps/myapp/production/green
+        kubectl rollout status deployment/myapp-green -n production --timeout=10m
+
+        # Run production smoke tests
+        ./scripts/smoke-test.sh https://green.example.com
+
+        # Switch traffic to green
+        kubectl patch service myapp -n production \
+          -p '{"spec":{"selector":{"version":"green"}}}'
+
+        # Wait and verify
+        sleep 60
+
+        # Scale down blue
+        kubectl scale deployment/myapp-blue -n production --replicas=0
+
+    - name: Verify deployment
+      run: |
+        kubectl get pods -n production
+        kubectl get events -n production --sort-by='.lastTimestamp'
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        kubectl apply -f backup-deployment.yaml
+        kubectl patch service myapp -n production \
+          -p '{"spec":{"selector":{"version":"blue"}}}'
+
+    - name: Create GitHub Release
+      if: success()
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Production deployment successful
+          Image: ${{ needs.build-and-push.outputs.image-tag }}
+          Digest: ${{ needs.build-and-push.outputs.image-digest }}
+
+  # JOB 6: Performance Testing
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run k6 load test
+      uses: grafana/k6-action@v0.3.0
+      with:
+        filename: tests/load-test.js
+        cloud: true
+        token: ${{ secrets.K6_CLOUD_TOKEN }}
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: results/
+\end{lstlisting}
+
+\section{GitLab CI Complete Pipeline}
+
+\subsection{GitLab CI/CD Configuration}
+\begin{lstlisting}[language=yaml, caption={.gitlab-ci.yml - Enterprise Pipeline}]
+# .gitlab-ci.yml
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  REGISTRY: $CI_REGISTRY
+  IMAGE: $CI_REGISTRY_IMAGE
+  DOCKER_BUILDKIT: 1
+
+stages:
+  - build
+  - test
+  - security
+  - package
+  - deploy-staging
+  - deploy-production
+
+# Template per Docker build con cache
+.docker-build-template: &docker-build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+# BUILD STAGE
+build:app:
+  <<: *docker-build
+  stage: build
+  script:
+    - |
+      docker build \
+        --cache-from $IMAGE:latest \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --target builder \
+        -t $IMAGE:builder-$CI_COMMIT_SHA \
+        .
+    - docker push $IMAGE:builder-$CI_COMMIT_SHA
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# TEST STAGE
+test:unit:
+  <<: *docker-build
+  stage: test
+  dependencies:
+    - build:app
+  script:
+    - docker pull $IMAGE:builder-$CI_COMMIT_SHA
+    - |
+      docker run --rm \
+        -v $PWD/coverage:/app/coverage \
+        $IMAGE:builder-$CI_COMMIT_SHA \
+        npm run test:unit -- --coverage
+  coverage: '/Statements\s+:\s+(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      junit: coverage/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+    expire_in: 1 week
+
+test:integration:
+  <<: *docker-build
+  stage: test
+  services:
+    - postgres:15-alpine
+    - redis:7-alpine
+  variables:
+    POSTGRES_DB: testdb
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpass
+    DATABASE_URL: postgres://testuser:testpass@postgres:5432/testdb
+    REDIS_URL: redis://redis:6379
+  script:
+    - docker pull $IMAGE:builder-$CI_COMMIT_SHA
+    - |
+      docker run --rm \
+        --network host \
+        -e DATABASE_URL=$DATABASE_URL \
+        -e REDIS_URL=$REDIS_URL \
+        $IMAGE:builder-$CI_COMMIT_SHA \
+        npm run test:integration
+  artifacts:
+    reports:
+      junit: test-results/integration.xml
+
+test:e2e:
+  image: cypress/browsers:latest
+  stage: test
+  services:
+    - name: $IMAGE:builder-$CI_COMMIT_SHA
+      alias: app
+  script:
+    - npm ci
+    - npm run cy:run --env baseUrl=http://app:3000
+  artifacts:
+    when: always
+    paths:
+      - cypress/videos/
+      - cypress/screenshots/
+    expire_in: 1 week
+
+# SECURITY STAGE
+security:trivy:
+  image: aquasec/trivy:latest
+  stage: security
+  script:
+    - trivy image --exit-code 0 --no-progress --format json -o trivy-report.json $IMAGE:builder-$CI_COMMIT_SHA
+    - trivy image --exit-code 1 --severity CRITICAL --no-progress $IMAGE:builder-$CI_COMMIT_SHA
+  artifacts:
+    reports:
+      container_scanning: trivy-report.json
+  allow_failure: false
+
+security:sast:
+  stage: security
+  image: returntocorp/semgrep
+  script:
+    - semgrep --config=auto --json --output=sast-report.json .
+  artifacts:
+    reports:
+      sast: sast-report.json
+
+security:dependency-scan:
+  image: node:20-alpine
+  stage: security
+  script:
+    - npm audit --audit-level=high --json > npm-audit.json
+  artifacts:
+    reports:
+      dependency_scanning: npm-audit.json
+  allow_failure: true
+
+security:secrets-scan:
+  image: trufflesecurity/trufflehog:latest
+  stage: security
+  script:
+    - trufflehog git file://. --json > secrets-report.json
+  artifacts:
+    paths:
+      - secrets-report.json
+  allow_failure: false
+
+# PACKAGE STAGE
+package:production:
+  <<: *docker-build
+  stage: package
+  script:
+    # Build final production image
+    - |
+      docker build \
+        --cache-from $IMAGE:latest \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --label "org.opencontainers.image.created=$(date -Iseconds)" \
+        --label "org.opencontainers.image.revision=$CI_COMMIT_SHA" \
+        --label "org.opencontainers.image.version=$CI_COMMIT_TAG" \
+        -t $IMAGE:$CI_COMMIT_SHA \
+        -t $IMAGE:$CI_COMMIT_REF_SLUG \
+        .
+
+    # Push all tags
+    - docker push $IMAGE:$CI_COMMIT_SHA
+    - docker push $IMAGE:$CI_COMMIT_REF_SLUG
+
+    # Tag latest if main branch
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
+        docker tag $IMAGE:$CI_COMMIT_SHA $IMAGE:latest
+        docker push $IMAGE:latest
+      fi
+
+    # Tag with version if tagged commit
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        docker tag $IMAGE:$CI_COMMIT_SHA $IMAGE:$CI_COMMIT_TAG
+        docker push $IMAGE:$CI_COMMIT_TAG
+      fi
+  only:
+    - main
+    - develop
+    - tags
+
+# DEPLOY STAGING
+deploy:staging:
+  stage: deploy-staging
+  image: bitnami/kubectl:latest
+  environment:
+    name: staging
+    url: https://staging.example.com
+    on_stop: stop:staging
+  script:
+    - kubectl config use-context staging-cluster
+    - |
+      kubectl set image deployment/myapp \
+        myapp=$IMAGE:$CI_COMMIT_SHA \
+        -n staging
+    - kubectl rollout status deployment/myapp -n staging --timeout=5m
+    - sleep 30
+    - curl -f https://staging.example.com/health || exit 1
+  only:
+    - develop
+
+stop:staging:
+  stage: deploy-staging
+  image: bitnami/kubectl:latest
+  environment:
+    name: staging
+    action: stop
+  script:
+    - kubectl scale deployment/myapp --replicas=0 -n staging
+  when: manual
+  only:
+    - develop
+
+# DEPLOY PRODUCTION
+deploy:production:
+  stage: deploy-production
+  image: bitnami/kubectl:latest
+  environment:
+    name: production
+    url: https://example.com
+  before_script:
+    - kubectl config use-context production-cluster
+  script:
+    # Backup current deployment
+    - kubectl get deployment myapp -n production -o yaml > backup.yaml
+
+    # Canary deployment (10%)
+    - |
+      kubectl apply -f - <<EOF
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: myapp-canary
+        namespace: production
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: myapp
+            track: canary
+        template:
+          metadata:
+            labels:
+              app: myapp
+              track: canary
+          spec:
+            containers:
+            - name: myapp
+              image: $IMAGE:$CI_COMMIT_SHA
+      EOF
+
+    - sleep 120  # Monitor canary
+
+    # Check error rate
+    - |
+      ERROR_RATE=$(curl -s 'http://prometheus:9090/api/v1/query?query=error_rate{track="canary"}' | jq -r '.data.result[0].value[1]')
+      if (( $(echo "$ERROR_RATE > 0.05" | bc -l) )); then
+        echo "Canary error rate too high: $ERROR_RATE"
+        kubectl delete deployment myapp-canary -n production
+        exit 1
+      fi
+
+    # Full rollout
+    - |
+      kubectl set image deployment/myapp \
+        myapp=$IMAGE:$CI_COMMIT_SHA \
+        -n production
+    - kubectl rollout status deployment/myapp -n production --timeout=10m
+
+    # Cleanup canary
+    - kubectl delete deployment myapp-canary -n production
+
+  after_script:
+    - |
+      if [ $CI_JOB_STATUS == 'failed' ]; then
+        echo "Deployment failed, rolling back..."
+        kubectl apply -f backup.yaml
+      fi
+
+  only:
+    - tags
+  when: manual  # Require manual approval for production
+
+# ROLLBACK
+rollback:production:
+  stage: deploy-production
+  image: bitnami/kubectl:latest
+  environment:
+    name: production
+  script:
+    - kubectl config use-context production-cluster
+    - kubectl rollout undo deployment/myapp -n production
+    - kubectl rollout status deployment/myapp -n production
+  when: manual
+  only:
+    - tags
+\end{lstlisting}
+
+\section{Docker Build Optimization}
+
+\subsection{Multi-Stage Dockerfile Optimized}
+\begin{lstlisting}[language=docker, caption={Optimized Multi-Stage Build}]
+# Dockerfile - Production optimized
+# syntax=docker/dockerfile:1.4
+
+# Stage 1: Base dependencies
+FROM node:20-alpine AS base
+WORKDIR /app
+RUN apk add --no-cache \
+    dumb-init \
+    ca-certificates
+ENV NODE_ENV=production
+
+# Stage 2: Dependencies
+FROM base AS dependencies
+COPY package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production && \
+    npm cache clean --force
+
+# Stage 3: Build
+FROM base AS builder
+COPY package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+COPY . .
+RUN npm run build && \
+    npm prune --production
+
+# Stage 4: Test
+FROM builder AS test
+ENV NODE_ENV=test
+RUN npm ci
+COPY --from=builder /app/dist ./dist
+CMD ["npm", "run", "test"]
+
+# Stage 5: Production
+FROM base AS production
+
+# Security: non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+# Copy only production files
+COPY --from=dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --chown=nodejs:nodejs package.json ./
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD node healthcheck.js
+
+USER nodejs
+EXPOSE 3000
+
+# Use dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "dist/server.js"]
+
+# Labels
+LABEL org.opencontainers.image.source="https://github.com/myorg/myapp"
+LABEL org.opencontainers.image.description="Production-optimized Node.js application"
+LABEL org.opencontainers.image.licenses="MIT"
+\end{lstlisting}
+
+\section{Test Automation}
+
+\subsection{Docker Compose for Testing}
+\begin{lstlisting}[language=yaml, caption={docker-compose.test.yml}]
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: test
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgres://test:test@postgres:5432/testdb
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: npm run test:all
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+\end{lstlisting}
+
+\section{Container Registry Management}
+
+\subsection{Multi-Registry Push}
+\begin{lstlisting}[language=bash, caption={Push to Multiple Registries}]
+#!/bin/bash
+# multi-registry-push.sh
+
+set -e
+
+IMAGE_NAME="myapp"
+VERSION="${1:-latest}"
+
+REGISTRIES=(
+  "docker.io/myorg"
+  "ghcr.io/myorg"
+  "gcr.io/myproject"
+  "myregistry.example.com"
+)
+
+# Build once
+docker build -t ${IMAGE_NAME}:${VERSION} .
+
+# Push to all registries
+for registry in "${REGISTRIES[@]}"; do
+  echo "Pushing to $registry..."
+
+  docker tag ${IMAGE_NAME}:${VERSION} ${registry}/${IMAGE_NAME}:${VERSION}
+  docker tag ${IMAGE_NAME}:${VERSION} ${registry}/${IMAGE_NAME}:latest
+
+  docker push ${registry}/${IMAGE_NAME}:${VERSION}
+  docker push ${registry}/${IMAGE_NAME}:latest
+done
+
+# Generate SBOM (Software Bill of Materials)
+syft ${IMAGE_NAME}:${VERSION} -o spdx-json > sbom.spdx.json
+
+# Sign images with Cosign
+for registry in "${REGISTRIES[@]}"; do
+  cosign sign --key cosign.key ${registry}/${IMAGE_NAME}:${VERSION}
+done
+
+echo "Image pushed to all registries and signed successfully"
+\end{lstlisting}
+
+\section{Advanced CI/CD Patterns}
+
+\subsection{Matrix Testing Strategy}
+\begin{lstlisting}[language=yaml, caption={GitHub Actions Matrix Testing}]
+# .github/workflows/matrix-test.yml
+name: Matrix Testing
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20, 21]
+        database: [postgres, mysql, mongodb]
+        exclude:
+          # Exclude specific combinations
+          - os: windows-latest
+            database: mongodb
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+
+    - name: Start database container
+      run: |
+        docker run -d \
+          --name test-db \
+          -e POSTGRES_PASSWORD=test \
+          ${{ matrix.database }}:latest
+
+    - name: Run tests
+      env:
+        DB_TYPE: ${{ matrix.database }}
+      run: npm run test:integration
+\end{lstlisting}
+
+\section{Secrets Management in CI/CD}
+
+\subsection{Vault Integration}
+\begin{lstlisting}[language=yaml, caption={GitLab CI with HashiCorp Vault}]
+# .gitlab-ci.yml with Vault
+variables:
+  VAULT_ADDR: https://vault.example.com
+
+deploy:production:
+  stage: deploy
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://vault.example.com
+  secrets:
+    DATABASE_PASSWORD:
+      vault: production/database/password@secret
+      file: false
+    API_KEY:
+      vault: production/api/key@secret
+      file: false
+  script:
+    - echo "Deploying with secrets from Vault..."
+    - export DB_PASSWORD=$DATABASE_PASSWORD
+    - kubectl create secret generic app-secrets \
+        --from-literal=db-password=$DATABASE_PASSWORD \
+        --from-literal=api-key=$API_KEY \
+        -n production --dry-run=client -o yaml | kubectl apply -f -
+\end{lstlisting}
+
+\section{Best Practices CI/CD}
+
+\begin{tcolorbox}[title=Production CI/CD Checklist]
+\begin{enumerate}
+\item \textbf{Build Once, Deploy Many}: Stessa image per tutti gli ambienti
+\item \textbf{Immutable Tags}: Mai riusare tag (no 'latest' in prod)
+\item \textbf{Security Scanning}: Integrare Trivy/Snyk in pipeline
+\item \textbf{Layer Caching}: Usare BuildKit cache per speed
+\item \textbf{Multi-Stage}: Separare build, test, production stages
+\item \textbf{Secrets}: Mai hardcode, usare secrets management
+\item \textbf{Rollback}: Automated rollback on health check failure
+\item \textbf{Notifications}: Slack/Teams alerts per deployments
+\item \textbf{Artifact Signing}: Cosign per image signing
+\item \textbf{SBOM}: Generare Software Bill of Materials
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Errori Comuni}
+
+\begin{itemize}
+\item \textbf{Errore}: Usare tag 'latest' in production
+\begin{itemize}
+\item \textbf{Conseguenza}: Deployments non riproducibili
+\item \textbf{Soluzione}: Semantic versioning o SHA commits
+\end{itemize}
+
+\item \textbf{Errore}: Build senza layer caching
+\begin{itemize}
+\item \textbf{Conseguenza}: Pipeline lente (10+ minuti)
+\item \textbf{Soluzione}: BuildKit con registry cache
+\end{itemize}
+
+\item \textbf{Errore}: Secrets in environment variables
+\begin{itemize}
+\item \textbf{Conseguenza}: Exposure in logs/history
+\item \textbf{Soluzione}: File-based secrets o Vault
+\end{itemize}
+\end{itemize}
+
+\section{Riepilogo}
+
+CI/CD con Docker richiede pipeline robuste con build optimization, security scanning, automated testing, e deployment strategies. GitHub Actions e GitLab CI offrono ecosistemi completi per containerized workflows, mentre tools come Trivy, Cosign e Vault garantiscono security best practices.
+
+\section{Riferimenti}
+\begin{itemize}
+\item GitHub Actions: \url{https://docs.github.com/actions}
+\item GitLab CI: \url{https://docs.gitlab.com/ee/ci/}
+\item Trivy Security Scanner: \url{https://trivy.dev/}
+\item Cosign Image Signing: \url{https://github.com/sigstore/cosign}
+\end{itemize}

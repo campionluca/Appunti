@@ -48,6 +48,109 @@ hello()
 - I decoratori sono ottimi per logging, validazione, caching e autorizzazioni.
 \end{tcolorbox}
 
+\subsubsection{Flusso di esecuzione del decoratore}
+
+Ecco come funziona un decoratore visivamente:
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    box/.style={rectangle, draw, thick, minimum width=3.5cm, minimum height=0.8cm, align=center, font=\small},
+    func/.style={box, fill=blue!20},
+    deco/.style={box, fill=orange!20},
+    code/.style={box, fill=green!15},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Definizione
+    \node[above, font=\small\bfseries] at (2,6.5) {1. Definizione};
+    \node[deco] (def_deco) at (0,6) {\texttt{def log\_calls(fn):}};
+    \node[code] (def_wrap) at (0,5) {\texttt{def wrapper(*a, **k):}};
+    \node[code] (def_body) at (0,4) {... codice decoratore ...};
+    \node[code] (def_ret) at (0,3) {\texttt{return wrapper}};
+
+    \node[func] (def_func) at (4.5,5) {@log\_calls\\def hello():};
+    \node[code] (def_fbody) at (4.5,4) {print("hello")};
+
+    \draw[arrow, blue] (def_func) -- (def_deco) node[midway, above, font=\footnotesize] {decorato};
+
+    % Chiamata
+    \node[above, font=\small\bfseries] at (2,1.5) {2. Chiamata: hello()};
+
+    \node[deco] (call_wrapper) at (0,1) {wrapper(*a, **k)};
+    \node[code] (call_pre) at (0,0) {print("chiamata hello")};
+    \node[func] (call_orig) at (0,-1) {fn(*a, **k)};
+    \node[code] (call_hello) at (0,-2) {print("hello")};
+    \node[code] (call_post) at (0,-3) {return risultato};
+
+    \draw[arrow] (call_wrapper) -- (call_pre);
+    \draw[arrow] (call_pre) -- (call_orig);
+    \draw[arrow] (call_orig) -- (call_hello);
+    \draw[arrow] (call_hello) -- (call_post);
+
+    % Output
+    \node[box, fill=yellow!20, text width=4cm, right=1cm of call_pre] (output) {
+        \textbf{Output:}\\
+        \texttt{chiamata hello}\\
+        \texttt{hello}
+    };
+
+    % Spiegazione visiva
+    \node[below, font=\footnotesize, align=left, text width=7cm] at (2,-4) {
+        Il decoratore \textbf{avvolge} la funzione originale:\\
+        wrapper $\rightarrow$ codice pre $\rightarrow$ funzione originale $\rightarrow$ codice post
+    };
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Decorator con parametri}
+
+\begin{lstlisting}
+def repeat(n):
+    def decorator(fn):
+        def wrapper(*a, **k):
+            for _ in range(n):
+                result = fn(*a, **k)
+            return result
+        return wrapper
+    return decorator
+
+@repeat(3)
+def greet(name):
+    print(f"Ciao {name}!")
+
+greet("Mario")  # Stampa 3 volte
+\end{lstlisting}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.8cm,
+    box/.style={rectangle, draw, thick, minimum width=4cm, minimum height=0.7cm, align=center, font=\footnotesize},
+    level1/.style={box, fill=red!15},
+    level2/.style={box, fill=orange!15},
+    level3/.style={box, fill=yellow!15},
+    func/.style={box, fill=blue!15},
+    arrow/.style={->, thick, >=stealth}
+]
+    \node[level1] (repeat) at (0,4) {repeat(3) — ritorna decorator};
+    \node[level2] (decorator) at (0,3) {decorator(greet) — ritorna wrapper};
+    \node[level3] (wrapper) at (0,2) {wrapper(*a, **k) — esegue loop};
+    \node[func] (greet) at (0,1) {greet(name) — 3 volte};
+
+    \draw[arrow] (repeat) -- (decorator);
+    \draw[arrow] (decorator) -- (wrapper);
+    \draw[arrow] (wrapper) -- (greet);
+
+    \node[right=0.5cm of repeat, font=\footnotesize, align=left] {Livello 1: Parametri decorator};
+    \node[right=0.5cm of decorator, font=\footnotesize, align=left] {Livello 2: Decorator vero};
+    \node[right=0.5cm of wrapper, font=\footnotesize, align=left] {Livello 3: Wrapper};
+    \node[right=0.5cm of greet, font=\footnotesize, align=left] {Funzione originale};
+\end{tikzpicture}
+\end{center}
+
+\begin{nota}
+I decorator con parametri sono funzioni che ritornano decorator. La sintassi \texttt{@repeat(3)} chiama prima \texttt{repeat(3)}, che ritorna un decorator, che poi viene applicato a \texttt{greet}.
+\end{nota}
+
 \subsection{Iteratore}
 \begin{lstlisting}
 class Count:

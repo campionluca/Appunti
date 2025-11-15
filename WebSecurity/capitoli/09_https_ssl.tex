@@ -1,0 +1,828 @@
+\chapter{HTTPS, TLS/SSL e Certificate Management}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, TLS/SSL handshake, Certificati digitali, Certificate Authorities, HTTPS setup, HSTS, Certificate pinning, OCSP, Attacchi, Best practices, Compliance.
+\end{tcolorbox}
+
+\section*{Introduzione}
+HTTPS (HTTP Secure) è il protocollo standard per comunicazioni web sicure. Utilizza TLS (Transport Layer Security) per cifrare traffico tra client e server, garantendo confidenzialità, integrità e autenticità. Questo capitolo copre il funzionamento di TLS, gestione certificati, configurazione sicura e protezione contro attacchi comuni.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere il TLS handshake e cipher suites
+    \item Configurare HTTPS su server web (Apache, Nginx)
+    \item Gestire certificati digitali (generazione, rinnovo, revoca)
+    \item Implementare HSTS (HTTP Strict Transport Security)
+    \item Applicare certificate pinning
+    \item Riconoscere e mitigare attacchi SSL/TLS (MITM, downgrade)
+    \item Configurare server secondo best practices Mozilla SSL
+    \item Garantire compliance PCI-DSS e GDPR
+\end{itemize}
+
+\section{TLS/SSL Fundamentals}
+
+\subsection{Storia e versioni}
+
+\begin{description}
+    \item[\textbf{SSL 1.0}] Mai rilasciato (vulnerabilità critiche)
+    \item[\textbf{SSL 2.0}] ❌ DEPRECATO (1995) - vulnerabilità DROWN
+    \item[\textbf{SSL 3.0}] ❌ DEPRECATO (1996) - vulnerabilità POODLE
+    \item[\textbf{TLS 1.0}] ❌ DEPRECATO (1999) - vulnerabilità BEAST
+    \item[\textbf{TLS 1.1}] ❌ DEPRECATO (2006) - superato
+    \item[\textbf{TLS 1.2}] ✓ SUPPORTATO (2008) - sicuro con cipher moderni
+    \item[\textbf{TLS 1.3}] ✓✓ RACCOMANDATO (2018) - più veloce e sicuro
+\end{description}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=IMPORTANTE]
+A partire dal 2024, disabilitare TLS 1.0 e 1.1 su tutti i server.
+
+PCI-DSS 4.0 RICHIEDE TLS 1.2+ dal giugno 2024.
+\end{tcolorbox}
+
+\subsection{TLS Handshake}
+
+\begin{lstlisting}[language=text, caption={TLS 1.2 Handshake completo}]
+CLIENT                                                SERVER
+
+1. ClientHello
+   - Versioni TLS supportate
+   - Cipher suites supportate
+   - Random bytes
+   - Extensions (SNI, ALPN, etc.)
+                    ------------------>
+
+                                            2. ServerHello
+                                               - Versione TLS scelta
+                                               - Cipher suite scelta
+                                               - Random bytes
+                                            3. Certificate
+                                               - Certificato server
+                                               - Catena certificati
+                                            4. ServerKeyExchange
+                                               (se richiesto da cipher)
+                                            5. ServerHelloDone
+                    <------------------
+
+6. ClientKeyExchange
+   - Pre-master secret cifrato con chiave pubblica server
+7. ChangeCipherSpec
+8. Finished (cifrato)
+                    ------------------>
+
+                                            9. ChangeCipherSpec
+                                            10. Finished (cifrato)
+                    <------------------
+
+[Comunicazione applicativa cifrata]
+                    <==================>
+\end{lstlisting}
+
+\subsection{TLS 1.3 Improvements}
+
+TLS 1.3 riduce latency e migliora sicurezza:
+
+\begin{itemize}
+    \item \textbf{1-RTT Handshake}: Ridotto da 2-RTT (TLS 1.2) a 1-RTT
+    \item \textbf{0-RTT Resumption}: Connessioni successive istantanee
+    \item \textbf{Cipher suites semplificate}: Solo AEAD ciphers
+    \item \textbf{Rimozione algoritmi insicuri}: No RSA key exchange, no CBC
+    \item \textbf{Forward secrecy obbligatoria}: Solo ephemeral key exchange
+\end{itemize}
+
+\begin{lstlisting}[language=text, caption={TLS 1.3 Handshake (1-RTT)}]
+CLIENT                                                SERVER
+
+ClientHello
++ KeyShare (client public key)
++ PreSharedKey (opzionale)
+                    ------------------>
+
+                                            ServerHello
+                                            + KeyShare (server public key)
+                                            {EncryptedExtensions}
+                                            {Certificate}
+                                            {CertificateVerify}
+                                            {Finished}
+                    <------------------
+{Finished}
+                    ------------------>
+
+[Applicazione DATA]
+                    <==================>
+
+Nota: {...} indica messaggi cifrati
+Handshake completo in 1 round trip!
+\end{lstlisting}
+
+\section{Certificati Digitali}
+
+\subsection{Struttura X.509 Certificate}
+
+\begin{lstlisting}[language=text, caption={Struttura certificato X.509}]
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            04:e1:e7:a4:dc:5c:f2:f3:6d:c0:2b:42:b8:5d:15:9f:2a
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C=US, O=Let's Encrypt, CN=R3
+        Validity
+            Not Before: Jan 15 00:00:00 2024 GMT
+            Not After : Apr 15 23:59:59 2024 GMT
+        Subject: CN=example.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                RSA Public-Key: (2048 bit)
+                Modulus: ...
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Key Usage: critical
+                Digital Signature, Key Encipherment
+            X509v3 Extended Key Usage:
+                TLS Web Server Authentication
+            X509v3 Subject Alternative Name:
+                DNS:example.com, DNS:www.example.com
+            X509v3 CRL Distribution Points:
+                Full Name:
+                  URI:http://r3.o.lencr.org
+            Authority Information Access:
+                OCSP - URI:http://r3.o.lencr.org
+                CA Issuers - URI:http://r3.i.lencr.org/
+    Signature Algorithm: sha256WithRSAEncryption
+         [signature bytes]
+\end{lstlisting}
+
+\subsection{Certificate Authority (CA) Trust Chain}
+
+\begin{lstlisting}[language=text, caption={Catena di fiducia certificati}]
+[Root CA] (self-signed, nei browser/OS trust stores)
+    |
+    | signs
+    V
+[Intermediate CA] (es. Let's Encrypt R3)
+    |
+    | signs
+    V
+[End-entity Certificate] (es. example.com)
+
+Verifica:
+1. Browser riceve certificato example.com
+2. Controlla firma con chiave pubblica di R3
+3. Controlla firma di R3 con chiave pubblica Root CA
+4. Root CA è nel trust store del browser → TRUSTED
+\end{lstlisting}
+
+\subsection{Ottenere certificati: Let's Encrypt}
+
+\begin{lstlisting}[language=bash, caption={Ottenere certificato gratuito con Let's Encrypt}]
+# Installa Certbot
+sudo apt-get update
+sudo apt-get install certbot python3-certbot-nginx
+
+# Ottieni certificato per Nginx (automatic configuration)
+sudo certbot --nginx -d example.com -d www.example.com
+
+# Certbot:
+# 1. Genera chiave privata
+# 2. Crea CSR (Certificate Signing Request)
+# 3. Completa ACME challenge (HTTP-01 o DNS-01)
+# 4. Riceve certificato da Let's Encrypt
+# 5. Configura Nginx automaticamente
+# 6. Setup auto-renewal
+
+# Verifica auto-renewal
+sudo certbot renew --dry-run
+
+# I certificati sono salvati in:
+# /etc/letsencrypt/live/example.com/fullchain.pem
+# /etc/letsencrypt/live/example.com/privkey.pem
+
+# Auto-renewal cron job (già configurato da certbot)
+# Rinnova automaticamente certificati 30 giorni prima scadenza
+\end{lstlisting}
+
+\subsection{Generare certificati self-signed (solo per testing)}
+
+\begin{lstlisting}[language=bash, caption={Certificato self-signed per sviluppo}]
+# ATTENZIONE: Self-signed NON adatto per produzione!
+# Genera warning nei browser
+
+# Genera chiave privata
+openssl genrsa -out server.key 2048
+
+# Genera certificato self-signed (valido 365 giorni)
+openssl req -new -x509 -key server.key -out server.crt -days 365 \
+  -subj "/C=IT/ST=Lazio/L=Roma/O=MyCompany/CN=localhost"
+
+# Con Subject Alternative Names (SAN)
+cat > san.cnf <<EOF
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = IT
+ST = Lazio
+L = Roma
+O = MyCompany
+CN = localhost
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = *.localhost
+IP.1 = 127.0.0.1
+EOF
+
+openssl req -new -x509 -key server.key -out server.crt -days 365 \
+  -config san.cnf -extensions v3_req
+
+# Usa in Nginx
+server {
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate /path/to/server.crt;
+    ssl_certificate_key /path/to/server.key;
+}
+\end{lstlisting}
+
+\section{Configurazione HTTPS Server}
+
+\subsection{Nginx Configuration}
+
+\begin{lstlisting}[language=nginx, caption={Configurazione Nginx sicura con TLS 1.3}]
+# /etc/nginx/sites-available/example.com
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;
+
+    # Redirect all HTTP to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS Server
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name example.com www.example.com;
+
+    # SSL Certificate
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    # SSL Protocols (TLS 1.2 e 1.3 solo)
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    # Cipher Suites (Mozilla Intermediate configuration)
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers off;
+
+    # DH Parameters per forward secrecy
+    ssl_dhparam /etc/nginx/dhparam.pem;
+
+    # SSL Session Cache (performance)
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_session_tickets off;
+
+    # OCSP Stapling (performance + privacy)
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/letsencrypt/live/example.com/chain.pem;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'" always;
+
+    # Application
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+\end{lstlisting}
+
+\subsection{Genera DH parameters}
+
+\begin{lstlisting}[language=bash, caption={Genera parametri Diffie-Hellman}]
+# Genera DH parameters (2048 bit, circa 5 minuti)
+sudo openssl dhparam -out /etc/nginx/dhparam.pem 2048
+
+# Per produzione high-security (4096 bit, circa 30 minuti)
+sudo openssl dhparam -out /etc/nginx/dhparam.pem 4096
+\end{lstlisting}
+
+\subsection{Apache Configuration}
+
+\begin{lstlisting}[language=apache, caption={Configurazione Apache sicura}]
+# /etc/apache2/sites-available/example.com-ssl.conf
+
+<VirtualHost *:80>
+    ServerName example.com
+    ServerAlias www.example.com
+
+    # Redirect to HTTPS
+    Redirect permanent / https://example.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName example.com
+    ServerAlias www.example.com
+
+    DocumentRoot /var/www/example.com
+
+    # SSL Engine
+    SSLEngine on
+
+    # Certificates
+    SSLCertificateFile /etc/letsencrypt/live/example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+
+    # SSL Protocols
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+
+    # Cipher Suites
+    SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+    SSLHonorCipherOrder off
+
+    # OCSP Stapling
+    SSLUseStapling on
+    SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
+
+    # HSTS Header
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+    # Other Security Headers
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+
+    <Directory /var/www/example.com>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/example.com-error.log
+    CustomLog ${APACHE_LOG_DIR}/example.com-access.log combined
+</VirtualHost>
+
+# Abilita moduli necessari
+# sudo a2enmod ssl headers rewrite
+# sudo systemctl restart apache2
+\end{lstlisting}
+
+\section{HSTS - HTTP Strict Transport Security}
+
+HSTS forza i browser a usare sempre HTTPS, prevenendo downgrade attacks.
+
+\begin{lstlisting}[language=text, caption={HSTS Header}]
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+Parametri:
+- max-age=63072000: Valido per 2 anni (in secondi)
+- includeSubDomains: Applica a tutti i sottodomini
+- preload: Richiesta inclusione in HSTS preload list browser
+\end{lstlisting}
+
+\subsection{HSTS Preload List}
+
+\begin{lstlisting}[language=bash, caption={Submitting a HSTS preload}]
+# 1. Configura HSTS header con preload
+# 2. Verifica su https://hstspreload.org/
+# 3. Submit domain
+
+# Requisiti:
+# - Certificato valido
+# - Redirect HTTP → HTTPS (tutti i sottodomini)
+# - HSTS su base domain con:
+#   - max-age >= 31536000 (1 anno)
+#   - includeSubDomains
+#   - preload
+
+# Una volta in preload list, browser SEMPRE usa HTTPS
+# anche per PRIMA visita (prima di ricevere header)
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Attenzione: HSTS Preload]
+HSTS preload è \textbf{irreversibile}! Rimuovere un domain dalla lista richiede mesi.
+
+Assicurati che:
+\begin{itemize}
+    \item Tutti i sottodomini supportano HTTPS
+    \item Non hai servizi legacy solo HTTP
+    \item Sei pronto a commitment a lungo termine
+\end{itemize}
+\end{tcolorbox}
+
+\section{Certificate Pinning}
+
+Certificate pinning lega l'applicazione a specifici certificati, prevenendo MITM attacks anche con CA compromesse.
+
+\subsection{Public Key Pinning HTTP Header (HPKP - DEPRECATO)}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=HPKP Deprecato]
+HTTP Public Key Pinning (HPKP) è stato \textbf{deprecato} e rimosso dai browser moderni a causa di rischi operativi (self-DoS se configurato male).
+
+Alternative:
+\begin{itemize}
+    \item Certificate Transparency
+    \item Expect-CT header
+    \item Application-level pinning (mobile apps)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Certificate Pinning in Mobile Apps}
+
+\begin{lstlisting}[language=Java, caption={Certificate Pinning in Android}]
+import okhttp3.CertificatePinner;
+import okhttp3.OkHttpClient;
+
+public class SecureHttpClient {
+    public static OkHttpClient getClient() {
+        // Pin certificati specifici
+        CertificatePinner certificatePinner = new CertificatePinner.Builder()
+            // Pin chiave pubblica del certificato corrente
+            .add("api.example.com",
+                 "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=")
+            // Pin anche backup certificate (per rotation)
+            .add("api.example.com",
+                 "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=")
+            .build();
+
+        return new OkHttpClient.Builder()
+            .certificatePinner(certificatePinner)
+            .build();
+    }
+}
+
+// Calcolare pin del certificato:
+// openssl s_client -servername api.example.com -connect api.example.com:443 \
+//   | openssl x509 -pubkey -noout \
+//   | openssl pkey -pubin -outform der \
+//   | openssl dgst -sha256 -binary \
+//   | openssl enc -base64
+\end{lstlisting}
+
+\begin{lstlisting}[language=Swift, caption={Certificate Pinning in iOS}]
+import Foundation
+
+class CertificatePinner: NSObject, URLSessionDelegate {
+    private let pinnedCertificates: [Data]
+
+    init(pinnedCertPaths: [String]) {
+        var certs: [Data] = []
+        for path in pinnedCertPaths {
+            if let certData = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                certs.append(certData)
+            }
+        }
+        self.pinnedCertificates = certs
+        super.init()
+    }
+
+    func urlSession(_ session: URLSession,
+                   didReceive challenge: URLAuthenticationChallenge,
+                   completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+
+        guard challenge.protectionSpace.authenticationMethod ==
+              NSURLAuthenticationMethodServerTrust,
+              let serverTrust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+
+        // Estrai certificato server
+        guard let serverCertificate = SecTrustGetCertificateAtIndex(serverTrust, 0) else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+
+        let serverCertData = SecCertificateCopyData(serverCertificate) as Data
+
+        // Verifica se corrisponde a uno dei certificati pinnati
+        if pinnedCertificates.contains(serverCertData) {
+            completionHandler(.useCredential,
+                            URLCredential(trust: serverTrust))
+        } else {
+            // Certificate non corrisponde - blocca connessione
+            completionHandler(.cancelAuthenticationChallenge, nil)
+        }
+    }
+}
+
+// Uso
+let pinner = CertificatePinner(pinnedCertPaths: [
+    Bundle.main.path(forResource: "api_cert", ofType: "cer")!
+])
+
+let config = URLSessionConfiguration.default
+let session = URLSession(configuration: config,
+                        delegate: pinner,
+                        delegateQueue: nil)
+\end{lstlisting}
+
+\section{OCSP e Certificate Revocation}
+
+\subsection{OCSP (Online Certificate Status Protocol)}
+
+OCSP permette di verificare se un certificato è stato revocato.
+
+\begin{lstlisting}[language=bash, caption={Verifica OCSP manualmente}]
+# Estrai OCSP URL dal certificato
+openssl x509 -in cert.pem -noout -ocsp_uri
+# Output: http://r3.o.lencr.org
+
+# Verifica stato certificato
+openssl ocsp \
+  -issuer chain.pem \
+  -cert cert.pem \
+  -text \
+  -url http://r3.o.lencr.org
+
+# Output:
+# Response verify OK
+# cert.pem: good
+#     This Update: Jan 15 12:00:00 2024 GMT
+#     Next Update: Jan 22 12:00:00 2024 GMT
+\end{lstlisting}
+
+\subsection{OCSP Stapling}
+
+OCSP Stapling migliora privacy e performance: il server include la risposta OCSP nel handshake.
+
+\begin{lstlisting}[language=text, caption={Vantaggi OCSP Stapling}]
+Senza Stapling:
+Browser → [TLS Handshake] → Server
+Browser → [OCSP Request] → CA OCSP Responder
+CA → [OCSP Response] → Browser
+- CA sa quali siti visiti (privacy issue)
+- Latency aggiuntiva
+
+Con Stapling:
+Server → [richiede OCSP response] → CA (periodicamente)
+Browser → [TLS Handshake] → Server
+Server → [TLS + OCSP Response stapled] → Browser
+- CA non sa chi visita il sito
+- No latency per client
+\end{lstlisting}
+
+\section{Attacchi SSL/TLS}
+
+\subsection{Man-in-the-Middle (MITM)}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attacco MITM}
+\textbf{Scenario}: Attaccante intercetta traffico tra client e server
+
+\textbf{Attacco}:
+\begin{enumerate}
+    \item Client inizia connessione a server
+    \item Attaccante intercetta e stabilisce due connessioni:
+    \begin{itemize}
+        \item Client ↔ Attacker (con certificato fake)
+        \item Attacker ↔ Server (connessione legit)
+    \end{itemize}
+    \item Attaccante decifra, legge/modifica, ri-cifra
+\end{enumerate}
+
+\textbf{Difese}:
+\begin{itemize}
+    \item Certificate pinning (mobile apps)
+    \item HSTS preload (blocca anche primo accesso)
+    \item Certificate Transparency monitoring
+    \item Public key pinning
+    \item User education (verificare certificato)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{SSL Stripping}
+
+\begin{lstlisting}[language=text, caption={SSL Stripping Attack}]
+Scenario: Utente su WiFi pubblico
+1. User digita "example.com" (nota: HTTP, no 'https://')
+2. Browser fa richiesta HTTP
+3. Attaccante intercetta e risponde con HTTP (no redirect a HTTPS)
+4. User pensa di essere su sito legit, ma traffico è in chiaro
+
+Difesa:
+- HSTS Preload: Browser sa che example.com richiede HTTPS
+- User deve digitare "https://example.com"
+- Browser plugins (HTTPS Everywhere)
+\end{lstlisting}
+
+\subsection{Downgrade Attacks}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Protocol Downgrade Attack}
+\textbf{Attacco}: Forzare client/server a usare protocolli vecchi vulnerabili (TLS 1.0, SSL 3.0)
+
+\textbf{Esempio - POODLE}:
+\begin{itemize}
+    \item Attaccante modifica ClientHello per rimuovere TLS support
+    \item Server fallback a SSL 3.0
+    \item SSL 3.0 è vulnerabile a padding oracle attack
+\end{itemize}
+
+\textbf{Difesa}:
+\begin{itemize}
+    \item Disabilitare SSL 3.0, TLS 1.0, TLS 1.1 su server
+    \item TLS\_FALLBACK\_SCSV (impedisce downgrade)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Heartbleed (CVE-2014-0160)}
+
+\begin{lstlisting}[language=text, caption={Heartbleed Vulnerability}]
+Vulnerabilità in OpenSSL Heartbeat extension
+
+Bug: Mancata validazione lunghezza payload
+- Client può richiedere più memoria di quella inviata
+- Server risponde con memoria arbitraria (può contenere chiavi private!)
+
+Impatto:
+- Leak di chiavi private SSL
+- Leak di credenziali utente
+- Leak di session tokens
+
+Fix:
+- Aggiornare OpenSSL a versione patched
+- Revocare e rigenerare tutti i certificati
+- Forzare cambio password di tutti gli utenti
+\end{lstlisting}
+
+\section{Testing e Monitoring}
+
+\subsection{SSL Labs SSL Test}
+
+\begin{lstlisting}[language=bash, caption={Test configurazione SSL}]
+# Online: https://www.ssllabs.com/ssltest/
+
+# Via API
+curl "https://api.ssllabs.com/api/v3/analyze?host=example.com"
+
+# Check lista:
+# - Certificate chain validity
+# - Protocol support (TLS 1.2+)
+# - Cipher suites strength
+# - Forward secrecy support
+# - HSTS header
+# - Vulnerabilità note (Heartbleed, POODLE, etc.)
+
+# Grade A+ richiede:
+# - TLS 1.2+ solo
+# - Strong ciphers
+# - Forward secrecy
+# - HSTS
+# - No vulnerabilità note
+\end{lstlisting}
+
+\subsection{Certificate Transparency Monitoring}
+
+\begin{lstlisting}[language=Python, caption={Monitor certificati con Certificate Transparency}]
+import requests
+import time
+
+def monitor_certificates(domain):
+    """
+    Monitora emissione certificati via Certificate Transparency logs
+    Rileva certificati fraudolenti
+    """
+    url = f"https://crt.sh/?q={domain}&output=json"
+
+    response = requests.get(url)
+    certs = response.json()
+
+    # Ordina per data emissione
+    certs.sort(key=lambda x: x['entry_timestamp'], reverse=True)
+
+    print(f"Certificati per {domain}:")
+    for cert in certs[:10]:  # Ultimi 10
+        print(f"  - Issuer: {cert['issuer_name']}")
+        print(f"    Common Name: {cert['common_name']}")
+        print(f"    Not Before: {cert['not_before']}")
+        print(f"    Not After: {cert['not_after']}")
+        print()
+
+        # Alert se issuer sospetto
+        trusted_issuers = ['Let\'s Encrypt', 'DigiCert', 'Sectigo']
+        if not any(issuer in cert['issuer_name'] for issuer in trusted_issuers):
+            print(f"⚠️  WARNING: Unknown issuer for {cert['common_name']}")
+
+monitor_certificates("example.com")
+
+# Setup monitoring automatico
+# - Cron job giornaliero
+# - Alert via email/Slack se nuovi certificati
+# - Permette rilevare CA compromise o phishing
+\end{lstlisting}
+
+\section{Compliance}
+
+\subsection{PCI-DSS Requirements}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=PCI-DSS 4.0 - Requirement 4]
+\textbf{4.2.1}: Strong cryptography and security protocols implemented
+
+\textbf{Dal Giugno 2024}:
+\begin{itemize}
+    \item TLS 1.2 minimo (TLS 1.3 raccomandato)
+    \item TLS 1.0 e 1.1 devono essere disabilitati
+    \item Strong cipher suites (forward secrecy)
+    \item Certificati da CA riconosciute
+    \item Certificate monitoring e revocation
+\end{itemize}
+
+\textbf{Testing}:
+\begin{itemize}
+    \item Quarterly vulnerability scans
+    \item Annual penetration testing
+    \item SSL Labs grade A minimo
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{GDPR Requirements}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=GDPR - Encryption in Transit]
+\textbf{Article 32}: Security of processing
+
+Richiede "encryption of personal data" including data in transit.
+
+Best practices:
+\begin{itemize}
+    \item HTTPS obbligatorio per tutti i form (login, checkout, etc.)
+    \item HSTS per prevenire downgrade
+    \item TLS 1.2+ con strong ciphers
+    \item Certificate monitoring
+    \item Encryption anche per API e microservizi interni
+\end{itemize}
+\end{tcolorbox}
+
+\section{Best Practices}
+
+\begin{enumerate}
+    \item \textbf{Usa TLS 1.2+ solo}: Disabilita TLS 1.0, 1.1, SSL 3.0
+    \item \textbf{Strong cipher suites}: Forward secrecy, AEAD
+    \item \textbf{Certificati da CA affidabili}: Let's Encrypt, DigiCert, etc.
+    \item \textbf{Rinnovo automatico}: Setup auto-renewal (certbot)
+    \item \textbf{HSTS}: Abilita con preload per siti pubblici
+    \item \textbf{OCSP Stapling}: Migliora privacy e performance
+    \item \textbf{Monitoring}: SSL Labs test, Certificate Transparency
+    \item \textbf{Redirect HTTP→HTTPS}: Tutte le richieste HTTP
+    \item \textbf{Secure cookies}: Secure, HttpOnly, SameSite flags
+    \item \textbf{Certificate pinning}: Per app mobile
+\end{enumerate}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Configura HTTPS su server Nginx con Let's Encrypt
+    \item Ottieni grade A+ su SSL Labs
+    \item Implementa HSTS e submit a preload list
+    \item Configura OCSP stapling
+    \item Implementa certificate pinning in app Android
+    \item Setup monitoring Certificate Transparency
+    \item Testa server contro vulnerabilità note (Heartbleed, POODLE)
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Qual è la differenza tra TLS 1.2 e TLS 1.3?
+    \item Come funziona il TLS handshake?
+    \item Cos'è HSTS e perché è importante?
+    \item Come funziona certificate pinning?
+    \item Cos'è OCSP stapling e quali vantaggi offre?
+    \item Come funziona un attacco SSL stripping?
+    \item Quali cipher suites sono considerate sicure?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item Mozilla SSL Configuration Generator: \url{https://ssl-config.mozilla.org/}
+    \item SSL Labs: \url{https://www.ssllabs.com/}
+    \item Let's Encrypt: \url{https://letsencrypt.org/}
+    \item HSTS Preload: \url{https://hstspreload.org/}
+    \item RFC 8446 - TLS 1.3: \url{https://tools.ietf.org/html/rfc8446}
+    \item OWASP Transport Layer Protection Cheat Sheet
+    \item Certificate Transparency: \url{https://certificate.transparency.dev/}
+\end{itemize}

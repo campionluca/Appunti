@@ -1,0 +1,1202 @@
+\chapter{Autorizzazione e Controllo degli Accessi}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, RBAC, ABAC, ACL, Privilege Escalation, Compliance, Esempi pratici, Best practices, Esercizi, Riferimenti.
+\end{tcolorbox}
+
+\section*{Introduzione}
+L'autorizzazione è il processo che determina quali risorse un utente autenticato può accedere e quali azioni può eseguire. Mentre l'autenticazione risponde alla domanda "chi sei?", l'autorizzazione risponde a "cosa puoi fare?". Un sistema di autorizzazione robusto è fondamentale per proteggere dati sensibili e garantire la separazione dei privilegi.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere i principi fondamentali dell'autorizzazione
+    \item Implementare Role-Based Access Control (RBAC)
+    \item Applicare Attribute-Based Access Control (ABAC)
+    \item Configurare Access Control Lists (ACL)
+    \item Riconoscere e prevenire attacchi di privilege escalation
+    \item Implementare il principio del minimo privilegio
+    \item Garantire compliance con GDPR e PCI-DSS
+    \item Implementare audit logging per accessi e modifiche
+\end{itemize}
+
+\section{Principi fondamentali dell'autorizzazione}
+
+\subsection{Least Privilege Principle}
+Il principio del minimo privilegio stabilisce che ogni utente, processo o sistema deve avere solo i privilegi minimi necessari per svolgere le proprie funzioni.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio Least Privilege]
+Un operatore di customer service dovrebbe:
+\begin{itemize}
+    \item ✓ Visualizzare dati clienti (read)
+    \item ✓ Aggiornare informazioni di contatto (update limitato)
+    \item ✗ Eliminare account clienti (no delete)
+    \item ✗ Accedere a dati finanziari completi (no accesso dati sensibili)
+    \item ✗ Modificare prezzi prodotti (no admin functions)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Separation of Duties (SoD)}
+La separazione dei compiti richiede che operazioni critiche richiedano più persone per essere completate, prevenendo frodi e errori.
+
+\begin{lstlisting}[language=Python, caption={Esempio SoD in un sistema finanziario}]
+class PaymentSystem:
+    def create_payment(self, user, amount, recipient):
+        """Solo ruolo PAYMENT_CREATOR può creare pagamenti"""
+        if not user.has_role('PAYMENT_CREATOR'):
+            raise PermissionDenied("User cannot create payments")
+
+        payment = Payment(
+            creator=user,
+            amount=amount,
+            recipient=recipient,
+            status='PENDING_APPROVAL'
+        )
+        payment.save()
+        return payment
+
+    def approve_payment(self, user, payment_id):
+        """Solo ruolo PAYMENT_APPROVER può approvare"""
+        if not user.has_role('PAYMENT_APPROVER'):
+            raise PermissionDenied("User cannot approve payments")
+
+        payment = Payment.get(payment_id)
+
+        # Separation of Duties: l'approvatore deve essere diverso dal creatore
+        if payment.creator.id == user.id:
+            raise SeparationOfDutiesViolation(
+                "Cannot approve own payment"
+            )
+
+        payment.status = 'APPROVED'
+        payment.approver = user
+        payment.approved_at = datetime.now()
+        payment.save()
+
+        # Audit log
+        AuditLog.create(
+            action='PAYMENT_APPROVED',
+            user=user,
+            resource=payment,
+            details={'amount': payment.amount}
+        )
+
+        return payment
+\end{lstlisting}
+
+\section{Role-Based Access Control (RBAC)}
+
+RBAC è il modello di autorizzazione più diffuso. Gli utenti vengono assegnati a ruoli, e i ruoli hanno permessi associati.
+
+\subsection{Architettura RBAC}
+
+\begin{lstlisting}[language=text, caption={Struttura RBAC}]
+Users → Roles → Permissions → Resources
+
+Esempio:
+User: alice@example.com
+  ↓ assigned to
+Role: Editor
+  ↓ has permissions
+Permissions: [article.create, article.edit, article.publish]
+  ↓ on resources
+Resources: /articles/*
+\end{lstlisting}
+
+\subsection{Implementazione RBAC in database}
+
+\begin{lstlisting}[language=SQL, caption={Schema database RBAC}]
+-- Tabella utenti
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabella ruoli
+CREATE TABLE roles (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    is_system_role BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabella permessi
+CREATE TABLE permissions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    resource VARCHAR(100) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    description TEXT,
+    UNIQUE KEY unique_permission (resource, action)
+);
+
+-- Tabella associazione user-role (many-to-many)
+CREATE TABLE user_roles (
+    user_id INT NOT NULL,
+    role_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by INT,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_by) REFERENCES users(id)
+);
+
+-- Tabella associazione role-permission (many-to-many)
+CREATE TABLE role_permissions (
+    role_id INT NOT NULL,
+    permission_id INT NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
+    FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+);
+
+-- Indici per performance
+CREATE INDEX idx_user_roles_user ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role ON user_roles(role_id);
+CREATE INDEX idx_role_permissions_role ON role_permissions(role_id);
+CREATE INDEX idx_permissions_resource ON permissions(resource);
+\end{lstlisting}
+
+\subsection{Implementazione RBAC in PHP}
+
+\begin{lstlisting}[language=PHP, caption={Sistema RBAC completo in PHP}]
+<?php
+class RBACManager {
+    private $db;
+
+    public function __construct($dbConnection) {
+        $this->db = $dbConnection;
+    }
+
+    /**
+     * Verifica se un utente ha un permesso specifico
+     * @return bool
+     */
+    public function userHasPermission($userId, $resource, $action) {
+        $stmt = $this->db->prepare("
+            SELECT COUNT(*) as count
+            FROM users u
+            INNER JOIN user_roles ur ON u.id = ur.user_id
+            INNER JOIN role_permissions rp ON ur.role_id = rp.role_id
+            INNER JOIN permissions p ON rp.permission_id = p.id
+            WHERE u.id = ?
+            AND u.is_active = TRUE
+            AND p.resource = ?
+            AND p.action = ?
+        ");
+
+        $stmt->bind_param('iss', $userId, $resource, $action);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        return $result['count'] > 0;
+    }
+
+    /**
+     * Ottiene tutti i ruoli di un utente
+     */
+    public function getUserRoles($userId) {
+        $stmt = $this->db->prepare("
+            SELECT r.id, r.name, r.description
+            FROM roles r
+            INNER JOIN user_roles ur ON r.id = ur.role_id
+            WHERE ur.user_id = ?
+        ");
+
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    /**
+     * Assegna un ruolo a un utente (con audit)
+     */
+    public function assignRole($userId, $roleId, $assignedBy) {
+        // Verifica che l'assegnatore abbia il permesso
+        if (!$this->userHasPermission($assignedBy, 'roles', 'assign')) {
+            throw new PermissionDeniedException(
+                "User $assignedBy cannot assign roles"
+            );
+        }
+
+        // Inizia transazione
+        $this->db->begin_transaction();
+
+        try {
+            // Assegna ruolo
+            $stmt = $this->db->prepare("
+                INSERT INTO user_roles (user_id, role_id, assigned_by)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE assigned_by = ?
+            ");
+            $stmt->bind_param('iiii', $userId, $roleId, $assignedBy, $assignedBy);
+            $stmt->execute();
+
+            // Audit log
+            $this->logAudit(
+                'ROLE_ASSIGNED',
+                $assignedBy,
+                [
+                    'target_user' => $userId,
+                    'role_id' => $roleId,
+                    'ip_address' => $_SERVER['REMOTE_ADDR']
+                ]
+            );
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Revoca un ruolo da un utente
+     */
+    public function revokeRole($userId, $roleId, $revokedBy) {
+        if (!$this->userHasPermission($revokedBy, 'roles', 'revoke')) {
+            throw new PermissionDeniedException(
+                "User $revokedBy cannot revoke roles"
+            );
+        }
+
+        $this->db->begin_transaction();
+
+        try {
+            $stmt = $this->db->prepare("
+                DELETE FROM user_roles
+                WHERE user_id = ? AND role_id = ?
+            ");
+            $stmt->bind_param('ii', $userId, $roleId);
+            $stmt->execute();
+
+            $this->logAudit(
+                'ROLE_REVOKED',
+                $revokedBy,
+                [
+                    'target_user' => $userId,
+                    'role_id' => $roleId
+                ]
+            );
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Middleware per proteggere route
+     */
+    public function requirePermission($resource, $action) {
+        return function($request, $response, $next) use ($resource, $action) {
+            $userId = $_SESSION['user_id'] ?? null;
+
+            if (!$userId) {
+                return $response->withStatus(401)->write(
+                    json_encode(['error' => 'Not authenticated'])
+                );
+            }
+
+            if (!$this->userHasPermission($userId, $resource, $action)) {
+                // Log tentativo accesso non autorizzato
+                $this->logAudit(
+                    'UNAUTHORIZED_ACCESS_ATTEMPT',
+                    $userId,
+                    [
+                        'resource' => $resource,
+                        'action' => $action,
+                        'uri' => $request->getUri()->getPath()
+                    ]
+                );
+
+                return $response->withStatus(403)->write(
+                    json_encode(['error' => 'Permission denied'])
+                );
+            }
+
+            return $next($request, $response);
+        };
+    }
+
+    private function logAudit($action, $userId, $details) {
+        $stmt = $this->db->prepare("
+            INSERT INTO audit_logs
+            (action, user_id, details, ip_address, user_agent, created_at)
+            VALUES (?, ?, ?, ?, ?, NOW())
+        ");
+
+        $detailsJson = json_encode($details);
+        $ipAddress = $_SERVER['REMOTE_ADDR'];
+        $userAgent = $_SERVER['HTTP_USER_AGENT'];
+
+        $stmt->bind_param(
+            'sisss',
+            $action,
+            $userId,
+            $detailsJson,
+            $ipAddress,
+            $userAgent
+        );
+
+        $stmt->execute();
+    }
+}
+?>
+\end{lstlisting}
+
+\subsection{Esempio di utilizzo RBAC}
+
+\begin{lstlisting}[language=PHP, caption={Uso del sistema RBAC in un'applicazione}]
+<?php
+// Inizializzazione
+$rbac = new RBACManager($db);
+
+// Setup iniziale ruoli e permessi
+function setupRoles($rbac) {
+    // Crea ruoli
+    $roleAdmin = createRole('Administrator', 'Full system access');
+    $roleEditor = createRole('Editor', 'Can create and edit content');
+    $roleViewer = createRole('Viewer', 'Read-only access');
+
+    // Crea permessi
+    $permissions = [
+        ['articles', 'create'],
+        ['articles', 'read'],
+        ['articles', 'update'],
+        ['articles', 'delete'],
+        ['users', 'read'],
+        ['users', 'update'],
+        ['users', 'delete'],
+        ['roles', 'assign'],
+        ['roles', 'revoke']
+    ];
+
+    // Assegna permessi ai ruoli
+    // Admin ha tutti i permessi
+    foreach ($permissions as $perm) {
+        assignPermissionToRole($roleAdmin, $perm[0], $perm[1]);
+    }
+
+    // Editor può gestire articoli
+    assignPermissionToRole($roleEditor, 'articles', 'create');
+    assignPermissionToRole($roleEditor, 'articles', 'read');
+    assignPermissionToRole($roleEditor, 'articles', 'update');
+
+    // Viewer può solo leggere
+    assignPermissionToRole($roleViewer, 'articles', 'read');
+}
+
+// Protezione route in un'applicazione
+$app->delete('/api/articles/{id}', function($request, $response, $args) {
+    $articleId = $args['id'];
+
+    // Elimina articolo
+    Article::delete($articleId);
+
+    return $response->withJson(['success' => true]);
+
+})->add($rbac->requirePermission('articles', 'delete'));
+
+// Controllo manuale in codice
+if ($rbac->userHasPermission($_SESSION['user_id'], 'users', 'delete')) {
+    // Mostra pulsante elimina utente
+    echo '<button onclick="deleteUser()">Delete User</button>';
+}
+?>
+\end{lstlisting}
+
+\section{Attribute-Based Access Control (ABAC)}
+
+ABAC è un modello più flessibile che prende decisioni basate su attributi dell'utente, della risorsa, dell'ambiente e dell'azione.
+
+\subsection{Concetti ABAC}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Componenti ABAC]
+\begin{itemize}
+    \item \textbf{Subject attributes}: Attributi dell'utente (ruolo, dipartimento, clearance level)
+    \item \textbf{Resource attributes}: Attributi della risorsa (classificazione, owner, tipo)
+    \item \textbf{Action attributes}: Operazione richiesta (read, write, delete)
+    \item \textbf{Environment attributes}: Contesto (ora del giorno, location, IP address)
+\end{itemize}
+
+\textbf{Policy example}:
+"Permettere accesso se (user.department == resource.department) AND (user.clearance >= resource.classification) AND (time.hour >= 9 AND time.hour < 18)"
+\end{tcolorbox}
+
+\subsection{Implementazione ABAC}
+
+\begin{lstlisting}[language=Python, caption={Sistema ABAC in Python}]
+from datetime import datetime
+from typing import Dict, Any, List
+import ipaddress
+
+class ABACPolicy:
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+        self.rules: List[callable] = []
+
+    def add_rule(self, rule: callable):
+        """Aggiunge una regola alla policy"""
+        self.rules.append(rule)
+        return self
+
+    def evaluate(self, subject: Dict, resource: Dict,
+                 action: str, environment: Dict) -> bool:
+        """Valuta tutte le regole - tutte devono essere vere"""
+        for rule in self.rules:
+            if not rule(subject, resource, action, environment):
+                return False
+        return True
+
+class ABACEngine:
+    def __init__(self):
+        self.policies: List[ABACPolicy] = []
+
+    def add_policy(self, policy: ABACPolicy):
+        self.policies.append(policy)
+
+    def check_access(self, subject: Dict, resource: Dict,
+                     action: str, environment: Dict) -> bool:
+        """Verifica se almeno una policy permette l'accesso"""
+        for policy in self.policies:
+            if policy.evaluate(subject, resource, action, environment):
+                return True
+        return False
+
+# Esempio di policy ABAC
+def create_document_access_policy():
+    policy = ABACPolicy(
+        name="DocumentAccessPolicy",
+        description="Controlla accesso ai documenti basato su attributi"
+    )
+
+    # Regola 1: L'utente deve essere nello stesso dipartimento
+    def same_department(subject, resource, action, env):
+        return subject.get('department') == resource.get('department')
+
+    # Regola 2: Il livello di clearance deve essere sufficiente
+    def sufficient_clearance(subject, resource, action, env):
+        clearance_levels = {
+            'public': 0,
+            'internal': 1,
+            'confidential': 2,
+            'secret': 3,
+            'top_secret': 4
+        }
+        user_level = clearance_levels.get(
+            subject.get('clearance', 'public'), 0
+        )
+        required_level = clearance_levels.get(
+            resource.get('classification', 'public'), 0
+        )
+        return user_level >= required_level
+
+    # Regola 3: Orario lavorativo per documenti confidenziali
+    def business_hours_for_confidential(subject, resource, action, env):
+        if resource.get('classification') in ['confidential', 'secret', 'top_secret']:
+            hour = datetime.now().hour
+            return 9 <= hour < 18
+        return True
+
+    # Regola 4: Accesso solo da IP aziendali per documenti segreti
+    def corporate_network_for_secret(subject, resource, action, env):
+        if resource.get('classification') in ['secret', 'top_secret']:
+            user_ip = ipaddress.ip_address(env.get('ip_address'))
+            corporate_network = ipaddress.ip_network('192.168.1.0/24')
+            return user_ip in corporate_network
+        return True
+
+    # Regola 5: Solo owner può eliminare
+    def owner_can_delete(subject, resource, action, env):
+        if action == 'delete':
+            return subject.get('user_id') == resource.get('owner_id')
+        return True
+
+    policy.add_rule(same_department)
+    policy.add_rule(sufficient_clearance)
+    policy.add_rule(business_hours_for_confidential)
+    policy.add_rule(corporate_network_for_secret)
+    policy.add_rule(owner_can_delete)
+
+    return policy
+
+# Utilizzo
+abac = ABACEngine()
+abac.add_policy(create_document_access_policy())
+
+# Verifica accesso
+subject = {
+    'user_id': 123,
+    'username': 'alice',
+    'department': 'Engineering',
+    'clearance': 'confidential'
+}
+
+resource = {
+    'document_id': 456,
+    'title': 'Q4 Strategy',
+    'department': 'Engineering',
+    'classification': 'confidential',
+    'owner_id': 123
+}
+
+environment = {
+    'ip_address': '192.168.1.50',
+    'timestamp': datetime.now(),
+    'user_agent': 'Mozilla/5.0...'
+}
+
+if abac.check_access(subject, resource, 'read', environment):
+    print("Access granted")
+else:
+    print("Access denied")
+    # Log tentativo accesso negato
+    log_access_denial(subject, resource, 'read', environment)
+\end{lstlisting}
+
+\section{Access Control Lists (ACL)}
+
+Le ACL specificano quali utenti o gruppi hanno accesso a specifiche risorse e quali operazioni possono eseguire.
+
+\subsection{Implementazione ACL filesystem-like}
+
+\begin{lstlisting}[language=PHP, caption={Sistema ACL per risorse}]
+<?php
+class ACLManager {
+    private $db;
+
+    // Costanti per i permessi (bitmask)
+    const PERMISSION_READ    = 1;  // 0001
+    const PERMISSION_WRITE   = 2;  // 0010
+    const PERMISSION_EXECUTE = 4;  // 0100
+    const PERMISSION_DELETE  = 8;  // 1000
+
+    /**
+     * Schema database ACL:
+     *
+     * CREATE TABLE acl_entries (
+     *     id INT PRIMARY KEY AUTO_INCREMENT,
+     *     resource_type VARCHAR(50),
+     *     resource_id INT,
+     *     principal_type ENUM('user', 'group', 'role'),
+     *     principal_id INT,
+     *     permissions INT,
+     *     is_deny BOOLEAN DEFAULT FALSE,
+     *     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     *     UNIQUE KEY (resource_type, resource_id, principal_type, principal_id)
+     * );
+     */
+
+    public function setACL($resourceType, $resourceId,
+                          $principalType, $principalId,
+                          $permissions, $isDeny = false) {
+        $stmt = $this->db->prepare("
+            INSERT INTO acl_entries
+            (resource_type, resource_id, principal_type, principal_id, permissions, is_deny)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE permissions = ?, is_deny = ?
+        ");
+
+        $stmt->bind_param(
+            'sisiiiii',
+            $resourceType, $resourceId,
+            $principalType, $principalId,
+            $permissions, $isDeny,
+            $permissions, $isDeny
+        );
+
+        return $stmt->execute();
+    }
+
+    public function checkPermission($userId, $resourceType,
+                                   $resourceId, $requiredPermission) {
+        // Ottieni tutti i gruppi/ruoli dell'utente
+        $userGroups = $this->getUserGroups($userId);
+        $userRoles = $this->getUserRoles($userId);
+
+        // Costruisci query per verificare permessi
+        $principals = [
+            ['user', $userId]
+        ];
+
+        foreach ($userGroups as $group) {
+            $principals[] = ['group', $group['id']];
+        }
+
+        foreach ($userRoles as $role) {
+            $principals[] = ['role', $role['id']];
+        }
+
+        // Verifica DENY espliciti (hanno precedenza)
+        foreach ($principals as $principal) {
+            if ($this->hasDenyPermission(
+                $resourceType, $resourceId,
+                $principal[0], $principal[1],
+                $requiredPermission
+            )) {
+                return false; // Deny esplicito
+            }
+        }
+
+        // Verifica ALLOW
+        foreach ($principals as $principal) {
+            if ($this->hasAllowPermission(
+                $resourceType, $resourceId,
+                $principal[0], $principal[1],
+                $requiredPermission
+            )) {
+                return true; // Allow trovato
+            }
+        }
+
+        return false; // Nessun permesso trovato (default deny)
+    }
+
+    private function hasDenyPermission($resourceType, $resourceId,
+                                       $principalType, $principalId,
+                                       $requiredPermission) {
+        $stmt = $this->db->prepare("
+            SELECT permissions
+            FROM acl_entries
+            WHERE resource_type = ?
+            AND resource_id = ?
+            AND principal_type = ?
+            AND principal_id = ?
+            AND is_deny = TRUE
+        ");
+
+        $stmt->bind_param('sisi',
+            $resourceType, $resourceId,
+            $principalType, $principalId
+        );
+
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        if ($result) {
+            // Verifica bitmask
+            return ($result['permissions'] & $requiredPermission) !== 0;
+        }
+
+        return false;
+    }
+
+    private function hasAllowPermission($resourceType, $resourceId,
+                                        $principalType, $principalId,
+                                        $requiredPermission) {
+        $stmt = $this->db->prepare("
+            SELECT permissions
+            FROM acl_entries
+            WHERE resource_type = ?
+            AND resource_id = ?
+            AND principal_type = ?
+            AND principal_id = ?
+            AND is_deny = FALSE
+        ");
+
+        $stmt->bind_param('sisi',
+            $resourceType, $resourceId,
+            $principalType, $principalId
+        );
+
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        if ($result) {
+            return ($result['permissions'] & $requiredPermission) !== 0;
+        }
+
+        return false;
+    }
+
+    /**
+     * Helper per combinare permessi
+     */
+    public static function combinePermissions(...$permissions) {
+        $combined = 0;
+        foreach ($permissions as $perm) {
+            $combined |= $perm;
+        }
+        return $combined;
+    }
+}
+
+// Esempio utilizzo
+$acl = new ACLManager($db);
+
+// Concedi read e write sull'articolo 123 all'utente 456
+$acl->setACL(
+    'article',
+    123,
+    'user',
+    456,
+    ACLManager::combinePermissions(
+        ACLManager::PERMISSION_READ,
+        ACLManager::PERMISSION_WRITE
+    )
+);
+
+// Nega delete sull'articolo 123 al gruppo "editors"
+$acl->setACL(
+    'article',
+    123,
+    'group',
+    10, // ID gruppo editors
+    ACLManager::PERMISSION_DELETE,
+    true // is_deny
+);
+
+// Verifica permesso
+if ($acl->checkPermission(
+    $userId,
+    'article',
+    123,
+    ACLManager::PERMISSION_DELETE
+)) {
+    // Utente può eliminare
+    deleteArticle(123);
+} else {
+    http_response_code(403);
+    echo json_encode(['error' => 'Permission denied']);
+}
+?>
+\end{lstlisting}
+
+\section{Privilege Escalation}
+
+Il privilege escalation è un tipo di attacco in cui un utente ottiene privilegi superiori a quelli autorizzati.
+
+\subsection{Tipi di Privilege Escalation}
+
+\begin{description}
+    \item[\textbf{Vertical Privilege Escalation}] Un utente con bassi privilegi ottiene privilegi amministrativi.
+
+    \item[\textbf{Horizontal Privilege Escalation}] Un utente accede a risorse di un altro utente con lo stesso livello di privilegi.
+\end{description}
+
+\subsection{Esempi di attacchi reali}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Vulnerabilità: Insecure Direct Object Reference (IDOR)]
+\textbf{Scenario}: Un'applicazione web permette agli utenti di visualizzare i propri ordini tramite URL:
+\begin{verbatim}
+https://shop.com/orders/view?order_id=12345
+\end{verbatim}
+
+\textbf{Attacco}: L'attaccante modifica il parametro:
+\begin{verbatim}
+https://shop.com/orders/view?order_id=12346
+\end{verbatim}
+
+Se l'applicazione non verifica che l'ordine 12346 appartenga all'utente autenticato, l'attaccante può visualizzare ordini di altri utenti (horizontal privilege escalation).
+\end{tcolorbox}
+
+\subsection{Remediation IDOR}
+
+\begin{lstlisting}[language=PHP, caption={Prevenzione IDOR}]
+<?php
+// VULNERABILE - NON FARE COSÌ
+function viewOrder_VULNERABLE($orderId) {
+    $order = Order::find($orderId);
+    return view('order', ['order' => $order]);
+}
+
+// SICURO - Verifica ownership
+function viewOrder_SECURE($orderId) {
+    $currentUserId = $_SESSION['user_id'];
+
+    $order = Order::where('id', $orderId)
+                  ->where('user_id', $currentUserId)
+                  ->first();
+
+    if (!$order) {
+        // Log tentativo accesso non autorizzato
+        SecurityLog::create([
+            'event' => 'UNAUTHORIZED_ORDER_ACCESS',
+            'user_id' => $currentUserId,
+            'target_order_id' => $orderId,
+            'ip_address' => $_SERVER['REMOTE_ADDR']
+        ]);
+
+        http_response_code(403);
+        die(json_encode(['error' => 'Access denied']));
+    }
+
+    return view('order', ['order' => $order]);
+}
+
+// ANCORA PIÙ SICURO - Usa UUID invece di ID sequenziali
+function viewOrder_UUID($orderUuid) {
+    $currentUserId = $_SESSION['user_id'];
+
+    // UUID è difficile da indovinare:
+    // "a3f2b8c9-4d5e-6789-0abc-def123456789"
+    $order = Order::where('uuid', $orderUuid)
+                  ->where('user_id', $currentUserId)
+                  ->first();
+
+    if (!$order) {
+        abort(403);
+    }
+
+    return view('order', ['order' => $order]);
+}
+?>
+\end{lstlisting}
+
+\subsection{Parameter tampering e Mass Assignment}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Attacco: Mass Assignment]
+\textbf{Scenario}: Un form di modifica profilo invia:
+\begin{verbatim}
+POST /profile/update
+name=Alice&email=alice@example.com
+\end{verbatim}
+
+\textbf{Attacco}: L'attaccante aggiunge parametri non previsti:
+\begin{verbatim}
+POST /profile/update
+name=Alice&email=alice@example.com&is_admin=1&role=administrator
+\end{verbatim}
+
+Se il backend fa semplicemente:
+\begin{verbatim}
+User::update($_POST)
+\end{verbatim}
+
+L'attaccante può elevarsi ad amministratore!
+\end{tcolorbox}
+
+\subsection{Remediation Mass Assignment}
+
+\begin{lstlisting}[language=PHP, caption={Prevenzione Mass Assignment}]
+<?php
+class User extends Model {
+    // VULNERABILE - tutti i campi modificabili
+    protected $fillable = ['*'];
+
+    // SICURO - solo campi specifici
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'address'
+    ];
+
+    // Campi protetti da modifiche
+    protected $guarded = [
+        'id',
+        'is_admin',
+        'role',
+        'password',
+        'created_at'
+    ];
+}
+
+// Controller
+function updateProfile(Request $request) {
+    $user = Auth::user();
+
+    // VULNERABILE
+    $user->update($request->all());
+
+    // SICURO - Validazione esplicita
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $user->id,
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string|max:500'
+    ]);
+
+    $user->update($validatedData);
+
+    // Log modifiche
+    AuditLog::create([
+        'action' => 'USER_PROFILE_UPDATED',
+        'user_id' => $user->id,
+        'changes' => $user->getChanges()
+    ]);
+
+    return response()->json(['success' => true]);
+}
+?>
+\end{lstlisting}
+
+\section{Compliance e Normative}
+
+\subsection{GDPR - General Data Protection Regulation}
+
+Il GDPR richiede controlli di accesso rigorosi per i dati personali.
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Requisiti GDPR per autorizzazione]
+\begin{itemize}
+    \item \textbf{Article 32}: Implementare misure tecniche appropriate per garantire sicurezza
+    \item \textbf{Principle of Least Privilege}: Solo personale autorizzato può accedere a dati personali
+    \item \textbf{Purpose Limitation}: Accesso solo per scopi legittimi e documentati
+    \item \textbf{Audit Trail}: Log di tutti gli accessi a dati personali
+    \item \textbf{Right to Access}: Gli utenti devono poter vedere chi ha acceduto ai loro dati
+\end{itemize}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=PHP, caption={Sistema autorizzazione GDPR-compliant}]
+<?php
+class GDPRAccessControl {
+    /**
+     * Accesso a dati personali con logging obbligatorio
+     */
+    public function accessPersonalData($userId, $dataSubjectId, $purpose) {
+        // Verifica che l'utente abbia un motivo legittimo
+        if (!$this->hasLegitimateInterest($userId, $purpose)) {
+            throw new GDPRViolationException(
+                "No legitimate interest for accessing personal data"
+            );
+        }
+
+        // Log obbligatorio (Article 30 - Records of processing)
+        $this->logDataAccess([
+            'accessor_user_id' => $userId,
+            'data_subject_id' => $dataSubjectId,
+            'purpose' => $purpose,
+            'legal_basis' => $this->getLegalBasis($purpose),
+            'timestamp' => time(),
+            'ip_address' => $_SERVER['REMOTE_ADDR']
+        ]);
+
+        // Restituisci dati
+        return PersonalData::find($dataSubjectId);
+    }
+
+    /**
+     * Right to Access (Article 15)
+     * L'utente può vedere chi ha acceduto ai suoi dati
+     */
+    public function getAccessLog($dataSubjectId) {
+        return DB::table('gdpr_access_logs')
+            ->where('data_subject_id', $dataSubjectId)
+            ->where('created_at', '>=', now()->subYears(1))
+            ->get();
+    }
+
+    /**
+     * Data minimization
+     * Restituisci solo campi necessari per lo scopo
+     */
+    public function getMinimalData($dataSubjectId, $purpose) {
+        $user = User::find($dataSubjectId);
+
+        switch ($purpose) {
+            case 'customer_support':
+                // Solo dati necessari per supporto
+                return [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'account_status' => $user->status
+                ];
+
+            case 'billing':
+                return [
+                    'name' => $user->name,
+                    'billing_address' => $user->billing_address,
+                    'vat_number' => $user->vat_number
+                ];
+
+            case 'marketing':
+                // Solo se ha dato consenso
+                if (!$user->marketing_consent) {
+                    throw new GDPRViolationException(
+                        "User has not consented to marketing"
+                    );
+                }
+                return [
+                    'email' => $user->email,
+                    'preferences' => $user->marketing_preferences
+                ];
+
+            default:
+                throw new InvalidArgumentException("Unknown purpose");
+        }
+    }
+}
+?>
+\end{lstlisting}
+
+\subsection{PCI-DSS - Payment Card Industry Data Security Standard}
+
+PCI-DSS richiede controlli di accesso stringenti per dati di carte di pagamento.
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Requisiti PCI-DSS]
+\textbf{Requirement 7}: Restrict access to cardholder data by business need to know
+\begin{itemize}
+    \item 7.1: Limit access to system components and cardholder data to only those individuals whose job requires such access
+    \item 7.2: Establish an access control system for systems components that restricts access based on a user's need to know
+    \item 7.3: Ensure that security policies and operational procedures are documented and in use
+\end{itemize}
+
+\textbf{Requirement 8}: Identify and authenticate access to system components
+\begin{itemize}
+    \item 8.1: Define and implement policies and procedures to ensure proper user identification
+    \item 8.2: Ensure proper user authentication management
+    \item 8.3: Secure all individual non-console administrative access and all remote access to the CDE using multi-factor authentication
+\end{itemize}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption={Sistema PCI-DSS compliant per gestione carte}]
+class PCIDSSAccessControl:
+    def __init__(self):
+        self.sensitive_fields = [
+            'card_number',
+            'cvv',
+            'expiry_date',
+            'cardholder_name'
+        ]
+
+    def access_card_data(self, user_id, card_id, action, justification):
+        """
+        PCI-DSS Requirement 7.1: Business need to know
+        """
+        # Verifica che l'utente abbia un motivo valido
+        if not self.has_business_need(user_id, action):
+            raise PCIDSSViolation(
+                f"User {user_id} does not have business need for {action}"
+            )
+
+        # Verifica MFA (Requirement 8.3)
+        if not self.verify_mfa(user_id):
+            raise MFARequiredException(
+                "Multi-factor authentication required for CDE access"
+            )
+
+        # Log dettagliato (Requirement 10)
+        self.log_card_access(
+            user_id=user_id,
+            card_id=card_id,
+            action=action,
+            justification=justification,
+            result='GRANTED'
+        )
+
+        # Restituisci dati mascherati se possibile
+        card_data = self.get_card_data(card_id)
+
+        if action == 'VIEW':
+            # Maschera PAN (Primary Account Number)
+            # Mostra solo ultime 4 cifre
+            card_data['card_number'] = self.mask_pan(
+                card_data['card_number']
+            )
+            # Non mostrare mai CVV
+            del card_data['cvv']
+
+        return card_data
+
+    def mask_pan(self, pan):
+        """
+        Maschera PAN mostrando solo ultime 4 cifre
+        4532123456789012 -> ************9012
+        """
+        return '*' * (len(pan) - 4) + pan[-4:]
+
+    def log_card_access(self, **kwargs):
+        """
+        PCI-DSS Requirement 10: Track and monitor all access
+        """
+        log_entry = {
+            'timestamp': datetime.now().isoformat(),
+            'user_id': kwargs['user_id'],
+            'card_id': kwargs['card_id'],
+            'action': kwargs['action'],
+            'justification': kwargs['justification'],
+            'result': kwargs['result'],
+            'ip_address': request.remote_addr,
+            'session_id': session.get('id')
+        }
+
+        # Scrivi in log system tamper-proof
+        AuditLogger.write_immutable_log(log_entry)
+
+        # Alert se accesso sospetto
+        if self.is_suspicious_access(log_entry):
+            SecurityAlerts.send_alert(
+                severity='HIGH',
+                message=f"Suspicious card data access by user {kwargs['user_id']}",
+                details=log_entry
+            )
+
+    def quarterly_access_review(self):
+        """
+        PCI-DSS Requirement 7.2.3: Review user access quarterly
+        """
+        users_with_access = self.get_users_with_card_access()
+
+        report = []
+        for user in users_with_access:
+            # Verifica se l'utente ha ancora necessità business
+            if not self.validate_continued_need(user['id']):
+                report.append({
+                    'user_id': user['id'],
+                    'recommendation': 'REVOKE_ACCESS',
+                    'reason': 'No longer requires card data access'
+                })
+
+        # Invia report a compliance team
+        ComplianceReporting.send_access_review_report(report)
+
+        return report
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{enumerate}
+    \item \textbf{Default Deny}: Nega tutto per default, consenti esplicitamente
+    \item \textbf{Least Privilege}: Concedi solo i permessi minimi necessari
+    \item \textbf{Separation of Duties}: Operazioni critiche richiedono più persone
+    \item \textbf{Regular Reviews}: Rivedi permessi periodicamente (quarterly per PCI-DSS)
+    \item \textbf{Audit Logging}: Registra tutti gli accessi e modifiche permessi
+    \item \textbf{Time-limited Access}: Usa permessi temporanei quando possibile
+    \item \textbf{Principle of Defense in Depth}: Molteplici layer di controllo
+    \item \textbf{Secure by Default}: Nuovi utenti hanno permessi minimi
+\end{enumerate}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementa un sistema RBAC completo con ruoli Administrator, Editor, Viewer
+    \item Crea una policy ABAC che permetta accesso ai documenti solo durante orario lavorativo e da IP aziendali
+    \item Implementa un sistema di audit logging GDPR-compliant
+    \item Identifica e correggi vulnerabilità IDOR in un'applicazione esistente
+    \item Implementa protezione contro mass assignment in un form di registrazione
+    \item Crea un sistema di quarterly access review per PCI-DSS compliance
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Qual è la differenza tra RBAC e ABAC?
+    \item Cos'è il principio del minimo privilegio e perché è importante?
+    \item Come previeni attacchi IDOR?
+    \item Quali sono i requisiti GDPR per l'accesso a dati personali?
+    \item Cosa richiede PCI-DSS Requirement 7?
+    \item Come implementi Separation of Duties in un sistema di pagamenti?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item OWASP - Authorization Cheat Sheet: \url{https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html}
+    \item NIST - Guide to Attribute Based Access Control: \url{https://csrc.nist.gov/publications/detail/sp/800-162/final}
+    \item GDPR - Official Text: \url{https://gdpr-info.eu/}
+    \item PCI-DSS v4.0: \url{https://www.pcisecuritystandards.org/}
+    \item CWE-639: Authorization Bypass Through User-Controlled Key
+    \item CWE-284: Improper Access Control
+\end{itemize}

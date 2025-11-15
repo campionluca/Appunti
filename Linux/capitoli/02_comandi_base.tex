@@ -1,0 +1,953 @@
+% 02_comandi_base.tex — Comandi fondamentali Linux
+\chapter{Comandi Base di Linux}
+
+\section{Introduzione}
+
+Padroneggiare i comandi base è fondamentale per lavorare efficacemente in Linux. In questo capitolo esploreremo i comandi essenziali per la navigazione, manipolazione file e ricerca di informazioni.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Filosofia Unix]
+Ricordate: ogni comando fa una cosa sola, ma la fa bene. La potenza viene dalla capacità di combinarli insieme tramite pipe e redirezioni.
+\end{tcolorbox}
+
+\section{Navigazione nel Filesystem}
+
+\subsection{pwd - Print Working Directory}
+
+Il comando \texttt{pwd} mostra la directory corrente (dove vi trovate):
+
+\begin{lstlisting}[style=bash]
+# Visualizza directory corrente
+pwd
+# Output: /home/user
+
+# pwd mostra sempre il percorso assoluto
+cd /var/log
+pwd
+# Output: /var/log
+
+# Opzione -P: mostra percorso fisico (risolve symlink)
+pwd -P
+
+# Opzione -L: mostra percorso logico (default, mantiene symlink)
+pwd -L
+\end{lstlisting}
+
+\subsection{cd - Change Directory}
+
+Il comando \texttt{cd} cambia la directory corrente:
+
+\begin{lstlisting}[style=bash]
+# Vai a una directory specifica
+cd /var/log
+
+# Vai alla home directory (tre modi equivalenti)
+cd
+cd ~
+cd $HOME
+
+# Vai alla directory precedente
+cd -
+# Output: /var/log (e cambia alla directory precedente)
+
+# Vai alla directory del padre
+cd ..
+
+# Vai due livelli sopra
+cd ../..
+
+# Percorso relativo
+cd Documents/Projects
+
+# Percorso assoluto
+cd /usr/local/bin
+
+# Directory con spazi (usare quote)
+cd "My Documents"
+cd 'My Documents'
+cd My\ Documents
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Trucchi per cd]
+\begin{lstlisting}[style=bash]
+# Crea alias per directory frequenti in ~/.bashrc
+alias proj='cd ~/Projects'
+alias docs='cd ~/Documents'
+alias down='cd ~/Downloads'
+
+# Funzione per creare directory e entrarci
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Uso
+mkcd ~/Projects/new-project
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{ls - List Directory Contents}
+
+Il comando \texttt{ls} elenca il contenuto di directory:
+
+\begin{lstlisting}[style=bash]
+# Lista semplice
+ls
+# Output: file1.txt  file2.txt  dir1  dir2
+
+# Lista dettagliata (long format)
+ls -l
+# Output:
+# -rw-r--r-- 1 user group 1024 Nov 15 10:30 file1.txt
+# drwxr-xr-x 2 user group 4096 Nov 15 09:15 dir1
+
+# Mostra file nascosti (iniziano con .)
+ls -a
+# Output: .  ..  .bashrc  .profile  file1.txt
+
+# Combina opzioni: long + all
+ls -la
+ls -l -a    # Equivalente
+
+# Human-readable file sizes
+ls -lh
+# Output: -rw-r--r-- 1 user group 1.0K Nov 15 10:30 file1.txt
+
+# Ordina per tempo di modifica (più recente prima)
+ls -lt
+
+# Ordina per tempo di modifica (inverso)
+ls -ltr
+
+# Ordina per dimensione
+ls -lS
+
+# Ricorsivo (mostra anche subdirectory)
+ls -R
+
+# Solo directory
+ls -d */
+
+# Con indicatori tipo (/ per dir, * per eseguibili)
+ls -F
+
+# Mostra inode numbers
+ls -i
+
+# Una colonna per file (utile in script)
+ls -1
+\end{lstlisting}
+
+\textbf{Interpretazione output ls -l}:
+
+\begin{lstlisting}[style=bash]
+# -rw-r--r-- 1 user group 1024 Nov 15 10:30 file.txt
+# │││││││││  │ │    │     │    │           │
+# │││││││││  │ │    │     │    │           └─> Nome file
+# │││││││││  │ │    │     │    └─> Data modifica
+# │││││││││  │ │    │     └─> Dimensione (byte)
+# │││││││││  │ │    └─> Gruppo
+# │││││││││  │ └─> Proprietario
+# │││││││││  └─> Numero hard link
+# │││││││││
+# ││││││││└─> Altri: esecuzione
+# │││││││└──> Altri: scrittura
+# ││││││└───> Altri: lettura
+# │││││└────> Gruppo: esecuzione
+# ││││└─────> Gruppo: scrittura
+# │││└──────> Gruppo: lettura
+# ││└───────> Utente: esecuzione
+# │└────────> Utente: scrittura
+# └─────────> Utente: lettura
+#
+# Primo carattere:
+# - = file normale
+# d = directory
+# l = symbolic link
+# b = block device
+# c = character device
+# p = named pipe
+# s = socket
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Alias Utili per ls]
+\begin{lstlisting}[style=bash]
+# Aggiungi a ~/.bash_aliases
+alias ll='ls -lh'           # Long format human-readable
+alias la='ls -lAh'          # Tutto tranne . e ..
+alias lt='ls -lhtr'         # Ordinato per tempo
+alias lsize='ls -lhS'       # Ordinato per dimensione
+alias tree='ls -R'          # Vista ad albero semplice
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Manipolazione File e Directory}
+
+\subsection{mkdir - Make Directory}
+
+Crea nuove directory:
+
+\begin{lstlisting}[style=bash]
+# Crea singola directory
+mkdir mydir
+
+# Crea multiple directory
+mkdir dir1 dir2 dir3
+
+# Crea directory con subdirectory (parent)
+mkdir -p projects/linux/scripts
+
+# Senza -p darebbe errore se projects/ non esiste
+mkdir projects/linux/scripts
+# mkdir: cannot create directory 'projects/linux/scripts':
+# No such file or directory
+
+# Crea con permessi specifici
+mkdir -m 755 public_dir
+mkdir -m 700 private_dir
+
+# Verboso (mostra cosa viene creato)
+mkdir -pv parent/child/grandchild
+# Output:
+# mkdir: created directory 'parent'
+# mkdir: created directory 'parent/child'
+# mkdir: created directory 'parent/child/grandchild'
+\end{lstlisting}
+
+\subsection{touch - Create Empty File / Update Timestamp}
+
+Crea file vuoti o aggiorna timestamp:
+
+\begin{lstlisting}[style=bash]
+# Crea file vuoto
+touch newfile.txt
+
+# Crea multipli file
+touch file1.txt file2.txt file3.txt
+
+# Crea file con timestamp specifico
+touch -t 202311151030 oldfile.txt
+# Formato: [[CC]YY]MMDDhhmm[.ss]
+
+# Aggiorna solo access time
+touch -a file.txt
+
+# Aggiorna solo modification time
+touch -m file.txt
+
+# Non creare file se non esiste
+touch -c file.txt
+
+# Usa timestamp di altro file
+touch -r reference.txt newfile.txt
+\end{lstlisting}
+
+\subsection{cp - Copy Files and Directories}
+
+Copia file e directory:
+
+\begin{lstlisting}[style=bash]
+# Copia file
+cp source.txt destination.txt
+
+# Copia file in directory
+cp file.txt /path/to/directory/
+
+# Copia multipli file in directory
+cp file1.txt file2.txt file3.txt /destination/
+
+# Copia directory ricorsivamente
+cp -r source_dir/ destination_dir/
+
+# Preserva attributi (timestamp, ownership, permessi)
+cp -p file.txt backup/
+
+# Preserva tutto + ricorsivo
+cp -rp source_dir/ backup/
+
+# Interattivo (chiedi conferma prima di sovrascrivere)
+cp -i file.txt existing_file.txt
+
+# Forza sovrascrittura senza chiedere
+cp -f file.txt existing_file.txt
+
+# Verboso (mostra cosa viene copiato)
+cp -v file.txt backup/
+# Output: 'file.txt' -> 'backup/file.txt'
+
+# Copia solo se source è più recente di destination
+cp -u source.txt destination.txt
+
+# Crea hard link invece di copiare
+cp -l file.txt hardlink.txt
+
+# Crea symbolic link invece di copiare
+cp -s /path/to/file.txt symlink.txt
+
+# Backup automatico se destination esiste
+cp --backup=numbered file.txt existing.txt
+# Crea existing.txt.~1~, existing.txt.~2~, etc.
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Attenzione con cp]
+\begin{itemize}
+    \item \texttt{cp} sovrascrive silenziosamente i file esistenti (usa \texttt{-i} per conferma)
+    \item Per directory, \texttt{-r} o \texttt{-R} è obbligatorio
+    \item \texttt{cp dir1 dir2} si comporta diversamente se dir2 esiste o no
+    \item Se dir2 esiste: crea dir2/dir1
+    \item Se dir2 non esiste: crea dir2 con contenuto di dir1
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{mv - Move/Rename Files and Directories}
+
+Sposta o rinomina file e directory:
+
+\begin{lstlisting}[style=bash]
+# Rinomina file
+mv oldname.txt newname.txt
+
+# Sposta file in directory
+mv file.txt /destination/directory/
+
+# Sposta multipli file in directory
+mv file1.txt file2.txt file3.txt /destination/
+
+# Sposta directory
+mv old_dir/ new_location/
+
+# Interattivo
+mv -i file.txt existing_file.txt
+
+# Forza sovrascrittura
+mv -f file.txt existing_file.txt
+
+# Verboso
+mv -v source.txt destination.txt
+# Output: 'source.txt' -> 'destination.txt'
+
+# Non sovrascrivere file esistenti
+mv -n file.txt existing_file.txt
+
+# Aggiorna solo se source è più recente
+mv -u source.txt destination.txt
+
+# Backup prima di sovrascrivere
+mv --backup=numbered file.txt existing.txt
+\end{lstlisting}
+
+\subsection{rm - Remove Files and Directories}
+
+Rimuove file e directory:
+
+\begin{lstlisting}[style=bash]
+# Rimuovi file
+rm file.txt
+
+# Rimuovi multipli file
+rm file1.txt file2.txt file3.txt
+
+# Rimuovi con pattern
+rm *.txt
+rm backup_*
+
+# Interattivo (chiedi conferma per ogni file)
+rm -i file.txt
+
+# Rimuovi directory vuota
+rmdir empty_dir/
+
+# Rimuovi directory e contenuto ricorsivamente
+rm -r directory/
+
+# Forza rimozione senza conferma
+rm -rf directory/
+
+# Verboso
+rm -v file.txt
+# Output: removed 'file.txt'
+
+# Rimuovi solo se directory vuota
+rmdir directory/
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=PERICOLO: rm -rf]
+\textbf{Il comando \texttt{rm -rf} è estremamente pericoloso!}
+
+\begin{itemize}
+    \item Non chiede conferma (\texttt{-f})
+    \item Cancella ricorsivamente (\texttt{-r})
+    \item Non c'è cestino: i file sono persi per sempre
+    \item Fate SEMPRE doppio check prima di eseguire
+    \item Mai eseguire: \texttt{rm -rf /} o \texttt{rm -rf /*}
+    \item Considerate alias: \texttt{alias rm='rm -i'}
+\end{itemize}
+
+Esempio catastrofico da evitare:
+\begin{lstlisting}[style=bash]
+# PERICOLOSISSIMO - Non eseguite mai!
+sudo rm -rf /     # Cancella tutto il sistema
+rm -rf ~/*        # Cancella tutta la home
+rm -rf ./*        # Cancella directory corrente
+
+# Controllate SEMPRE la variabile prima
+DIR="/tmp/backup"
+rm -rf $DIR       # OK se $DIR è valorizzata
+rm -rf $DIRR      # PERICOLO! $DIRR è vuota, diventa rm -rf /
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Visualizzazione Contenuti File}
+
+\subsection{cat - Concatenate and Print Files}
+
+Visualizza contenuto file:
+
+\begin{lstlisting}[style=bash]
+# Visualizza file
+cat file.txt
+
+# Visualizza multipli file
+cat file1.txt file2.txt
+
+# Concatena file in nuovo file
+cat file1.txt file2.txt > combined.txt
+
+# Mostra numeri di riga
+cat -n file.txt
+
+# Mostra numeri di riga solo per righe non vuote
+cat -b file.txt
+
+# Mostra caratteri non stampabili
+cat -A file.txt
+
+# Mostra $ alla fine di ogni riga
+cat -E file.txt
+
+# Comprimi righe vuote multiple in una sola
+cat -s file.txt
+
+# Crea file da stdin (Ctrl+D per terminare)
+cat > newfile.txt
+This is line 1
+This is line 2
+^D
+
+# Append a file esistente
+cat >> existing.txt
+Additional line
+^D
+\end{lstlisting}
+
+\subsection{less - View File Contents (Pager)}
+
+Visualizza file con navigazione:
+
+\begin{lstlisting}[style=bash]
+# Apri file con less
+less file.txt
+
+# Comandi all'interno di less:
+# Space         Pagina successiva
+# b             Pagina precedente
+# /pattern      Cerca pattern
+# n             Prossima occorrenza
+# N             Occorrenza precedente
+# g             Vai all'inizio
+# G             Vai alla fine
+# q             Esci
+
+# Mostra numeri di riga
+less -N file.txt
+
+# Non wrappare righe lunghe
+less -S file.txt
+
+# Monitoraggio file in tempo reale (come tail -f)
+less +F logfile.txt
+
+# Apri su pattern specifico
+less +/ERROR logfile.txt
+\end{lstlisting}
+
+\subsection{head e tail - View Beginning/End of Files}
+
+\begin{lstlisting}[style=bash]
+# Mostra prime 10 righe (default)
+head file.txt
+
+# Mostra prime N righe
+head -n 20 file.txt
+head -20 file.txt     # Sintassi breve
+
+# Mostra prime N byte
+head -c 100 file.txt
+
+# Multiple files
+head file1.txt file2.txt
+
+# Ultime 10 righe (default)
+tail file.txt
+
+# Ultime N righe
+tail -n 20 file.txt
+tail -20 file.txt
+
+# Mostra file in tempo reale (log monitoring)
+tail -f /var/log/syslog
+
+# Segue file anche se rinominato/ruotato
+tail -F /var/log/syslog
+
+# Mostra ultime N righe e poi segue
+tail -n 50 -f logfile.txt
+
+# Mostra da riga N in poi
+tail -n +10 file.txt  # Dalla riga 10 fino alla fine
+\end{lstlisting}
+
+\section{Ricerca e Ricerca Pattern}
+
+\subsection{find - Search for Files}
+
+Potente comando per cercare file nel filesystem:
+
+\begin{lstlisting}[style=bash]
+# Sintassi base
+find [path] [options] [expression]
+
+# Trova tutti i file in directory corrente
+find .
+
+# Trova file per nome
+find . -name "*.txt"
+
+# Case-insensitive
+find . -iname "*.TXT"
+
+# Trova directory
+find . -type d
+
+# Trova file regolari
+find . -type f
+
+# Trova symbolic link
+find . -type l
+
+# Trova per dimensione
+find . -size +100M          # Maggiori di 100MB
+find . -size -1k            # Minori di 1KB
+find . -size 50M            # Esattamente 50MB
+
+# Trova per tempo di modifica
+find . -mtime -7            # Modificati ultimi 7 giorni
+find . -mtime +30           # Modificati più di 30 giorni fa
+find . -mmin -60            # Modificati ultimi 60 minuti
+
+# Trova per tempo di accesso
+find . -atime -1            # Acceduti ultimo giorno
+
+# Trova per permessi
+find . -perm 644            # Esattamente 644
+find . -perm -644           # Almeno 644
+find . -perm /644           # Qualunque bit di 644
+
+# Trova per proprietario
+find . -user username
+find . -group groupname
+
+# Trova file vuoti
+find . -empty
+
+# Combina condizioni (AND implicito)
+find . -name "*.log" -size +10M
+
+# OR condition
+find . \( -name "*.txt" -o -name "*.log" \)
+
+# NOT condition
+find . -not -name "*.txt"
+find . ! -name "*.txt"      # Equivalente
+
+# Esegui comando sui risultati
+find . -name "*.tmp" -delete                    # Cancella
+find . -name "*.log" -exec gzip {} \;           # Comprimi
+find . -type f -exec chmod 644 {} \;            # Cambia permessi
+find . -name "*.txt" -exec cp {} /backup/ \;    # Copia
+
+# Esecuzione più efficiente con +
+find . -name "*.txt" -exec chmod 644 {} +
+
+# Conferma prima di eseguire
+find . -name "*.tmp" -ok rm {} \;
+
+# Limita profondità ricerca
+find . -maxdepth 2 -name "*.txt"
+find . -mindepth 1 -maxdepth 1  # Solo primo livello
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Esempi Pratici find]
+\begin{lstlisting}[style=bash]
+# Trova e cancella file .tmp più vecchi di 7 giorni
+find /tmp -name "*.tmp" -mtime +7 -delete
+
+# Trova file grandi (>100MB) e mostra dimensioni
+find . -type f -size +100M -exec ls -lh {} \; | awk '{print $5, $9}'
+
+# Trova file modificati oggi
+find . -type f -mtime 0
+
+# Trova e comprimi log vecchi
+find /var/log -name "*.log" -mtime +30 -exec gzip {} \;
+
+# Trova file senza proprietario valido (orphaned)
+find / -nouser -o -nogroup 2>/dev/null
+
+# Trova file eseguibili
+find . -type f -executable
+
+# Trova file con permessi problematici
+find . -type f -perm 777  # World-writable
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{grep - Search Pattern in Files}
+
+Cerca pattern testuali nei file:
+
+\begin{lstlisting}[style=bash]
+# Sintassi base
+grep pattern file.txt
+
+# Case-insensitive
+grep -i pattern file.txt
+
+# Mostra numero di riga
+grep -n pattern file.txt
+
+# Mostra solo count delle corrispondenze
+grep -c pattern file.txt
+
+# Mostra righe che NON matchano
+grep -v pattern file.txt
+
+# Cerca in multipli file
+grep pattern file1.txt file2.txt
+
+# Cerca ricorsivamente in directory
+grep -r pattern directory/
+
+# Segui symbolic link
+grep -R pattern directory/
+
+# Mostra solo nomi file con match
+grep -l pattern *.txt
+
+# Mostra solo nomi file SENZA match
+grep -L pattern *.txt
+
+# Contesto: righe prima e dopo match
+grep -C 3 pattern file.txt    # 3 righe prima e dopo
+grep -B 2 pattern file.txt    # 2 righe prima
+grep -A 5 pattern file.txt    # 5 righe dopo
+
+# Regex avanzate (Extended regex)
+grep -E 'pattern1|pattern2' file.txt
+
+# Evidenzia match con colori
+grep --color=auto pattern file.txt
+
+# Match intera parola
+grep -w word file.txt
+
+# Match intera riga
+grep -x "exact line" file.txt
+
+# Escludi file binari
+grep -I pattern *
+
+# Mostra solo la parte che matcha
+grep -o pattern file.txt
+\end{lstlisting}
+
+\textbf{Esempi con Regular Expression:}
+
+\begin{lstlisting}[style=bash]
+# Trova indirizzi email
+grep -E '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}' file.txt
+
+# Trova indirizzi IP
+grep -E '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' file.txt
+
+# Trova righe che iniziano con parola
+grep '^ERROR' logfile.txt
+
+# Trova righe che finiscono con parola
+grep 'failed$' logfile.txt
+
+# Trova righe vuote
+grep '^$' file.txt
+
+# Trova righe NON vuote
+grep -v '^$' file.txt
+
+# Trova numeri
+grep -E '[0-9]+' file.txt
+
+# Combina pattern
+grep -E '^(ERROR|WARNING|CRITICAL)' logfile.txt
+\end{lstlisting}
+
+\section{Documentazione e Aiuto}
+
+\subsection{man - Manual Pages}
+
+Il sistema di documentazione integrato di Linux:
+
+\begin{lstlisting}[style=bash]
+# Visualizza manuale comando
+man ls
+
+# Sezioni del manuale:
+# 1: Programmi utente
+# 2: System calls
+# 3: Librerie C
+# 4: Dispositivi (/dev)
+# 5: Formati file e convenzioni
+# 6: Giochi
+# 7: Miscellanea
+# 8: Comandi amministrazione
+
+# Specifica sezione
+man 5 passwd    # File /etc/passwd
+man 1 passwd    # Comando passwd
+
+# Cerca nelle man page
+man -k keyword
+apropos keyword  # Equivalente
+
+# Cerca exact match
+man -f command
+whatis command   # Equivalente
+
+# Aggiorna database man
+sudo mandb
+
+# All'interno di man:
+# /pattern      Cerca pattern
+# n             Prossima occorrenza
+# N             Occorrenza precedente
+# q             Esci
+# h             Help
+\end{lstlisting}
+
+\subsection{help e --help}
+
+\begin{lstlisting}[style=bash]
+# Per comandi builtin della shell
+help cd
+help alias
+
+# Per comandi esterni
+ls --help
+grep --help
+find --help
+
+# Formato compatto
+command -h
+\end{lstlisting}
+
+\subsection{info - Info Pages}
+
+Documentazione GNU più dettagliata:
+
+\begin{lstlisting}[style=bash]
+# Apri info page
+info ls
+info coreutils
+
+# Navigazione in info:
+# Space         Pagina successiva
+# Backspace     Pagina precedente
+# n             Prossimo nodo
+# p             Nodo precedente
+# u             Nodo superiore
+# q             Esci
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 2.1: Navigazione e Listing}
+
+\begin{lstlisting}[style=bash]
+# 1. Trovate la vostra directory corrente
+pwd
+
+# 2. Andate nella directory /etc
+cd /etc
+
+# 3. Lista tutti i file inclusi i nascosti
+ls -la
+
+# 4. Trovate i 5 file più grandi in /etc
+ls -lhS | head -6
+
+# 5. Tornate alla directory precedente
+cd -
+
+# 6. Andate alla vostra home
+cd ~
+
+# 7. Create questa struttura:
+#    ~/projects/
+#    └── linux-practice/
+#        ├── docs/
+#        └── scripts/
+mkdir -p ~/projects/linux-practice/{docs,scripts}
+
+# 8. Verificate la struttura
+ls -R ~/projects/
+\end{lstlisting}
+
+\subsection{Esercizio 2.2: Manipolazione File}
+
+\begin{lstlisting}[style=bash]
+# 1. Create directory di lavoro
+mkdir ~/practice
+cd ~/practice
+
+# 2. Create alcuni file
+touch file1.txt file2.txt file3.txt
+
+# 3. Create file con contenuto
+cat > notes.txt
+This is my first note
+This is my second note
+^D
+
+# 4. Copiate file1.txt come file1_backup.txt
+cp file1.txt file1_backup.txt
+
+# 5. Rinominate file2.txt in renamed.txt
+mv file2.txt renamed.txt
+
+# 6. Create subdirectory backup/
+mkdir backup
+
+# 7. Copiate tutti i .txt in backup/
+cp *.txt backup/
+
+# 8. Verificate contenuto backup/
+ls -l backup/
+
+# 9. Rimuovete file3.txt con conferma
+rm -i file3.txt
+\end{lstlisting}
+
+\subsection{Esercizio 2.3: Ricerca File}
+
+\begin{lstlisting}[style=bash]
+# 1. Trovate tutti i file .conf in /etc
+find /etc -name "*.conf" 2>/dev/null | head -20
+
+# 2. Trovate file modificati nelle ultime 24 ore nella home
+find ~ -type f -mtime 0
+
+# 3. Trovate directory nella home
+find ~ -maxdepth 2 -type d
+
+# 4. Trovate file più grandi di 10MB
+find ~ -type f -size +10M 2>/dev/null
+
+# 5. Trovate file vuoti
+find ~ -type f -empty
+\end{lstlisting}
+
+\subsection{Esercizio 2.4: Pattern Matching con grep}
+
+\begin{lstlisting}[style=bash]
+# 1. Create file di test
+cat > testfile.txt << 'EOF'
+ERROR: Failed to connect
+WARNING: Low memory
+INFO: Service started
+ERROR: Timeout occurred
+DEBUG: Variable x = 10
+INFO: User logged in
+ERROR: Permission denied
+EOF
+
+# 2. Trovate tutte le righe con ERROR
+grep ERROR testfile.txt
+
+# 3. Trovate ERROR o WARNING
+grep -E 'ERROR|WARNING' testfile.txt
+
+# 4. Trovate righe che NON contengono INFO
+grep -v INFO testfile.txt
+
+# 5. Conta occorrenze di ERROR
+grep -c ERROR testfile.txt
+
+# 6. Mostra numero riga per ogni match
+grep -n ERROR testfile.txt
+
+# 7. Cerca case-insensitive
+grep -i error testfile.txt
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Sicurezza e Buone Abitudini]
+\begin{enumerate}
+    \item \textbf{Conferme per operazioni distruttive}
+    \begin{lstlisting}[style=bash]
+# Usa sempre -i con rm, cp, mv su file importanti
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+    \end{lstlisting}
+
+    \item \textbf{Backup prima di modifiche importanti}
+    \begin{lstlisting}[style=bash]
+# Backup prima di modificare
+cp important.conf important.conf.backup
+    \end{lstlisting}
+
+    \item \textbf{Test con echo prima di esecuzione}
+    \begin{lstlisting}[style=bash]
+# Test pattern prima di rm
+find . -name "*.tmp"              # Verifica cosa verrà cancellato
+find . -name "*.tmp" -delete      # Poi cancella
+    \end{lstlisting}
+
+    \item \textbf{Usa path assoluti in script}
+    \begin{lstlisting}[style=bash]
+# Evita ambiguità
+/bin/rm file.txt                  # Non rm file.txt
+    \end{lstlisting}
+
+    \item \textbf{Quote sempre i path con spazi}
+    \begin{lstlisting}[style=bash]
+cp "file with spaces.txt" "/destination/path/"
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo imparato:
+
+\begin{itemize}
+    \item \textbf{Navigazione}: pwd, cd, ls con tutte le opzioni
+    \item \textbf{Manipolazione}: mkdir, touch, cp, mv, rm
+    \item \textbf{Visualizzazione}: cat, less, head, tail
+    \item \textbf{Ricerca}: find con criteri multipli
+    \item \textbf{Pattern matching}: grep e regular expressions
+    \item \textbf{Documentazione}: man, info, --help
+\end{itemize}
+
+Questi comandi formano la base del lavoro quotidiano in Linux. Padroneggiandoli sarete in grado di navigare, gestire e cercare file efficacemente.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
+Nel Capitolo 3 esploreremo in profondità il filesystem Linux: la sua struttura gerarchica, i permessi, ownership e i comandi per gestirli (chmod, chown, umask).
+\end{tcolorbox}

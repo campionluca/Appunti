@@ -1,105 +1,837 @@
 % Modulo 10 — Standard Library Avanzata
 \chapter{Standard Library Avanzata}
 
-\section{Introduzione}
-Panoramica di moduli utili: \texttt{pathlib}, \texttt{collections}, \texttt{itertools}, \texttt{functools}, \texttt{datetime}.
-
-La descrizione evidenzia come sfruttare la libreria standard per risolvere problemi comuni senza dipendenze esterne: manipolare file e percorsi, contare e raggruppare dati, combinare sequenze e comporre funzioni. Un uso mirato accelera sviluppo e riduce bug.
-
-Conoscere bene questi moduli evita di "reinventare la ruota" e abilita soluzioni più eleganti e concise.
-
-\section{Obiettivi di Apprendimento}
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
 \begin{itemize}
-  \item Usare moduli della libreria standard per compiti comuni.
-  \item Combinare strumenti per soluzioni eleganti.
+  \item Usare collections (Counter, defaultdict, deque, namedtuple)
+  \item Applicare itertools per combinazioni e trasformazioni
+  \item Ottimizzare con functools (lru\_cache, partial, reduce)
+  \item Manipolare date con datetime e timezone
+  \item Gestire percorsi con pathlib
+  \item Creare CLI con argparse
+  \item Usare regex con il modulo re
+  \item Serializzare dati con json e pickle
+  \item Applicare type hints con typing
+\end{itemize}
+\end{tcolorbox}
+
+\section{Teoria}
+
+La libreria standard Python offre moduli potenti per compiti comuni senza dipendenze esterne:
+\begin{itemize}
+  \item \textbf{Evita reinventare la ruota}: soluzioni testate e ottimizzate
+  \item \textbf{Portabilità}: funziona su tutte le piattaforme
+  \item \textbf{Manutenibilità}: codice familiare per altri sviluppatori
+  \item \textbf{Performance}: implementazioni in C per moduli critici
 \end{itemize}
 
-\section{Concetti Fondamentali}
-\begin{tcolorbox}[title=Selezionare gli strumenti giusti]
-- \texttt{pathlib}: percorsi e file system in modo portabile.
-- \texttt{collections}: contatori, code, mapping specializzati.
-- \texttt{itertools}: combinazioni, accumuli, slicing di iterabili.
-- \texttt{functools}: memoization, partial application, composizione.
-- \texttt{datetime}: fusi orari, intervalli, formattazione.
-\end{tcolorbox}
+\textbf{Filosofia}: "Batteries included" — Python include tutto il necessario.
 
-\section{Esempi Pratici}
-\subsection{pathlib}
-\begin{lstlisting}
-from pathlib import Path
-p = Path(".")
-print([f.name for f in p.glob("*.tex")])
-\end{lstlisting}
+\section{Collections}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{Path} modella percorsi in modo portabile; \texttt{glob} elenca i file per pattern.
-- Preferire \texttt{Path} a \texttt{os.path}: API orientata a oggetti e più leggibile.
-- Usare metodi come \texttt{read\_text()} e \texttt{write\_text()} per I/O semplice.
-\end{tcolorbox}
+\subsection{Counter}
 
-\subsection{collections}
 \begin{lstlisting}
 from collections import Counter
-print(Counter("banana"))
+
+# Conta elementi
+words = ["apple", "banana", "apple", "cherry", "banana", "apple"]
+counts = Counter(words)
+print(counts)  # Counter({'apple': 3, 'banana': 2, 'cherry': 1})
+
+# Most common
+print(counts.most_common(2))  # [('apple', 3), ('banana', 2)]
+
+# Operazioni
+text = "banana"
+letter_counts = Counter(text)
+print(letter_counts)  # Counter({'a': 3, 'n': 2, 'b': 1})
+
+# Combine counters
+c1 = Counter(a=3, b=1)
+c2 = Counter(a=1, b=2)
+print(c1 + c2)  # Counter({'a': 4, 'b': 3})
+print(c1 - c2)  # Counter({'a': 2})
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{Counter} conta occorrenze; utile per analisi testi e frequenze.
-- Supporta operazioni tra contatori (somma, sottrazione) e metodi come \texttt{most\_common()}.
-- Per default dict con valori interi; considerare \texttt{defaultdict} per default custom.
-\end{tcolorbox}
+\subsection{defaultdict}
 
-\subsection{itertools/functools}
 \begin{lstlisting}
-import itertools, functools
-data = [1,2,3]
-print(list(itertools.accumulate(data)))
-print(functools.reduce(lambda a,b: a+b, data, 0))
+from collections import defaultdict
+
+# Group by key
+students = [
+    ("Alice", "Math"),
+    ("Bob", "Science"),
+    ("Charlie", "Math"),
+    ("David", "Science"),
+]
+
+# Con dict normale: controllare se key esiste
+by_subject_manual = {}
+for name, subject in students:
+    if subject not in by_subject_manual:
+        by_subject_manual[subject] = []
+    by_subject_manual[subject].append(name)
+
+# Con defaultdict: automatico!
+by_subject = defaultdict(list)
+for name, subject in students:
+    by_subject[subject].append(name)
+
+print(by_subject)
+# defaultdict(<class 'list'>, {'Math': ['Alice', 'Charlie'],
+#                               'Science': ['Bob', 'David']})
+
+# Default values
+counts = defaultdict(int)  # Default: 0
+counts["apple"] += 1
+counts["banana"] += 2
+print(counts)  # defaultdict(<class 'int'>, {'apple': 1, 'banana': 2})
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Spiegazione]
-- \texttt{accumulate} genera prefissi cumulativi; \texttt{reduce} combina una sequenza con una funzione.
-- Usare funzioni pure per \texttt{reduce}; considerare \texttt{operator} per evitare \texttt{lambda}.
-- Comporre trasformazioni con iteratori per evitare liste intermedie.
+\subsection{deque (Double-ended Queue)}
+
+\begin{lstlisting}
+from collections import deque
+
+# Efficient queue operations
+queue = deque([1, 2, 3])
+
+# Add/remove from both ends (O(1))
+queue.append(4)        # Right: [1, 2, 3, 4]
+queue.appendleft(0)    # Left: [0, 1, 2, 3, 4]
+queue.pop()            # Remove right: [0, 1, 2, 3]
+queue.popleft()        # Remove left: [1, 2, 3]
+
+# Rotate
+queue.rotate(1)   # [3, 1, 2]
+queue.rotate(-1)  # [1, 2, 3]
+
+# Max length (circular buffer)
+buffer = deque(maxlen=3)
+buffer.extend([1, 2, 3, 4, 5])  # Only keeps last 3
+print(buffer)  # deque([3, 4, 5], maxlen=3)
+\end{lstlisting}
+
+\subsection{namedtuple}
+
+\begin{lstlisting}
+from collections import namedtuple
+
+# Define structure
+Point = namedtuple("Point", ["x", "y"])
+
+# Create instances
+p1 = Point(10, 20)
+p2 = Point(x=5, y=15)
+
+# Access by name (readable!)
+print(p1.x, p1.y)  # 10 20
+
+# Still a tuple (immutable, hashable)
+print(p1[0], p1[1])  # 10 20
+x, y = p1  # Unpacking works
+
+# Use case: function returns
+def get_coordinates():
+    return Point(100, 200)
+
+coord = get_coordinates()
+print(f"X: {coord.x}, Y: {coord.y}")
+\end{lstlisting}
+
+\section{Itertools}
+
+\subsection{Combinazioni e Permutazioni}
+
+\begin{lstlisting}
+import itertools
+
+# Combinations (order doesn't matter)
+items = ["A", "B", "C"]
+print(list(itertools.combinations(items, 2)))
+# [('A', 'B'), ('A', 'C'), ('B', 'C')]
+
+# Permutations (order matters)
+print(list(itertools.permutations(items, 2)))
+# [('A', 'B'), ('A', 'C'), ('B', 'A'), ('B', 'C'), ('C', 'A'), ('C', 'B')]
+
+# Product (Cartesian product)
+colors = ["red", "blue"]
+sizes = ["S", "M", "L"]
+print(list(itertools.product(colors, sizes)))
+# [('red', 'S'), ('red', 'M'), ('red', 'L'),
+#  ('blue', 'S'), ('blue', 'M'), ('blue', 'L')]
+\end{lstlisting}
+
+\subsection{Chain, Groupby, Islice}
+
+\begin{lstlisting}
+import itertools
+
+# Chain: concatenate iterables
+list1 = [1, 2, 3]
+list2 = [4, 5, 6]
+print(list(itertools.chain(list1, list2)))  # [1, 2, 3, 4, 5, 6]
+
+# Groupby: group consecutive items
+data = [
+    ("Alice", "Math"),
+    ("Bob", "Math"),
+    ("Charlie", "Science"),
+    ("David", "Science"),
+]
+
+for subject, group in itertools.groupby(data, key=lambda x: x[1]):
+    students = [name for name, _ in group]
+    print(f"{subject}: {students}")
+# Math: ['Alice', 'Bob']
+# Science: ['Charlie', 'David']
+
+# Islice: slice iterator (memory efficient)
+numbers = range(1000000)  # Doesn't create list!
+first_10 = list(itertools.islice(numbers, 10))
+print(first_10)  # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+# Every nth element
+every_5th = list(itertools.islice(range(50), 0, None, 5))
+print(every_5th)  # [0, 5, 10, 15, 20, 25, 30, 35, 40, 45]
+\end{lstlisting}
+
+\subsection{Cycle, Repeat, Accumulate}
+
+\begin{lstlisting}
+import itertools
+
+# Cycle: infinite repetition
+colors = itertools.cycle(["red", "green", "blue"])
+for i, color in enumerate(colors):
+    print(color)
+    if i >= 5:
+        break
+# red, green, blue, red, green, blue
+
+# Repeat: repeat element
+for x in itertools.repeat("Hello", 3):
+    print(x)  # Hello (3 times)
+
+# Accumulate: running totals
+numbers = [1, 2, 3, 4, 5]
+print(list(itertools.accumulate(numbers)))  # [1, 3, 6, 10, 15]
+
+# Accumulate with custom function
+import operator
+print(list(itertools.accumulate(numbers, operator.mul)))  # [1, 2, 6, 24, 120]
+\end{lstlisting}
+
+\section{Functools}
+
+\subsection{lru\_cache (Memoization)}
+
+\begin{lstlisting}
+from functools import lru_cache
+
+# Without cache: slow (exponential time)
+def fibonacci_slow(n):
+    if n < 2:
+        return n
+    return fibonacci_slow(n-1) + fibonacci_slow(n-2)
+
+# With cache: fast! (linear time)
+@lru_cache(maxsize=128)
+def fibonacci_fast(n):
+    if n < 2:
+        return n
+    return fibonacci_fast(n-1) + fibonacci_fast(n-2)
+
+print(fibonacci_fast(100))  # Instant!
+
+# Check cache stats
+print(fibonacci_fast.cache_info())
+# CacheInfo(hits=98, misses=101, maxsize=128, currsize=101)
+
+# Clear cache
+fibonacci_fast.cache_clear()
+\end{lstlisting}
+
+\subsection{partial (Partial Application)}
+
+\begin{lstlisting}
+from functools import partial
+
+# Create specialized functions
+def power(base, exponent):
+    return base ** exponent
+
+square = partial(power, exponent=2)
+cube = partial(power, exponent=3)
+
+print(square(5))  # 25
+print(cube(5))    # 125
+
+# Use case: callback with fixed arguments
+import tkinter as tk
+
+def on_button_click(button_id, event):
+    print(f"Button {button_id} clicked")
+
+root = tk.Tk()
+for i in range(3):
+    callback = partial(on_button_click, i)
+    tk.Button(root, text=f"Button {i}", command=lambda e=None: callback(e)).pack()
+\end{lstlisting}
+
+\subsection{reduce}
+
+\begin{lstlisting}
+from functools import reduce
+import operator
+
+# Reduce: apply function cumulatively
+numbers = [1, 2, 3, 4, 5]
+
+# Sum
+total = reduce(operator.add, numbers, 0)
+print(total)  # 15
+
+# Product
+product = reduce(operator.mul, numbers, 1)
+print(product)  # 120
+
+# Find max
+max_val = reduce(lambda a, b: a if a > b else b, numbers)
+print(max_val)  # 5
+
+# Custom: concatenate strings
+words = ["Hello", "World", "!"]
+sentence = reduce(lambda a, b: a + " " + b, words)
+print(sentence)  # "Hello World !"
+\end{lstlisting}
+
+\section{Datetime}
+
+\subsection{Basics}
+
+\begin{lstlisting}
+from datetime import datetime, timedelta, date, time
+
+# Current datetime
+now = datetime.now()
+print(now)  # 2024-01-15 14:30:45.123456
+
+# Create specific datetime
+dt = datetime(2024, 12, 25, 18, 30, 0)
+print(dt)  # 2024-12-25 18:30:00
+
+# Date and time separately
+today = date.today()
+current_time = datetime.now().time()
+print(today)         # 2024-01-15
+print(current_time)  # 14:30:45.123456
+
+# Formatting (strftime)
+formatted = now.strftime("%Y-%m-%d %H:%M:%S")
+print(formatted)  # "2024-01-15 14:30:45"
+
+# Parsing (strptime)
+date_string = "2024-01-15"
+parsed = datetime.strptime(date_string, "%Y-%m-%d")
+print(parsed)  # 2024-01-15 00:00:00
+\end{lstlisting}
+
+\subsection{Timedelta (Durations)}
+
+\begin{lstlisting}
+from datetime import datetime, timedelta
+
+now = datetime.now()
+
+# Add/subtract time
+tomorrow = now + timedelta(days=1)
+next_week = now + timedelta(weeks=1)
+two_hours_ago = now - timedelta(hours=2)
+
+print(tomorrow)
+print(next_week)
+
+# Difference between dates
+birthday = datetime(2024, 6, 15)
+today = datetime.now()
+days_until = (birthday - today).days
+print(f"Days until birthday: {days_until}")
+
+# Duration components
+duration = timedelta(days=7, hours=3, minutes=30)
+print(duration.total_seconds())  # 612600.0
+\end{lstlisting}
+
+\section{Pathlib}
+
+\subsection{Path Operations}
+
+\begin{lstlisting}
+from pathlib import Path
+
+# Current directory
+cwd = Path.cwd()
+print(cwd)
+
+# Home directory
+home = Path.home()
+print(home)
+
+# Join paths (portable!)
+config_file = home / ".config" / "app" / "settings.json"
+print(config_file)
+
+# Path components
+path = Path("/home/user/documents/file.txt")
+print(path.name)       # file.txt
+print(path.stem)       # file
+print(path.suffix)     # .txt
+print(path.parent)     # /home/user/documents
+print(path.parts)      # ('/', 'home', 'user', 'documents', 'file.txt')
+
+# Check existence
+if path.exists():
+    print("File exists")
+
+if path.is_file():
+    print("It's a file")
+
+if path.is_dir():
+    print("It's a directory")
+\end{lstlisting}
+
+\subsection{File I/O and Globbing}
+
+\begin{lstlisting}
+from pathlib import Path
+
+# Read/write text
+config = Path("config.txt")
+config.write_text("Setting=Value\n")
+content = config.read_text()
+print(content)
+
+# Read/write bytes
+data_file = Path("data.bin")
+data_file.write_bytes(b"\x00\xFF\x42")
+data = data_file.read_bytes()
+
+# Iterate directory
+for item in Path(".").iterdir():
+    if item.is_file():
+        print(f"File: {item.name}")
+
+# Glob patterns
+for tex_file in Path(".").glob("*.tex"):
+    print(tex_file)
+
+# Recursive glob
+for py_file in Path(".").rglob("*.py"):  # All .py in subdirs
+    print(py_file)
+
+# Create directories
+new_dir = Path("output/data/processed")
+new_dir.mkdir(parents=True, exist_ok=True)
+\end{lstlisting}
+
+\section{Argparse (CLI Arguments)}
+
+\begin{lstlisting}
+import argparse
+from pathlib import Path
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Process some data files"
+    )
+
+    # Positional argument
+    parser.add_argument("input", type=Path, help="Input file path")
+
+    # Optional arguments
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default=Path("output.txt"),
+        help="Output file path (default: output.txt)"
+    )
+
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output"
+    )
+
+    parser.add_argument(
+        "-n", "--count",
+        type=int,
+        default=10,
+        help="Number of items to process"
+    )
+
+    # Choices
+    parser.add_argument(
+        "--format",
+        choices=["json", "csv", "xml"],
+        default="json",
+        help="Output format"
+    )
+
+    args = parser.parse_args()
+
+    # Use arguments
+    if args.verbose:
+        print(f"Processing {args.input}")
+        print(f"Output: {args.output}")
+        print(f"Format: {args.format}")
+        print(f"Count: {args.count}")
+
+    # Process file
+    if args.input.exists():
+        content = args.input.read_text()
+        # ... process content ...
+        args.output.write_text(f"Processed {args.count} items")
+
+if __name__ == "__main__":
+    main()
+
+# Usage examples:
+# python script.py input.txt
+# python script.py input.txt -o result.txt --verbose
+# python script.py input.txt --format csv -n 20
+\end{lstlisting}
+
+\section{Regular Expressions (re)}
+
+\begin{lstlisting}
+import re
+
+# Match pattern
+text = "My email is john@example.com"
+match = re.search(r"\w+@\w+\.\w+", text)
+if match:
+    print(match.group())  # john@example.com
+
+# Find all
+text = "Emails: alice@test.com, bob@demo.org"
+emails = re.findall(r"\w+@\w+\.\w+", text)
+print(emails)  # ['alice@test.com', 'bob@demo.org']
+
+# Groups (capture parts)
+pattern = r"(\w+)@(\w+)\.(\w+)"
+match = re.search(pattern, "user@example.com")
+if match:
+    print(match.group(0))  # user@example.com (full match)
+    print(match.group(1))  # user
+    print(match.group(2))  # example
+    print(match.group(3))  # com
+
+# Named groups
+pattern = r"(?P<user>\w+)@(?P<domain>\w+\.\w+)"
+match = re.search(pattern, "alice@example.com")
+if match:
+    print(match.group("user"))    # alice
+    print(match.group("domain"))  # example.com
+
+# Substitute
+text = "Phone: 123-456-7890"
+cleaned = re.sub(r"[\s-]", "", text)
+print(cleaned)  # Phone:1234567890
+
+# Split
+text = "apple,banana;cherry|date"
+fruits = re.split(r"[,;|]", text)
+print(fruits)  # ['apple', 'banana', 'cherry', 'date']
+
+# Compile for reuse
+email_pattern = re.compile(r"\w+@\w+\.\w+")
+if email_pattern.search("Contact: test@mail.com"):
+    print("Email found")
+\end{lstlisting}
+
+\section{JSON e Pickle}
+
+\subsection{JSON}
+
+\begin{lstlisting}
+import json
+from pathlib import Path
+
+# Python dict to JSON
+data = {
+    "name": "Alice",
+    "age": 30,
+    "skills": ["Python", "SQL", "Docker"],
+    "active": True
+}
+
+# To JSON string
+json_string = json.dumps(data, indent=2)
+print(json_string)
+
+# To file
+Path("data.json").write_text(json.dumps(data, indent=2))
+
+# From JSON string
+parsed = json.loads(json_string)
+print(parsed["name"])
+
+# From file
+loaded = json.loads(Path("data.json").read_text())
+print(loaded)
+
+# Custom objects (use default function)
+from datetime import datetime
+
+def serialize_datetime(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
+data_with_date = {
+    "event": "Meeting",
+    "timestamp": datetime.now()
+}
+
+json_str = json.dumps(data_with_date, default=serialize_datetime)
+print(json_str)
+\end{lstlisting}
+
+\subsection{Pickle (Python Binary)}
+
+\begin{lstlisting}
+import pickle
+from pathlib import Path
+
+# Any Python object
+data = {
+    "name": "Bob",
+    "skills": ["Python", "ML"],
+    "scores": [95, 87, 92]
+}
+
+# Save to file
+with open("data.pkl", "wb") as f:
+    pickle.dump(data, f)
+
+# Load from file
+with open("data.pkl", "rb") as f:
+    loaded = pickle.load(f)
+
+print(loaded)
+
+# WARNING: Pickle is Python-specific and can execute code!
+# Only unpickle trusted data
+# For data exchange, prefer JSON
+\end{lstlisting}
+
+\section{Type Hints (typing)}
+
+\begin{lstlisting}
+from typing import List, Dict, Optional, Union, Tuple, Callable
+
+# Basic types
+def greet(name: str) -> str:
+    return f"Hello, {name}"
+
+# Lists and dicts
+def process_scores(scores: List[int]) -> Dict[str, float]:
+    return {
+        "average": sum(scores) / len(scores),
+        "max": max(scores)
+    }
+
+# Optional (can be None)
+def find_user(user_id: int) -> Optional[Dict[str, str]]:
+    # ... search logic ...
+    if user_id == 1:
+        return {"name": "Alice", "email": "alice@test.com"}
+    return None
+
+# Union (multiple types)
+def format_id(id_value: Union[int, str]) -> str:
+    return str(id_value).zfill(5)
+
+# Tuple (fixed size)
+def get_coordinates() -> Tuple[float, float]:
+    return (10.5, 20.3)
+
+# Callable (function type)
+def apply_operation(
+    numbers: List[int],
+    operation: Callable[[int], int]
+) -> List[int]:
+    return [operation(n) for n in numbers]
+
+result = apply_operation([1, 2, 3], lambda x: x * 2)
+print(result)  # [2, 4, 6]
+
+# Type aliases
+Vector = List[float]
+Matrix = List[Vector]
+
+def multiply_matrix(m: Matrix) -> Matrix:
+    # ... matrix multiplication ...
+    pass
+\end{lstlisting}
+
+\section{Progetto: Log Analyzer}
+
+\begin{lstlisting}
+from pathlib import Path
+from collections import Counter, defaultdict
+from datetime import datetime
+import re
+import argparse
+import json
+
+class LogAnalyzer:
+    def __init__(self, log_file: Path):
+        self.log_file = log_file
+        self.entries = []
+
+    def parse_log(self):
+        """Parse log entries"""
+        # Pattern: 2024-01-15 14:30:45 [INFO] Message here
+        pattern = r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)\] (.+)"
+
+        for line in self.log_file.read_text().splitlines():
+            match = re.match(pattern, line)
+            if match:
+                timestamp_str, level, message = match.groups()
+                timestamp = datetime.strptime(
+                    timestamp_str, "%Y-%m-%d %H:%M:%S"
+                )
+                self.entries.append({
+                    "timestamp": timestamp,
+                    "level": level,
+                    "message": message
+                })
+
+    def analyze(self) -> dict:
+        """Analyze log data"""
+        # Count by level
+        level_counts = Counter(e["level"] for e in self.entries)
+
+        # Group by hour
+        by_hour = defaultdict(int)
+        for entry in self.entries:
+            hour = entry["timestamp"].hour
+            by_hour[hour] += 1
+
+        # Find errors
+        errors = [e for e in self.entries if e["level"] == "ERROR"]
+
+        return {
+            "total_entries": len(self.entries),
+            "by_level": dict(level_counts),
+            "by_hour": dict(by_hour),
+            "error_count": len(errors),
+            "errors": errors[:10]  # First 10 errors
+        }
+
+    def save_report(self, output: Path):
+        """Save analysis report as JSON"""
+        analysis = self.analyze()
+
+        # Serialize datetime objects
+        def serialize(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
+
+        output.write_text(
+            json.dumps(analysis, indent=2, default=serialize)
+        )
+
+def main():
+    parser = argparse.ArgumentParser(description="Analyze log files")
+    parser.add_argument("logfile", type=Path, help="Log file to analyze")
+    parser.add_argument(
+        "-o", "--output",
+        type=Path,
+        default=Path("report.json"),
+        help="Output report file"
+    )
+
+    args = parser.parse_args()
+
+    if not args.logfile.exists():
+        print(f"Error: {args.logfile} not found")
+        return
+
+    analyzer = LogAnalyzer(args.logfile)
+    analyzer.parse_log()
+    analyzer.save_report(args.output)
+
+    print(f"Analysis complete. Report saved to {args.output}")
+
+if __name__ == "__main__":
+    main()
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best Practices]
+\begin{itemize}
+  \item Preferire pathlib a os.path per operazioni su percorsi
+  \item Usare type hints per documentare contratti di funzioni
+  \item Compilare regex con re.compile() se riusate spesso
+  \item defaultdict evita check "key in dict" ridondanti
+  \item lru\_cache per funzioni pure computazionalmente costose
+  \item JSON per interoperabilità, pickle solo per Python
+  \item argparse per CLI consistenti con --help automatico
+  \item namedtuple per strutture dati immutabili leggibili
+  \item itertools per pipeline di dati memory-efficient
+  \item Timezone-aware datetime per app internazionali
+\end{itemize}
 \end{tcolorbox}
 
-\begin{tcolorbox}[title=Casi d'uso]
-- Analisi testi con \texttt{Counter} e normalizzazione.
-- Pipeline di trasformazione dati con \texttt{itertools}.
-- Strumenti CLI e gestione file con \texttt{pathlib}.
-- Cache di funzioni pure con \texttt{functools.lru\_cache}.
+\begin{tcolorbox}[title=Errori Comuni]
+\begin{itemize}
+  \item Usare os.path invece di pathlib (meno leggibile)
+  \item Dimenticare maxsize in lru\_cache (memory leak!)
+  \item Pickle di dati non fidati (security risk!)
+  \item Regex senza raw string (r"") — escape issues
+  \item groupby senza ordinamento preventivo (funziona su consecutivi!)
+  \item Naive datetime (senza timezone) per app globali
+  \item JSON di datetime senza serializer custom
+  \item Ignorare .cache\_clear() per test con lru\_cache
+  \item Creare Path con stringhe hardcoded (non portabile!)
+  \item reduce senza valore iniziale (crash su lista vuota)
+\end{itemize}
 \end{tcolorbox}
 
 \section{Esercizi}
+
+\subsection{Livello Base}
 \begin{enumerate}
-  \item Usa \texttt{Counter} per conteggio parole in un testo.
-  \item Filtra files per estensione con \texttt{pathlib}.
-  \item Genera combinazioni e permutazioni con \texttt{itertools}.
-  \item Applica \texttt{reduce} per calcolare un prodotto.
-  \item Usa \texttt{datetime} per differenze tra date.
+  \item Usa Counter per trovare le 5 parole più frequenti in un testo
+  \item Crea CLI con argparse che accetta file input/output
+  \item Usa pathlib per trovare tutti i file .txt in una directory
 \end{enumerate}
 
-\section{Riepilogo}
-Hai visto moduli chiave della standard library.
+\subsection{Livello Intermedio}
+\begin{enumerate}
+  \item Implementa cache LRU manuale con defaultdict + deque
+  \item Parser CSV con namedtuple per righe
+  \item Regex per validare email e estrarre dominio
+\end{enumerate}
 
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-- Tooling per filesystem e report con \texttt{pathlib}.
-- Analisi e raggruppamenti con \texttt{collections}.
-- Pipeline e combinazioni con \texttt{itertools}.
-- Cache e composizione funzioni con \texttt{functools}.
-\end{tcolorbox}
+\subsection{Livello Avanzato}
+\begin{enumerate}
+  \item Log aggregator: analizza log da più file, report JSON
+  \item Data pipeline con itertools (filter, map, groupby)
+  \item CLI tool con argparse, pathlib, JSON per config file manager
+\end{enumerate}
 
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
+\section{Riferimenti}
 \begin{itemize}
-  \item \textbf{Collections}: \verb|deque|, \verb|Counter|, \verb|defaultdict| per pattern frequenti.
-  \item \textbf{Itertools}: combinazioni, prodotti, concatenazioni; evitare ricombinazioni manuali.
-  \item \textbf{Functools}: \verb|partial|, \verb|reduce|, \verb|lru_cache| per composizione e performance.
-  \item \textbf{Pathlib e datetime}: gestire percorsi in modo portabile; trattare timezone e formattazioni con attenzione.
-  \item \textbf{Logging e argparse}: standardizzare logging; costruire CLI coerenti e autodescrittive.
+  \item Python Standard Library: \url{https://docs.python.org/3/library/}
+  \item Collections: \url{https://docs.python.org/3/library/collections.html}
+  \item Itertools recipes: \url{https://docs.python.org/3/library/itertools.html#itertools-recipes}
+  \item Pathlib guide: \url{https://realpython.com/python-pathlib/}
 \end{itemize}
-\end{tcolorbox}
-
-\paragraph{Approccio} Preferire libreria standard quando sufficiente, riducendo dipendenze; valutare compatibilità e performance prima di introdurre terze parti. Integrare \verb|typing| e strumenti statici per contratti chiari.
-Consulta: \url{https://docs.python.org/3/library/index.html}.

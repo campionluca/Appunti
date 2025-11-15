@@ -46,8 +46,98 @@ p.class { color: red; }
 #id { color: yellow; }
 \end{lstlisting}
 
+\subsection{Piramide della Specificity}
+
+La specificity può essere visualizzata come una piramide, dove i livelli superiori hanno precedenza sui livelli inferiori:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Definisci gli stili
+    \tikzstyle{level}=[trapezium, trapezium left angle=70, trapezium right angle=110,
+                       draw=black, thick, minimum height=1cm, align=center]
+
+    % !important (livello massimo)
+    \node[level, fill=red!60, minimum width=3cm, font=\small\bfseries] (important) at (0,5) {
+        !important\\
+        \footnotesize Peso: $\infty$
+    };
+
+    % Inline styles
+    \node[level, fill=orange!50, minimum width=4.5cm, font=\small\bfseries, below=0.8cm of important] (inline) {
+        Inline Styles\\
+        \footnotesize (1,0,0,0)
+    };
+
+    % ID selectors
+    \node[level, fill=yellow!60, minimum width=6cm, font=\small\bfseries, below=0.8cm of inline] (id) {
+        ID Selectors\\
+        \footnotesize \texttt{\#header} (0,1,0,0)
+    };
+
+    % Class, attribute, pseudo-class
+    \node[level, fill=green!40, minimum width=7.5cm, font=\small, below=0.8cm of id] (class) {
+        \textbf{Class, Attribute, Pseudo-class}\\
+        \footnotesize \texttt{.btn}, \texttt{[type="text"]}, \texttt{:hover} (0,0,1,0)
+    };
+
+    % Element, pseudo-element
+    \node[level, fill=blue!30, minimum width=9cm, font=\small, below=0.8cm of class] (element) {
+        \textbf{Element \& Pseudo-element}\\
+        \footnotesize \texttt{div}, \texttt{p}, \texttt{::before} (0,0,0,1)
+    };
+
+    % Universal selector
+    \node[rectangle, draw=black, thick, fill=gray!20, minimum width=10cm, minimum height=0.7cm,
+          font=\small, below=0.8cm of element] (universal) {
+        \textbf{Universal Selector} \texttt{*} (0,0,0,0)
+    };
+
+    % Freccia indicatore priorità
+    \draw[->, ultra thick, red!70] (-6,5.5) -- (-6,1) node[midway, left, align=center, font=\footnotesize] {
+        Priorità\\crescente\\$\uparrow$
+    };
+\end{tikzpicture}
+\end{center}
+
+\subsection{Come si calcola la specificity}
+
+La specificity si rappresenta come una tupla $(a, b, c, d)$ dove:
+
+\begin{itemize}
+    \item \textbf{a}: numero di inline styles (\texttt{style="..."})
+    \item \textbf{b}: numero di ID selectors (\texttt{\#id})
+    \item \textbf{c}: numero di class selectors, attribute selectors, pseudo-classes
+    \item \textbf{d}: numero di element selectors, pseudo-elements
+\end{itemize}
+
+\textbf{Esempi di calcolo}:
+
+\begin{lstlisting}[language=CSS]
+/* (0,0,0,1) */
+p { color: blue; }
+
+/* (0,0,1,0) */
+.highlight { color: green; }
+
+/* (0,0,1,1) */
+p.highlight { color: red; }
+
+/* (0,1,0,0) */
+#main { color: orange; }
+
+/* (0,1,2,1) */
+#main .content p.intro { color: purple; }
+
+/* (1,0,0,0) */
+<p style="color: pink;">Inline</p>
+\end{lstlisting}
+
+\begin{attenzione}
+Quando due regole hanno la stessa specificity, vince quella dichiarata per ultima nel CSS. Il selettore universale \texttt{*} ha specificity (0,0,0,0) e non influenza il calcolo.
+\end{attenzione}
+
 \begin{nota}
-Regola generale della specificity: ID (1,0,0) > Classe (0,1,0) > Elemento (0,0,1). Evita \texttt{!important} quando possibile.
+Regola generale della specificity: \texttt{!important} > Inline > ID > Class > Element. Evita \texttt{!important} quando possibile perché rende il CSS difficile da mantenere.
 \end{nota}
 
 \section{Box model}
@@ -73,6 +163,77 @@ div {
   \item[Border] Linea intorno al padding
   \item[Margin] Spazio esterno tra border e elementi vicini
 \end{description}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+    % Margin (esterno)
+    \draw[fill=yellow!20, draw=black, thick] (0,0) rectangle (10,7);
+    \node[above right, font=\small\bfseries] at (0,7) {Margin};
+
+    % Border
+    \draw[fill=orange!30, draw=black, thick] (0.8,0.8) rectangle (9.2,6.2);
+    \node[above right, font=\small\bfseries] at (0.8,6.2) {Border};
+
+    % Padding
+    \draw[fill=green!20, draw=black, thick] (1.6,1.6) rectangle (8.4,5.4);
+    \node[above right, font=\small\bfseries] at (1.6,5.4) {Padding};
+
+    % Content
+    \draw[fill=blue!20, draw=black, thick] (2.4,2.4) rectangle (7.6,4.6);
+    \node[align=center, font=\small] at (5,3.5) {\textbf{Content}\\(width × height)};
+
+    % Frecce dimensioni
+    \draw[<->, >=stealth, thick, red] (0,-0.5) -- node[below, font=\footnotesize] {Total width} (10,-0.5);
+    \draw[<->, >=stealth, thick, red] (10.5,0) -- node[right, font=\footnotesize, rotate=90] {Total height} (10.5,7);
+
+    % Annotazioni
+    \draw[dashed] (0.8,0) -- (0.8,0.8);
+    \draw[dashed] (1.6,0) -- (1.6,1.6);
+    \draw[dashed] (2.4,0) -- (2.4,2.4);
+
+    \node[below, font=\tiny] at (0.4,-0.2) {margin};
+    \node[below, font=\tiny] at (1.2,-0.2) {border};
+    \node[below, font=\tiny] at (2,-0.2) {padding};
+    \node[below, font=\tiny] at (5,-0.2) {content};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Calcolo dimensioni totali}:
+\begin{itemize}
+    \item \textbf{content-box} (default): Total width = width + padding + border + margin
+    \item \textbf{border-box}: Total width include padding e border, esclude margin
+\end{itemize}
+
+\begin{lstlisting}[language=CSS]
+/* content-box (default): width = solo content */
+div {
+  width: 300px;      /* Solo content */
+  padding: 20px;     /* +40px */
+  border: 5px;       /* +10px */
+  margin: 10px;      /* +20px */
+  /* Total width = 300 + 40 + 10 + 20 = 370px */
+}
+
+/* border-box: width = content + padding + border */
+div {
+  box-sizing: border-box;
+  width: 300px;      /* Include padding e border */
+  padding: 20px;     /* Già incluso */
+  border: 5px;       /* Già incluso */
+  margin: 10px;      /* +20px */
+  /* Total width = 300 + 20 = 320px */
+  /* Content width = 300 - 40 - 10 = 250px */
+}
+\end{lstlisting}
+
+\begin{attenzione}
+Usa \texttt{box-sizing: border-box} per calcoli più intuitivi. Molti framework CSS (Bootstrap, Tailwind) lo impostano di default con:
+\begin{lstlisting}[language=CSS]
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+\end{lstlisting}
+\end{attenzione}
 
 \section{Proprietà CSS comuni}
 

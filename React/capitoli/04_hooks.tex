@@ -1,0 +1,1465 @@
+\chapter{React Hooks}
+
+\section{Introduzione agli Hooks}
+
+Gli Hooks sono funzioni speciali che permettono di "agganciare" funzionalità di React (state, lifecycle, context, ecc.) nei componenti funzionali. Introdotti in React 16.8, hanno rivoluzionato il modo di scrivere componenti React.
+
+\subsection{Regole degli Hooks}
+
+\textbf{Le 2 Regole Fondamentali:}
+
+\begin{enumerate}
+    \item \textbf{Chiama gli Hooks solo al top level}: Non chiamarli dentro loop, condizioni o funzioni annidate
+    \item \textbf{Chiama gli Hooks solo da React functions}: Componenti funzionali o custom hooks
+\end{enumerate}
+
+\begin{lstlisting}[language=JavaScript, caption=Regole degli Hooks]
+function Component() {
+    // ✅ CORRETTO: Top level
+    const [count, setCount] = useState(0);
+    const [name, setName] = useState('');
+
+    // ❌ SBAGLIATO: Dentro condizione
+    if (count > 5) {
+        const [error, setError] = useState(''); // NO!
+    }
+
+    // ❌ SBAGLIATO: Dentro loop
+    for (let i = 0; i < 10; i++) {
+        const [value, setValue] = useState(i); // NO!
+    }
+
+    // ❌ SBAGLIATO: Dentro funzione normale
+    function handleClick() {
+        const [temp, setTemp] = useState(0); // NO!
+    }
+
+    // ✅ CORRETTO: Hook chiamato al top level
+    useEffect(() => {
+        // Effetto qui dentro è OK
+    }, [count]);
+
+    return <div>{count}</div>;
+}
+
+// ✅ CORRETTO: Custom hook
+function useCustomHook() {
+    const [state, setState] = useState(0);
+    return [state, setState];
+}
+\end{lstlisting}
+
+\section{useState: State Management}
+
+useState è l'hook fondamentale per aggiungere state ai componenti funzionali.
+
+\subsection{Sintassi Base}
+
+\begin{lstlisting}[language=JavaScript, caption=useState base]
+import { useState } from 'react';
+
+function Counter() {
+    // Dichiarazione
+    const [count, setCount] = useState(0);
+    //     ^       ^              ^
+    //     |       |              |
+    //  valore  setter    valore iniziale
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(count + 1)}>
+                Incrementa
+            </button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useState con Lazy Initialization}
+
+\begin{lstlisting}[language=JavaScript, caption=Lazy initialization]
+function ExpensiveComponent() {
+    // ❌ Funzione eseguita ad ogni render
+    const [data, setData] = useState(expensiveComputation());
+
+    // ✅ Funzione eseguita solo al mount
+    const [data, setData] = useState(() => expensiveComputation());
+
+    // Esempio pratico
+    const [user, setUser] = useState(() => {
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
+
+    return <div>{user?.name}</div>;
+}
+
+function expensiveComputation() {
+    console.log('Computing...');
+    let result = 0;
+    for (let i = 0; i < 1000000; i++) {
+        result += i;
+    }
+    return result;
+}
+\end{lstlisting}
+
+\subsection{useState con Oggetti Complessi}
+
+\begin{lstlisting}[language=JavaScript, caption=State oggetti]
+function UserProfile() {
+    const [user, setUser] = useState({
+        name: '',
+        email: '',
+        age: 0,
+        preferences: {
+            theme: 'light',
+            notifications: true
+        }
+    });
+
+    // Aggiorna campo top-level
+    const updateName = (name) => {
+        setUser(prev => ({ ...prev, name }));
+    };
+
+    // Aggiorna campo nested
+    const updateTheme = (theme) => {
+        setUser(prev => ({
+            ...prev,
+            preferences: {
+                ...prev.preferences,
+                theme
+            }
+        }));
+    };
+
+    // Aggiorna multipli campi
+    const updateMultiple = () => {
+        setUser(prev => ({
+            ...prev,
+            name: 'Mario',
+            age: 30
+        }));
+    };
+
+    return (
+        <div>
+            <input
+                value={user.name}
+                onChange={(e) => updateName(e.target.value)}
+            />
+            <select
+                value={user.preferences.theme}
+                onChange={(e) => updateTheme(e.target.value)}
+            >
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{useEffect: Side Effects}
+
+useEffect permette di eseguire side effects nei componenti funzionali: data fetching, subscriptions, DOM manipulation, ecc.
+
+\subsection{useEffect Base}
+
+\begin{lstlisting}[language=JavaScript, caption=useEffect sintassi]
+import { useState, useEffect } from 'react';
+
+function Component() {
+    const [count, setCount] = useState(0);
+
+    // 1. Esegue ad ogni render
+    useEffect(() => {
+        console.log('Eseguito ad ogni render');
+    });
+
+    // 2. Esegue solo al mount
+    useEffect(() => {
+        console.log('Eseguito solo al mount');
+    }, []);
+
+    // 3. Esegue quando count cambia
+    useEffect(() => {
+        console.log('Count è cambiato:', count);
+    }, [count]);
+
+    // 4. Con cleanup function
+    useEffect(() => {
+        console.log('Setup');
+        return () => {
+            console.log('Cleanup');
+        };
+    }, []);
+
+    return <div>{count}</div>;
+}
+\end{lstlisting}
+
+\subsection{Component Lifecycle con useEffect}
+
+\begin{verbatim}
+Component Lifecycle:
+
+┌─────────────────────────────────────────────────────┐
+│                    COMPONENT LIFECYCLE               │
+└─────────────────────────────────────────────────────┘
+
+1. MOUNT (prima volta che il componente appare)
+   └─> useEffect(() => { ... }, [])
+       └─> Eseguito UNA SOLA VOLTA
+
+2. UPDATE (quando props/state cambiano)
+   └─> useEffect(() => { ... }, [dep1, dep2])
+       └─> Eseguito quando dep1 o dep2 cambiano
+
+3. UNMOUNT (componente rimosso dal DOM)
+   └─> useEffect(() => {
+           return () => { cleanup };
+       }, [])
+\end{verbatim}
+
+\begin{lstlisting}[language=JavaScript, caption=Lifecycle completo]
+function UserProfile({ userId }) {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // componentDidMount + componentDidUpdate (quando userId cambia)
+    useEffect(() => {
+        console.log('Fetching user:', userId);
+        setLoading(true);
+
+        fetch(`/api/users/${userId}`)
+            .then(res => res.json())
+            .then(data => {
+                setUser(data);
+                setLoading(false);
+            });
+
+        // componentWillUnmount / cleanup
+        return () => {
+            console.log('Cleanup per userId:', userId);
+        };
+    }, [userId]); // Re-esegue quando userId cambia
+
+    if (loading) return <div>Loading...</div>;
+    return <div>{user?.name}</div>;
+}
+\end{lstlisting}
+
+\subsection{useEffect: Data Fetching}
+
+\begin{lstlisting}[language=JavaScript, caption=Data fetching pattern]
+function PostsList() {
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchPosts = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const response = await fetch('/api/posts');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch');
+                }
+
+                const data = await response.json();
+
+                // Evita state update se componente è unmounted
+                if (!cancelled) {
+                    setPosts(data);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err.message);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPosts();
+
+        // Cleanup: segna come cancelled
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <ul>
+            {posts.map(post => (
+                <li key={post.id}>{post.title}</li>
+            ))}
+        </ul>
+    );
+}
+\end{lstlisting}
+
+\subsection{useEffect: Subscriptions}
+
+\begin{lstlisting}[language=JavaScript, caption=Event subscriptions]
+function WindowSize() {
+    const [size, setSize] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+
+    useEffect(() => {
+        // Setup subscription
+        const handleResize = () => {
+            setSize({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+
+        window.addEventListener('resize', handleResize);
+
+        // Cleanup subscription
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []); // Array vuoto = solo mount/unmount
+
+    return (
+        <div>
+            Window size: {size.width} x {size.height}
+        </div>
+    );
+}
+
+// WebSocket subscription
+function ChatRoom({ roomId }) {
+    const [messages, setMessages] = useState([]);
+
+    useEffect(() => {
+        const ws = new WebSocket(`ws://api.example.com/chat/${roomId}`);
+
+        ws.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            setMessages(prev => [...prev, message]);
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        // Cleanup: chiudi connessione
+        return () => {
+            ws.close();
+        };
+    }, [roomId]); // Riconnetti quando roomId cambia
+
+    return (
+        <ul>
+            {messages.map((msg, i) => (
+                <li key={i}>{msg.text}</li>
+            ))}
+        </ul>
+    );
+}
+\end{lstlisting}
+
+\subsection{useEffect: Timers}
+
+\begin{lstlisting}[language=JavaScript, caption=Timers e intervals]
+function Timer() {
+    const [seconds, setSeconds] = useState(0);
+    const [isRunning, setIsRunning] = useState(false);
+
+    useEffect(() => {
+        if (!isRunning) return;
+
+        const interval = setInterval(() => {
+            setSeconds(prev => prev + 1);
+        }, 1000);
+
+        // Cleanup: clear interval
+        return () => clearInterval(interval);
+    }, [isRunning]); // Re-esegue quando isRunning cambia
+
+    return (
+        <div>
+            <p>Secondi: {seconds}</p>
+            <button onClick={() => setIsRunning(!isRunning)}>
+                {isRunning ? 'Pausa' : 'Avvia'}
+            </button>
+            <button onClick={() => setSeconds(0)}>Reset</button>
+        </div>
+    );
+}
+
+// Countdown timer
+function Countdown({ initialSeconds }) {
+    const [timeLeft, setTimeLeft] = useState(initialSeconds);
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const timeout = setTimeout(() => {
+            setTimeLeft(timeLeft - 1);
+        }, 1000);
+
+        return () => clearTimeout(timeout);
+    }, [timeLeft]);
+
+    return (
+        <div>
+            {timeLeft > 0 ? (
+                <p>Tempo rimanente: {timeLeft}s</p>
+            ) : (
+                <p>Tempo scaduto!</p>
+            )}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{useContext: Context API}
+
+useContext permette di consumare context senza wrapper component.
+
+\subsection{Creazione e Uso del Context}
+
+\begin{lstlisting}[language=JavaScript, caption=Context pattern completo]
+import { createContext, useContext, useState } from 'react';
+
+// 1. Crea Context
+const ThemeContext = createContext();
+
+// 2. Provider Component
+export function ThemeProvider({ children }) {
+    const [theme, setTheme] = useState('light');
+
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    };
+
+    const value = {
+        theme,
+        setTheme,
+        toggleTheme
+    };
+
+    return (
+        <ThemeContext.Provider value={value}>
+            {children}
+        </ThemeContext.Provider>
+    );
+}
+
+// 3. Custom Hook per consumare Context
+export function useTheme() {
+    const context = useContext(ThemeContext);
+    if (context === undefined) {
+        throw new Error('useTheme must be used within ThemeProvider');
+    }
+    return context;
+}
+
+// 4. Uso in App
+function App() {
+    return (
+        <ThemeProvider>
+            <Navbar />
+            <Content />
+        </ThemeProvider>
+    );
+}
+
+// 5. Consume Context in qualsiasi componente
+function Navbar() {
+    const { theme, toggleTheme } = useTheme();
+
+    return (
+        <nav className={`navbar-${theme}`}>
+            <button onClick={toggleTheme}>
+                Tema: {theme}
+            </button>
+        </nav>
+    );
+}
+
+function Content() {
+    const { theme } = useTheme();
+
+    return (
+        <div className={`content-${theme}`}>
+            <p>Contenuto con tema {theme}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{Context Multipli}
+
+\begin{lstlisting}[language=JavaScript, caption=Multipli context providers]
+// contexts/AuthContext.js
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+    const [user, setUser] = useState(null);
+
+    const login = async (credentials) => {
+        const userData = await api.login(credentials);
+        setUser(userData);
+    };
+
+    const logout = () => {
+        setUser(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export const useAuth = () => useContext(AuthContext);
+
+// contexts/SettingsContext.js
+const SettingsContext = createContext();
+
+export function SettingsProvider({ children }) {
+    const [settings, setSettings] = useState({
+        language: 'it',
+        notifications: true
+    });
+
+    const updateSettings = (updates) => {
+        setSettings(prev => ({ ...prev, ...updates }));
+    };
+
+    return (
+        <SettingsContext.Provider value={{ settings, updateSettings }}>
+            {children}
+        </SettingsContext.Provider>
+    );
+}
+
+export const useSettings = () => useContext(SettingsContext);
+
+// App.jsx - Componi multipli providers
+function App() {
+    return (
+        <AuthProvider>
+            <SettingsProvider>
+                <ThemeProvider>
+                    <Router>
+                        <Routes />
+                    </Router>
+                </ThemeProvider>
+            </SettingsProvider>
+        </AuthProvider>
+    );
+}
+
+// Uso in componenti
+function UserDashboard() {
+    const { user, logout } = useAuth();
+    const { settings } = useSettings();
+    const { theme } = useTheme();
+
+    return (
+        <div className={theme}>
+            <h1>Ciao, {user.name}</h1>
+            <p>Lingua: {settings.language}</p>
+            <button onClick={logout}>Logout</button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{useRef: Riferimenti Mutabili}
+
+useRef crea un riferimento mutabile che persiste tra i render senza causare re-rendering.
+
+\subsection{useRef per DOM Access}
+
+\begin{lstlisting}[language=JavaScript, caption=Accesso al DOM con useRef]
+import { useRef, useEffect } from 'react';
+
+function FocusInput() {
+    const inputRef = useRef(null);
+
+    useEffect(() => {
+        // Focus automatico al mount
+        inputRef.current.focus();
+    }, []);
+
+    const handleFocus = () => {
+        inputRef.current.focus();
+    };
+
+    return (
+        <div>
+            <input ref={inputRef} type="text" />
+            <button onClick={handleFocus}>Focus Input</button>
+        </div>
+    );
+}
+
+// Scroll to element
+function ScrollToSection() {
+    const sectionRef = useRef(null);
+
+    const scrollToSection = () => {
+        sectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    return (
+        <div>
+            <button onClick={scrollToSection}>Vai alla sezione</button>
+            <div style={{ height: '1000px' }}>Contenuto...</div>
+            <div ref={sectionRef}>
+                <h2>Sezione Target</h2>
+            </div>
+        </div>
+    );
+}
+
+// Media playback control
+function VideoPlayer({ src }) {
+    const videoRef = useRef(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const togglePlay = () => {
+        if (isPlaying) {
+            videoRef.current.pause();
+        } else {
+            videoRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+    };
+
+    return (
+        <div>
+            <video ref={videoRef} src={src} />
+            <button onClick={togglePlay}>
+                {isPlaying ? 'Pausa' : 'Play'}
+            </button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useRef per Valori Mutabili}
+
+\begin{lstlisting}[language=JavaScript, caption=useRef per valori persistenti]
+function Timer() {
+    const [seconds, setSeconds] = useState(0);
+    const intervalRef = useRef(null);
+
+    const start = () => {
+        if (intervalRef.current) return; // Già in esecuzione
+
+        intervalRef.current = setInterval(() => {
+            setSeconds(prev => prev + 1);
+        }, 1000);
+    };
+
+    const stop = () => {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+    };
+
+    const reset = () => {
+        stop();
+        setSeconds(0);
+    };
+
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
+
+    return (
+        <div>
+            <p>Secondi: {seconds}</p>
+            <button onClick={start}>Start</button>
+            <button onClick={stop}>Stop</button>
+            <button onClick={reset}>Reset</button>
+        </div>
+    );
+}
+
+// Tracciare valore precedente
+function usePrevious(value) {
+    const ref = useRef();
+
+    useEffect(() => {
+        ref.current = value;
+    }, [value]);
+
+    return ref.current;
+}
+
+// Uso
+function Counter() {
+    const [count, setCount] = useState(0);
+    const prevCount = usePrevious(count);
+
+    return (
+        <div>
+            <p>Attuale: {count}</p>
+            <p>Precedente: {prevCount}</p>
+            <button onClick={() => setCount(count + 1)}>
+                Incrementa
+            </button>
+        </div>
+    );
+}
+
+// Evitare re-render inutili
+function SearchComponent() {
+    const [query, setQuery] = useState('');
+    const timeoutRef = useRef(null);
+
+    const handleSearch = (value) => {
+        setQuery(value);
+
+        // Debounce: cancella timeout precedente
+        clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
+            console.log('Searching for:', value);
+            // API call...
+        }, 500);
+    };
+
+    return (
+        <input
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+        />
+    );
+}
+\end{lstlisting}
+
+\section{useMemo: Memoizzazione Valori}
+
+useMemo memoizza il risultato di un calcolo costoso, ricalcolandolo solo quando le dipendenze cambiano.
+
+\subsection{useMemo Base}
+
+\begin{lstlisting}[language=JavaScript, caption=useMemo per ottimizzazioni]
+import { useMemo, useState } from 'react';
+
+function ExpensiveList({ items, filter }) {
+    // ❌ Senza useMemo: filtra ad ogni render
+    const filteredItems = items.filter(item =>
+        item.name.includes(filter)
+    );
+
+    // ✅ Con useMemo: filtra solo quando items o filter cambiano
+    const filteredItems = useMemo(() => {
+        console.log('Filtering items...');
+        return items.filter(item => item.name.includes(filter));
+    }, [items, filter]);
+
+    return (
+        <ul>
+            {filteredItems.map(item => (
+                <li key={item.id}>{item.name}</li>
+            ))}
+        </ul>
+    );
+}
+
+// Calcoli complessi
+function DataAnalysis({ data }) {
+    const statistics = useMemo(() => {
+        console.log('Calculating statistics...');
+
+        const sum = data.reduce((acc, val) => acc + val, 0);
+        const avg = sum / data.length;
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+
+        return { sum, avg, min, max };
+    }, [data]);
+
+    return (
+        <div>
+            <p>Somma: {statistics.sum}</p>
+            <p>Media: {statistics.avg}</p>
+            <p>Min: {statistics.min}</p>
+            <p>Max: {statistics.max}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useMemo per Reference Equality}
+
+\begin{lstlisting}[language=JavaScript, caption=useMemo per stabilità riferimenti]
+function Parent() {
+    const [count, setCount] = useState(0);
+    const [name, setName] = useState('Mario');
+
+    // ❌ Nuovo oggetto ad ogni render
+    const user = {
+        name: name,
+        age: 30
+    };
+
+    // ✅ Stesso oggetto se name non cambia
+    const user = useMemo(() => ({
+        name: name,
+        age: 30
+    }), [name]);
+
+    // Child non re-renderizza inutilmente quando count cambia
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(count + 1)}>Inc</button>
+            <ExpensiveChild user={user} />
+        </div>
+    );
+}
+
+const ExpensiveChild = React.memo(({ user }) => {
+    console.log('ExpensiveChild render');
+    return <div>{user.name}</div>;
+});
+\end{lstlisting}
+
+\section{useCallback: Memoizzazione Funzioni}
+
+useCallback memoizza una funzione, restituendo la stessa istanza finché le dipendenze non cambiano.
+
+\subsection{useCallback Base}
+
+\begin{lstlisting}[language=JavaScript, caption=useCallback per callbacks]
+import { useCallback, useState } from 'react';
+
+function Parent() {
+    const [count, setCount] = useState(0);
+    const [name, setName] = useState('Mario');
+
+    // ❌ Nuova funzione ad ogni render
+    const handleClick = () => {
+        console.log('Clicked');
+    };
+
+    // ✅ Stessa funzione tra i render
+    const handleClick = useCallback(() => {
+        console.log('Clicked');
+    }, []); // Nessuna dipendenza
+
+    // ✅ Con dipendenze
+    const handleNameChange = useCallback((newName) => {
+        console.log('Old name:', name);
+        setName(newName);
+    }, [name]); // Ricreata solo quando name cambia
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(count + 1)}>Inc</button>
+            <ExpensiveButton onClick={handleClick} />
+        </div>
+    );
+}
+
+const ExpensiveButton = React.memo(({ onClick }) => {
+    console.log('ExpensiveButton render');
+    return <button onClick={onClick}>Click me</button>;
+});
+\end{lstlisting}
+
+\subsection{useCallback vs useMemo}
+
+\begin{lstlisting}[language=JavaScript, caption=Differenza useCallback vs useMemo]
+function Component() {
+    // useCallback: memoizza la FUNZIONE
+    const handleClick = useCallback(() => {
+        console.log('Clicked');
+    }, []);
+
+    // useMemo: memoizza il RISULTATO della funzione
+    const value = useMemo(() => {
+        return expensiveCalculation();
+    }, []);
+
+    // Equivalenze:
+    // useCallback(fn, deps) === useMemo(() => fn, deps)
+
+    const fn1 = useCallback(() => console.log('Hi'), []);
+    const fn2 = useMemo(() => () => console.log('Hi'), []);
+    // fn1 === fn2
+
+    return <div />;
+}
+\end{lstlisting}
+
+\subsection{useCallback: Casi d'Uso}
+
+\begin{lstlisting}[language=JavaScript, caption=useCallback pattern comuni]
+function TodoList() {
+    const [todos, setTodos] = useState([]);
+
+    // Callback passata a child
+    const handleToggle = useCallback((id) => {
+        setTodos(prev => prev.map(todo =>
+            todo.id === id
+                ? { ...todo, completed: !todo.completed }
+                : todo
+        ));
+    }, []); // Usa funzione updater, nessuna dipendenza
+
+    const handleDelete = useCallback((id) => {
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+    }, []);
+
+    return (
+        <div>
+            {todos.map(todo => (
+                <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                />
+            ))}
+        </div>
+    );
+}
+
+const TodoItem = React.memo(({ todo, onToggle, onDelete }) => {
+    console.log('TodoItem render:', todo.id);
+
+    return (
+        <div>
+            <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
+            />
+            <span>{todo.text}</span>
+            <button onClick={() => onDelete(todo.id)}>Delete</button>
+        </div>
+    );
+});
+\end{lstlisting}
+
+\section{Custom Hooks}
+
+I custom hooks permettono di estrarre logica riutilizzabile in funzioni separate.
+
+\subsection{Custom Hook Base}
+
+\begin{lstlisting}[language=JavaScript, caption=Primo custom hook]
+// hooks/useCounter.js
+import { useState } from 'react';
+
+function useCounter(initialValue = 0) {
+    const [count, setCount] = useState(initialValue);
+
+    const increment = () => setCount(prev => prev + 1);
+    const decrement = () => setCount(prev => prev - 1);
+    const reset = () => setCount(initialValue);
+
+    return { count, increment, decrement, reset };
+}
+
+// Uso
+function Counter() {
+    const { count, increment, decrement, reset } = useCounter(0);
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <button onClick={decrement}>-</button>
+            <button onClick={reset}>Reset</button>
+            <button onClick={increment}>+</button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useLocalStorage}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook localStorage]
+import { useState, useEffect } from 'react';
+
+function useLocalStorage(key, initialValue) {
+    // State con lazy initialization
+    const [storedValue, setStoredValue] = useState(() => {
+        try {
+            const item = window.localStorage.getItem(key);
+            return item ? JSON.parse(item) : initialValue;
+        } catch (error) {
+            console.error(error);
+            return initialValue;
+        }
+    });
+
+    // Aggiorna localStorage quando il valore cambia
+    useEffect(() => {
+        try {
+            window.localStorage.setItem(key, JSON.stringify(storedValue));
+        } catch (error) {
+            console.error(error);
+        }
+    }, [key, storedValue]);
+
+    return [storedValue, setStoredValue];
+}
+
+// Uso
+function App() {
+    const [name, setName] = useLocalStorage('name', 'Guest');
+    const [theme, setTheme] = useLocalStorage('theme', 'light');
+
+    return (
+        <div>
+            <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+            />
+            <p>Nome salvato: {name}</p>
+
+            <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                Tema: {theme}
+            </button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useFetch}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook data fetching]
+import { useState, useEffect } from 'react';
+
+function useFetch(url, options = {}) {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const json = await response.json();
+
+                if (!cancelled) {
+                    setData(json);
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setError(err.message);
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [url]);
+
+    return { data, loading, error };
+}
+
+// Uso
+function UserProfile({ userId }) {
+    const { data: user, loading, error } = useFetch(`/api/users/${userId}`);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <div>
+            <h1>{user.name}</h1>
+            <p>{user.email}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useDebounce}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook debounce]
+import { useState, useEffect } from 'react';
+
+function useDebounce(value, delay = 500) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
+// Uso
+function SearchComponent() {
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+    useEffect(() => {
+        if (debouncedSearchTerm) {
+            console.log('Searching for:', debouncedSearchTerm);
+            // API call...
+        }
+    }, [debouncedSearchTerm]);
+
+    return (
+        <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Cerca..."
+        />
+    );
+}
+\end{lstlisting}
+
+\subsection{useToggle}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook toggle]
+import { useState, useCallback } from 'react';
+
+function useToggle(initialValue = false) {
+    const [value, setValue] = useState(initialValue);
+
+    const toggle = useCallback(() => {
+        setValue(prev => !prev);
+    }, []);
+
+    const setTrue = useCallback(() => {
+        setValue(true);
+    }, []);
+
+    const setFalse = useCallback(() => {
+        setValue(false);
+    }, []);
+
+    return [value, toggle, setTrue, setFalse];
+}
+
+// Uso
+function Modal() {
+    const [isOpen, toggle, open, close] = useToggle(false);
+
+    return (
+        <div>
+            <button onClick={open}>Apri Modal</button>
+
+            {isOpen && (
+                <div className="modal">
+                    <h2>Modal</h2>
+                    <button onClick={close}>Chiudi</button>
+                    <button onClick={toggle}>Toggle</button>
+                </div>
+            )}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useWindowSize}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook window size]
+import { useState, useEffect } from 'react';
+
+function useWindowSize() {
+    const [windowSize, setWindowSize] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight
+            });
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    return windowSize;
+}
+
+// Uso
+function ResponsiveComponent() {
+    const { width, height } = useWindowSize();
+
+    return (
+        <div>
+            <p>Window size: {width} x {height}</p>
+            {width < 768 ? (
+                <MobileLayout />
+            ) : (
+                <DesktopLayout />
+            )}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{useClickOutside}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom hook click outside]
+import { useEffect, useRef } from 'react';
+
+function useClickOutside(callback) {
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handleClick = (event) => {
+            if (ref.current && !ref.current.contains(event.target)) {
+                callback();
+            }
+        };
+
+        document.addEventListener('mousedown', handleClick);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+        };
+    }, [callback]);
+
+    return ref;
+}
+
+// Uso
+function Dropdown() {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useClickOutside(() => setIsOpen(false));
+
+    return (
+        <div ref={dropdownRef}>
+            <button onClick={() => setIsOpen(!isOpen)}>
+                Menu
+            </button>
+
+            {isOpen && (
+                <ul className="dropdown-menu">
+                    <li>Option 1</li>
+                    <li>Option 2</li>
+                    <li>Option 3</li>
+                </ul>
+            )}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{Hook Composition}
+
+Combina hooks multipli per funzionalità complesse.
+
+\begin{lstlisting}[language=JavaScript, caption=Composizione di hooks]
+// Custom hook che usa altri custom hooks
+function useForm(initialValues, validate) {
+    const [values, setValues] = useState(initialValues);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Usa useCallback
+    const handleChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setValues(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleBlur = useCallback((e) => {
+        const { name } = e.target;
+        setTouched(prev => ({ ...prev, [name]: true }));
+    }, []);
+
+    // Usa useEffect
+    useEffect(() => {
+        if (Object.keys(touched).length > 0) {
+            const validationErrors = validate(values);
+            setErrors(validationErrors);
+        }
+    }, [values, touched, validate]);
+
+    const handleSubmit = useCallback(async (onSubmit) => {
+        setIsSubmitting(true);
+        const validationErrors = validate(values);
+
+        if (Object.keys(validationErrors).length === 0) {
+            await onSubmit(values);
+        }
+
+        setIsSubmitting(false);
+    }, [values, validate]);
+
+    return {
+        values,
+        errors,
+        touched,
+        isSubmitting,
+        handleChange,
+        handleBlur,
+        handleSubmit
+    };
+}
+
+// Uso
+function LoginForm() {
+    const validate = (values) => {
+        const errors = {};
+        if (!values.email) errors.email = 'Email richiesta';
+        if (!values.password) errors.password = 'Password richiesta';
+        return errors;
+    };
+
+    const form = useForm(
+        { email: '', password: '' },
+        validate
+    );
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        form.handleSubmit(async (values) => {
+            console.log('Login:', values);
+            // API call...
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input
+                name="email"
+                value={form.values.email}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+            />
+            {form.touched.email && form.errors.email && (
+                <span>{form.errors.email}</span>
+            )}
+
+            <input
+                type="password"
+                name="password"
+                value={form.values.password}
+                onChange={form.handleChange}
+                onBlur={form.handleBlur}
+            />
+            {form.touched.password && form.errors.password && (
+                <span>{form.errors.password}</span>
+            )}
+
+            <button type="submit" disabled={form.isSubmitting}>
+                Login
+            </button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\subsection{1. Naming Convention}
+
+\begin{lstlisting}[language=JavaScript, caption=Naming dei custom hooks]
+// ✅ Inizia sempre con "use"
+function useCounter() {}
+function useFetch() {}
+function useLocalStorage() {}
+
+// ❌ Non usare "use" per funzioni normali
+function useHelper() {}  // Se non è un hook, non chiamarlo "use..."
+function formatDate() {} // ✅ Meglio
+\end{lstlisting}
+
+\subsection{2. Dependency Array}
+
+\begin{lstlisting}[language=JavaScript, caption=Gestione dependencies]
+function Component({ userId }) {
+    const [user, setUser] = useState(null);
+
+    // ❌ Missing dependency
+    useEffect(() => {
+        fetchUser(userId).then(setUser);
+    }, []); // userId dovrebbe essere nelle deps!
+
+    // ✅ Include tutte le dependencies
+    useEffect(() => {
+        fetchUser(userId).then(setUser);
+    }, [userId]);
+
+    // ✅ Oppure usa ESLint plugin
+    // eslint-plugin-react-hooks ti avviserà
+}
+\end{lstlisting}
+
+\subsection{3. Evita Premature Optimization}
+
+\begin{lstlisting}[language=JavaScript, caption=Non abusare di useMemo/useCallback]
+// ❌ Overuse di useMemo
+function Component() {
+    const value = useMemo(() => 2 + 2, []); // Inutile!
+    const name = useMemo(() => 'Mario', []); // Inutile!
+
+    // ✅ Usa solo per calcoli costosi
+    const expensiveValue = useMemo(() => {
+        return data.reduce((acc, item) => {
+            // Calcolo complesso...
+        }, 0);
+    }, [data]);
+}
+\end{lstlisting}
+
+\section{Conclusione}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item useState per state management
+    \item useEffect per side effects e lifecycle
+    \item useContext per condividere dati globalmente
+    \item useRef per riferimenti mutabili
+    \item useMemo per memoizzazione valori
+    \item useCallback per memoizzazione funzioni
+    \item Custom hooks per logica riutilizzabile
+    \item Best practices e pattern avanzati
+\end{itemize}
+
+Ora sei pronto per gestire eventi e interazioni utente!

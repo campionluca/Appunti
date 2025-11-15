@@ -1,0 +1,935 @@
+\chapter{Docker Compose: Orchestrazione Multi-Container}
+
+\section*{Introduzione}
+Docker Compose è uno strumento per definire ed eseguire applicazioni Docker multi-container. Con un singolo file YAML puoi configurare tutti i servizi, reti e volumi della tua applicazione e avviarli con un comando.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Scrivere file docker-compose.yml
+    \item Definire services, networks, volumes
+    \item Orchestrare stack multi-container
+    \item Gestire dipendenze tra servizi
+    \item Usare variabili d'ambiente e secrets
+    \item Deploy applicazioni complete
+\end{itemize}
+
+\section{Cos'è Docker Compose}
+
+\subsection{Definizione}
+\textbf{Docker Compose} è un tool per definire e gestire applicazioni multi-container usando un file YAML dichiarativo.
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Un file per tutta l'infrastruttura
+    \item Versionabile con Git
+    \item Riproducibile su qualsiasi ambiente
+    \item Comandi semplici: up, down, logs
+    \item Ideale per sviluppo locale e testing
+\end{itemize}
+
+\subsection{Installazione}
+
+\begin{lstlisting}[language=bash, caption=Docker Compose V2 (integrato in Docker)]
+# Già incluso in Docker Desktop (macOS/Windows)
+
+# Linux: verifica versione
+$ docker compose version
+Docker Compose version v2.20.2
+
+# Se manca, installa plugin
+$ sudo apt-get install docker-compose-plugin
+\end{lstlisting}
+
+\begin{nota}
+\textbf{Compose V1 vs V2}:
+\begin{itemize}
+    \item V1: \texttt{docker-compose} (Python, standalone)
+    \item V2: \texttt{docker compose} (Go plugin, integrato)
+    \item V2 è più veloce e il futuro ufficiale
+\end{itemize}
+\end{nota}
+
+\section{File docker-compose.yml}
+
+\subsection{Struttura Base}
+
+\begin{lstlisting}[language=yaml, caption=docker-compose.yml minimale]
+version: '3.8'
+
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+\end{lstlisting}
+
+\textbf{Sezioni principali}:
+\begin{itemize}
+    \item \texttt{version}: Versione file format (3.8 è comune)
+    \item \texttt{services}: Container da eseguire
+    \item \texttt{networks}: Reti custom (opzionale)
+    \item \texttt{volumes}: Volumi persistenti (opzionale)
+\end{itemize}
+
+\subsection{Comandi Base}
+
+\begin{lstlisting}[language=bash]
+# Avvia tutti i servizi (detached)
+$ docker compose up -d
+
+# Build e avvia
+$ docker compose up --build
+
+# Ferma e rimuovi container
+$ docker compose down
+
+# Ferma e rimuovi anche volumi
+$ docker compose down -v
+
+# Lista servizi in esecuzione
+$ docker compose ps
+
+# Log di tutti i servizi
+$ docker compose logs -f
+
+# Log di un servizio specifico
+$ docker compose logs -f web
+
+# Esegui comando in un servizio
+$ docker compose exec web sh
+
+# Scala un servizio
+$ docker compose up -d --scale web=3
+\end{lstlisting}
+
+\section{Definire Services}
+
+\subsection{Build da Dockerfile}
+
+\begin{lstlisting}[language=yaml, caption=Service con build custom]
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      args:
+        - APP_ENV=production
+    image: myapp:latest
+    container_name: my-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_KEY=${API_KEY}
+    volumes:
+      - ./app:/usr/src/app
+      - /usr/src/app/node_modules
+\end{lstlisting}
+
+\subsection{Usare Immagini Esistenti}
+
+\begin{lstlisting}[language=yaml, caption=Service con immagine da registry]
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis-data:
+\end{lstlisting}
+
+\subsection{Opzioni Comuni dei Services}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Opzione} & \textbf{Descrizione} \\
+\hline
+\texttt{image} & Immagine da usare \\
+\texttt{build} & Path Dockerfile per build custom \\
+\texttt{container\_name} & Nome container (default: progetto\_servizio\_1) \\
+\texttt{ports} & Mapping porte host:container \\
+\texttt{environment} & Variabili d'ambiente \\
+\texttt{env\_file} & File con env vars \\
+\texttt{volumes} & Mount volumi o bind mounts \\
+\texttt{networks} & Reti a cui connettere \\
+\texttt{depends\_on} & Dipendenze da altri servizi \\
+\texttt{restart} & Policy restart (no/always/on-failure/unless-stopped) \\
+\texttt{command} & Override CMD del Dockerfile \\
+\texttt{healthcheck} & Controllo salute container \\
+\texttt{labels} & Metadata key-value \\
+\hline
+\end{tabular}
+\caption{Opzioni principali dei services}
+\end{table}
+
+\section{Dipendenze tra Servizi}
+
+\subsection{depends\_on}
+
+\begin{lstlisting}[language=yaml, caption=Definire dipendenze]
+services:
+  web:
+    image: myapp
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15
+
+  redis:
+    image: redis:alpine
+\end{lstlisting}
+
+\textbf{Comportamento}:
+\begin{itemize}
+    \item Compose avvia \texttt{db} e \texttt{redis} prima di \texttt{web}
+    \item Non aspetta che i servizi siano "ready", solo che siano started
+    \item Per aspettare readiness, serve health check
+\end{itemize}
+
+\subsection{Health Checks e Readiness}
+
+\begin{lstlisting}[language=yaml, caption=Aspettare che DB sia pronto]
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: secret
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: myapp
+    depends_on:
+      db:
+        condition: service_healthy
+\end{lstlisting}
+
+\section{Networks}
+
+\subsection{Network di Default}
+
+Compose crea automaticamente una rete bridge per i servizi.
+
+\begin{lstlisting}[language=yaml]
+services:
+  web:
+    image: nginx
+  app:
+    image: myapp
+  db:
+    image: postgres
+
+# Automaticamente:
+# - Network "myproject_default" creata
+# - Tutti i servizi connessi
+# - Service discovery: web può raggiungere db via DNS "db"
+\end{lstlisting}
+
+\subsection{Networks Custom}
+
+\begin{lstlisting}[language=yaml, caption=Definire reti multiple]
+services:
+  frontend:
+    image: react-app
+    networks:
+      - frontend-net
+
+  api:
+    image: node-api
+    networks:
+      - frontend-net
+      - backend-net
+
+  db:
+    image: postgres
+    networks:
+      - backend-net
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+    internal: true  # No accesso internet
+\end{lstlisting}
+
+\textbf{Risultato}:
+\begin{itemize}
+    \item Frontend può chiamare API
+    \item API può chiamare DB
+    \item Frontend NON può chiamare DB direttamente
+    \item DB non ha accesso internet (internal)
+\end{itemize}
+
+\subsection{Network Esistente}
+
+\begin{lstlisting}[language=yaml]
+services:
+  app:
+    image: myapp
+    networks:
+      - existing-network
+
+networks:
+  existing-network:
+    external: true
+\end{lstlisting}
+
+\section{Volumes}
+
+\subsection{Named Volumes}
+
+\begin{lstlisting}[language=yaml, caption=Volumi gestiti da Docker]
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-data:
+  redis-data:
+\end{lstlisting}
+
+\subsection{Bind Mounts}
+
+\begin{lstlisting}[language=yaml, caption=Mount directory host]
+services:
+  web:
+    image: nginx
+    volumes:
+      # Bind mount (path assoluto o relativo)
+      - ./html:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Read-only
+
+  app:
+    build: ./app
+    volumes:
+      # Hot reload per sviluppo
+      - ./app:/usr/src/app
+      # Named volume per node_modules
+      - /usr/src/app/node_modules
+\end{lstlisting}
+
+\subsection{Opzioni Volumi Avanzate}
+
+\begin{lstlisting}[language=yaml]
+services:
+  db:
+    image: postgres
+    volumes:
+      - type: volume
+        source: db-data
+        target: /var/lib/postgresql/data
+        volume:
+          nocopy: true
+
+      - type: bind
+        source: ./backup
+        target: /backup
+        read_only: true
+
+volumes:
+  db-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/database
+\end{lstlisting}
+
+\section{Variabili d'Ambiente}
+
+\subsection{File .env}
+
+\begin{lstlisting}[caption=.env file]
+# .env
+POSTGRES_VERSION=15
+POSTGRES_PASSWORD=mysecretpassword
+APP_PORT=3000
+NODE_ENV=production
+\end{lstlisting}
+
+\begin{lstlisting}[language=yaml, caption=Usare variabili da .env]
+services:
+  db:
+    image: postgres:${POSTGRES_VERSION}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  app:
+    build: ./app
+    ports:
+      - "${APP_PORT}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+\end{lstlisting}
+
+\subsection{env\_file per Container}
+
+\begin{lstlisting}[language=yaml]
+services:
+  app:
+    image: myapp
+    env_file:
+      - .env.common
+      - .env.production
+
+  db:
+    image: postgres
+    env_file: database.env
+\end{lstlisting}
+
+\begin{lstlisting}[caption=database.env]
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=secret
+POSTGRES_DB=myapp
+\end{lstlisting}
+
+\section{Esempi Completi}
+
+\subsection{Stack LAMP (Linux, Apache, MySQL, PHP)}
+
+\begin{lstlisting}[language=yaml, caption=docker-compose.yml per LAMP]
+version: '3.8'
+
+services:
+  web:
+    image: php:8.2-apache
+    container_name: lamp-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./www:/var/www/html
+    networks:
+      - lamp-net
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: lamp-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: myapp
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - lamp-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: lamp-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    networks:
+      - lamp-net
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  lamp-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+\end{lstlisting}
+
+\subsection{Stack MERN (MongoDB, Express, React, Node)}
+
+\begin{lstlisting}[language=yaml, caption=docker-compose.yml per MERN]
+version: '3.8'
+
+services:
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mern-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+    networks:
+      - mern-net
+    depends_on:
+      - backend
+
+  # Backend Node.js/Express
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mern-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongodb:27017/myapp
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - mern-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # Database MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: mern-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpass
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mern-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  mern-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+\end{lstlisting}
+
+\subsection{Stack Microservizi con Nginx Reverse Proxy}
+
+\begin{lstlisting}[language=yaml, caption=Architettura microservizi]
+version: '3.8'
+
+services:
+  # Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    networks:
+      - frontend-net
+    depends_on:
+      - auth-service
+      - user-service
+      - product-service
+
+  # Authentication Service
+  auth-service:
+    build: ./services/auth
+    container_name: auth-service
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      - DB_HOST=auth-db
+      - REDIS_HOST=redis
+    networks:
+      - frontend-net
+      - auth-backend-net
+    depends_on:
+      - auth-db
+      - redis
+
+  # User Service
+  user-service:
+    build: ./services/user
+    container_name: user-service
+    restart: unless-stopped
+    expose:
+      - "3002"
+    environment:
+      - DB_HOST=user-db
+    networks:
+      - frontend-net
+      - user-backend-net
+    depends_on:
+      - user-db
+
+  # Product Service
+  product-service:
+    build: ./services/product
+    container_name: product-service
+    restart: unless-stopped
+    expose:
+      - "3003"
+    environment:
+      - DB_HOST=product-db
+    networks:
+      - frontend-net
+      - product-backend-net
+    depends_on:
+      - product-db
+
+  # Databases
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth
+      POSTGRES_PASSWORD: authpass
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - auth-backend-net
+
+  user-db:
+    image: postgres:15
+    container_name: user-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: users
+      POSTGRES_PASSWORD: userpass
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - user-backend-net
+
+  product-db:
+    image: postgres:15
+    container_name: product-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: products
+      POSTGRES_PASSWORD: productpass
+    volumes:
+      - product-db-data:/var/lib/postgresql/data
+    networks:
+      - product-backend-net
+
+  # Cache Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - auth-backend-net
+
+networks:
+  frontend-net:
+  auth-backend-net:
+    internal: true
+  user-backend-net:
+    internal: true
+  product-backend-net:
+    internal: true
+
+volumes:
+  auth-db-data:
+  user-db-data:
+  product-db-data:
+\end{lstlisting}
+
+\subsection{Monitoring Stack (Prometheus + Grafana)}
+
+\begin{lstlisting}[language=yaml, caption=Stack monitoring]
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    expose:
+      - "9100"
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    expose:
+      - "8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
+\end{lstlisting}
+
+\section{Comandi Avanzati}
+
+\subsection{Override Files}
+
+\begin{lstlisting}[language=bash]
+# docker-compose.yml (base)
+# docker-compose.override.yml (dev)
+# docker-compose.prod.yml (production)
+
+# Automatico: usa override se esiste
+$ docker compose up
+
+# Specifica file multipli
+$ docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+\end{lstlisting}
+
+\begin{lstlisting}[language=yaml, caption=docker-compose.override.yml]
+# Override per sviluppo
+services:
+  web:
+    volumes:
+      - ./app:/app  # Hot reload
+    environment:
+      - DEBUG=true
+\end{lstlisting}
+
+\subsection{Scale Services}
+
+\begin{lstlisting}[language=bash]
+# Scala servizio web a 3 repliche
+$ docker compose up -d --scale web=3
+
+# Verifica
+$ docker compose ps
+NAME           IMAGE    COMMAND    STATUS    PORTS
+project-web-1  nginx    ...        Up        0.0.0.0:8081->80/tcp
+project-web-2  nginx    ...        Up        0.0.0.0:8082->80/tcp
+project-web-3  nginx    ...        Up        0.0.0.0:8083->80/tcp
+\end{lstlisting}
+
+\subsection{Logs e Monitoring}
+
+\begin{lstlisting}[language=bash]
+# Log real-time di tutti i servizi
+$ docker compose logs -f
+
+# Log di un servizio specifico
+$ docker compose logs -f web
+
+# Ultime 100 righe
+$ docker compose logs --tail=100
+
+# Top processes
+$ docker compose top
+
+# Stats risorse
+$ docker stats $(docker compose ps -q)
+\end{lstlisting}
+
+\section*{Best Practices}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Best Practices Docker Compose]
+\begin{enumerate}
+    \item \textbf{Versionamento}: Commit docker-compose.yml in Git
+
+    \item \textbf{File .env}: Non committare secrets (usa .gitignore)
+
+    \item \textbf{Named volumes}: Preferisci a bind mounts per produzione
+
+    \item \textbf{Health checks}: Definisci per tutti i servizi critici
+
+    \item \textbf{Restart policies}: Usa \texttt{unless-stopped} in prod
+
+    \item \textbf{Resource limits}:
+    \begin{lstlisting}[language=yaml]
+services:
+  web:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    \end{lstlisting}
+
+    \item \textbf{Networks isolate}: Separa frontend/backend
+
+    \item \textbf{Container names}: Usa nomi espliciti
+
+    \item \textbf{Override files}: Separa dev/prod config
+
+    \item \textbf{Documentazione}: README con istruzioni setup
+\end{enumerate}
+\end{tcolorbox}
+
+\section*{Errori Comuni}
+
+\begin{attenzione}
+\begin{enumerate}
+    \item \textbf{Bind mounts in produzione}: Preferisci named volumes
+
+    \item \textbf{Port conflicts}: Verifica porte non occupate
+    \begin{lstlisting}
+Error: Bind for 0.0.0.0:3000 failed: port is already allocated
+    \end{lstlisting}
+
+    \item \textbf{depends\_on senza health check}: Non garantisce readiness
+
+    \item \textbf{Secrets in chiaro}: Usa Docker secrets o vault
+
+    \item \textbf{Network non specificata}: Servizi non comunicano
+
+    \item \textbf{Volumi non persistenti}: Dati persi con down -v
+\end{enumerate}
+\end{attenzione}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Crea uno stack WordPress + MySQL con docker-compose
+
+    \item Implementa un'app Node.js + PostgreSQL + Redis:
+    \begin{itemize}
+        \item Health check su database
+        \item Bind mount per hot reload
+        \item Named volume per dati PostgreSQL
+    \end{itemize}
+
+    \item Setup ambiente microservizi:
+    \begin{itemize}
+        \item 3 servizi API (users, orders, products)
+        \item Nginx reverse proxy
+        \item Database separato per ogni servizio
+        \item Redis condiviso per caching
+    \end{itemize}
+
+    \item Crea file override per sviluppo e produzione
+
+    \item Implementa stack monitoring con Prometheus + Grafana
+\end{enumerate}
+
+\section*{Quiz di Verifica}
+
+\begin{enumerate}
+    \item Qual è il comando per avviare tutti i servizi in background?
+
+    \item Cosa fa \texttt{depends\_on}? Garantisce che il servizio sia pronto?
+
+    \item Come passare variabili d'ambiente a un servizio?
+
+    \item Qual è la differenza tra named volume e bind mount?
+
+    \item Come vedere i log di un singolo servizio in real-time?
+\end{enumerate}
+
+\section*{Riepilogo}
+
+\begin{itemize}
+    \item \textbf{Docker Compose}: Orchestrazione multi-container con YAML
+    \item \textbf{Services}: Definizione container e configurazione
+    \item \textbf{Networks}: Isolamento e comunicazione tra servizi
+    \item \textbf{Volumes}: Persistenza dati
+    \item \textbf{depends\_on}: Dipendenze e ordine avvio
+    \item \textbf{Health checks}: Verificare readiness servizi
+    \item \textbf{.env}: Gestione variabili d'ambiente
+    \item \textbf{Override}: Configurazioni multiple dev/prod
+\end{itemize}
+
+\section*{Prossimi Passi}
+
+Nel prossimo capitolo esploreremo:
+\begin{itemize}
+    \item Networking Docker approfondito (bridge, host, overlay)
+    \item Gestione avanzata volumi
+    \item Persistenza dati e backup
+    \item Service discovery e load balancing
+\end{itemize}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Compose File Reference: \url{https://docs.docker.com/compose/compose-file/}
+    \item Compose CLI: \url{https://docs.docker.com/compose/reference/}
+    \item Compose Samples: \url{https://github.com/docker/awesome-compose}
+\end{itemize}

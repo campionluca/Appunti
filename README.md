@@ -5,11 +5,13 @@
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)](https://github.com)
 [![Last Update](https://img.shields.io/badge/Last%20Update-November%202025-informational.svg)](MASTER-TODO.md)
 
-Repository educativo completo contenente materiali didattici per **5 corsi di programmazione** dell'Istituto Tecnico Antonio Scarpa, organizzati in formato LaTeX per la generazione di manuali PDF professionali.
+Repository educativo completo contenente materiali didattici per **14 corsi di programmazione** dell'Istituto Tecnico Antonio Scarpa, organizzati in formato LaTeX per la generazione di manuali PDF professionali.
 
 ---
 
 ## 🎓 Corsi Disponibili
+
+### Corsi Base (Fondamenti)
 
 | Corso | Anno | Capitoli | PDF | Stato | Pagine | Descrizione |
 |-------|------|----------|-----|-------|--------|-------------|
@@ -18,10 +20,37 @@ Repository educativo completo contenente materiali didattici per **5 corsi di pr
 | **[Java](Java/)** | 4° | 10 + App | ✅ | Completo | ~280 | OOP, GUI, MVC, design patterns |
 | **[PHP](PHP/)** | 4° | 7+ | ✅ | In sviluppo | ~160 | Web backend, sicurezza, database |
 | **[Python](Python/)** | 5° | 18+ | ✅ | In progresso | ~200 | Python avanzato, GUI, web, robotics |
+
+### Corsi Database e Sistemi
+
+| Corso | Anno | Capitoli | PDF | Stato | Pagine | Descrizione |
+|-------|------|----------|-----|-------|--------|-------------|
 | **[Database](Database/)** | 4°/5° | 13 + App | ⏳ | Nuovo corso | ~400 | DBMS, ER, SQL, normalizzazione, transazioni |
 | **[Assembly 8086](Assembly/)** | 5° | 13 + App | ⏳ | Nuovo corso | ~450 | Architettura 8086, set istruzioni, hardware I/O |
+| **[Linux](Linux/)** | 4°/5° | 13 + App | ⏳ | Nuovo corso | ~550 | Linux, Bash scripting, amministrazione sistema |
 
-**Totale**: ~2,290 pagine di contenuti didattici | 360+ esercizi | 600+ esempi di codice
+### Corsi Algoritmi e Strutture Dati
+
+| Corso | Anno | Capitoli | PDF | Stato | Pagine | Descrizione |
+|-------|------|----------|-----|-------|--------|-------------|
+| **[Algoritmi](Algoritmi/)** | 4°/5° | 15 + App | ⏳ | Nuovo corso | ~500 | Complessità, sorting, DP, greedy, backtracking |
+
+### Corsi DevOps e Tools
+
+| Corso | Anno | Capitoli | PDF | Stato | Pagine | Descrizione |
+|-------|------|----------|-----|-------|--------|-------------|
+| **[Git](Git/)** | 3°/4° | 13 + App | ⏳ | Nuovo corso | ~550 | Version control, branching, GitHub/GitLab, CI/CD |
+| **[Docker](Docker/)** | 5° | 13 + App | ⏳ | Nuovo corso | ~530 | Container, docker-compose, deployment, monitoring |
+
+### Corsi Web Avanzato
+
+| Corso | Anno | Capitoli | PDF | Stato | Pagine | Descrizione |
+|-------|------|----------|-----|-------|--------|-------------|
+| **[React](React/)** | 5° | 15 + App | ⏳ | Nuovo corso | ~800 | Hooks, routing, state management, testing |
+| **[REST API](RestAPI/)** | 5° | 15 + App | ⏳ | Nuovo corso | ~700 | REST principles, OpenAPI, autenticazione |
+| **[Web Security](WebSecurity/)** | 5° | 15 + App | ⏳ | Nuovo corso | ~680 | OWASP Top 10, SQLi, XSS, CSRF, pentesting |
+
+**Totale**: **~6,200 pagine** di contenuti didattici | **800+ esercizi** | **1,500+ esempi** di codice
 
 ---
 
@@ -202,6 +231,8 @@ Appunti/
 
 ### Completamento Corsi
 
+**Corsi Base:**
+
 | Corso | Contenuti | Esercizi | PDF | Priorità | Deadline |
 |-------|-----------|----------|-----|----------|----------|
 | C | ✅ 100% | ✅ 120+ | ✅ | Bassa | — |
@@ -209,6 +240,20 @@ Appunti/
 | Java | ✅ 100% | ✅ 60+ | ⚠️ warnings | Media | 2025-11-30 |
 | PHP | 🟡 85% | 🟡 15+ | ✅ | Media | 2025-11-28 |
 | Python | 🟡 75% | 🟡 30+ | ✅ | Alta | 2025-11-20 |
+
+**Nuovi Corsi (2025):**
+
+| Corso | Contenuti | Esercizi | PDF | Priorità | Deadline |
+|-------|-----------|----------|-----|----------|----------|
+| Database | ✅ 100% | ✅ 78+ | ⏳ | Media | 2025-12-05 |
+| Assembly | ✅ 100% | ✅ 80+ | ⏳ | Media | 2025-12-10 |
+| Git | ✅ 100% | ✅ 60+ | ⏳ | Media | 2025-12-15 |
+| Linux | ✅ 100% | ✅ 70+ | ⏳ | Media | 2025-12-15 |
+| Algoritmi | ✅ 100% | ✅ 100+ | ⏳ | Alta | 2025-12-10 |
+| Docker | ✅ 100% | ✅ 65+ | ⏳ | Media | 2025-12-20 |
+| React | ✅ 100% | ✅ 90+ | ⏳ | Alta | 2025-12-18 |
+| REST API | ✅ 100% | ✅ 75+ | ⏳ | Media | 2025-12-18 |
+| WebSecurity | ✅ 100% | ✅ 85+ | ⏳ | Alta | 2025-12-15 |
 
 ### Task Attivi (da MASTER-TODO.md v3.0)
 
@@ -372,25 +417,31 @@ Materiale didattico per uso educativo.
 
 ## 📈 Statistiche Repository
 
-- **Corsi**: 5
-- **Capitoli**: 60+
-- **Pagine totali**: ~1,040
-- **Esercizi**: 200+
-- **Esempi codice**: 300+
-- **Progetti guidati**: 10+
-- **Dimensione repository**: ~3 MB (PDF inclusi)
-- **Ultimo aggiornamento**: 14 Novembre 2025
+- **Corsi**: 14 (5 base + 9 nuovi)
+- **Capitoli**: 180+
+- **Pagine totali**: ~6,200
+- **Esercizi**: 800+
+- **Esempi codice**: 1,500+
+- **Progetti guidati**: 35+
+- **Dimensione repository**: ~15 MB (con nuovi corsi)
+- **Ultimo aggiornamento**: 15 Novembre 2025
 
 ---
 
 ## 🗓️ Roadmap Futura
 
-### Completamento (2025-11-20 / 2025-11-30)
-- ✅ Finalizzare corso Python
-- ✅ Risolvere warning LaTeX Java
-- ✅ Completare esercizi e soluzioni
+### ✅ Completato (Novembre 2025)
+- ✅ Creati 7 nuovi corsi completi (~88,400 linee)
+- ✅ Espansi corsi esistenti (Python, PHP, Java, HTMLCSS, C)
+- ✅ Integrati tutti i corsi nel repository principale
 
-### Espansioni Opzionali
+### In Corso (Dicembre 2025)
+- ⏳ Compilazione PDF per 9 nuovi corsi
+- ⏳ Generazione descrittori AI per nuovi corsi
+- ⏳ Creazione documentazione (README, TODO, PIANO_SVILUPPO)
+- ⏳ Testing ed esecuzione esempi codice
+
+### Espansioni Future (2026)
 - 📚 Nuovi capitoli avanzati (design patterns, concurrency)
 - 🎬 Video tutorial integrati
 - 🧪 Quiz interattivi per ogni capitolo

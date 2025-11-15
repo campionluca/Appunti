@@ -1,0 +1,1077 @@
+% 12_best_practices.tex
+\chapter{Best Practices}
+
+Questo capitolo raccoglie le best practices per progettare, implementare e mantenere REST API di qualità production-ready.
+
+\section{Design API}
+
+\subsection{Naming Conventions}
+
+\begin{tcolorbox}[title=Regole per URL]
+\begin{itemize}
+\item Usa \textbf{nomi al plurale} per collezioni: \texttt{/users}, \texttt{/products}
+\item Usa \textbf{kebab-case} per URL multi-parola: \texttt{/order-items}
+\item \textbf{Evita verbi} negli URL (usa HTTP methods)
+\item Usa \textbf{sostantivi} per identificare risorse
+\item Mantieni gerarchia \textbf{massimo 3 livelli}
+\end{itemize}
+\end{tcolorbox}
+
+\begin{lstlisting}[caption=Esempi Naming - Good vs Bad]
+# GOOD
+GET    /users
+GET    /users/123
+POST   /users
+GET    /users/123/orders
+GET    /products?category=electronics
+DELETE /users/123/sessions
+
+# BAD
+GET    /getUsers
+GET    /user/123           # singolare
+POST   /createUser         # verbo
+GET    /user_orders/123    # snake_case
+GET    /users/123/orders/456/items/789/details  # troppo profondo
+\end{lstlisting}
+
+\subsection{Resource Hierarchies}
+
+\begin{lstlisting}[caption=Gerarchia Risorse]
+# Risorsa principale
+GET /users/123
+
+# Sotto-risorsa
+GET /users/123/orders
+
+# Risorsa correlata specifica
+GET /users/123/orders/456
+
+# EVITARE gerarchie troppo profonde
+# BAD: /users/123/orders/456/items/789/details
+# BETTER: /order-items/789 o /users/123/order-items/789
+\end{lstlisting}
+
+\subsection{Versionamento API}
+
+\begin{lstlisting}[caption=Strategie di Versionamento]
+# URL versioning (RACCOMANDATO)
+GET https://api.example.com/v1/users
+GET https://api.example.com/v2/users
+
+# Header versioning
+GET https://api.example.com/users
+Accept: application/vnd.example.v2+json
+
+# Query parameter (SCONSIGLIATO)
+GET https://api.example.com/users?version=2
+
+# Custom header
+GET https://api.example.com/users
+API-Version: 2
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Quando Incrementare la Versione]
+Incrementa la versione major quando fai \textbf{breaking changes}:
+\begin{itemize}
+\item Rimuovi endpoint o campi
+\item Cambi tipo di dato di un campo
+\item Modifichi comportamento esistente in modo incompatibile
+\item Cambi struttura errori
+\end{itemize}
+
+Non serve nuova versione per:
+\begin{itemize}
+\item Aggiungi nuovi endpoint
+\item Aggiungi nuovi campi opzionali
+\item Fix di bug che non cambiano contratto
+\end{itemize}
+\end{tcolorbox}
+
+\section{HATEOAS (Hypermedia as the Engine of Application State)}
+
+\subsection{Principio}
+
+HATEOAS è un constraint REST che richiede che le risposte includano link per navigare l'API.
+
+\begin{lstlisting}[caption=Response con HATEOAS]
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "status": "active",
+
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/users/123"
+    },
+    "orders": {
+      "href": "https://api.example.com/users/123/orders"
+    },
+    "avatar": {
+      "href": "https://api.example.com/users/123/avatar"
+    },
+    "deactivate": {
+      "href": "https://api.example.com/users/123/deactivate",
+      "method": "POST"
+    }
+  },
+
+  "_actions": {
+    "update": {
+      "href": "https://api.example.com/users/123",
+      "method": "PUT",
+      "fields": [
+        {"name": "name", "type": "string", "required": true},
+        {"name": "email", "type": "email", "required": true}
+      ]
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection{Benefici HATEOAS}
+
+\begin{itemize}
+\item \textbf{Discoverability}: Client può esplorare API seguendo link
+\item \textbf{Decoupling}: Client meno dipendente da URL hardcoded
+\item \textbf{Evolvibilità}: Server può cambiare URL senza rompere client
+\item \textbf{Self-documenting}: API più facile da capire
+\end{itemize}
+
+\subsection{Implementazione}
+
+\begin{lstlisting}[language=Python, caption=Generazione Link HATEOAS]
+from flask import url_for, request
+
+def add_links(resource, resource_type, resource_id):
+    """Aggiungi link HATEOAS a risorsa"""
+
+    base_url = request.url_root.rstrip('/')
+
+    resource['_links'] = {
+        'self': {
+            'href': f"{base_url}/api/{resource_type}/{resource_id}"
+        }
+    }
+
+    # Link specifici per tipo risorsa
+    if resource_type == 'users':
+        resource['_links']['orders'] = {
+            'href': f"{base_url}/api/users/{resource_id}/orders"
+        }
+
+        if resource.get('status') == 'active':
+            resource['_links']['deactivate'] = {
+                'href': f"{base_url}/api/users/{resource_id}/deactivate",
+                'method': 'POST'
+            }
+
+    return resource
+
+# Uso
+user = get_user(123)
+user_with_links = add_links(user, 'users', 123)
+\end{lstlisting}
+
+\section{Caching}
+
+\subsection{Cache Headers}
+
+\begin{lstlisting}[caption=HTTP Cache Headers]
+# Cache pubblica (CDN, proxy, browser)
+HTTP/1.1 200 OK
+Cache-Control: public, max-age=3600
+ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+Last-Modified: Mon, 13 Nov 2023 12:00:00 GMT
+Expires: Mon, 13 Nov 2023 13:00:00 GMT
+
+# Cache privata (solo browser)
+Cache-Control: private, max-age=300
+
+# No cache (rivalidazione sempre richiesta)
+Cache-Control: no-cache
+
+# No store (non cachare mai)
+Cache-Control: no-store, no-cache, must-revalidate
+
+# Cache con validazione
+Cache-Control: public, max-age=3600, must-revalidate
+\end{lstlisting}
+
+\subsection{ETag per Validazione}
+
+\begin{lstlisting}[language=bash, caption=Conditional Requests con ETag]
+# Prima richiesta
+GET /api/users/123
+Accept: application/json
+
+# Response con ETag
+HTTP/1.1 200 OK
+ETag: "abc123"
+Cache-Control: private, max-age=60
+Content-Type: application/json
+
+{"id": 123, "name": "Mario"}
+
+# Richiesta successiva con validazione
+GET /api/users/123
+If-None-Match: "abc123"
+
+# Se non modificato
+HTTP/1.1 304 Not Modified
+ETag: "abc123"
+
+# Se modificato
+HTTP/1.1 200 OK
+ETag: "xyz789"
+Content-Type: application/json
+
+{"id": 123, "name": "Mario Rossi"}
+\end{lstlisting}
+
+\subsection{Implementazione ETag}
+
+\begin{lstlisting}[language=Python, caption=ETag Generation e Validation]
+import hashlib
+from flask import request, jsonify, make_response
+
+def generate_etag(data):
+    """Genera ETag da dati"""
+    content = json.dumps(data, sort_keys=True)
+    return hashlib.md5(content.encode()).hexdigest()
+
+@app.route('/api/users/<int:user_id>')
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user_dict = user.to_dict()
+
+    # Genera ETag
+    etag = generate_etag(user_dict)
+
+    # Verifica If-None-Match
+    if_none_match = request.headers.get('If-None-Match')
+    if if_none_match == etag:
+        # Risorsa non modificata
+        response = make_response('', 304)
+        response.headers['ETag'] = etag
+        return response
+
+    # Risorsa modificata o prima richiesta
+    response = make_response(jsonify(user_dict))
+    response.headers['ETag'] = etag
+    response.headers['Cache-Control'] = 'private, max-age=60'
+
+    return response
+\end{lstlisting}
+
+\subsection{Vary Header}
+
+\begin{lstlisting}[caption=Vary Header per Cache Varianti]
+# Cache dipende da Accept header
+HTTP/1.1 200 OK
+Content-Type: application/json
+Vary: Accept
+Cache-Control: public, max-age=3600
+
+# Cache dipende da lingua e encoding
+HTTP/1.1 200 OK
+Vary: Accept-Language, Accept-Encoding
+Cache-Control: public, max-age=3600
+\end{lstlisting}
+
+\section{Compressione}
+
+\subsection{Content Encoding}
+
+\begin{lstlisting}[language=bash, caption=Compressione Response]
+# Request con Accept-Encoding
+GET /api/users
+Accept-Encoding: gzip, deflate, br
+
+# Response compressa
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Encoding: gzip
+Content-Length: 1234
+Vary: Accept-Encoding
+
+[binary compressed data]
+\end{lstlisting}
+
+\subsection{Implementazione con Flask}
+
+\begin{lstlisting}[language=Python, caption=Compressione Flask]
+from flask import Flask
+from flask_compress import Compress
+
+app = Flask(__name__)
+
+# Abilita compressione automatica
+Compress(app)
+
+# Configurazione
+app.config['COMPRESS_MIMETYPES'] = [
+    'application/json',
+    'text/html',
+    'text/css',
+    'text/xml',
+    'application/javascript',
+]
+app.config['COMPRESS_LEVEL'] = 6  # 1-9
+app.config['COMPRESS_MIN_SIZE'] = 500  # bytes
+
+@app.route('/api/users')
+def get_users():
+    # Response automaticamente compressa se > 500 bytes
+    return jsonify(users)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Quando Comprimere]
+\begin{itemize}
+\item \textbf{SI}: Response > 500 bytes, JSON, XML, testo
+\item \textbf{NO}: Immagini (già compresse), response piccole (overhead)
+\item \textbf{Algoritmi}: gzip (standard), br (brotli, migliore ratio)
+\end{itemize}
+\end{tcolorbox}
+
+\section{CORS (Cross-Origin Resource Sharing)}
+
+\subsection{CORS Headers}
+
+\begin{lstlisting}[caption=CORS Response Headers]
+# Preflight request (OPTIONS)
+OPTIONS /api/users
+Origin: https://example.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Content-Type, Authorization
+
+# Preflight response
+HTTP/1.1 204 No Content
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Max-Age: 86400
+Access-Control-Allow-Credentials: true
+
+# Actual request
+POST /api/users
+Origin: https://example.com
+Content-Type: application/json
+Authorization: Bearer token123
+
+# Response
+HTTP/1.1 201 Created
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Credentials: true
+Access-Control-Expose-Headers: Location, X-Request-ID
+\end{lstlisting}
+
+\subsection{Configurazione CORS}
+
+\begin{lstlisting}[language=Python, caption=CORS con Flask-CORS]
+from flask import Flask
+from flask_cors import CORS
+
+app = Flask(__name__)
+
+# CORS per tutti gli endpoint
+CORS(app)
+
+# CORS con configurazione
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://example.com",
+            "https://app.example.com"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["X-Total-Count", "Link"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }
+})
+
+# CORS per endpoint specifici
+@app.route('/api/public/data')
+@cross_origin(origins="*")  # Pubblico
+def public_data():
+    return jsonify(data)
+
+@app.route('/api/private/data')
+@cross_origin(
+    origins=["https://example.com"],
+    supports_credentials=True
+)
+def private_data():
+    return jsonify(data)
+\end{lstlisting}
+
+\begin{tcolorbox}[title=CORS Security, colframe=red!60]
+\begin{itemize}
+\item \textbf{MAI} usare \texttt{Access-Control-Allow-Origin: *} con credenziali
+\item Specifica esattamente gli origin permessi
+\item Limita methods e headers a quelli necessari
+\item Valida sempre l'origin server-side
+\end{itemize}
+\end{tcolorbox}
+
+\section{Security Headers}
+
+\subsection{Headers di Sicurezza Essenziali}
+
+\begin{lstlisting}[caption=Security Headers]
+# Strict Transport Security (HTTPS only)
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# Previeni clickjacking
+X-Frame-Options: DENY
+
+# Previeni MIME sniffing
+X-Content-Type-Options: nosniff
+
+# XSS Protection (legacy, usa CSP)
+X-XSS-Protection: 1; mode=block
+
+# Content Security Policy
+Content-Security-Policy: default-src 'none'; script-src 'self'; connect-src 'self'
+
+# Referrer Policy
+Referrer-Policy: strict-origin-when-cross-origin
+
+# Permissions Policy
+Permissions-Policy: geolocation=(), camera=(), microphone=()
+\end{lstlisting}
+
+\subsection{Implementazione Security Headers}
+
+\begin{lstlisting}[language=Python, caption=Security Headers Middleware]
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.after_request
+def add_security_headers(response):
+    """Aggiungi security headers a tutte le response"""
+
+    # HSTS
+    response.headers['Strict-Transport-Security'] = \
+        'max-age=31536000; includeSubDomains; preload'
+
+    # Prevent clickjacking
+    response.headers['X-Frame-Options'] = 'DENY'
+
+    # Prevent MIME sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+
+    # XSS Protection
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+
+    # Content Security Policy
+    response.headers['Content-Security-Policy'] = \
+        "default-src 'none'; script-src 'self'; connect-src 'self'"
+
+    # Referrer Policy
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+
+    # Permissions Policy
+    response.headers['Permissions-Policy'] = \
+        'geolocation=(), camera=(), microphone=()'
+
+    # Remove server header
+    response.headers.pop('Server', None)
+
+    return response
+\end{lstlisting}
+
+\section{Input Validation}
+
+\subsection{Validazione Completa}
+
+\begin{lstlisting}[language=Python, caption=Input Validation Best Practices]
+from marshmallow import Schema, fields, validate, ValidationError
+from flask import request, jsonify
+
+class UserCreateSchema(Schema):
+    """Schema validazione creazione utente"""
+
+    email = fields.Email(
+        required=True,
+        error_messages={
+            'required': 'Email is required',
+            'invalid': 'Invalid email format'
+        }
+    )
+
+    name = fields.Str(
+        required=True,
+        validate=[
+            validate.Length(min=1, max=100),
+            validate.Regexp(
+                r'^[a-zA-Z\s]+$',
+                error='Name can only contain letters and spaces'
+            )
+        ]
+    )
+
+    age = fields.Int(
+        required=False,
+        validate=validate.Range(min=18, max=120)
+    )
+
+    password = fields.Str(
+        required=True,
+        load_only=True,  # Non includere in dump
+        validate=[
+            validate.Length(min=8, max=128),
+            validate.Regexp(
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)',
+                error='Password must contain uppercase, lowercase, and number'
+            )
+        ]
+    )
+
+    role = fields.Str(
+        validate=validate.OneOf(['user', 'admin', 'moderator']),
+        missing='user'
+    )
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    # Valida JSON
+    if not request.is_json:
+        return jsonify({
+            'error': 'Content-Type must be application/json'
+        }), 400
+
+    data = request.get_json()
+
+    # Valida schema
+    schema = UserCreateSchema()
+    try:
+        validated_data = schema.load(data)
+    except ValidationError as err:
+        return jsonify({
+            'error': {
+                'code': 'validation_error',
+                'message': 'Validation failed',
+                'errors': err.messages
+            }
+        }), 400
+
+    # Validazione business logic
+    if User.query.filter_by(email=validated_data['email']).first():
+        return jsonify({
+            'error': {
+                'code': 'duplicate_email',
+                'message': 'Email already exists'
+            }
+        }), 409
+
+    # Crea utente
+    user = User(**validated_data)
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify(user.to_dict()), 201
+\end{lstlisting}
+
+\subsection{Sanitizzazione Input}
+
+\begin{lstlisting}[language=Python, caption=Input Sanitization]
+import bleach
+from html import escape
+
+def sanitize_string(value, allow_html=False):
+    """Sanitizza stringa"""
+
+    if not isinstance(value, str):
+        return value
+
+    # Trim whitespace
+    value = value.strip()
+
+    if allow_html:
+        # Permetti solo tag sicuri
+        allowed_tags = ['b', 'i', 'u', 'em', 'strong', 'a', 'p', 'br']
+        allowed_attrs = {'a': ['href', 'title']}
+        value = bleach.clean(
+            value,
+            tags=allowed_tags,
+            attributes=allowed_attrs,
+            strip=True
+        )
+    else:
+        # Escape HTML
+        value = escape(value)
+
+    return value
+
+def sanitize_dict(data, allow_html_fields=None):
+    """Sanitizza tutti i campi di un dict"""
+    allow_html_fields = allow_html_fields or []
+
+    sanitized = {}
+    for key, value in data.items():
+        if isinstance(value, str):
+            sanitized[key] = sanitize_string(
+                value,
+                allow_html=key in allow_html_fields
+            )
+        elif isinstance(value, dict):
+            sanitized[key] = sanitize_dict(value, allow_html_fields)
+        elif isinstance(value, list):
+            sanitized[key] = [
+                sanitize_string(v) if isinstance(v, str) else v
+                for v in value
+            ]
+        else:
+            sanitized[key] = value
+
+    return sanitized
+\end{lstlisting}
+
+\section{Idempotenza}
+
+\subsection{Idempotency Keys}
+
+\begin{lstlisting}[language=bash, caption=Uso Idempotency-Key]
+# Request con idempotency key
+POST /api/payments
+Idempotency-Key: a7b3c9d2-1234-5678-9abc-def012345678
+Content-Type: application/json
+
+{
+  "amount": 100.00,
+  "currency": "EUR",
+  "source": "card_123"
+}
+
+# Prima chiamata: esegue operazione
+HTTP/1.1 201 Created
+
+# Chiamate successive con stesso key: ritorna stesso risultato
+HTTP/1.1 200 OK
+Idempotent-Replayed: true
+\end{lstlisting}
+
+\subsection{Implementazione Idempotenza}
+
+\begin{lstlisting}[language=Python, caption=Idempotency Middleware]
+import uuid
+from functools import wraps
+from flask import request, jsonify
+import redis
+
+redis_client = redis.Redis()
+
+def idempotent(expire_seconds=86400):
+    """Decorator per endpoint idempotenti"""
+
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            # Estrai idempotency key
+            key = request.headers.get('Idempotency-Key')
+
+            if not key:
+                return jsonify({
+                    'error': 'Idempotency-Key header required'
+                }), 400
+
+            # Valida formato UUID
+            try:
+                uuid.UUID(key)
+            except ValueError:
+                return jsonify({
+                    'error': 'Idempotency-Key must be valid UUID'
+                }), 400
+
+            # Chiave cache
+            cache_key = f"idempotency:{key}"
+
+            # Verifica se già eseguito
+            cached = redis_client.get(cache_key)
+
+            if cached:
+                # Ritorna risposta cached
+                import json
+                response_data = json.loads(cached)
+                response = make_response(
+                    jsonify(response_data['body']),
+                    response_data['status']
+                )
+                response.headers['Idempotent-Replayed'] = 'true'
+                return response
+
+            # Esegui operazione
+            response = f(*args, **kwargs)
+
+            # Cache response
+            if 200 <= response.status_code < 300:
+                response_data = {
+                    'status': response.status_code,
+                    'body': response.get_json()
+                }
+                redis_client.setex(
+                    cache_key,
+                    expire_seconds,
+                    json.dumps(response_data)
+                )
+
+            return response
+
+        return wrapped
+    return decorator
+
+# Uso
+@app.route('/api/payments', methods=['POST'])
+@idempotent(expire_seconds=86400)  # 24 ore
+def create_payment():
+    # Logica creazione pagamento
+    payment = create_payment_logic()
+    return jsonify(payment), 201
+\end{lstlisting}
+
+\section{Logging e Monitoring}
+
+\subsection{Structured Logging}
+
+\begin{lstlisting}[language=Python, caption=Structured Logging]
+import logging
+import json
+import uuid
+from datetime import datetime
+from flask import request, g
+
+class JSONFormatter(logging.Formatter):
+    """Formatta log in JSON"""
+
+    def format(self, record):
+        log_data = {
+            'timestamp': datetime.utcnow().isoformat(),
+            'level': record.levelname,
+            'message': record.getMessage(),
+            'logger': record.name,
+            'request_id': getattr(g, 'request_id', None),
+            'user_id': getattr(g, 'user_id', None),
+            'path': getattr(g, 'path', None),
+            'method': getattr(g, 'method', None),
+        }
+
+        # Aggiungi exception se presente
+        if record.exc_info:
+            log_data['exception'] = self.formatException(record.exc_info)
+
+        # Aggiungi extra fields
+        if hasattr(record, 'extra'):
+            log_data.update(record.extra)
+
+        return json.dumps(log_data)
+
+# Configura logging
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger = logging.getLogger('api')
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
+
+@app.before_request
+def before_request():
+    """Setup request context"""
+    g.request_id = str(uuid.uuid4())
+    g.path = request.path
+    g.method = request.method
+
+    # Log request
+    logger.info('Request started', extra={
+        'query_params': dict(request.args),
+        'headers': dict(request.headers)
+    })
+
+@app.after_request
+def after_request(response):
+    """Log response"""
+    logger.info('Request completed', extra={
+        'status_code': response.status_code,
+        'response_size': response.content_length
+    })
+
+    # Aggiungi request ID a response
+    response.headers['X-Request-ID'] = g.request_id
+
+    return response
+\end{lstlisting}
+
+\subsection{Metriche con Prometheus}
+
+\begin{lstlisting}[language=Python, caption=Prometheus Metrics]
+from prometheus_client import Counter, Histogram, Gauge
+from prometheus_client import make_wsgi_app
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+
+# Definisci metriche
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
+
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration',
+    ['method', 'endpoint']
+)
+
+active_requests = Gauge(
+    'active_requests',
+    'Number of active requests'
+)
+
+# Middleware metriche
+@app.before_request
+def before_request_metrics():
+    active_requests.inc()
+    g.start_time = time.time()
+
+@app.after_request
+def after_request_metrics(response):
+    active_requests.dec()
+
+    # Incrementa counter
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=request.endpoint or 'unknown',
+        status=response.status_code
+    ).inc()
+
+    # Registra durata
+    duration = time.time() - g.start_time
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=request.endpoint or 'unknown'
+    ).observe(duration)
+
+    return response
+
+# Esponi metriche su /metrics
+app.wsgi_app = DispatcherMiddleware(
+    app.wsgi_app,
+    {'/metrics': make_wsgi_app()}
+)
+\end{lstlisting}
+
+\section{Health Checks}
+
+\subsection{Endpoint Health}
+
+\begin{lstlisting}[language=Python, caption=Health Check Endpoint]
+from flask import jsonify
+import psutil
+
+@app.route('/health')
+def health_check():
+    """Health check semplice"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+@app.route('/health/detailed')
+def detailed_health():
+    """Health check dettagliato"""
+
+    health_data = {
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'checks': {}
+    }
+
+    # Database check
+    try:
+        db.session.execute('SELECT 1')
+        health_data['checks']['database'] = {
+            'status': 'healthy',
+            'response_time_ms': 5
+        }
+    except Exception as e:
+        health_data['status'] = 'unhealthy'
+        health_data['checks']['database'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+
+    # Redis check
+    try:
+        redis_client.ping()
+        health_data['checks']['redis'] = {
+            'status': 'healthy'
+        }
+    except Exception as e:
+        health_data['status'] = 'degraded'
+        health_data['checks']['redis'] = {
+            'status': 'unhealthy',
+            'error': str(e)
+        }
+
+    # System resources
+    health_data['system'] = {
+        'cpu_percent': psutil.cpu_percent(),
+        'memory_percent': psutil.virtual_memory().percent,
+        'disk_percent': psutil.disk_usage('/').percent
+    }
+
+    # Status code
+    status_code = 200 if health_data['status'] == 'healthy' else 503
+
+    return jsonify(health_data), status_code
+\end{lstlisting}
+
+\section{Deprecation}
+
+\subsection{Comunicare Deprecazione}
+
+\begin{lstlisting}[caption=Deprecation Headers]
+# Endpoint deprecato
+GET /api/v1/users
+
+HTTP/1.1 200 OK
+Deprecation: true
+Sunset: Sat, 31 Dec 2024 23:59:59 GMT
+Link: <https://api.example.com/v2/users>; rel="alternate"
+Warning: 299 - "This endpoint is deprecated and will be removed on 2024-12-31"
+
+{
+  "data": [...],
+  "deprecation_notice": {
+    "deprecated": true,
+    "sunset_date": "2024-12-31",
+    "alternative": "https://api.example.com/v2/users",
+    "migration_guide": "https://docs.example.com/migration/v1-to-v2"
+  }
+}
+\end{lstlisting}
+
+\subsection{Implementazione Deprecation}
+
+\begin{lstlisting}[language=Python, caption=Deprecation Decorator]
+from functools import wraps
+from datetime import datetime
+
+def deprecated(sunset_date, alternative=None, message=None):
+    """Marca endpoint come deprecato"""
+
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            response = make_response(f(*args, **kwargs))
+
+            # Headers
+            response.headers['Deprecation'] = 'true'
+            response.headers['Sunset'] = sunset_date
+
+            if alternative:
+                response.headers['Link'] = f'<{alternative}>; rel="alternate"'
+
+            warning = message or f"This endpoint is deprecated and will be removed on {sunset_date}"
+            response.headers['Warning'] = f'299 - "{warning}"'
+
+            # Log deprecation usage
+            logger.warning(
+                'Deprecated endpoint accessed',
+                extra={
+                    'endpoint': request.endpoint,
+                    'sunset_date': sunset_date,
+                    'user_agent': request.user_agent.string
+                }
+            )
+
+            return response
+
+        return wrapped
+    return decorator
+
+# Uso
+@app.route('/api/v1/users')
+@deprecated(
+    sunset_date='Sat, 31 Dec 2024 23:59:59 GMT',
+    alternative='https://api.example.com/v2/users',
+    message='Migra a v2 per nuove funzionalità'
+)
+def get_users_v1():
+    return jsonify(users)
+\end{lstlisting}
+
+\section{Checklist API Production-Ready}
+
+\begin{tcolorbox}[title=Checklist Completa]
+\textbf{Design}
+\begin{itemize}
+\item[$\square$] URL RESTful con nomi plurali
+\item[$\square$] Versionamento implementato
+\item[$\square$] HATEOAS per navigazione
+\item[$\square$] Documentazione OpenAPI completa
+\end{itemize}
+
+\textbf{Sicurezza}
+\begin{itemize}
+\item[$\square$] HTTPS obbligatorio
+\item[$\square$] Autenticazione robusta (OAuth 2.0/JWT)
+\item[$\square$] Autorizzazione granulare
+\item[$\square$] Input validation e sanitization
+\item[$\square$] Rate limiting implementato
+\item[$\square$] Security headers configurati
+\item[$\square$] CORS correttamente configurato
+\end{itemize}
+
+\textbf{Performance}
+\begin{itemize}
+\item[$\square$] Caching implementato (ETag, Cache-Control)
+\item[$\square$] Compressione abilitata
+\item[$\square$] Paginazione per liste
+\item[$\square$] Database indexes su campi filtrabili
+\item[$\square$] Query optimization
+\end{itemize}
+
+\textbf{Affidabilità}
+\begin{itemize}
+\item[$\square$] Error handling consistente
+\item[$\square$] Idempotenza per operazioni critiche
+\item[$\square$] Health check endpoint
+\item[$\square$] Graceful degradation
+\item[$\square$] Timeout configurati
+\end{itemize}
+
+\textbf{Observability}
+\begin{itemize}
+\item[$\square$] Structured logging
+\item[$\square$] Metriche (Prometheus/StatsD)
+\item[$\square$] Request ID tracking
+\item[$\square$] Error tracking (Sentry)
+\item[$\square$] Performance monitoring (APM)
+\end{itemize}
+
+\textbf{Developer Experience}
+\begin{itemize}
+\item[$\square$] Documentazione chiara e aggiornata
+\item[$\square$] Esempi pratici (cURL, code samples)
+\item[$\square$] SDK/client libraries
+\item[$\square$] Sandbox environment
+\item[$\square$] Changelog e migration guides
+\end{itemize}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+Le best practices per REST API includono:
+
+\begin{enumerate}
+\item \textbf{Design}: URL RESTful, versionamento, HATEOAS
+\item \textbf{Performance}: Caching, compressione, paginazione
+\item \textbf{Sicurezza}: HTTPS, autenticazione, validazione, security headers
+\item \textbf{Affidabilità}: Error handling, idempotenza, health checks
+\item \textbf{Osservabilità}: Logging, metriche, monitoring
+\item \textbf{Developer Experience}: Documentazione, esempi, SDK
+\end{enumerate}
+
+Seguire queste pratiche garantisce API robuste, sicure, performanti e facili da usare.

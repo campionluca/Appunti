@@ -1,0 +1,1011 @@
+\chapter{Algoritmi di Ricerca}
+\label{cap:searching}
+
+\section{Introduzione}
+
+La ricerca è un'operazione fondamentale che consiste nel determinare se un elemento appartiene a un insieme e, eventualmente, trovare la sua posizione.
+
+\subsection{Definizione Formale}
+
+Dato un insieme $S$ di $n$ elementi e un elemento chiave $k$, il problema di ricerca consiste nel:
+\begin{itemize}
+    \item Determinare se $k \in S$
+    \item Se $k \in S$, trovare la posizione o un riferimento a $k$
+    \item Se $k \notin S$, ritornare un valore speciale (es. $-1$, \texttt{None})
+\end{itemize}
+
+\subsection{Classificazione}
+
+Gli algoritmi di ricerca si classificano in base a:
+\begin{itemize}
+    \item \textbf{Struttura dei dati}: array ordinati vs non ordinati, liste, alberi
+    \item \textbf{Complessità temporale}: lineare, logaritmica, sub-lineare
+    \item \textbf{Complessità spaziale}: iterativi vs ricorsivi
+    \item \textbf{Tipo di ricerca}: esatta, approssimata, pattern matching
+\end{itemize}
+
+\section{Ricerca Lineare (Linear Search)}
+
+\subsection{Descrizione}
+
+La ricerca lineare (o sequenziale) esamina sequenzialmente ogni elemento dell'array fino a trovare quello cercato o raggiungere la fine.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Linear Search}
+\begin{algorithmic}[1]
+\Procedure{LinearSearch}{$A, n, key$}
+    \For{$i \gets 1$ \To $n$}
+        \If{$A[i] = key$}
+            \State \Return $i$
+        \EndIf
+    \EndFor
+    \State \Return $\text{NOT\_FOUND}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Variante con Sentinella}
+
+Per eliminare il controllo del limite ad ogni iterazione:
+
+\begin{algorithm}
+\caption{Linear Search con Sentinella}
+\begin{algorithmic}[1]
+\Procedure{LinearSearchSentinel}{$A, n, key$}
+    \State $last \gets A[n]$
+    \State $A[n] \gets key$ \Comment{Sentinella}
+    \State $i \gets 1$
+    \While{$A[i] \neq key$}
+        \State $i \gets i + 1$
+    \EndWhile
+    \State $A[n] \gets last$ \Comment{Ripristina}
+    \If{$i < n$ \Or $last = key$}
+        \State \Return $i$
+    \Else
+        \State \Return $\text{NOT\_FOUND}$
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso migliore}: $O(1)$ - elemento in prima posizione
+    \item \textbf{Caso peggiore}: $O(n)$ - elemento in ultima posizione o assente
+    \item \textbf{Caso medio}: $O(n)$ - assumendo distribuzione uniforme:
+    \[ T_{avg} = \frac{1}{n}\sum_{i=1}^{n} i = \frac{n+1}{2} = \Theta(n) \]
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Funziona su array non ordinati
+    \item Semplice da implementare
+    \item Ottimo per piccoli array o ricerche occasionali
+    \item Non richiede preprocessing
+\end{itemize}
+
+\subsection{Prova di Correttezza}
+
+\textbf{Invariante:} All'inizio dell'iterazione $i$, $key \notin A[1..i-1]$.
+
+\textbf{Base:} $i=1$, l'insieme vuoto non contiene $key$.
+
+\textbf{Passo:} Se $key \notin A[1..i-1]$ e $A[i] \neq key$, allora $key \notin A[1..i]$.
+
+\textbf{Terminazione:}
+\begin{itemize}
+    \item Se il ciclo termina con $A[i] = key$, abbiamo trovato la chiave in posizione $i$
+    \item Se il ciclo termina con $i > n$, allora $key \notin A[1..n]$
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def linear_search(arr, key):
+    """
+    Ricerca lineare di un elemento in un array.
+
+    Args:
+        arr: array di elementi confrontabili
+        key: elemento da cercare
+
+    Returns:
+        indice dell'elemento se trovato, -1 altrimenti
+
+    Complessita: O(n) tempo, O(1) spazio
+    """
+    for i in range(len(arr)):
+        if arr[i] == key:
+            return i
+    return -1
+
+
+def linear_search_all(arr, key):
+    """
+    Trova tutte le occorrenze di key nell'array.
+
+    Returns:
+        lista di indici dove key appare
+    """
+    indices = []
+    for i in range(len(arr)):
+        if arr[i] == key:
+            indices.append(i)
+    return indices
+
+
+def linear_search_sentinel(arr, key):
+    """
+    Ricerca lineare con sentinella (ottimizzazione).
+    Elimina un confronto per iterazione.
+    """
+    if not arr:
+        return -1
+
+    n = len(arr)
+    last = arr[-1]
+
+    # Metti sentinella
+    arr[-1] = key
+
+    i = 0
+    while arr[i] != key:
+        i += 1
+
+    # Ripristina ultimo elemento
+    arr[-1] = last
+
+    # Verifica se trovato
+    if i < n - 1 or last == key:
+        return i
+    return -1
+
+
+def linear_search_predicate(arr, predicate):
+    """
+    Ricerca lineare con predicato personalizzato.
+
+    Args:
+        arr: array di elementi
+        predicate: funzione che ritorna True per l'elemento cercato
+
+    Returns:
+        indice del primo elemento che soddisfa il predicato
+    """
+    for i, elem in enumerate(arr):
+        if predicate(elem):
+            return i
+    return -1
+
+# Esempio d'uso:
+# idx = linear_search_predicate(arr, lambda x: x > 10 and x % 2 == 0)
+\end{lstlisting}
+
+\section{Ricerca Binaria (Binary Search)}
+
+\subsection{Descrizione}
+
+La ricerca binaria sfrutta l'ordinamento dell'array per dimezzare ripetutamente lo spazio di ricerca, confrontando la chiave con l'elemento centrale.
+
+\subsection{Pseudocodice}
+
+\subsubsection{Versione Iterativa}
+
+\begin{algorithm}
+\caption{Binary Search Iterativo}
+\begin{algorithmic}[1]
+\Procedure{BinarySearch}{$A, n, key$}
+    \State $left \gets 1$
+    \State $right \gets n$
+    \While{$left \leq right$}
+        \State $mid \gets \lfloor(left + right) / 2\rfloor$
+        \If{$A[mid] = key$}
+            \State \Return $mid$
+        \ElsIf{$A[mid] < key$}
+            \State $left \gets mid + 1$
+        \Else
+            \State $right \gets mid - 1$
+        \EndIf
+    \EndWhile
+    \State \Return $\text{NOT\_FOUND}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Versione Ricorsiva}
+
+\begin{algorithm}
+\caption{Binary Search Ricorsivo}
+\begin{algorithmic}[1]
+\Procedure{BinarySearchRec}{$A, left, right, key$}
+    \If{$left > right$}
+        \State \Return $\text{NOT\_FOUND}$
+    \EndIf
+    \State $mid \gets \lfloor(left + right) / 2\rfloor$
+    \If{$A[mid] = key$}
+        \State \Return $mid$
+    \ElsIf{$A[mid] < key$}
+        \State \Return \Call{BinarySearchRec}{$A, mid+1, right, key$}
+    \Else
+        \State \Return \Call{BinarySearchRec}{$A, left, mid-1, key$}
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Ricorrenza:}
+\[ T(n) = T(n/2) + O(1) \]
+
+Applicando il Master Theorem (caso 2):
+\[ T(n) = \Theta(\log n) \]
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso migliore}: $O(1)$ - elemento al centro
+    \item \textbf{Caso peggiore}: $O(\log n)$ - massimo numero di divisioni
+    \item \textbf{Caso medio}: $O(\log n)$
+\end{itemize}
+
+\paragraph{Complessità Spaziale:}
+\begin{itemize}
+    \item Iterativa: $O(1)$
+    \item Ricorsiva: $O(\log n)$ stack ricorsivo
+\end{itemize}
+
+\paragraph{Numero di confronti:}
+Nel caso peggiore: $\lceil \log_2(n+1) \rceil$
+
+\subsection{Prova di Correttezza}
+
+\textbf{Invariante:} All'inizio di ogni iterazione, se $key \in A$, allora $key \in A[left..right]$.
+
+\textbf{Base:} Inizialmente $left=1$, $right=n$, quindi $key \in A[1..n]$.
+
+\textbf{Passo:} Se l'invariante è vero e:
+\begin{itemize}
+    \item $A[mid] = key$: trovato
+    \item $A[mid] < key$: per l'ordinamento, $key$ può essere solo in $A[mid+1..right]$
+    \item $A[mid] > key$: per l'ordinamento, $key$ può essere solo in $A[left..mid-1]$
+\end{itemize}
+
+\textbf{Terminazione:} Il ciclo termina quando $left > right$, cioè l'intervallo è vuoto, quindi $key \notin A$.
+
+\subsection{Varianti della Ricerca Binaria}
+
+\subsubsection{Lower Bound}
+
+Trova la prima posizione dove inserire $key$ mantenendo l'ordinamento (primo elemento $\geq key$):
+
+\begin{algorithm}
+\caption{Binary Search Lower Bound}
+\begin{algorithmic}[1]
+\Procedure{LowerBound}{$A, n, key$}
+    \State $left \gets 1$, $right \gets n + 1$
+    \While{$left < right$}
+        \State $mid \gets \lfloor(left + right) / 2\rfloor$
+        \If{$A[mid] < key$}
+            \State $left \gets mid + 1$
+        \Else
+            \State $right \gets mid$
+        \EndIf
+    \EndWhile
+    \State \Return $left$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Upper Bound}
+
+Trova la prima posizione dove un elemento è $> key$:
+
+\begin{algorithm}
+\caption{Binary Search Upper Bound}
+\begin{algorithmic}[1]
+\Procedure{UpperBound}{$A, n, key$}
+    \State $left \gets 1$, $right \gets n + 1$
+    \While{$left < right$}
+        \State $mid \gets \lfloor(left + right) / 2\rfloor$
+        \If{$A[mid] \leq key$}
+            \State $left \gets mid + 1$
+        \Else
+            \State $right \gets mid$
+        \EndIf
+    \EndWhile
+    \State \Return $left$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def binary_search(arr, key):
+    """
+    Ricerca binaria iterativa.
+
+    Args:
+        arr: array ordinato
+        key: elemento da cercare
+
+    Returns:
+        indice dell'elemento se trovato, -1 altrimenti
+
+    Complessita: O(log n) tempo, O(1) spazio
+    Precondizione: arr deve essere ordinato
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        # Evita overflow: mid = (left + right) // 2
+        mid = left + (right - left) // 2
+
+        if arr[mid] == key:
+            return mid
+        elif arr[mid] < key:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return -1
+
+
+def binary_search_recursive(arr, key, left=0, right=None):
+    """
+    Ricerca binaria ricorsiva.
+
+    Complessita: O(log n) tempo, O(log n) spazio (stack)
+    """
+    if right is None:
+        right = len(arr) - 1
+
+    if left > right:
+        return -1
+
+    mid = left + (right - left) // 2
+
+    if arr[mid] == key:
+        return mid
+    elif arr[mid] < key:
+        return binary_search_recursive(arr, key, mid + 1, right)
+    else:
+        return binary_search_recursive(arr, key, left, mid - 1)
+
+
+def binary_search_leftmost(arr, key):
+    """
+    Trova l'indice della prima occorrenza di key.
+    (Lower bound: primo elemento >= key)
+
+    Returns:
+        indice del primo elemento >= key,
+        len(arr) se tutti gli elementi sono < key
+    """
+    left, right = 0, len(arr)
+
+    while left < right:
+        mid = left + (right - left) // 2
+        if arr[mid] < key:
+            left = mid + 1
+        else:
+            right = mid
+
+    return left
+
+
+def binary_search_rightmost(arr, key):
+    """
+    Trova l'indice dopo l'ultima occorrenza di key.
+    (Upper bound: primo elemento > key)
+
+    Returns:
+        indice del primo elemento > key,
+        len(arr) se tutti gli elementi sono <= key
+    """
+    left, right = 0, len(arr)
+
+    while left < right:
+        mid = left + (right - left) // 2
+        if arr[mid] <= key:
+            left = mid + 1
+        else:
+            right = mid
+
+    return left
+
+
+def binary_search_range(arr, key):
+    """
+    Trova il range [start, end) di tutte le occorrenze di key.
+
+    Returns:
+        tupla (start, end) dove arr[start:end] contiene tutte le occorrenze
+    """
+    start = binary_search_leftmost(arr, key)
+    end = binary_search_rightmost(arr, key)
+    return (start, end)
+
+
+def binary_search_insert_position(arr, key):
+    """
+    Trova la posizione dove inserire key per mantenere l'ordinamento.
+    Equivalente a lower_bound.
+    """
+    return binary_search_leftmost(arr, key)
+
+
+# Uso del modulo bisect (built-in Python)
+def binary_search_bisect(arr, key):
+    """
+    Ricerca binaria usando il modulo bisect di Python.
+    """
+    import bisect
+
+    # bisect_left: lower bound
+    pos = bisect.bisect_left(arr, key)
+
+    if pos < len(arr) and arr[pos] == key:
+        return pos
+    return -1
+\end{lstlisting}
+
+\subsection{Applicazioni della Ricerca Binaria}
+
+\subsubsection{Ricerca in Floating Point}
+
+Trovare $\sqrt{x}$ con precisione $\epsilon$:
+
+\begin{lstlisting}[language=Python]
+def binary_search_sqrt(x, epsilon=1e-6):
+    """
+    Calcola la radice quadrata di x usando ricerca binaria.
+
+    Complessita: O(log(x/epsilon))
+    """
+    if x < 0:
+        raise ValueError("x deve essere non negativo")
+    if x == 0:
+        return 0
+
+    left, right = 0.0, max(1.0, x)
+
+    while right - left > epsilon:
+        mid = (left + right) / 2
+        square = mid * mid
+
+        if abs(square - x) < epsilon:
+            return mid
+        elif square < x:
+            left = mid
+        else:
+            right = mid
+
+    return (left + right) / 2
+\end{lstlisting}
+
+\subsubsection{Ricerca della Soluzione}
+
+Trovare il minimo $k$ tale che $f(k) \geq target$ (assumendo $f$ monotona):
+
+\begin{lstlisting}[language=Python]
+def binary_search_monotonic(f, target, low, high):
+    """
+    Ricerca binaria su funzione monotona crescente.
+
+    Args:
+        f: funzione monotona crescente
+        target: valore target
+        low, high: range di ricerca
+
+    Returns:
+        minimo k in [low, high] tale che f(k) >= target
+    """
+    result = high + 1
+
+    while low <= high:
+        mid = low + (high - low) // 2
+
+        if f(mid) >= target:
+            result = mid
+            high = mid - 1  # Cerca a sinistra
+        else:
+            low = mid + 1
+
+    return result if result <= high else None
+\end{lstlisting}
+
+\section{Ricerca per Interpolazione (Interpolation Search)}
+
+\subsection{Descrizione}
+
+L'interpolation search migliora la ricerca binaria usando interpolazione lineare per stimare la posizione della chiave, invece di dividere sempre a metà.
+
+\subsection{Idea}
+
+Se i dati sono uniformemente distribuiti, possiamo stimare la posizione di $key$ con:
+\[ pos = left + \frac{(key - A[left]) \cdot (right - left)}{A[right] - A[left]} \]
+
+Analogia: cercare "Smith" in un dizionario - iniziamo vicino alla fine, non al centro.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Interpolation Search}
+\begin{algorithmic}[1]
+\Procedure{InterpolationSearch}{$A, n, key$}
+    \State $left \gets 1$, $right \gets n$
+    \While{$left \leq right$ \And $key \geq A[left]$ \And $key \leq A[right]$}
+        \If{$left = right$}
+            \If{$A[left] = key$}
+                \State \Return $left$
+            \EndIf
+            \State \Return $\text{NOT\_FOUND}$
+        \EndIf
+        \State $pos \gets left + \lfloor\frac{(key - A[left])(right - left)}{A[right] - A[left]}\rfloor$
+        \If{$A[pos] = key$}
+            \State \Return $pos$
+        \ElsIf{$A[pos] < key$}
+            \State $left \gets pos + 1$
+        \Else
+            \State $right \gets pos - 1$
+        \EndIf
+    \EndWhile
+    \State \Return $\text{NOT\_FOUND}$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso medio} (dati uniformi): $O(\log \log n)$ - migliore di binary search!
+    \item \textbf{Caso peggiore} (dati non uniformi): $O(n)$ - peggiore di binary search
+\end{itemize}
+
+\paragraph{Assunzioni:}
+Per ottenere $O(\log \log n)$, i dati devono essere:
+\begin{itemize}
+    \item Ordinati
+    \item Distribuiti uniformemente
+    \item Numerici (o convertibili in numeri)
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$
+
+\subsection{Analisi Dettagliata}
+
+Per dati uniformemente distribuiti, ad ogni passo riduciamo l'intervallo a $\sqrt{n}$:
+\[ T(n) = T(\sqrt{n}) + O(1) \]
+
+Risolvendo:
+\[ T(n) = O(\log \log n) \]
+
+\textbf{Dimostrazione:} Sia $n = 2^m$, allora $T(2^m) = T(2^{m/2}) + O(1)$.
+Ponendo $S(m) = T(2^m)$:
+\[ S(m) = S(m/2) + O(1) = O(\log m) = O(\log \log n) \]
+
+\subsection{Prova di Correttezza}
+
+Simile alla ricerca binaria, l'invariante è:
+\[ \text{Se } key \in A \text{, allora } key \in A[left..right] \]
+
+La differenza è nel calcolo di $pos$, ma la correttezza dell'interpolazione garantisce che:
+\begin{itemize}
+    \item Se $A[pos] < key$, allora per monotonia $key \in A[pos+1..right]$
+    \item Se $A[pos] > key$, allora per monotonia $key \in A[left..pos-1]$
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def interpolation_search(arr, key):
+    """
+    Ricerca per interpolazione.
+
+    Args:
+        arr: array ordinato di numeri
+        key: valore numerico da cercare
+
+    Returns:
+        indice dell'elemento se trovato, -1 altrimenti
+
+    Complessita:
+        - Caso medio (dati uniformi): O(log log n)
+        - Caso peggiore: O(n)
+
+    Precondizioni:
+        - arr ordinato
+        - elementi numerici
+        - preferibilmente uniformemente distribuiti
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right and key >= arr[left] and key <= arr[right]:
+        # Caso speciale: un solo elemento
+        if left == right:
+            if arr[left] == key:
+                return left
+            return -1
+
+        # Evita divisione per zero
+        if arr[right] == arr[left]:
+            if arr[left] == key:
+                return left
+            return -1
+
+        # Interpolazione lineare
+        pos = left + int(
+            ((key - arr[left]) * (right - left)) /
+            (arr[right] - arr[left])
+        )
+
+        # Assicurati che pos sia nell'intervallo
+        pos = max(left, min(right, pos))
+
+        if arr[pos] == key:
+            return pos
+        elif arr[pos] < key:
+            left = pos + 1
+        else:
+            right = pos - 1
+
+    return -1
+
+
+def interpolation_search_safe(arr, key):
+    """
+    Versione robusta che gestisce meglio dati non uniformi.
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right and key >= arr[left] and key <= arr[right]:
+        if left == right:
+            return left if arr[left] == key else -1
+
+        # Evita problemi con distribuzione non uniforme
+        range_arr = arr[right] - arr[left]
+        if range_arr == 0:
+            return left if arr[left] == key else -1
+
+        # Interpolazione
+        ratio = (key - arr[left]) / range_arr
+        pos = left + int(ratio * (right - left))
+
+        # Clamp pos nell'intervallo valido
+        pos = max(left, min(right, pos))
+
+        if arr[pos] == key:
+            return pos
+        elif arr[pos] < key:
+            left = pos + 1
+        else:
+            right = pos - 1
+
+    return -1
+\end{lstlisting}
+
+\section{Confronto degli Algoritmi di Ricerca}
+
+\begin{table}[h]
+\centering
+\caption{Confronto algoritmi di ricerca}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Ordinamento} & \textbf{Tempo (avg)} & \textbf{Tempo (worst)} & \textbf{Spazio} \\
+\hline
+Linear Search & No & $O(n)$ & $O(n)$ & $O(1)$ \\
+Binary Search & Sì & $O(\log n)$ & $O(\log n)$ & $O(1)$ iter \\
+Interpolation & Sì + Uniforme & $O(\log \log n)$ & $O(n)$ & $O(1)$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Quando Usare Quale Algoritmo}
+
+\begin{itemize}
+    \item \textbf{Linear Search}:
+    \begin{itemize}
+        \item Array piccoli ($n < 20$)
+        \item Array non ordinati
+        \item Ricerche rare (costo ordinamento non giustificato)
+    \end{itemize}
+
+    \item \textbf{Binary Search}:
+    \begin{itemize}
+        \item Array ordinati
+        \item Ricerche frequenti
+        \item Caso generale più affidabile
+        \item Garanzia di $O(\log n)$ anche nel caso peggiore
+    \end{itemize}
+
+    \item \textbf{Interpolation Search}:
+    \begin{itemize}
+        \item Dati numerici uniformemente distribuiti
+        \item Dataset molto grandi
+        \item Quando $O(\log \log n)$ fa differenza
+        \item Non usare con distribuzioni skewed
+    \end{itemize}
+\end{itemize}
+
+\section{Ricerca in Strutture Dati Speciali}
+
+\subsection{Ricerca in Array Ruotato}
+
+Un array ordinato ruotato: $[4,5,6,7,0,1,2]$ (originale $[0,1,2,4,5,6,7]$ ruotato di 4 posizioni).
+
+\begin{lstlisting}[language=Python]
+def search_rotated_array(arr, key):
+    """
+    Ricerca in array ordinato ruotato.
+
+    Complessita: O(log n)
+    """
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2
+
+        if arr[mid] == key:
+            return mid
+
+        # Determina quale meta e ordinata
+        if arr[left] <= arr[mid]:  # Meta sinistra ordinata
+            if arr[left] <= key < arr[mid]:
+                right = mid - 1  # Cerca a sinistra
+            else:
+                left = mid + 1   # Cerca a destra
+        else:  # Meta destra ordinata
+            if arr[mid] < key <= arr[right]:
+                left = mid + 1   # Cerca a destra
+            else:
+                right = mid - 1  # Cerca a sinistra
+
+    return -1
+\end{lstlisting}
+
+\subsection{Ricerca del Picco}
+
+Trovare un elemento picco (maggiore dei vicini) in $O(\log n)$:
+
+\begin{lstlisting}[language=Python]
+def find_peak(arr):
+    """
+    Trova un elemento picco nell'array.
+    Un picco e un elemento maggiore dei suoi vicini.
+
+    Complessita: O(log n)
+    """
+    left, right = 0, len(arr) - 1
+
+    while left < right:
+        mid = left + (right - left) // 2
+
+        # Confronta con il vicino destro
+        if arr[mid] < arr[mid + 1]:
+            # Picco nella meta destra
+            left = mid + 1
+        else:
+            # Picco nella meta sinistra (o mid stesso)
+            right = mid
+
+    return left  # left == right, posizione del picco
+\end{lstlisting}
+
+\subsection{Ricerca in Matrice Ordinata}
+
+Matrice con righe e colonne ordinate:
+
+\begin{lstlisting}[language=Python]
+def search_2d_matrix(matrix, key):
+    """
+    Ricerca in matrice ordinata (ogni riga e colonna ordinata).
+
+    Algoritmo: parti dall'angolo in alto a destra.
+
+    Complessita: O(m + n) dove m=righe, n=colonne
+    """
+    if not matrix or not matrix[0]:
+        return False
+
+    rows, cols = len(matrix), len(matrix[0])
+    row, col = 0, cols - 1  # Angolo in alto a destra
+
+    while row < rows and col >= 0:
+        if matrix[row][col] == key:
+            return True
+        elif matrix[row][col] > key:
+            col -= 1  # Vai a sinistra
+        else:
+            row += 1  # Vai in basso
+
+    return False
+
+
+def search_2d_matrix_binary(matrix, key):
+    """
+    Ricerca in matrice completamente ordinata
+    (primo elemento riga i+1 > ultimo elemento riga i).
+
+    Complessita: O(log(m*n))
+    """
+    if not matrix or not matrix[0]:
+        return False
+
+    rows, cols = len(matrix), len(matrix[0])
+    left, right = 0, rows * cols - 1
+
+    while left <= right:
+        mid = left + (right - left) // 2
+        # Converti indice 1D in 2D
+        mid_val = matrix[mid // cols][mid % cols]
+
+        if mid_val == key:
+            return True
+        elif mid_val < key:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return False
+\end{lstlisting}
+
+\section{Tecniche Avanzate}
+
+\subsection{Exponential Search}
+
+Utile quando non conosciamo la dimensione dell'array o quando l'elemento è vicino all'inizio:
+
+\begin{lstlisting}[language=Python]
+def exponential_search(arr, key):
+    """
+    Exponential search: trova il range, poi usa binary search.
+
+    Complessita: O(log i) dove i e la posizione del key
+    Utile quando key e vicino all'inizio.
+    """
+    n = len(arr)
+
+    # Caso speciale: primo elemento
+    if arr[0] == key:
+        return 0
+
+    # Trova il range usando raddoppio esponenziale
+    i = 1
+    while i < n and arr[i] <= key:
+        i *= 2
+
+    # Binary search nell'intervallo [i/2, min(i, n-1)]
+    return binary_search_range_helper(
+        arr, key, i // 2, min(i, n - 1)
+    )
+
+
+def binary_search_range_helper(arr, key, left, right):
+    """Helper per binary search in un range."""
+    while left <= right:
+        mid = left + (right - left) // 2
+        if arr[mid] == key:
+            return mid
+        elif arr[mid] < key:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+\end{lstlisting}
+
+\subsection{Fibonacci Search}
+
+Divide l'array usando numeri di Fibonacci invece di divisione per 2:
+
+\begin{lstlisting}[language=Python]
+def fibonacci_search(arr, key):
+    """
+    Fibonacci search: usa numeri di Fibonacci per dividere.
+
+    Vantaggi:
+    - Evita divisione (usa solo addizione/sottrazione)
+    - Utile su hardware senza divisore veloce
+
+    Complessita: O(log n)
+    """
+    n = len(arr)
+
+    # Trova i piu piccoli Fibonacci >= n
+    fib_m2 = 0  # (m-2)-esimo Fibonacci
+    fib_m1 = 1  # (m-1)-esimo Fibonacci
+    fib_m = fib_m2 + fib_m1  # m-esimo Fibonacci
+
+    while fib_m < n:
+        fib_m2 = fib_m1
+        fib_m1 = fib_m
+        fib_m = fib_m2 + fib_m1
+
+    offset = -1
+
+    while fib_m > 1:
+        # Controlla se fib_m2 e una posizione valida
+        i = min(offset + fib_m2, n - 1)
+
+        if arr[i] < key:
+            # Cerca nel sotto-array dopo i
+            fib_m = fib_m1
+            fib_m1 = fib_m2
+            fib_m2 = fib_m - fib_m1
+            offset = i
+        elif arr[i] > key:
+            # Cerca nel sotto-array prima di i
+            fib_m = fib_m2
+            fib_m1 = fib_m1 - fib_m2
+            fib_m2 = fib_m - fib_m1
+        else:
+            return i
+
+    # Controlla l'ultimo elemento
+    if fib_m1 and offset + 1 < n and arr[offset + 1] == key:
+        return offset + 1
+
+    return -1
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementare una funzione che trova l'elemento più vicino a $k$ in un array ordinato usando ricerca binaria.
+
+    \item Dato un array ordinato con duplicati, implementare funzioni per trovare la prima e l'ultima occorrenza di un elemento in $O(\log n)$.
+
+    \item Dimostrare che la ricerca binaria richiede al massimo $\lceil \log_2(n+1) \rceil$ confronti.
+
+    \item Implementare una ricerca binaria che trova l'elemento più piccolo in un array ordinato ruotato.
+
+    \item Analizzare empiricamente le prestazioni di interpolation search su dati con diverse distribuzioni (uniforme, normale, esponenziale).
+
+    \item Implementare ternary search (divide in 3 parti) e confrontare con binary search.
+
+    \item Trovare il punto fisso (elemento dove $A[i] = i$) in un array ordinato di interi distinti in $O(\log n)$.
+
+    \item Dato un array infinito (o molto grande), implementare una ricerca efficiente senza conoscere la dimensione.
+\end{enumerate}
+
+\section{Note Pratiche}
+
+\subsection{Evitare Overflow}
+
+Il classico calcolo di \texttt{mid}:
+\begin{lstlisting}[language=Python]
+mid = (left + right) // 2  # Puo causare overflow!
+\end{lstlisting}
+
+Dovrebbe essere:
+\begin{lstlisting}[language=Python]
+mid = left + (right - left) // 2  # Sicuro
+\end{lstlisting}
+
+\subsection{Gestione dei Bounds}
+
+Attenzione ai confini degli array:
+\begin{itemize}
+    \item Usare $<$ vs $\leq$ correttamente
+    \item Verificare array vuoti
+    \item Controllare limiti prima di accedere
+\end{itemize}
+
+\subsection{Testing}
+
+Casi di test importanti:
+\begin{itemize}
+    \item Array vuoto
+    \item Un solo elemento
+    \item Due elementi
+    \item Elemento all'inizio/fine/centro
+    \item Elemento assente
+    \item Tutti elementi uguali
+\end{itemize}

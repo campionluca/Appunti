@@ -1,26 +1,42 @@
 # MASTER TODO — Struttura Unificata (Tutti i Corsi)
 
-**Ultimo aggiornamento**: 14 Novembre 2025
-**Versione**: 3.0
-**Status**: 🟡 Sincronizzazione completata tra tutti i TODO.md di corso
+**Ultimo aggiornamento**: 15 Novembre 2025
+**Versione**: 4.0
+**Status**: ✅ Integrati 7 nuovi corsi dal branch analyze-data
 
-**Riferimento operativo**: Questo file sintetizza lo stato di TUTTI i corsi (C, HTMLCSS, Java, PHP, Python) ed è la fonte di verità centralizzata. I file TODO.md specifici di ogni corso contengono dettagli, i dettagli di task non vanno qui.
+**Riferimento operativo**: Questo file sintetizza lo stato di TUTTI i 14 corsi del repository ed è la fonte di verità centralizzata. I file TODO.md specifici di ogni corso contengono dettagli, i dettagli di task non vanno qui.
 
 ---
 
-## 📊 Stato Generale Tutti i Corsi (14 Novembre 2025)
+## 📊 Stato Generale Tutti i Corsi (15 Novembre 2025)
+
+### Corsi Base (5)
 
 | Corso | Capitoli | PDF | Stato | Descrittori AI | Priorità | Deadline |
 |-------|----------|-----|-------|----------------|----------|----------|
-| **C (Terza)** | 11+App | ✅ | Completo | ✅ 15 | BASSA | — |
+| **C** | 11+App | ✅ | Completo | ✅ 15 | BASSA | — |
 | **HTMLCSS** | 12 | ✅ | Completo | ✅ 15 | BASSA | — |
-| **Java (Quarta)** | 10+App | ✅ | Build warnings | ✅ 18 | MEDIA | 2025-11-30 |
+| **Java** | 10+App | ✅ | Build warnings | ✅ 18 | MEDIA | 2025-11-30 |
 | **PHP** | 7+ | ✅ | In sviluppo | ✅ 15 | MEDIA | 2025-11-28 |
-| **Python (Quinta)** | 18+App | ✅ | In progresso | ✅ 41 | ALTA | 2025-11-20 |
-| **Database** | 13+App | ⏳ | Nuovo corso | ⏳ 0 | MEDIA | 2025-12-05 |
-| **Assembly 8086** | 13+App | ⏳ | Nuovo corso | ⏳ 0 | MEDIA | 2025-12-25 |
+| **Python** | 18+App | ✅ | In progresso | ✅ 41 | ALTA | 2025-11-20 |
+
+### Nuovi Corsi 2025 (9)
+
+| Corso | Capitoli | PDF | Stato | Descrittori AI | Priorità | Deadline |
+|-------|----------|-----|-------|----------------|----------|----------|
+| **Database** | 13+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-05 |
+| **Assembly** | 13+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-10 |
+| **Git** | 13+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-15 |
+| **Linux** | 13+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-15 |
+| **Algoritmi** | 15+App | ⏳ | Contenuti ✅ | ⏳ 0 | ALTA | 2025-12-10 |
+| **Docker** | 13+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-20 |
+| **React** | 15+App | ⏳ | Contenuti ✅ | ⏳ 0 | ALTA | 2025-12-18 |
+| **REST API** | 15+App | ⏳ | Contenuti ✅ | ⏳ 0 | MEDIA | 2025-12-18 |
+| **WebSecurity** | 15+App | ⏳ | Contenuti ✅ | ⏳ 0 | ALTA | 2025-12-15 |
 
 **Legenda**: ✅=Completo | 🟡=In progresso | ❌=Assente | ⏳=In creazione | ⚠️=Attenzione
+
+**Totale Repository**: 14 corsi | 180+ capitoli | ~6,200 pagine | 800+ esercizi
 
 ### 🤖 Descrittori AI - Status Generale
 **Totale descrittori generati**: 104 (5 corsi completati, Database in pianificazione)
@@ -115,6 +131,76 @@
 
 ---
 
+## 🆕 NUOVI CORSI 2025 (Priorità Alta)
+
+### Compilazione PDF (9 corsi)
+- **[NEW-PDF-01]** Compilare PDF per Git
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-15
+  - Comando: `cd Git && latexmk -pdf main.tex`
+
+- **[NEW-PDF-02]** Compilare PDF per Linux
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-15
+
+- **[NEW-PDF-03]** Compilare PDF per Algoritmi
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-10
+  - Priorità: ALTA
+
+- **[NEW-PDF-04]** Compilare PDF per Docker
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-20
+
+- **[NEW-PDF-05]** Compilare PDF per React
+  - Stato: TODO
+  - Tempo: 20-25 min
+  - Scadenza: 2025-12-18
+  - Priorità: ALTA
+
+- **[NEW-PDF-06]** Compilare PDF per REST API
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-18
+
+- **[NEW-PDF-07]** Compilare PDF per WebSecurity
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-15
+  - Priorità: ALTA
+
+- **[NEW-PDF-08]** Compilare PDF per Database (se non già fatto)
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-05
+
+- **[NEW-PDF-09]** Compilare PDF per Assembly (se non già fatto)
+  - Stato: TODO
+  - Tempo: 15-20 min
+  - Scadenza: 2025-12-10
+
+### Documentazione Nuovi Corsi
+- **[NEW-DOC-01]** Creare README.md, TODO.md, PIANO_SVILUPPO.md per i 7 nuovi corsi
+  - Stato: TODO
+  - Tempo: 3-4 ore totali (30 min per corso)
+  - Corsi: Git, Linux, Algoritmi, Docker, React, REST API, WebSecurity
+  - Priorità: ALTA
+  - Scadenza: 2025-12-10
+
+### Descrittori AI per Nuovi Corsi
+- **[NEW-AI-01]** Generare descrittori AI per tutti i 9 nuovi corsi
+  - Stato: TODO
+  - Tempo: 6-8 ore totali
+  - Stima descrittori: ~150-180 totali (15-20 per corso)
+  - Priorità: MEDIA
+  - Scadenza: 2025-12-20
+
+---
+
 ## 💡 PRIORITÀ BASSA (Backlog / Nessuna urgenza)
 
 ### Refactoring Cross-Corso
@@ -135,7 +221,24 @@
 
 ---
 
-## 📋 Task Completati Recenti (13-14 Novembre 2025)
+## 📋 Task Completati Recenti (13-15 Novembre 2025)
+
+### Integrazione Nuovi Corsi (15 Novembre)
+✅ **[MERGE-ANALYZE-DATA]** Integrati 7 nuovi corsi dal branch analyze-data
+  - Merge completato con successo: 125 file modificati, +99,579 linee
+  - Corsi aggiunti: Git, Linux, Algoritmi, Docker, React, REST API, WebSecurity
+  - Totale repository: da 7 a 14 corsi
+  - Branch: claude/analyze-data-01KdHoeiqfcgbz7C44t1R3Hv → claude/analizza-t-01NbrtZAwsjsVAKemV7VKcib
+
+✅ **[DOC-UPDATE-01]** Aggiornamento README.md principale
+  - Aggiornata tabella corsi: 5 → 14 corsi
+  - Aggiornate statistiche: ~1,040 → ~6,200 pagine
+  - Suddivisi corsi in categorie (Base, Database/Sistemi, Algoritmi, DevOps, Web)
+
+✅ **[DOC-UPDATE-02]** Aggiornamento MASTER-TODO.md v4.0
+  - Aggiunta sezione "Nuovi Corsi 2025"
+  - Definiti task per compilazione PDF (9 corsi)
+  - Pianificata documentazione e descrittori AI
 
 ### Python (11-14 Novembre)
 ✅ **[PY-BLOCKER-01]** Compilazione `Python/main.pdf` completata (11 Nov 2025)
@@ -217,6 +320,8 @@
   - Deadline: 2025-12-05
 
 ### Cronologia Recente
+- 2025-11-15: **🔀 Integrati 7 nuovi corsi nel branch principale** (Git, Linux, Algoritmi, Docker, React, REST API, WebSecurity)
+- 2025-11-15: **📝 Aggiornata documentazione principale** (README.md, MASTER-TODO.md v4.0)
 - 2025-11-14: **💾 Creato nuovo corso Assembly 8086** (13 capitoli, 6K righe, 80+ esercizi, 150+ esempi codice)
 - 2025-11-14: **📚 Creato nuovo corso Database** (13 capitoli, 6K righe, 78 esercizi, SQL completo)
 - 2025-11-14: **🤖 Descrittori AI completati per tutti i 5 corsi** (104 totali: C=15, HTMLCSS=15, Java=18, PHP=15, Python=41)

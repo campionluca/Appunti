@@ -1,0 +1,865 @@
+% 03_filesystem_permessi.tex — Filesystem, Permessi e Ownership
+\chapter{Filesystem e Permessi}
+
+\section{Gerarchia del Filesystem Linux}
+
+\subsection{Filesystem Hierarchy Standard (FHS)}
+
+Linux organizza tutti i file in un'unica gerarchia ad albero che parte dalla \textbf{root directory} (\texttt{/}). Ogni directory ha uno scopo specifico definito dal Filesystem Hierarchy Standard.
+
+\begin{lstlisting}[style=bash]
+# Visualizza struttura radice
+ls -l /
+
+# Output tipico:
+# drwxr-xr-x   2 root root  4096 /bin
+# drwxr-xr-x   4 root root  4096 /boot
+# drwxr-xr-x  20 root root  3840 /dev
+# drwxr-xr-x 135 root root 12288 /etc
+# drwxr-xr-x   3 root root  4096 /home
+# drwxr-xr-x  14 root root  4096 /lib
+# drwxr-xr-x   2 root root  4096 /mnt
+# drwxr-xr-x   3 root root  4096 /opt
+# drwxr-xr-x 261 root root     0 /proc
+# drwx------   8 root root  4096 /root
+# drwxr-xr-x  28 root root   880 /run
+# drwxr-xr-x   2 root root 12288 /sbin
+# drwxr-xr-x   2 root root  4096 /srv
+# drwxr-xr-x  13 root root     0 /sys
+# drwxrwxrwt  20 root root  4096 /tmp
+# drwxr-xr-x  11 root root  4096 /usr
+# drwxr-xr-x  14 root root  4096 /var
+\end{lstlisting}
+
+\subsection{Directory Principali}
+
+\subsubsection{/bin - Binari Essenziali}
+
+Comandi fondamentali disponibili a tutti gli utenti:
+
+\begin{lstlisting}[style=bash]
+# Esplora /bin
+ls /bin
+
+# Comandi in /bin: ls, cp, mv, rm, cat, bash, echo, grep, etc.
+# Necessari per boot e single-user mode
+
+# Verifica dove si trova un comando
+which ls
+# Output: /bin/ls
+
+which bash
+# Output: /bin/bash
+\end{lstlisting}
+
+\subsubsection{/sbin - Binari di Sistema}
+
+Comandi amministrativi (di solito richiedono root):
+
+\begin{lstlisting}[style=bash]
+ls /sbin
+
+# Comandi in /sbin: ifconfig, iptables, fdisk, mkfs, shutdown, etc.
+# Usati per amministrazione sistema
+\end{lstlisting}
+
+\subsubsection{/etc - Configurazione}
+
+File di configurazione del sistema:
+
+\begin{lstlisting}[style=bash]
+# Configurazioni importanti
+/etc/passwd         # Database utenti
+/etc/group          # Database gruppi
+/etc/shadow         # Password criptate (solo root)
+/etc/fstab          # Filesystem da montare al boot
+/etc/hosts          # Mapping hostname-IP locale
+/etc/hostname       # Nome del sistema
+/etc/ssh/           # Configurazione SSH
+/etc/nginx/         # Configurazione Nginx
+/etc/apache2/       # Configurazione Apache
+
+# Esempi
+cat /etc/hostname
+cat /etc/hosts
+ls -la /etc/ssh/
+\end{lstlisting}
+
+\subsubsection{/home - Home Directory Utenti}
+
+Directory personali degli utenti:
+
+\begin{lstlisting}[style=bash]
+# Ogni utente ha la sua directory
+/home/user1/
+/home/user2/
+/home/alice/
+
+# Variabile $HOME punta alla tua home
+echo $HOME
+# Output: /home/username
+
+# Shortcut tilde (~)
+cd ~              # Vai alla tua home
+cd ~alice         # Vai alla home di alice (se hai permessi)
+\end{lstlisting}
+
+\subsubsection{/root - Home dell'Amministratore}
+
+Home directory dell'utente root:
+
+\begin{lstlisting}[style=bash]
+# Separata da /home per motivi di sicurezza
+# Accessibile solo a root
+sudo ls -la /root
+\end{lstlisting}
+
+\subsubsection{/tmp - File Temporanei}
+
+Directory per file temporanei:
+
+\begin{lstlisting}[style=bash]
+# Writable da tutti
+# Solitamente pulita al reboot
+# Spesso con sticky bit per sicurezza
+
+ls -ld /tmp
+# drwxrwxrwt  20 root root  4096 Nov 15 10:30 /tmp
+#         ^
+#         └─ sticky bit (t)
+
+# Creazione file temporanei
+mktemp
+# Output: /tmp/tmp.xYz123aBc
+
+# Directory temporanea
+mktemp -d
+# Output: /tmp/tmp.dir.xYz123aBc
+\end{lstlisting}
+
+\subsubsection{/var - Dati Variabili}
+
+Dati che cambiano durante operazioni normali:
+
+\begin{lstlisting}[style=bash]
+/var/log/           # File di log
+/var/mail/          # Mail degli utenti
+/var/spool/         # Code di stampa, cron, etc.
+/var/tmp/           # File temporanei persistenti tra reboot
+/var/www/           # Contenuti web server
+/var/lib/           # Dati applicazioni
+
+# Log importanti
+/var/log/syslog     # Log di sistema (Debian/Ubuntu)
+/var/log/messages   # Log di sistema (RHEL/CentOS)
+/var/log/auth.log   # Log autenticazione
+/var/log/kern.log   # Log kernel
+
+# Visualizza log recenti
+sudo tail -f /var/log/syslog
+\end{lstlisting}
+
+\subsubsection{/usr - Unix System Resources}
+
+Programmi e librerie utente:
+
+\begin{lstlisting}[style=bash]
+/usr/bin/           # Binari applicazioni utente
+/usr/sbin/          # Binari amministrativi non essenziali
+/usr/lib/           # Librerie
+/usr/local/         # Software installato localmente
+/usr/share/         # Dati condivisi (documentazione, icone)
+/usr/include/       # Header file C/C++
+/usr/src/           # Codice sorgente
+
+# Differenza /bin vs /usr/bin:
+# /bin:     comandi essenziali per boot
+# /usr/bin: comandi applicativi aggiuntivi
+\end{lstlisting}
+
+\subsubsection{/opt - Software Opzionale}
+
+Pacchetti software di terze parti:
+
+\begin{lstlisting}[style=bash]
+# Software non gestito dal package manager
+/opt/google/chrome/
+/opt/teamviewer/
+/opt/custom-app/
+\end{lstlisting}
+
+\subsubsection{/proc - Processo Information Filesystem}
+
+Filesystem virtuale con informazioni su processi e sistema:
+
+\begin{lstlisting}[style=bash]
+# Informazioni CPU
+cat /proc/cpuinfo
+
+# Informazioni memoria
+cat /proc/meminfo
+
+# Informazioni kernel
+cat /proc/version
+
+# Informazioni processo specifico
+ls /proc/$$          # $$ = PID della shell corrente
+cat /proc/$$/cmdline
+
+# System limits
+cat /proc/sys/fs/file-max
+\end{lstlisting}
+
+\subsubsection{/sys - Informazioni Sistema}
+
+Filesystem virtuale per informazioni hardware e kernel:
+
+\begin{lstlisting}[style=bash]
+# Informazioni dispositivi
+ls /sys/class/
+ls /sys/block/       # Dispositivi a blocchi
+
+# Temperatura CPU (se disponibile)
+cat /sys/class/thermal/thermal_zone0/temp
+\end{lstlisting}
+
+\subsubsection{/dev - Device Files}
+
+File speciali che rappresentano dispositivi hardware:
+
+\begin{lstlisting}[style=bash]
+# Dispositivi a blocchi (dischi)
+/dev/sda            # Primo disco SATA
+/dev/sda1           # Prima partizione
+/dev/sdb            # Secondo disco
+
+# Dispositivi a caratteri
+/dev/tty            # Terminal
+/dev/null           # Black hole (scarta tutto)
+/dev/zero           # Sorgente infinita di zeri
+/dev/random         # Generatore numeri casuali
+
+# Esempi pratici
+echo "test" > /dev/null    # Scarta output
+dd if=/dev/zero of=file bs=1M count=100  # Crea file 100MB di zeri
+\end{lstlisting}
+
+\subsubsection{/mnt e /media - Mount Points}
+
+\begin{lstlisting}[style=bash]
+# /mnt: mount manuali temporanei
+# /media: mount automatici (USB, CD, etc.)
+
+# Lista dispositivi montati
+mount | column -t
+
+# Oppure
+df -h
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Visualizzazione Grafica]
+\begin{lstlisting}[style=bash]
+# Installa tree per visualizzazione grafica
+sudo apt install tree    # Debian/Ubuntu
+sudo dnf install tree    # Fedora
+
+# Visualizza struttura directory
+tree -L 2 /etc           # Due livelli di profondità
+tree -d /usr             # Solo directory
+tree -h /var             # Con dimensioni human-readable
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Permessi dei File}
+
+\subsection{Il Modello di Permessi Unix}
+
+Ogni file e directory in Linux ha:
+\begin{itemize}
+    \item Un \textbf{proprietario} (owner/user)
+    \item Un \textbf{gruppo} (group)
+    \item Tre set di \textbf{permessi}: owner, group, others
+\end{itemize}
+
+\subsection{Tipi di Permessi}
+
+\begin{lstlisting}[style=bash]
+# Visualizza permessi
+ls -l file.txt
+# -rw-r--r-- 1 user group 1024 Nov 15 10:30 file.txt
+
+# I tre tipi di permessi:
+# r (read)    = 4  = lettura
+# w (write)   = 2  = scrittura
+# x (execute) = 1  = esecuzione
+
+# Per FILE:
+# r: leggere contenuto
+# w: modificare contenuto
+# x: eseguire come programma
+
+# Per DIRECTORY:
+# r: listare contenuto (ls)
+# w: creare/cancellare file dentro
+# x: entrare nella directory (cd)
+\end{lstlisting}
+
+\subsection{Interpretazione Permessi}
+
+\begin{lstlisting}[style=bash]
+# -rw-r--r--
+# │││ │ │ │
+# ││└─┴─┴─┴─> Altri (others): r-- (4)
+# │└────────> Gruppo (group):  r-- (4)
+# └─────────> Owner (user):    rw- (6)
+#
+# Primo carattere: tipo file
+# -: file normale
+# d: directory
+# l: symbolic link
+# b: block device
+# c: character device
+# p: named pipe (FIFO)
+# s: socket
+
+# Esempi
+drwxr-xr-x  # Directory: 755
+-rwxr-xr-x  # File eseguibile: 755
+-rw-------  # File privato: 600
+-rw-r--r--  # File normale: 644
+lrwxrwxrwx  # Symbolic link (sempre 777)
+\end{lstlisting}
+
+\subsection{chmod - Change Mode}
+
+Modifica i permessi di file e directory:
+
+\begin{lstlisting}[style=bash]
+# METODO NUMERICO (ottale)
+chmod 755 script.sh
+# 7 = 4+2+1 = rwx (owner)
+# 5 = 4+0+1 = r-x (group)
+# 5 = 4+0+1 = r-x (others)
+
+chmod 644 file.txt
+# 6 = 4+2 = rw- (owner)
+# 4 = 4   = r-- (group)
+# 4 = 4   = r-- (others)
+
+chmod 600 private.key
+# 6 = rw- (owner)
+# 0 = --- (group)
+# 0 = --- (others)
+
+# METODO SIMBOLICO
+chmod u+x script.sh      # User: aggiungi execute
+chmod g+w file.txt       # Group: aggiungi write
+chmod o-r secret.txt     # Others: rimuovi read
+chmod a+x program        # All: aggiungi execute
+
+# Combinazioni
+chmod u+x,g+x,o-rwx file
+chmod ug+rw,o-rwx file
+chmod a=r file.txt       # Imposta uguale per tutti
+
+# Ricorsivo
+chmod -R 755 directory/
+
+# Permessi speciali comuni
+chmod 700 ~/.ssh                    # Directory SSH privata
+chmod 600 ~/.ssh/id_rsa            # Chiave privata SSH
+chmod 644 ~/.ssh/id_rsa.pub        # Chiave pubblica SSH
+chmod 644 ~/.ssh/authorized_keys   # Chiavi autorizzate
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Permessi Comuni]
+\begin{tabular}{ll}
+\textbf{Valore} & \textbf{Significato} \\
+\hline
+777 & rwxrwxrwx - Tutti i permessi (EVITARE!) \\
+755 & rwxr-xr-x - Eseguibili, directory pubbliche \\
+700 & rwx------ - Eseguibili/directory private \\
+666 & rw-rw-rw- - File writable da tutti (EVITARE!) \\
+644 & rw-r--r-- - File normali leggibili \\
+600 & rw------- - File privati \\
+444 & r--r--r-- - File read-only \\
+\end{tabular}
+\end{tcolorbox}
+
+\subsection{Permessi Speciali}
+
+\subsubsection{SetUID (SUID) - 4000}
+
+Esegue con permessi del proprietario del file:
+
+\begin{lstlisting}[style=bash]
+# Visualizza file con SUID
+find /usr/bin -perm -4000 -ls 2>/dev/null
+
+# Esempio: passwd
+ls -l /usr/bin/passwd
+# -rwsr-xr-x 1 root root 68208 /usr/bin/passwd
+#    ^
+#    └─ s invece di x = SUID bit
+
+# passwd deve scrivere /etc/shadow (solo root)
+# SUID permette di eseguirlo come root
+
+# Impostare SUID
+chmod u+s file
+chmod 4755 file
+\end{lstlisting}
+
+\subsubsection{SetGID (SGID) - 2000}
+
+Per file: esegue con permessi del gruppo.
+Per directory: file creati ereditano il gruppo della directory:
+
+\begin{lstlisting}[style=bash]
+# Su directory: file creati ereditano gruppo
+mkdir shared
+chmod g+s shared
+chmod 2775 shared
+
+ls -ld shared
+# drwxrwsr-x 2 user group 4096 shared
+#       ^
+#       └─ s invece di x = SGID bit
+
+# File creati in shared/ avranno gruppo "group"
+\end{lstlisting}
+
+\subsubsection{Sticky Bit - 1000}
+
+Su directory: solo proprietario può cancellare i propri file:
+
+\begin{lstlisting}[style=bash]
+# Esempio: /tmp
+ls -ld /tmp
+# drwxrwxrwt 20 root root 4096 /tmp
+#         ^
+#         └─ t invece di x = sticky bit
+
+# Tutti possono creare file in /tmp
+# Ma solo il proprietario può cancellare i propri file
+
+# Impostare sticky bit
+chmod +t directory
+chmod 1777 directory
+\end{lstlisting}
+
+\subsection{chown - Change Owner}
+
+Cambia proprietario e gruppo di file:
+
+\begin{lstlisting}[style=bash]
+# Cambia solo owner
+sudo chown newuser file.txt
+
+# Cambia owner e group
+sudo chown newuser:newgroup file.txt
+
+# Cambia solo group
+sudo chown :newgroup file.txt
+# Oppure
+sudo chgrp newgroup file.txt
+
+# Ricorsivo
+sudo chown -R user:group directory/
+
+# Esempi pratici
+sudo chown www-data:www-data /var/www/html
+sudo chown -R $USER:$USER ~/projects
+
+# Cambia owner usando reference file
+sudo chown --reference=reference.txt file.txt
+
+# Verbose
+sudo chown -v user:group file.txt
+# Output: changed ownership of 'file.txt' from root:root to user:group
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Attenzione!]
+\textbf{chown richiede privilegi root} (sudo). Non potete dare via la proprietà di vostri file o prendere proprietà di file altrui senza essere root. Questo previene escalation di privilegi.
+\end{tcolorbox}
+
+\subsection{umask - Default Permissions}
+
+Il comando \texttt{umask} definisce i permessi di default per nuovi file:
+
+\begin{lstlisting}[style=bash]
+# Visualizza umask corrente
+umask
+# Output: 0022
+
+# Visualizza in formato simbolico
+umask -S
+# Output: u=rwx,g=rx,o=rx
+
+# Come funziona umask:
+# File:      666 (rw-rw-rw-)
+# - umask:   022 (----w--w-)
+# = result:  644 (rw-r--r--)
+
+# Directory: 777 (rwxrwxrwx)
+# - umask:   022 (----w--w-)
+# = result:  755 (rwxr-xr-x)
+
+# Imposta nuovo umask
+umask 027
+# File:      666 - 027 = 640 (rw-r-----)
+# Directory: 777 - 027 = 750 (rwxr-x---)
+
+# Umask comuni:
+umask 022   # Default: file 644, dir 755
+umask 002   # Gruppo può scrivere: file 664, dir 775
+umask 077   # Privato: file 600, dir 700
+
+# Test pratico
+umask 022
+touch test1.txt
+mkdir test1dir
+ls -ld test1*
+# -rw-r--r-- test1.txt
+# drwxr-xr-x test1dir
+
+umask 077
+touch test2.txt
+mkdir test2dir
+ls -ld test2*
+# -rw------- test2.txt
+# drwx------ test2dir
+
+# Rendere permanente: aggiungi a ~/.bashrc
+echo "umask 027" >> ~/.bashrc
+\end{lstlisting}
+
+\section{Attributi Estesi}
+
+\subsection{lsattr e chattr - Extended Attributes}
+
+Linux supporta attributi aggiuntivi oltre ai permessi standard:
+
+\begin{lstlisting}[style=bash]
+# Visualizza attributi
+lsattr file.txt
+# --------------e------- file.txt
+
+# Attributi importanti:
+# i: immutable - non può essere modificato, cancellato, rinominato
+# a: append-only - si può solo aggiungere in coda
+# e: extent format (default su ext4)
+# s: secure deletion - sovrascrive con zero alla cancellazione
+
+# Rendi file immutabile (richiede root)
+sudo chattr +i important.conf
+
+# Ora nemmeno root può modificarlo/cancellarlo
+sudo rm important.conf
+# rm: cannot remove 'important.conf': Operation not permitted
+
+# Rimuovi attributo immutable
+sudo chattr -i important.conf
+
+# Append-only (utile per log)
+sudo chattr +a logfile.log
+
+# File può solo crescere, non può essere troncato
+echo "new line" >> logfile.log   # OK
+echo "overwrite" > logfile.log   # ERRORE
+\end{lstlisting}
+
+\section{ACL - Access Control Lists}
+
+Per permessi più granulari del modello standard:
+
+\begin{lstlisting}[style=bash]
+# Verifica supporto ACL
+mount | grep acl
+
+# Visualizza ACL
+getfacl file.txt
+
+# Imposta ACL: permetti a user2 di leggere
+setfacl -m u:user2:r file.txt
+
+# Imposta ACL: permetti a group2 di scrivere
+setfacl -m g:group2:rw file.txt
+
+# Rimuovi ACL specifica
+setfacl -x u:user2 file.txt
+
+# Rimuovi tutte le ACL
+setfacl -b file.txt
+
+# ACL ricorsive su directory
+setfacl -R -m u:user2:rx directory/
+
+# ACL di default (ereditate da nuovi file)
+setfacl -d -m g:developers:rwx /shared/project/
+
+# Esempio completo
+getfacl file.txt
+# Output:
+# # file: file.txt
+# # owner: user1
+# # group: group1
+# user::rw-
+# user:user2:r--
+# group::r--
+# group:group2:rw-
+# mask::rw-
+# other::r--
+\end{lstlisting}
+
+\section{Esercizi Pratici}
+
+\subsection{Esercizio 3.1: Esplorazione Filesystem}
+
+\begin{lstlisting}[style=bash]
+# 1. Esplora la struttura principale
+ls -l /
+
+# 2. Trova la tua distribuzione
+cat /etc/os-release
+
+# 3. Quanti file in /etc?
+ls /etc | wc -l
+
+# 4. Trova i 5 file più grandi in /var/log
+sudo du -sh /var/log/* | sort -hr | head -5
+
+# 5. Dispositivi montati
+df -h
+
+# 6. Informazioni CPU
+cat /proc/cpuinfo | grep "model name" | head -1
+
+# 7. Memoria totale
+free -h
+
+# 8. Processi attivi
+ls /proc | grep "^[0-9]" | wc -l
+\end{lstlisting}
+
+\subsection{Esercizio 3.2: Gestione Permessi}
+
+\begin{lstlisting}[style=bash]
+# 1. Create directory di lavoro
+mkdir ~/permissions_test
+cd ~/permissions_test
+
+# 2. Create file con diversi permessi
+touch public.txt private.txt executable.sh
+
+# 3. Imposta permessi
+chmod 644 public.txt         # rw-r--r--
+chmod 600 private.txt        # rw-------
+chmod 755 executable.sh      # rwxr-xr-x
+
+# 4. Verifica
+ls -l
+
+# 5. Create directory con permessi
+mkdir public_dir private_dir shared_dir
+chmod 755 public_dir         # rwxr-xr-x
+chmod 700 private_dir        # rwx------
+chmod 775 shared_dir         # rwxrwxr-x
+
+# 6. Test permessi
+# Come puoi leggere/scrivere/eseguire?
+cat public.txt               # OK
+cat private.txt              # OK (sei owner)
+./executable.sh              # OK se ha shebang
+
+# 7. Imposta SGID su shared_dir
+chmod g+s shared_dir
+
+# 8. Verifica
+ls -ld shared_dir
+# drwxrwsr-x
+\end{lstlisting}
+
+\subsection{Esercizio 3.3: Ownership}
+
+\begin{lstlisting}[style=bash]
+# 1. Verifica owner corrente
+ls -l ~/permissions_test
+
+# 2. Create file temporaneo come root
+sudo touch /tmp/rootfile.txt
+ls -l /tmp/rootfile.txt
+# -rw-r--r-- 1 root root 0 /tmp/rootfile.txt
+
+# 3. Cambia ownership a te stesso
+sudo chown $USER:$USER /tmp/rootfile.txt
+ls -l /tmp/rootfile.txt
+
+# 4. Create struttura
+mkdir -p ~/project/{src,docs,bin}
+touch ~/project/src/main.c
+touch ~/project/docs/README.md
+
+# 5. Imposta ownership ricorsivo
+sudo chown -R $USER:$USER ~/project
+
+# 6. Verifica ricorsivamente
+ls -lR ~/project
+\end{lstlisting}
+
+\subsection{Esercizio 3.4: umask}
+
+\begin{lstlisting}[style=bash]
+# 1. Verifica umask corrente
+umask
+umask -S
+
+# 2. Test con umask 022
+umask 022
+touch file_022.txt
+mkdir dir_022
+ls -l file_022.txt    # -rw-r--r--
+ls -ld dir_022        # drwxr-xr-x
+
+# 3. Test con umask 077
+umask 077
+touch file_077.txt
+mkdir dir_077
+ls -l file_077.txt    # -rw-------
+ls -ld dir_077        # drwx------
+
+# 4. Test con umask 002
+umask 002
+touch file_002.txt
+mkdir dir_002
+ls -l file_002.txt    # -rw-rw-r--
+ls -ld dir_002        # drwxrwxr-x
+
+# 5. Ripristina umask default
+umask 022
+
+# 6. Cleanup
+rm file_* 2>/dev/null
+rm -rf dir_* 2>/dev/null
+\end{lstlisting}
+
+\subsection{Esercizio 3.5: Scenario Reale}
+
+Configurare un progetto web condiviso:
+
+\begin{lstlisting}[style=bash]
+# 1. Create gruppo developers
+sudo groupadd developers
+
+# 2. Aggiungi utenti al gruppo
+sudo usermod -aG developers $USER
+# (necessario logout/login per applicare)
+
+# 3. Create directory progetto
+sudo mkdir -p /var/www/project
+sudo chown root:developers /var/www/project
+
+# 4. Imposta permessi con SGID
+sudo chmod 2775 /var/www/project
+# 2: SGID - nuovi file ereditano gruppo "developers"
+# 775: rwxrwxr-x
+
+# 5. Verifica
+ls -ld /var/www/project
+# drwxrwsr-x 2 root developers 4096 /var/www/project
+#       ^
+#       └─ SGID bit
+
+# 6. Test: crea file
+touch /var/www/project/test.html
+ls -l /var/www/project/test.html
+# -rw-rw-r-- 1 yourusername developers 0 test.html
+#                          ^
+#                          └─ gruppo ereditato da SGID
+
+# 7. Imposta umask per gruppo writable
+echo "umask 002" >> ~/.bashrc
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Sicurezza Permessi]
+\begin{enumerate}
+    \item \textbf{Principio del minimo privilegio}
+    \begin{lstlisting}[style=bash]
+# Dai solo i permessi necessari, non di più
+chmod 600 ~/.ssh/id_rsa        # Chiave privata: solo owner
+chmod 644 public_file.txt      # File pubblico: read per tutti
+chmod 700 ~/bin/               # Script personali: solo owner
+    \end{lstlisting}
+
+    \item \textbf{Mai 777 su file critici}
+    \begin{lstlisting}[style=bash]
+# MALE - troppo permissivo
+chmod 777 config.php           # Chiunque può modificare!
+
+# BENE - solo necessario
+chmod 640 config.php           # Owner rw, group r
+    \end{lstlisting}
+
+    \item \textbf{Proteggi directory .ssh}
+    \begin{lstlisting}[style=bash]
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/id_rsa
+chmod 644 ~/.ssh/id_rsa.pub
+chmod 600 ~/.ssh/authorized_keys
+    \end{lstlisting}
+
+    \item \textbf{Usa gruppi per condivisione}
+    \begin{lstlisting}[style=bash]
+# Invece di permessi 777, usa gruppi + SGID
+sudo groupadd projectteam
+sudo chown -R :projectteam /shared/project
+sudo chmod -R 2775 /shared/project
+    \end{lstlisting}
+
+    \item \textbf{Audit regolare permessi}
+    \begin{lstlisting}[style=bash]
+# Trova file world-writable (potenziale rischio)
+find /home -type f -perm -002 2>/dev/null
+
+# Trova file con SUID (potenziale rischio escalation)
+find / -perm -4000 -type f 2>/dev/null
+
+# Trova file senza owner (orphaned)
+find / -nouser -o -nogroup 2>/dev/null
+    \end{lstlisting}
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Errori Comuni da Evitare]
+\begin{enumerate}
+    \item \textbf{chmod -R 777}: mai su directory importanti
+    \item \textbf{chown senza backup}: sempre backup prima di cambiare ownership massivo
+    \item \textbf{Modificare /etc senza capire}: può rompere il sistema
+    \item \textbf{Dimenticare sticky bit su /tmp}: permette cancellazione file altrui
+    \item \textbf{SUID su script shell}: rischio sicurezza, molte shell lo ignorano
+\end{enumerate}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item \textbf{Filesystem Hierarchy Standard}: organizzazione directory Linux
+    \item \textbf{Directory principali}: /, /etc, /var, /home, /usr, /proc, /sys, /dev
+    \item \textbf{Permessi}: lettura, scrittura, esecuzione per owner/group/others
+    \item \textbf{chmod}: modifica permessi (numerico e simbolico)
+    \item \textbf{chown/chgrp}: modifica ownership
+    \item \textbf{umask}: permessi di default per nuovi file
+    \item \textbf{Permessi speciali}: SUID, SGID, sticky bit
+    \item \textbf{Attributi estesi}: chattr, lsattr
+    \item \textbf{ACL}: permessi granulari
+\end{itemize}
+
+La comprensione del filesystem e dei permessi è fondamentale per la sicurezza e l'amministrazione di sistemi Linux.
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Prossimo Capitolo]
+Nel Capitolo 4 impareremo a gestire i processi: monitorarli con ps e top, controllarli con kill, e gestire job in foreground e background.
+\end{tcolorbox}

@@ -1,0 +1,923 @@
+\chapter{Algoritmi di Ordinamento}
+\label{cap:sorting}
+
+\section{Introduzione}
+
+L'ordinamento è uno dei problemi fondamentali dell'informatica. Dato un insieme di elementi con una relazione d'ordine totale, l'obiettivo è riorganizzare gli elementi in ordine crescente (o decrescente).
+
+\subsection{Definizione Formale}
+
+Dato un array $A[1..n]$ di elementi confrontabili, vogliamo permutare $A$ in modo che:
+\[ A[1] \leq A[2] \leq \ldots \leq A[n] \]
+
+\subsection{Classificazione degli Algoritmi}
+
+Gli algoritmi di ordinamento si classificano secondo:
+\begin{itemize}
+    \item \textbf{Complessità temporale}: numero di confronti e scambi
+    \item \textbf{Complessità spaziale}: memoria aggiuntiva richiesta
+    \item \textbf{Stabilità}: preservazione dell'ordine relativo di elementi uguali
+    \item \textbf{In-place}: utilizzo di memoria costante $O(1)$
+    \item \textbf{Adattività}: prestazioni migliori su dati parzialmente ordinati
+\end{itemize}
+
+\section{Bubble Sort}
+
+\subsection{Descrizione}
+
+Bubble Sort confronta ripetutamente coppie di elementi adiacenti, scambiandoli se non sono nell'ordine corretto. L'elemento più grande "bolle" verso la fine dell'array ad ogni iterazione.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Bubble Sort}
+\begin{algorithmic}[1]
+\Procedure{BubbleSort}{$A, n$}
+    \For{$i \gets 1$ \To $n-1$}
+        \For{$j \gets 1$ \To $n-i$}
+            \If{$A[j] > A[j+1]$}
+                \State \Call{Swap}{$A[j], A[j+1]$}
+            \EndIf
+        \EndFor
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Versione Ottimizzata}
+
+\begin{algorithm}
+\caption{Bubble Sort Ottimizzato}
+\begin{algorithmic}[1]
+\Procedure{BubbleSortOpt}{$A, n$}
+    \State $swapped \gets \True$
+    \While{$swapped$}
+        \State $swapped \gets \False$
+        \For{$j \gets 1$ \To $n-1$}
+            \If{$A[j] > A[j+1]$}
+                \State \Call{Swap}{$A[j], A[j+1]$}
+                \State $swapped \gets \True$
+            \EndIf
+        \EndFor
+        \State $n \gets n - 1$
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso peggiore}: $T(n) = \sum_{i=1}^{n-1}(n-i) = \frac{n(n-1)}{2} = O(n^2)$
+    \item \textbf{Caso medio}: $\Theta(n^2)$ confronti e $\Theta(n^2)$ scambi
+    \item \textbf{Caso migliore}: $O(n)$ con ottimizzazione (array già ordinato)
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$ - algoritmo in-place
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Stabile: mantiene l'ordine relativo
+    \item In-place: non richiede memoria aggiuntiva
+    \item Adattivo: termina presto se l'array è già ordinato (versione ottimizzata)
+\end{itemize}
+
+\subsection{Prova di Correttezza}
+
+\textbf{Invariante del ciclo esterno:} Dopo $i$ iterazioni, gli ultimi $i$ elementi sono nella loro posizione finale e sono ordinati.
+
+\textbf{Base:} $i=0$, nessun elemento in posizione finale (vero banalmente).
+
+\textbf{Passo induttivo:} Assumiamo che dopo $i$ iterazioni gli ultimi $i$ elementi siano ordinati. Durante l'iterazione $i+1$, il ciclo interno porta il massimo tra i primi $n-i$ elementi alla posizione $n-i$, quindi dopo $i+1$ iterazioni gli ultimi $i+1$ elementi sono ordinati.
+
+\textbf{Terminazione:} Dopo $n-1$ iterazioni, gli ultimi $n-1$ elementi sono ordinati, quindi anche il primo è in posizione corretta.
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def bubble_sort(arr):
+    """
+    Ordina un array usando Bubble Sort.
+
+    Args:
+        arr: lista di elementi confrontabili
+
+    Returns:
+        lista ordinata
+
+    Complessita: O(n^2) tempo, O(1) spazio
+    """
+    n = len(arr)
+    arr = arr.copy()  # Non modifichiamo l'originale
+
+    for i in range(n - 1):
+        for j in range(n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+
+    return arr
+
+
+def bubble_sort_optimized(arr):
+    """
+    Bubble Sort ottimizzato con early stopping.
+
+    Complessita: O(n) best case, O(n^2) worst case
+    """
+    n = len(arr)
+    arr = arr.copy()
+
+    for i in range(n - 1):
+        swapped = False
+        for j in range(n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+
+        if not swapped:
+            break  # Array gia ordinato
+
+    return arr
+\end{lstlisting}
+
+\section{Selection Sort}
+
+\subsection{Descrizione}
+
+Selection Sort divide l'array in due parti: ordinata e non ordinata. Ad ogni iterazione, seleziona il minimo dalla parte non ordinata e lo sposta alla fine della parte ordinata.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Selection Sort}
+\begin{algorithmic}[1]
+\Procedure{SelectionSort}{$A, n$}
+    \For{$i \gets 1$ \To $n-1$}
+        \State $min\_idx \gets i$
+        \For{$j \gets i+1$ \To $n$}
+            \If{$A[j] < A[min\_idx]$}
+                \State $min\_idx \gets j$
+            \EndIf
+        \EndFor
+        \If{$min\_idx \neq i$}
+            \State \Call{Swap}{$A[i], A[min\_idx]$}
+        \EndIf
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Tutti i casi}: $T(n) = \sum_{i=1}^{n-1}(n-i) = \frac{n(n-1)}{2} = \Theta(n^2)$
+    \item Numero di confronti: sempre $\frac{n(n-1)}{2}$
+    \item Numero di scambi: al massimo $n-1$ (meglio di Bubble Sort)
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Non stabile (può cambiare ordine relativo)
+    \item In-place
+    \item Non adattivo (sempre $O(n^2)$ confronti)
+    \item Minimo numero di scambi: utile quando gli scambi sono costosi
+\end{itemize}
+
+\subsection{Prova di Correttezza}
+
+\textbf{Invariante:} Dopo $i$ iterazioni, i primi $i$ elementi sono ordinati e sono i più piccoli dell'array.
+
+\textbf{Base:} $i=0$, nessun elemento ordinato (vero).
+
+\textbf{Passo:} Se i primi $i$ elementi sono i più piccoli e ordinati, l'iterazione $i+1$ trova il minimo tra gli elementi rimanenti e lo posiziona in $i+1$.
+
+\textbf{Terminazione:} Dopo $n-1$ iterazioni, i primi $n-1$ elementi sono ordinati, quindi anche l'ultimo è corretto.
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def selection_sort(arr):
+    """
+    Ordina un array usando Selection Sort.
+
+    Complessita: O(n^2) tempo, O(1) spazio
+    Caratteristiche: minimo numero di scambi
+    """
+    n = len(arr)
+    arr = arr.copy()
+
+    for i in range(n - 1):
+        # Trova il minimo nella parte non ordinata
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+
+        # Scambia se necessario
+        if min_idx != i:
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
+
+    return arr
+\end{lstlisting}
+
+\section{Insertion Sort}
+
+\subsection{Descrizione}
+
+Insertion Sort costruisce l'array ordinato un elemento alla volta, inserendo ogni nuovo elemento nella posizione corretta rispetto agli elementi già ordinati.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Insertion Sort}
+\begin{algorithmic}[1]
+\Procedure{InsertionSort}{$A, n$}
+    \For{$i \gets 2$ \To $n$}
+        \State $key \gets A[i]$
+        \State $j \gets i - 1$
+        \While{$j > 0$ \And $A[j] > key$}
+            \State $A[j+1] \gets A[j]$
+            \State $j \gets j - 1$
+        \EndWhile
+        \State $A[j+1] \gets key$
+    \EndFor
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso peggiore}: $T(n) = \sum_{i=2}^{n}(i-1) = \frac{n(n-1)}{2} = O(n^2)$ (array ordinato al contrario)
+    \item \textbf{Caso medio}: $\Theta(n^2)$
+    \item \textbf{Caso migliore}: $O(n)$ (array già ordinato)
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Stabile
+    \item In-place
+    \item Adattivo: efficiente su array quasi ordinati
+    \item Online: può ordinare mentre riceve dati
+    \item Efficiente per piccoli array ($n < 50$)
+\end{itemize}
+
+\subsection{Prova di Correttezza}
+
+\textbf{Invariante:} All'inizio dell'iterazione $i$, il sotto-array $A[1..i-1]$ è ordinato.
+
+\textbf{Base:} $i=2$, $A[1..1]$ è ordinato (un solo elemento).
+
+\textbf{Passo:} Se $A[1..i-1]$ è ordinato, l'iterazione $i$ inserisce $A[i]$ nella posizione corretta in $A[1..i]$, mantenendo l'ordine.
+
+\textbf{Terminazione:} Dopo $n$ iterazioni, $A[1..n]$ è ordinato.
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def insertion_sort(arr):
+    """
+    Ordina un array usando Insertion Sort.
+
+    Complessita: O(n) best case, O(n^2) worst case
+    Caratteristiche: stabile, adattivo, efficiente su piccoli array
+    """
+    n = len(arr)
+    arr = arr.copy()
+
+    for i in range(1, n):
+        key = arr[i]
+        j = i - 1
+
+        # Sposta elementi maggiori di key verso destra
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+
+        # Inserisci key nella posizione corretta
+        arr[j + 1] = key
+
+    return arr
+
+
+def insertion_sort_binary(arr):
+    """
+    Insertion Sort con ricerca binaria per trovare la posizione.
+    Riduce i confronti ma non migliora la complessita asintotica.
+    """
+    import bisect
+    arr = arr.copy()
+
+    for i in range(1, len(arr)):
+        key = arr[i]
+        # Trova posizione con ricerca binaria
+        pos = bisect.bisect_left(arr, key, 0, i)
+        # Sposta e inserisci
+        arr = arr[:pos] + [key] + arr[pos:i] + arr[i+1:]
+
+    return arr
+\end{lstlisting}
+
+\section{Merge Sort}
+
+\subsection{Descrizione}
+
+Merge Sort è un algoritmo divide-et-impera che divide ricorsivamente l'array in due metà, le ordina separatamente e poi le fonde.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Merge Sort}
+\begin{algorithmic}[1]
+\Procedure{MergeSort}{$A, p, r$}
+    \If{$p < r$}
+        \State $q \gets \lfloor(p+r)/2\rfloor$
+        \State \Call{MergeSort}{$A, p, q$}
+        \State \Call{MergeSort}{$A, q+1, r$}
+        \State \Call{Merge}{$A, p, q, r$}
+    \EndIf
+\EndProcedure
+\State
+\Procedure{Merge}{$A, p, q, r$}
+    \State $n_1 \gets q - p + 1$
+    \State $n_2 \gets r - q$
+    \State Crea array $L[1..n_1]$ e $R[1..n_2]$
+    \For{$i \gets 1$ \To $n_1$}
+        \State $L[i] \gets A[p+i-1]$
+    \EndFor
+    \For{$j \gets 1$ \To $n_2$}
+        \State $R[j] \gets A[q+j]$
+    \EndFor
+    \State $i \gets 1$, $j \gets 1$, $k \gets p$
+    \While{$i \leq n_1$ \And $j \leq n_2$}
+        \If{$L[i] \leq R[j]$}
+            \State $A[k] \gets L[i]$
+            \State $i \gets i + 1$
+        \Else
+            \State $A[k] \gets R[j]$
+            \State $j \gets j + 1$
+        \EndIf
+        \State $k \gets k + 1$
+    \EndWhile
+    \While{$i \leq n_1$}
+        \State $A[k] \gets L[i]$
+        \State $i \gets i + 1$, $k \gets k + 1$
+    \EndWhile
+    \While{$j \leq n_2$}
+        \State $A[k] \gets R[j]$
+        \State $j \gets j + 1$, $k \gets k + 1$
+    \EndWhile
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Ricorrenza:}
+\[ T(n) = 2T(n/2) + \Theta(n) \]
+
+Applicando il Master Theorem (caso 2):
+\[ T(n) = \Theta(n \log n) \]
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Tutti i casi}: $\Theta(n \log n)$ - sempre lo stesso
+    \item Numero di confronti: $\approx n \log n$
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(n)$ per gli array temporanei
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Stabile (se implementato correttamente con $\leq$ nel merge)
+    \item Non in-place (richiede $O(n)$ spazio aggiuntivo)
+    \item Non adattivo (sempre $\Theta(n \log n)$)
+    \item Ottimo per grandi dataset
+    \item Parallelizzabile
+\end{itemize}
+
+\subsection{Prova di Correttezza}
+
+Per induzione sulla dimensione $n = r - p + 1$:
+
+\textbf{Base:} $n=1$ (p=r), l'array è già ordinato.
+
+\textbf{Passo:} Se MergeSort ordina correttamente array di dimensione $< n$, allora:
+\begin{itemize}
+    \item Le due chiamate ricorsive ordinano le due metà
+    \item Merge fonde correttamente due array ordinati in uno ordinato
+    \item Quindi $A[p..r]$ è ordinato
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def merge_sort(arr):
+    """
+    Ordina un array usando Merge Sort.
+
+    Complessita: O(n log n) tempo, O(n) spazio
+    Caratteristiche: stabile, garantisce O(n log n) anche nel caso peggiore
+    """
+    if len(arr) <= 1:
+        return arr
+
+    # Dividi
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+
+    # Fondi
+    return merge(left, right)
+
+
+def merge(left, right):
+    """
+    Fonde due array ordinati in uno ordinato.
+    """
+    result = []
+    i = j = 0
+
+    # Confronta e fondi
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:  # <= per stabilita
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+
+    # Aggiungi elementi rimanenti
+    result.extend(left[i:])
+    result.extend(right[j:])
+
+    return result
+
+
+def merge_sort_inplace(arr, start=0, end=None):
+    """
+    Versione in-place di Merge Sort (usa ancora O(n) spazio nella ricorsione).
+    """
+    if end is None:
+        end = len(arr)
+        arr = arr.copy()
+
+    if end - start <= 1:
+        return arr if end is None else None
+
+    mid = (start + end) // 2
+    merge_sort_inplace(arr, start, mid)
+    merge_sort_inplace(arr, mid, end)
+
+    # Merge in-place
+    temp = []
+    i, j = start, mid
+
+    while i < mid and j < end:
+        if arr[i] <= arr[j]:
+            temp.append(arr[i])
+            i += 1
+        else:
+            temp.append(arr[j])
+            j += 1
+
+    temp.extend(arr[i:mid])
+    temp.extend(arr[j:end])
+
+    for i, val in enumerate(temp):
+        arr[start + i] = val
+
+    return arr if end == len(arr) else None
+\end{lstlisting}
+
+\section{Quick Sort}
+
+\subsection{Descrizione}
+
+Quick Sort sceglie un elemento pivot e partiziona l'array in elementi minori e maggiori del pivot, poi ordina ricorsivamente le due partizioni.
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Quick Sort}
+\begin{algorithmic}[1]
+\Procedure{QuickSort}{$A, p, r$}
+    \If{$p < r$}
+        \State $q \gets$ \Call{Partition}{$A, p, r$}
+        \State \Call{QuickSort}{$A, p, q-1$}
+        \State \Call{QuickSort}{$A, q+1, r$}
+    \EndIf
+\EndProcedure
+\State
+\Procedure{Partition}{$A, p, r$}
+    \State $x \gets A[r]$ \Comment{Pivot}
+    \State $i \gets p - 1$
+    \For{$j \gets p$ \To $r-1$}
+        \If{$A[j] \leq x$}
+            \State $i \gets i + 1$
+            \State \Call{Swap}{$A[i], A[j]$}
+        \EndIf
+    \EndFor
+    \State \Call{Swap}{$A[i+1], A[r]$}
+    \State \Return $i + 1$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{Complessità Temporale:}
+\begin{itemize}
+    \item \textbf{Caso peggiore}: $T(n) = T(n-1) + \Theta(n) = O(n^2)$ (pivot sempre min/max)
+    \item \textbf{Caso medio}: $T(n) = 2T(n/2) + \Theta(n) = \Theta(n \log n)$
+    \item \textbf{Caso migliore}: $\Theta(n \log n)$ (partizioni bilanciate)
+\end{itemize}
+
+\paragraph{Complessità Spaziale:}
+\begin{itemize}
+    \item $O(\log n)$ stack ricorsivo nel caso medio
+    \item $O(n)$ nel caso peggiore
+\end{itemize}
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Non stabile
+    \item In-place (ignoring stack)
+    \item Molto efficiente in pratica (costanti piccole)
+    \item Cache-friendly
+\end{itemize}
+
+\subsection{Ottimizzazioni}
+
+\subsubsection{Randomized Quick Sort}
+
+\begin{algorithm}
+\caption{Randomized Partition}
+\begin{algorithmic}[1]
+\Procedure{RandomizedPartition}{$A, p, r$}
+    \State $i \gets$ \Call{Random}{$p, r$}
+    \State \Call{Swap}{$A[i], A[r]$}
+    \State \Return \Call{Partition}{$A, p, r$}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+La randomizzazione garantisce complessità attesa $O(n \log n)$ indipendentemente dall'input.
+
+\subsubsection{Three-Way Partitioning}
+
+Per gestire duplicati efficientemente (Dijkstra's 3-way partition):
+
+\begin{algorithm}
+\caption{Three-Way Partition}
+\begin{algorithmic}[1]
+\Procedure{Partition3Way}{$A, p, r$}
+    \State $pivot \gets A[p]$
+    \State $lt \gets p$, $gt \gets r$, $i \gets p$
+    \While{$i \leq gt$}
+        \If{$A[i] < pivot$}
+            \State \Call{Swap}{$A[lt], A[i]$}
+            \State $lt \gets lt + 1$, $i \gets i + 1$
+        \ElsIf{$A[i] > pivot$}
+            \State \Call{Swap}{$A[i], A[gt]$}
+            \State $gt \gets gt - 1$
+        \Else
+            \State $i \gets i + 1$
+        \EndIf
+    \EndWhile
+    \State \Return $(lt, gt)$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def quick_sort(arr):
+    """
+    Ordina un array usando Quick Sort.
+
+    Complessita: O(n log n) medio, O(n^2) peggiore
+    Caratteristiche: in-place, molto efficiente in pratica
+    """
+    arr = arr.copy()
+    _quick_sort_helper(arr, 0, len(arr) - 1)
+    return arr
+
+
+def _quick_sort_helper(arr, low, high):
+    """Helper ricorsivo per Quick Sort."""
+    if low < high:
+        # Partiziona e ottieni indice pivot
+        pi = partition(arr, low, high)
+
+        # Ordina ricorsivamente le due partizioni
+        _quick_sort_helper(arr, low, pi - 1)
+        _quick_sort_helper(arr, pi + 1, high)
+
+
+def partition(arr, low, high):
+    """
+    Partiziona l'array usando l'ultimo elemento come pivot.
+    Ritorna l'indice finale del pivot.
+    """
+    pivot = arr[high]
+    i = low - 1  # Indice dell'elemento piu piccolo
+
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+
+    # Metti il pivot nella posizione corretta
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+
+def quick_sort_randomized(arr):
+    """Quick Sort con pivot randomizzato."""
+    import random
+    arr = arr.copy()
+
+    def randomized_partition(arr, low, high):
+        # Scegli pivot casuale
+        pivot_idx = random.randint(low, high)
+        arr[pivot_idx], arr[high] = arr[high], arr[pivot_idx]
+        return partition(arr, low, high)
+
+    def helper(arr, low, high):
+        if low < high:
+            pi = randomized_partition(arr, low, high)
+            helper(arr, low, pi - 1)
+            helper(arr, pi + 1, high)
+
+    helper(arr, 0, len(arr) - 1)
+    return arr
+
+
+def quick_sort_3way(arr):
+    """Quick Sort con partizione a 3 vie (per duplicati)."""
+    arr = arr.copy()
+
+    def partition_3way(arr, low, high):
+        if high <= low:
+            return
+
+        pivot = arr[low]
+        lt = low      # arr[low..lt-1] < pivot
+        gt = high     # arr[gt+1..high] > pivot
+        i = low + 1   # arr[lt..i-1] == pivot
+
+        while i <= gt:
+            if arr[i] < pivot:
+                arr[lt], arr[i] = arr[i], arr[lt]
+                lt += 1
+                i += 1
+            elif arr[i] > pivot:
+                arr[i], arr[gt] = arr[gt], arr[i]
+                gt -= 1
+            else:
+                i += 1
+
+        partition_3way(arr, low, lt - 1)
+        partition_3way(arr, gt + 1, high)
+
+    partition_3way(arr, 0, len(arr) - 1)
+    return arr
+\end{lstlisting}
+
+\section{Heap Sort}
+
+\subsection{Descrizione}
+
+Heap Sort usa una struttura dati heap (coda di priorità) per ordinare. Costruisce un max-heap e poi estrae ripetutamente il massimo.
+
+\subsection{Richiami sugli Heap}
+
+Un \textbf{max-heap} è un albero binario completo dove ogni nodo è $\geq$ dei suoi figli:
+\[ A[\text{PARENT}(i)] \geq A[i] \]
+
+Operazioni fondamentali:
+\begin{itemize}
+    \item $\text{PARENT}(i) = \lfloor i/2 \rfloor$
+    \item $\text{LEFT}(i) = 2i$
+    \item $\text{RIGHT}(i) = 2i + 1$
+\end{itemize}
+
+\subsection{Pseudocodice}
+
+\begin{algorithm}
+\caption{Heap Sort}
+\begin{algorithmic}[1]
+\Procedure{HeapSort}{$A, n$}
+    \State \Call{BuildMaxHeap}{$A, n$}
+    \For{$i \gets n$ \DownTo $2$}
+        \State \Call{Swap}{$A[1], A[i]$}
+        \State $heap\_size \gets heap\_size - 1$
+        \State \Call{MaxHeapify}{$A, 1$}
+    \EndFor
+\EndProcedure
+\State
+\Procedure{BuildMaxHeap}{$A, n$}
+    \State $heap\_size \gets n$
+    \For{$i \gets \lfloor n/2 \rfloor$ \DownTo $1$}
+        \State \Call{MaxHeapify}{$A, i$}
+    \EndFor
+\EndProcedure
+\State
+\Procedure{MaxHeapify}{$A, i$}
+    \State $l \gets \text{LEFT}(i)$
+    \State $r \gets \text{RIGHT}(i)$
+    \State $largest \gets i$
+    \If{$l \leq heap\_size$ \And $A[l] > A[largest]$}
+        \State $largest \gets l$
+    \EndIf
+    \If{$r \leq heap\_size$ \And $A[r] > A[largest]$}
+        \State $largest \gets r$
+    \EndIf
+    \If{$largest \neq i$}
+        \State \Call{Swap}{$A[i], A[largest]$}
+        \State \Call{MaxHeapify}{$A, largest$}
+    \EndIf
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Analisi di Complessità}
+
+\paragraph{MaxHeapify:} $O(\log n)$ - altezza dell'heap
+
+\paragraph{BuildMaxHeap:}
+Analisi tight: $O(n)$ (non $O(n \log n)$!)
+
+Dimostrazione: In un heap di $n$ elementi, ci sono al più $\lceil n/2^{h+1} \rceil$ nodi ad altezza $h$:
+\begin{align*}
+T(n) &= \sum_{h=0}^{\lfloor \log n \rfloor} \lceil n/2^{h+1} \rceil O(h) \\
+     &= O\left(n \sum_{h=0}^{\lfloor \log n \rfloor} h/2^h\right) \\
+     &= O(n)
+\end{align*}
+
+\paragraph{HeapSort:} $O(n \log n)$
+\begin{itemize}
+    \item BuildMaxHeap: $O(n)$
+    \item $n-1$ estrazioni: $(n-1) \times O(\log n) = O(n \log n)$
+\end{itemize}
+
+\paragraph{Complessità Spaziale:} $O(1)$ - in-place
+
+\paragraph{Proprietà:}
+\begin{itemize}
+    \item Non stabile
+    \item In-place
+    \item $O(n \log n)$ garantito (come Merge Sort)
+    \item Non cache-friendly (accessi sparsi)
+\end{itemize}
+
+\subsection{Implementazione Python}
+
+\begin{lstlisting}[language=Python]
+def heap_sort(arr):
+    """
+    Ordina un array usando Heap Sort.
+
+    Complessita: O(n log n) tempo, O(1) spazio
+    Caratteristiche: in-place, garantisce O(n log n)
+    """
+    arr = arr.copy()
+    n = len(arr)
+
+    # Costruisci max-heap
+    build_max_heap(arr, n)
+
+    # Estrai elementi uno alla volta
+    for i in range(n - 1, 0, -1):
+        # Sposta la radice (max) alla fine
+        arr[0], arr[i] = arr[i], arr[0]
+        # Ripristina heap sulla parte ridotta
+        max_heapify(arr, 0, i)
+
+    return arr
+
+
+def build_max_heap(arr, n):
+    """Costruisce un max-heap dall'array."""
+    # Inizia dall'ultimo nodo non-foglia
+    for i in range(n // 2 - 1, -1, -1):
+        max_heapify(arr, i, n)
+
+
+def max_heapify(arr, i, heap_size):
+    """
+    Mantiene la proprieta di max-heap al nodo i.
+    Assume che i sottoalberi siano gia max-heap.
+    """
+    left = 2 * i + 1
+    right = 2 * i + 2
+    largest = i
+
+    # Trova il piu grande tra nodo, figlio sx e dx
+    if left < heap_size and arr[left] > arr[largest]:
+        largest = left
+
+    if right < heap_size and arr[right] > arr[largest]:
+        largest = right
+
+    # Se necessario, scambia e ricorsivamente heapify
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        max_heapify(arr, largest, heap_size)
+
+
+# Versione iterativa di max_heapify (evita ricorsione)
+def max_heapify_iterative(arr, i, heap_size):
+    """Versione iterativa di max_heapify."""
+    while True:
+        left = 2 * i + 1
+        right = 2 * i + 2
+        largest = i
+
+        if left < heap_size and arr[left] > arr[largest]:
+            largest = left
+        if right < heap_size and arr[right] > arr[largest]:
+            largest = right
+
+        if largest == i:
+            break
+
+        arr[i], arr[largest] = arr[largest], arr[i]
+        i = largest
+\end{lstlisting}
+
+\section{Confronto degli Algoritmi}
+
+\begin{table}[h]
+\centering
+\caption{Confronto algoritmi di ordinamento}
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Best} & \textbf{Average} & \textbf{Worst} & \textbf{Spazio} & \textbf{Stabile} & \textbf{In-place} \\
+\hline
+Bubble Sort & $O(n)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & Sì & Sì \\
+Selection Sort & $O(n^2)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & No & Sì \\
+Insertion Sort & $O(n)$ & $O(n^2)$ & $O(n^2)$ & $O(1)$ & Sì & Sì \\
+Merge Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(n)$ & Sì & No \\
+Quick Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n^2)$ & $O(\log n)$ & No & Sì \\
+Heap Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & $O(1)$ & No & Sì \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Quando Usare Quale Algoritmo}
+
+\begin{itemize}
+    \item \textbf{Insertion Sort}: piccoli array ($n < 50$), array quasi ordinati
+    \item \textbf{Merge Sort}: quando serve stabilità e $O(n \log n)$ garantito, linked list
+    \item \textbf{Quick Sort}: caso generale, migliori prestazioni medie
+    \item \textbf{Heap Sort}: quando serve $O(n \log n)$ garantito con $O(1)$ spazio
+    \item \textbf{Bubble/Selection Sort}: solo per scopi didattici o casi molto particolari
+\end{itemize}
+
+\section{Algoritmi Ibridi}
+
+\subsection{Introsort}
+
+Introsort (usato in C++ STL) combina Quick Sort, Heap Sort e Insertion Sort:
+\begin{itemize}
+    \item Inizia con Quick Sort
+    \item Se la ricorsione supera $2 \log n$, passa a Heap Sort
+    \item Per array piccoli ($< 16$ elementi), usa Insertion Sort
+\end{itemize}
+
+Garantisce $O(n \log n)$ nel caso peggiore con ottime prestazioni medie.
+
+\subsection{Timsort}
+
+Timsort (usato in Python e Java) combina Merge Sort e Insertion Sort:
+\begin{itemize}
+    \item Identifica "run" naturali ordinati
+    \item Usa Insertion Sort per run piccoli
+    \item Fonde i run con Merge Sort ottimizzato
+\end{itemize}
+
+Eccellente per dati reali (spesso parzialmente ordinati).
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementare una versione di Quick Sort che usa Insertion Sort per sottoarray $\leq k$ elementi. Trovare sperimentalmente il valore ottimale di $k$.
+
+    \item Dimostrare che ogni algoritmo di ordinamento basato su confronti richiede $\Omega(n \log n)$ confronti nel caso peggiore.
+
+    \item Implementare Merge Sort per liste concatenate con complessità spaziale $O(1)$.
+
+    \item Analizzare la complessità di Quick Sort quando l'array contiene molti duplicati. Implementare e testare la versione 3-way.
+
+    \item Modificare Heap Sort per trovare i $k$ elementi più grandi in $O(n \log k)$.
+\end{enumerate}

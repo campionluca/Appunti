@@ -1,0 +1,779 @@
+\chapter{Best Practices e Convenzioni}
+
+\section*{Introduzione}
+Scrivere buon codice non basta: è fondamentale usare Git in modo efficace. Questo capitolo presenta best practices consolidate per commit messages, struttura dei commit, branching strategies e workflow collaborativi. Seguire queste convenzioni rende il progetto più manutenibile e la collaborazione più fluida.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Scrivere commit messages chiari e informativi
+    \item Creare commit atomici e logicamente coerenti
+    \item Scegliere la branching strategy appropriata per il progetto
+    \item Applicare best practices per code review
+    \item Decidere quando usare merge vs rebase
+    \item Mantenere una cronologia Git pulita e comprensibile
+    \item Gestire .gitignore efficacemente
+    \item Implementare security best practices
+\end{itemize}
+
+\section{Commit Messages: L'Arte della Comunicazione}
+
+\subsection{Anatomia di un Buon Commit Message}
+
+\begin{lstlisting}
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+\end{lstlisting}
+
+\textbf{Esempio}:
+\begin{lstlisting}
+feat(auth): add JWT token authentication
+
+Implement JSON Web Token based authentication system to replace
+session-based auth. This provides better scalability and enables
+stateless API design.
+
+- Add JWT generation and validation
+- Implement middleware for protected routes
+- Add token refresh mechanism
+- Update user model with token fields
+
+Closes #142
+Breaking change: Session-based auth is deprecated
+\end{lstlisting}
+
+\subsection{Conventional Commits}
+
+\begin{description}
+    \item[\texttt{feat:}] Nuova funzionalità
+    \item[\texttt{fix:}] Bug fix
+    \item[\texttt{docs:}] Solo modifiche documentazione
+    \item[\texttt{style:}] Formattazione, missing semicolons, etc. (non cambia codice)
+    \item[\texttt{refactor:}] Refactoring (né fix né feature)
+    \item[\texttt{perf:}] Miglioramento performance
+    \item[\texttt{test:}] Aggiunta o correzione test
+    \item[\texttt{build:}] Build system, dipendenze (webpack, npm, etc.)
+    \item[\texttt{ci:}] CI configuration (GitHub Actions, Travis, etc.)
+    \item[\texttt{chore:}] Manutenzione varia (update dependencies, etc.)
+\end{description}
+
+\subsection{Esempi di Commit Messages}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Esempi BUONI]
+\begin{lstlisting}
+feat(api): add pagination to user list endpoint
+
+fix(login): resolve password validation bug
+Fixes #234
+
+docs(README): update installation instructions
+
+refactor(database): optimize query performance
+Reduce query time from 2s to 200ms by adding index
+
+test(auth): add integration tests for login flow
+
+perf(image): implement lazy loading for gallery
+Improves page load time by 40%
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Esempi CATTIVI]
+\begin{lstlisting}
+update stuff
+fixed bug
+WIP
+asdfsdf
+Final version
+Final version 2
+Really final version
+\end{lstlisting}
+
+\textbf{Perché sono cattivi?}
+\begin{itemize}
+    \item Non descrittivi
+    \item Non spiegano il "perché"
+    \item Rendono impossibile capire la cronologia
+    \item Complicano bisect, revert, review
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Subject Line: Le 7 Regole}
+
+\begin{enumerate}
+    \item \textbf{Separa subject da body con riga vuota}
+    \item \textbf{Limita subject a 50 caratteri}
+    \item \textbf{Inizia con lettera maiuscola}
+    \item \textbf{Non terminare con punto}
+    \item \textbf{Usa imperativo} ("Add feature" non "Added feature")
+    \item \textbf{Spiega COSA e PERCHÉ, non COME}
+    \item \textbf{Body: max 72 caratteri per riga}
+\end{enumerate}
+
+\begin{lstlisting}
+# BUONO
+Add user authentication system
+
+# CATTIVO
+added user authentication system.
+\end{lstlisting}
+
+\subsection{Body: Quando e Come}
+
+Il body è opzionale per commit semplici, ma fondamentale per modifiche complesse.
+
+\begin{lstlisting}
+refactor(database): migrate from MongoDB to PostgreSQL
+
+The application has grown beyond MongoDB's capabilities for our
+use case. PostgreSQL provides:
+- Better ACID compliance for financial transactions
+- Superior JOIN performance for complex queries
+- More mature ecosystem for data analytics
+
+Migration steps:
+1. Set up PostgreSQL database
+2. Create schema matching current data model
+3. Migrate data using custom script
+4. Update ORM configuration
+5. Deploy new version with backward compatibility
+
+This is a breaking change requiring infrastructure updates.
+See MIGRATION.md for deployment guide.
+
+Refs #456, #457, #458
+\end{lstlisting}
+
+\section{Atomic Commits}
+
+\subsection{Cos'è un Commit Atomico}
+
+Un commit è atomico quando contiene \textbf{un singolo cambiamento logico} che:
+\begin{itemize}
+    \item È autocontenuto e completo
+    \item Compila senza errori
+    \item Non rompe test esistenti
+    \item Può essere revertito indipendentemente
+\end{itemize}
+
+\subsection{Esempio: NON Atomico}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Commit Troppo Grande]
+\begin{lstlisting}
+commit abc123
+Author: Developer
+Date: ...
+
+Add user authentication, fix login bug, update dependencies,
+refactor database queries, add email validation
+
+Modified files:
+src/auth/login.js
+src/auth/register.js
+src/auth/middleware.js
+src/database/queries.js
+src/database/connection.js
+src/validation/email.js
+package.json
+package-lock.json
+README.md
+\end{lstlisting}
+
+\textbf{Problemi}:
+\begin{itemize}
+    \item Troppi cambiamenti non correlati
+    \item Impossibile revert solo una parte
+    \item Code review difficile
+    \item Bisect non efficace
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Esempio: Atomico Corretto}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Commit Atomici Separati]
+\begin{lstlisting}
+# Commit 1
+feat(auth): add JWT middleware
+Modified: src/auth/middleware.js
+
+# Commit 2
+feat(auth): implement login endpoint
+Modified: src/auth/login.js
+
+# Commit 3
+feat(auth): implement registration endpoint
+Modified: src/auth/register.js
+
+# Commit 4
+feat(validation): add email validation helper
+Modified: src/validation/email.js
+
+# Commit 5
+refactor(database): optimize user queries
+Modified: src/database/queries.js
+
+# Commit 6
+fix(auth): resolve password hashing bug
+Modified: src/auth/login.js
+
+# Commit 7
+chore(deps): update security dependencies
+Modified: package.json, package-lock.json
+
+# Commit 8
+docs(README): add authentication setup guide
+Modified: README.md
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Staging Parziale per Commit Atomici}
+
+\begin{lstlisting}
+# Hai modificato 3 file per 2 feature diverse
+git status
+# modified: feature-a.js
+# modified: feature-b.js
+# modified: utils.js (usato da entrambi)
+
+# Commit solo feature A
+git add feature-a.js
+git add -p utils.js  # seleziona solo modifiche per A
+git commit -m "feat: implement feature A"
+
+# Commit feature B
+git add feature-b.js utils.js
+git commit -m "feat: implement feature B"
+\end{lstlisting}
+
+\subsection{Interactive Staging}
+
+\begin{lstlisting}
+# Staging interattivo per file grande
+git add -p myfile.js
+
+# Git mostrerà ogni "hunk" (blocco modifiche)
+# y = stage this hunk
+# n = don't stage
+# s = split into smaller hunks
+# e = edit hunk manually
+# q = quit
+\end{lstlisting}
+
+\section{Branching Strategies}
+
+\subsection{Git Flow}
+
+Git Flow è una branching strategy strutturata per progetti con release cicliche.
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1cm,
+    commit/.style={circle, draw=blue!60, fill=blue!20, thick, minimum size=5mm},
+    branch/.style={->, thick}
+]
+    % Main branch
+    \node[commit] (m1) at (0,0) {};
+    \node[commit] (m2) at (2,0) {};
+    \node[commit] (m3) at (6,0) {};
+    \node[commit] (m4) at (8,0) {};
+    \draw[branch, blue] (m1) -- (m2);
+    \draw[branch, blue] (m2) -- (m3);
+    \draw[branch, blue] (m3) -- (m4);
+    \node[left of=m1] {\texttt{main}};
+
+    % Develop branch
+    \node[commit] (d1) at (1,1.5) {};
+    \node[commit] (d2) at (2,1.5) {};
+    \node[commit] (d3) at (3,1.5) {};
+    \node[commit] (d4) at (4,1.5) {};
+    \node[commit] (d5) at (5,1.5) {};
+    \node[commit] (d6) at (6,1.5) {};
+    \node[commit] (d7) at (7,1.5) {};
+    \draw[branch, green] (m1) -- (d1);
+    \draw[branch, green] (d1) -- (d2);
+    \draw[branch, green] (d2) -- (d3);
+    \draw[branch, green] (d3) -- (d4);
+    \draw[branch, green] (d4) -- (d5);
+    \draw[branch, green] (d5) -- (d6);
+    \draw[branch, green] (d6) -- (d7);
+    \draw[branch, green] (d2) -- (m2);
+    \draw[branch, green] (d6) -- (m3);
+    \node[above of=d1] {\texttt{develop}};
+
+    % Feature branch
+    \node[commit] (f1) at (3.5,3) {};
+    \node[commit] (f2) at (4.5,3) {};
+    \draw[branch, orange] (d3) -- (f1);
+    \draw[branch, orange] (f1) -- (f2);
+    \draw[branch, orange] (f2) -- (d5);
+    \node[above of=f1, xshift=0.5cm] {\texttt{feature/x}};
+
+    % Hotfix branch
+    \node[commit] (h1) at (7,-1.5) {};
+    \draw[branch, red] (m3) -- (h1);
+    \draw[branch, red] (h1) -- (m4);
+    \draw[branch, red] (h1) -- (d7);
+    \node[below of=h1] {\texttt{hotfix}};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Branch principali}:
+\begin{description}
+    \item[\texttt{main}] Produzione, solo release stabili
+    \item[\texttt{develop}] Integrazione, development attivo
+\end{description}
+
+\textbf{Branch temporanei}:
+\begin{description}
+    \item[\texttt{feature/*}] Nuove funzionalità (da develop)
+    \item[\texttt{release/*}] Preparazione release (da develop)
+    \item[\texttt{hotfix/*}] Fix urgenti produzione (da main)
+\end{description}
+
+\subsection{Git Flow: Comandi}
+
+\begin{lstlisting}
+# Setup repository
+git checkout -b develop main
+
+# Feature workflow
+git checkout -b feature/user-profile develop
+# ... lavoro ...
+git checkout develop
+git merge --no-ff feature/user-profile
+git branch -d feature/user-profile
+
+# Release workflow
+git checkout -b release/1.2.0 develop
+# ... fix bug release ...
+git checkout main
+git merge --no-ff release/1.2.0
+git tag -a v1.2.0
+git checkout develop
+git merge --no-ff release/1.2.0
+git branch -d release/1.2.0
+
+# Hotfix workflow
+git checkout -b hotfix/1.2.1 main
+# ... fix bug ...
+git checkout main
+git merge --no-ff hotfix/1.2.1
+git tag -a v1.2.1
+git checkout develop
+git merge --no-ff hotfix/1.2.1
+git branch -d hotfix/1.2.1
+\end{lstlisting}
+
+\subsection{GitHub Flow}
+
+GitHub Flow è più semplice: ottimo per continuous deployment.
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1cm,
+    commit/.style={circle, draw=blue!60, fill=blue!20, thick, minimum size=5mm},
+    branch/.style={->, thick}
+]
+    % Main branch
+    \foreach \x in {0,1,2,3,4,5,6,7,8}
+        \node[commit] (m\x) at (\x,0) {};
+    \foreach \x in {0,1,2,3,4,5,6,7}
+        \draw[branch, blue] (m\x) -- (m\the\numexpr\x+1);
+    \node[left of=m0] {\texttt{main}};
+
+    % Feature 1
+    \node[commit] (f1a) at (1.5,1.5) {};
+    \node[commit] (f1b) at (2.5,1.5) {};
+    \draw[branch, green] (m1) -- (f1a);
+    \draw[branch, green] (f1a) -- (f1b);
+    \draw[branch, green] (f1b) -- (m3);
+    \node[above of=f1a, xshift=0.5cm] {\small\texttt{feature-1}};
+
+    % Feature 2
+    \node[commit] (f2a) at (4.5,1.5) {};
+    \node[commit] (f2b) at (5.5,1.5) {};
+    \node[commit] (f2c) at (6.5,1.5) {};
+    \draw[branch, orange] (m4) -- (f2a);
+    \draw[branch, orange] (f2a) -- (f2b);
+    \draw[branch, orange] (f2b) -- (f2c);
+    \draw[branch, orange] (f2c) -- (m7);
+    \node[above of=f2a, xshift=1cm] {\small\texttt{feature-2}};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Regole}:
+\begin{enumerate}
+    \item \texttt{main} è sempre deployable
+    \item Crea branch descrittivo da \texttt{main}
+    \item Commit regolari e push al remote
+    \item Apri Pull Request quando pronto
+    \item Code review e discussione
+    \item Deploy da branch per testing
+    \item Merge in \texttt{main} dopo approval
+    \item Deploy immediatamente da \texttt{main}
+\end{enumerate}
+
+\begin{lstlisting}
+# GitHub Flow workflow
+git checkout main
+git pull origin main
+git checkout -b feature/add-search
+
+# ... sviluppo ...
+git push -u origin feature/add-search
+
+# Apri Pull Request su GitHub
+
+# Dopo approval e CI/CD green
+git checkout main
+git merge feature/add-search
+git push origin main
+
+# Auto-deploy to production
+git branch -d feature/add-search
+git push origin --delete feature/add-search
+\end{lstlisting}
+
+\subsection{Trunk-Based Development}
+
+Trunk-based è estremamente semplice: sviluppo diretto su main (o trunk).
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Trunk-Based Development]
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item Branch di breve durata (< 1 giorno)
+    \item Commit frequenti su main
+    \item Feature flags per funzionalità incomplete
+    \item CI/CD obbligatorio
+    \item Test automatici robusti
+\end{itemize}
+
+\textbf{Pro}:
+\begin{itemize}
+    \item Integrazione continua reale
+    \item Meno merge conflicts
+    \item Feedback veloce
+\end{itemize}
+
+\textbf{Contro}:
+\begin{itemize}
+    \item Richiede disciplina del team
+    \item Necessita ottimi test automatici
+    \item Feature flags possono complicare codice
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Quale Strategia Scegliere?}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Scenario} & \textbf{Strategia Consigliata} \\
+\hline
+Release pianificate, versioning & Git Flow \\
+Continuous deployment, startup & GitHub Flow \\
+Team piccolo, alta frequenza deploy & Trunk-Based \\
+Open source, molti contributor & GitHub Flow / Forking \\
+Enterprise, processi rigidi & Git Flow \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Merge vs Rebase}
+
+\subsection{Quando Usare Merge}
+
+\begin{lstlisting}
+git checkout main
+git merge feature-branch
+\end{lstlisting}
+
+\textbf{Pro}:
+\begin{itemize}
+    \item Preserva cronologia completa
+    \item Non riscrive storia
+    \item Sicuro per branch condivisi
+    \item Mostra merge conflicts esplicitamente
+\end{itemize}
+
+\textbf{Contro}:
+\begin{itemize}
+    \item Crea merge commits extra
+    \item Cronologia può essere confusa
+\end{itemize}
+
+\subsection{Quando Usare Rebase}
+
+\begin{lstlisting}
+git checkout feature-branch
+git rebase main
+\end{lstlisting}
+
+\textbf{Pro}:
+\begin{itemize}
+    \item Cronologia lineare e pulita
+    \item Nessun merge commit
+    \item Più facile da leggere
+\end{itemize}
+
+\textbf{Contro}:
+\begin{itemize}
+    \item Riscrive cronologia
+    \item Pericoloso su branch condivisi
+    \item Può perdere contesto merge
+\end{itemize}
+
+\subsection{Golden Rule of Rebase}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=REGOLA D'ORO]
+\textbf{Mai fare rebase di commit già pushati e condivisi con altri!}
+
+Rebase riscrive cronologia. Se altri hanno basato lavoro sui tuoi commit, rebase crea caos.
+
+\textbf{Rebase è OK}:
+\begin{itemize}
+    \item Su branch locali non pushati
+    \item Su feature branch usati solo da te
+    \item Prima di aprire Pull Request (pulizia)
+\end{itemize}
+
+\textbf{Rebase è PERICOLOSO}:
+\begin{itemize}
+    \item Su main/develop
+    \item Su branch condivisi con team
+    \item Su commit già pushati in PR
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Workflow Raccomandato}
+
+\begin{lstlisting}
+# Lavorando su feature branch
+git checkout feature-branch
+
+# Aggiorna con main (rebase locale)
+git fetch origin
+git rebase origin/main
+
+# Se ci sono conflitti, risolvili
+git rebase --continue
+
+# Quando pronto per PR, pulisci cronologia
+git rebase -i HEAD~5  # squash commit WIP
+
+# Push (prima volta o force dopo rebase)
+git push -f origin feature-branch
+
+# Apri PR
+
+# Quando merge PR, usa merge (non rebase su main!)
+# Via GitHub: "Merge pull request" oppure "Squash and merge"
+\end{lstlisting}
+
+\section{.gitignore Best Practices}
+
+\subsection{File .gitignore Strutturato}
+
+\begin{lstlisting}
+# .gitignore
+
+# ==========================================
+# Dependencies
+# ==========================================
+node_modules/
+vendor/
+bower_components/
+
+# ==========================================
+# Build Output
+# ==========================================
+dist/
+build/
+*.min.js
+*.min.css
+
+# ==========================================
+# Environment Variables
+# ==========================================
+.env
+.env.local
+.env.*.local
+config/secrets.yml
+
+# ==========================================
+# IDE / Editor
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+npm-debug.log*
+logs/
+
+# ==========================================
+# Testing
+# ==========================================
+coverage/
+.nyc_output/
+*.test.db
+
+# ==========================================
+# OS Generated
+# ==========================================
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ==========================================
+# Temporary Files
+# ==========================================
+tmp/
+temp/
+*.tmp
+\end{lstlisting}
+
+\subsection{Pattern Avanzati}
+
+\begin{lstlisting}
+# Ignora tutto in cartella tranne file specifico
+build/*
+!build/version.txt
+
+# Ignora solo in root (non in subdirectories)
+/TODO.txt
+
+# Ignora pattern ricorsivamente
+**/*.log
+
+# Negazione (non ignorare)
+*.log
+!important.log
+
+# Ignora cartella ma traccia contenuto
+cache/.gitkeep
+# (crea file vuoto .gitkeep per tracciare cartella vuota)
+\end{lstlisting}
+
+\subsection{.gitignore Globale}
+
+\begin{lstlisting}
+# Configura gitignore globale per tutti i repository
+git config --global core.excludesfile ~/.gitignore_global
+
+# ~/.gitignore_global
+.DS_Store
+.vscode/
+.idea/
+*.swp
+\end{lstlisting}
+
+\section{Security Best Practices}
+
+\subsection{Mai Committare Secrets}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=PERICOLO: Secrets in Repository]
+\textbf{MAI committare}:
+\begin{itemize}
+    \item Password, API keys, token
+    \item Chiavi private SSH/SSL
+    \item Database credentials
+    \item OAuth secrets
+    \item File .env con secrets
+\end{itemize}
+
+Anche se cancelli il commit dopo, rimane nella cronologia Git!
+\end{tcolorbox}
+
+\subsection{Uso di .env e Secrets}
+
+\begin{lstlisting}
+# .env (MAI committare)
+DATABASE_URL=postgresql://user:password@localhost/db
+API_KEY=super-secret-key-123
+JWT_SECRET=my-jwt-secret
+
+# .env.example (COMMITTARE questo)
+DATABASE_URL=postgresql://user:password@localhost/db_name
+API_KEY=your-api-key-here
+JWT_SECRET=your-jwt-secret-here
+\end{lstlisting}
+
+\subsection{Rimuovere Secrets dalla Cronologia}
+
+Se hai committato secrets, rimuovili SUBITO:
+
+\begin{lstlisting}
+# Rimuovi file da tutta la cronologia
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch path/to/secrets.env" \
+  --prune-empty --tag-name-filter cat -- --all
+
+# Oppure usa tool più moderno
+git filter-repo --path secrets.env --invert-paths
+
+# Force push (ATTENZIONE!)
+git push origin --force --all
+
+# IMPORTANTE: Revoca le credenziali esposte!
+# Cambia password, rigenera API keys, etc.
+\end{lstlisting}
+
+\section{Esercizi}
+
+\subsection{Esercizio 1: Commit Message Quality}
+
+Riscrivi questi commit messages seguendo Conventional Commits:
+\begin{enumerate}
+    \item "fixed stuff"
+    \item "update"
+    \item "added login and fixed bugs and updated readme"
+\end{enumerate}
+
+\subsection{Esercizio 2: Atomic Commits}
+
+Hai un file con 3 funzionalità mescolate. Usa \texttt{git add -p} per creare 3 commit atomici separati.
+
+\subsection{Esercizio 3: Git Flow}
+
+Implementa completo Git Flow workflow:
+\begin{enumerate}
+    \item Setup main e develop
+    \item Crea feature branch e merge in develop
+    \item Crea release branch
+    \item Merge release in main e develop
+    \item Simula hotfix
+\end{enumerate}
+
+\subsection{Esercizio 4: Rebase Practice}
+
+\begin{enumerate}
+    \item Crea branch con 5 commit "WIP"
+    \item Usa \texttt{git rebase -i} per squash in 2 commit significativi
+    \item Modifica commit messages
+\end{enumerate}
+
+\subsection{Esercizio 5: .gitignore}
+
+Crea .gitignore per progetto Node.js che:
+\begin{itemize}
+    \item Ignora node\_modules
+    \item Ignora .env ma traccia .env.example
+    \item Ignora build/ tranne build/version.txt
+\end{itemize}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Risorse]
+\begin{itemize}
+    \item Conventional Commits: \url{https://www.conventionalcommits.org}
+    \item gitignore.io: \url{https://www.toptal.com/developers/gitignore}
+    \item Git Flow Cheatsheet: \url{https://danielkummer.github.io/git-flow-cheatsheet}
+\end{itemize}
+\end{tcolorbox}

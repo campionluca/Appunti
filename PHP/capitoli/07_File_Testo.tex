@@ -1,99 +1,919 @@
 \chapter{File di Testo}
 
-\begin{tcolorbox}[title=Mappa del capitolo]
-Teoria, Lettura e scrittura, Permessi, Bloccaggio, CSV, Esempi pratici, Caso di studio, Esercizi, Verifica, Riferimenti.
+\begin{tcolorbox}[title=Obiettivi del capitolo]
+Dopo questo capitolo saprai:
+\begin{itemize}
+  \item Aprire, leggere e scrivere file in modo efficiente e sicuro
+  \item Utilizzare le diverse modalità di apertura file (r, w, a, x, c)
+  \item Gestire file CSV e JSON
+  \item Implementare file locking per accessi concorrenti
+  \item Gestire permessi, errori e validazione
+  \item Operare su directory e percorsi file
+  \item Creare sistemi di logging e configurazione robusti
+\end{itemize}
 \end{tcolorbox}
 
 \section{Teoria}
-La gestione dei file include apertura, lettura/scrittura, permessi e lock per evitare corruzione in accessi concorrenti.
 
-\section{Lettura e scrittura}
+\subsection{Perché gestire file di testo}
+I file di testo sono fondamentali per:
+\begin{itemize}
+  \item \textbf{Persistenza dati}: configurazioni, log, cache, sessioni
+  \item \textbf{Interoperabilità}: CSV, JSON, XML per scambio dati
+  \item \textbf{Debugging}: log applicativi, trace, dump
+  \item \textbf{Import/Export}: dati utente, backup, migrazioni
+  \item \textbf{Comunicazione}: file come IPC (Inter-Process Communication)
+\end{itemize}
+
+\subsection{Operazioni di alto vs basso livello}
+PHP offre due approcci:
+
+\textbf{Alto livello} (funzioni pratiche):
+\begin{itemize}
+  \item \texttt{file\_get\_contents()}, \texttt{file\_put\_contents()}
+  \item \texttt{file()}, \texttt{readfile()}
+  \item Caricano tutto in memoria: semplici ma non scalabili per file grandi
+\end{itemize}
+
+\textbf{Basso livello} (controllo granulare):
+\begin{itemize}
+  \item \texttt{fopen()}, \texttt{fread()}, \texttt{fwrite()}, \texttt{fclose()}
+  \item \texttt{fgets()}, \texttt{fgetcsv()}, \texttt{flock()}
+  \item Leggono a blocchi: più complessi ma efficienti con file di GB
+\end{itemize}
+
+\section{Modalità di apertura file}
+
+\subsection{Modalità principali}
 \begin{lstlisting}
 <?php
-$path = __DIR__ . '/dati.txt';
-file_put_contents($path, "Prima riga\n", FILE_APPEND | LOCK_EX);
-$contenuto = file_get_contents($path);
-echo $contenuto;
+// r  = Read only, puntatore all'inizio, FALLISCE se file non esiste
+// r+ = Read/Write, puntatore all'inizio, FALLISCE se file non esiste
+
+// w  = Write only, TRUNCA (svuota) file, CREA se non esiste
+// w+ = Read/Write, TRUNCA file, CREA se non esiste
+
+// a  = Write only (append), puntatore alla fine, CREA se non esiste
+// a+ = Read/Write (append), puntatore alla fine, CREA se non esiste
+
+// x  = Write only, CREA file, FALLISCE se già esiste (esclusivo)
+// x+ = Read/Write, CREA file, FALLISCE se già esiste
+
+// c  = Write only, CREA se non esiste, NON trunca, puntatore all'inizio
+// c+ = Read/Write, CREA se non esiste, NON trunca, puntatore all'inizio
+?>
 \end{lstlisting}
 
-\section{Gestione dei permessi}
-- Verificare \texttt{is\_readable}, \texttt{is\_writable} e gestire errori con messaggi chiari.
+\textbf{Suffissi}:
+\begin{itemize}
+  \item \texttt{b} (binary): \texttt{rb}, \texttt{wb} per file binari (Windows compatibility)
+  \item \texttt{t} (text): default su Linux/Mac, esplicito su Windows
+\end{itemize}
 
+\subsection{Esempi modalità}
 \begin{lstlisting}
 <?php
-if (!is_writable($path)) {
-    echo 'File non scrivibile';
+// Lettura sicura
+$fp = fopen('config.txt', 'r');
+if (!$fp) {
+    die('File non trovato o non leggibile');
 }
-\end{lstlisting}
+$content = fread($fp, filesize('config.txt'));
+fclose($fp);
 
-\section{Bloccaggio dei file}
-\begin{lstlisting}
-<?php
-$fp = fopen($path, 'c+');
-if (flock($fp, LOCK_EX)) {
-    fwrite($fp, "Riga sicura\n");
-    fflush($fp);
-    flock($fp, LOCK_UN);
+// Scrittura (sovrascrive tutto)
+$fp = fopen('output.txt', 'w');
+fwrite($fp, "Nuova riga\n");
+fclose($fp);
+
+// Append (aggiunge alla fine)
+$fp = fopen('log.txt', 'a');
+fwrite($fp, date('Y-m-d H:i:s') . " - Log entry\n");
+fclose($fp);
+
+// Creazione esclusiva (fallisce se esiste)
+$fp = fopen('unique.txt', 'x');
+if ($fp) {
+    fwrite($fp, "File creato per la prima volta\n");
+    fclose($fp);
+} else {
+    echo "File già esistente!\n";
 }
-fclose($fp);
+?>
 \end{lstlisting}
 
-\section{Operazioni su CSV}
+\section{Lettura file}
+
+\subsection{Lettura completa (alto livello)}
 \begin{lstlisting}
 <?php
-$fp = fopen(__DIR__ . '/utenti.csv', 'r');
-while (($row = fgetcsv($fp, 0, ';')) !== false) {
-    // $row è un array di campi
+// Legge tutto il file in una stringa
+$content = file_get_contents('dati.txt');
+if ($content === false) {
+    die('Errore lettura file');
 }
-fclose($fp);
+echo $content;
 
-// Scrittura
-$fp = fopen(__DIR__ . '/out.csv', 'w');
-fputcsv($fp, ['id','name'], ';');
-fclose($fp);
+// Legge tutto il file in un array di righe
+$lines = file('dati.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+foreach ($lines as $line) {
+    echo htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "<br>";
+}
+
+// Output diretto del file (efficiente per file grandi)
+readfile('documento.txt');  // Stampa direttamente senza caricare in memoria
+?>
 \end{lstlisting}
 
-\begin{tcolorbox}[title=Best practice]
-- Usare \texttt{LOCK\_EX} o \texttt{flock} per scritture concorrenti.
-- Gestire gli errori con codici HTTP e log.
-- Validare i dati prima di scrivere su disco.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Errori comuni]
-- Ignorare permessi e fallimenti di I/O.
-- Non chiudere i file o non flushare i buffer.
-- Usare separatori inconsistenti in CSV.
-\end{tcolorbox}
-
-\section{Esempi pratici}
+\subsection{Lettura riga-per-riga (basso livello)}
 \begin{lstlisting}
 <?php
-// Lettura riga-per-riga con controllo errori
-$fp = fopen($path, 'r');
-if (!$fp) { echo 'Apertura fallita'; }
+// Efficiente per file grandi: legge una riga alla volta
+$fp = fopen('large_file.txt', 'r');
+if (!$fp) {
+    die('Apertura fallita');
+}
+
 while (($line = fgets($fp)) !== false) {
-    echo htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    // Processa una riga alla volta (memoria costante)
+    echo htmlspecialchars(trim($line), ENT_QUOTES, 'UTF-8') . "<br>";
 }
+
+if (!feof($fp)) {
+    echo "Errore durante la lettura\n";
+}
+
 fclose($fp);
 ?>
 \end{lstlisting}
 
-\section{Caso di studio}
-Semplice logger applicativo su file con rotazione: quando la dimensione supera una soglia, rinomina il file con timestamp e riparte.
+\subsection{Lettura a blocchi (chunked reading)}
+\begin{lstlisting}
+<?php
+// Lettura a blocchi di 8KB (file molto grandi o streaming)
+$fp = fopen('huge_file.bin', 'rb');
+$chunkSize = 8192;  // 8KB
+
+while (!feof($fp)) {
+    $chunk = fread($fp, $chunkSize);
+    // Processa blocco (es. calcola hash, invia su rete, etc.)
+    echo "Letto blocco di " . strlen($chunk) . " byte\n";
+}
+
+fclose($fp);
+?>
+\end{lstlisting}
+
+\section{Scrittura file}
+
+\subsection{Scrittura completa (alto livello)}
+\begin{lstlisting}
+<?php
+// Scrive (sovrascrive tutto)
+$data = "Prima riga\nSeconda riga\nTerza riga\n";
+file_put_contents('output.txt', $data);
+
+// Append (aggiunge alla fine)
+file_put_contents('log.txt', "Nuova entry\n", FILE_APPEND);
+
+// Append con file locking (thread-safe)
+file_put_contents('shared.txt', "Dato sicuro\n", FILE_APPEND | LOCK_EX);
+
+// Verifica successo
+$bytes = file_put_contents('data.txt', $data);
+if ($bytes === false) {
+    die('Scrittura fallita');
+}
+echo "Scritti $bytes byte\n";
+?>
+\end{lstlisting}
+
+\subsection{Scrittura granulare (basso livello)}
+\begin{lstlisting}
+<?php
+// Scrittura controllata con fwrite
+$fp = fopen('output.txt', 'w');
+if (!$fp) {
+    die('Impossibile aprire file in scrittura');
+}
+
+$data = "Prima riga\n";
+$bytes = fwrite($fp, $data);
+if ($bytes === false) {
+    fclose($fp);
+    die('Scrittura fallita');
+}
+
+// Forza scrittura su disco (flush buffer)
+fflush($fp);
+
+fclose($fp);
+?>
+\end{lstlisting}
+
+\subsection{Scrittura atomica (atomic write)}
+\begin{lstlisting}
+<?php
+// Scrittura atomica: evita file corrotti in caso di crash
+function atomicWrite(string $path, string $data): bool {
+    $tempPath = $path . '.tmp.' . uniqid();
+
+    // Scrivi su file temporaneo
+    if (file_put_contents($tempPath, $data, LOCK_EX) === false) {
+        return false;
+    }
+
+    // Rename atomico (operazione atomica del filesystem)
+    if (!rename($tempPath, $path)) {
+        unlink($tempPath);  // Cleanup
+        return false;
+    }
+
+    return true;
+}
+
+// Uso
+$config = json_encode(['db' => 'mysql', 'cache' => 'redis']);
+if (atomicWrite('config.json', $config)) {
+    echo "Configurazione salvata in modo sicuro\n";
+}
+?>
+\end{lstlisting}
+
+\section{File locking (bloccaggio)}
+
+\subsection{Tipi di lock}
+\begin{lstlisting}
+<?php
+// LOCK_SH = Shared lock (lettura): altri possono leggere, nessuno scrive
+// LOCK_EX = Exclusive lock (scrittura): nessun altro accesso
+// LOCK_UN = Unlock: rilascia il lock
+// LOCK_NB = Non-blocking: non aspetta, fallisce subito se già locked
+?>
+\end{lstlisting}
+
+\subsection{Lock esclusivo per scrittura}
+\begin{lstlisting}
+<?php
+// Scrittura sicura con lock esclusivo
+$fp = fopen('counter.txt', 'c+');  // c+ = non trunca
+if (!$fp) {
+    die('Apertura fallita');
+}
+
+// Blocca in scrittura esclusiva
+if (flock($fp, LOCK_EX)) {
+    // Leggi valore corrente
+    $counter = (int) fgets($fp);
+
+    // Incrementa
+    $counter++;
+
+    // Riposiziona all'inizio e trunca
+    fseek($fp, 0);
+    ftruncate($fp, 0);
+
+    // Scrivi nuovo valore
+    fwrite($fp, (string) $counter);
+    fflush($fp);
+
+    // Rilascia lock
+    flock($fp, LOCK_UN);
+} else {
+    echo "Impossibile ottenere lock\n";
+}
+
+fclose($fp);
+?>
+\end{lstlisting}
+
+\subsection{Lock non-bloccante}
+\begin{lstlisting}
+<?php
+// Tentativo non-bloccante: fallisce subito se locked
+$fp = fopen('data.txt', 'c+');
+
+if (flock($fp, LOCK_EX | LOCK_NB)) {
+    // Lock ottenuto immediatamente
+    fwrite($fp, "Dato scritto\n");
+    flock($fp, LOCK_UN);
+} else {
+    // File già in uso da altro processo
+    echo "File occupato, riprova più tardi\n";
+}
+
+fclose($fp);
+?>
+\end{lstlisting}
+
+\section{Gestione CSV}
+
+\subsection{Lettura CSV}
+\begin{lstlisting}
+<?php
+// Lettura CSV con fgetcsv
+$fp = fopen('utenti.csv', 'r');
+if (!$fp) {
+    die('File CSV non trovato');
+}
+
+// Prima riga = header
+$header = fgetcsv($fp, 0, ';');  // 0 = lunghezza automatica, ; = delimitatore
+if (!$header) {
+    die('CSV vuoto o corrotto');
+}
+
+$users = [];
+while (($row = fgetcsv($fp, 0, ';')) !== false) {
+    // Combina header con valori
+    $users[] = array_combine($header, $row);
+}
+
+fclose($fp);
+
+// Risultato: array associativo
+print_r($users);
+/*
+Array (
+    [0] => Array ( [id] => 1, [nome] => Mario, [email] => mario@example.com )
+    [1] => Array ( [id] => 2, [nome] => Laura, [email] => laura@example.com )
+)
+*/
+?>
+\end{lstlisting}
+
+\subsection{Scrittura CSV}
+\begin{lstlisting}
+<?php
+// Scrittura CSV con fputcsv
+$users = [
+    ['id' => 1, 'nome' => 'Mario', 'email' => 'mario@example.com'],
+    ['id' => 2, 'nome' => 'Laura', 'email' => 'laura@example.com']
+];
+
+$fp = fopen('output.csv', 'w');
+if (!$fp) {
+    die('Impossibile creare CSV');
+}
+
+// Header
+$header = array_keys($users[0]);
+fputcsv($fp, $header, ';');
+
+// Dati
+foreach ($users as $user) {
+    fputcsv($fp, $user, ';');
+}
+
+fclose($fp);
+?>
+\end{lstlisting}
+
+\subsection{CSV con gestione errori}
+\begin{lstlisting}
+<?php
+function readCSV(string $path, string $delimiter = ','): array {
+    if (!is_readable($path)) {
+        throw new RuntimeException("File non leggibile: $path");
+    }
+
+    $fp = fopen($path, 'r');
+    if (!$fp) {
+        throw new RuntimeException("Impossibile aprire: $path");
+    }
+
+    $header = fgetcsv($fp, 0, $delimiter);
+    if (!$header) {
+        fclose($fp);
+        throw new RuntimeException("CSV vuoto o header mancante");
+    }
+
+    $rows = [];
+    $lineNumber = 1;
+
+    while (($row = fgetcsv($fp, 0, $delimiter)) !== false) {
+        $lineNumber++;
+
+        // Verifica numero colonne
+        if (count($row) !== count($header)) {
+            fclose($fp);
+            throw new RuntimeException("Riga $lineNumber: numero colonne errato");
+        }
+
+        $rows[] = array_combine($header, $row);
+    }
+
+    fclose($fp);
+    return $rows;
+}
+
+// Uso con try-catch
+try {
+    $data = readCSV('utenti.csv', ';');
+    echo "Letti " . count($data) . " record\n";
+} catch (RuntimeException $e) {
+    echo "Errore: " . $e->getMessage() . "\n";
+}
+?>
+\end{lstlisting}
+
+\section{Gestione JSON}
+
+\subsection{Lettura e scrittura JSON}
+\begin{lstlisting}
+<?php
+// Lettura JSON da file
+function readJSON(string $path): array {
+    if (!is_readable($path)) {
+        throw new RuntimeException("File non leggibile: $path");
+    }
+
+    $content = file_get_contents($path);
+    if ($content === false) {
+        throw new RuntimeException("Errore lettura file");
+    }
+
+    $data = json_decode($content, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new RuntimeException("JSON invalido: " . json_last_error_msg());
+    }
+
+    return $data;
+}
+
+// Scrittura JSON su file
+function writeJSON(string $path, array $data, bool $pretty = false): bool {
+    $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
+    if ($pretty) {
+        $flags |= JSON_PRETTY_PRINT;
+    }
+
+    $json = json_encode($data, $flags);
+    if ($json === false) {
+        throw new RuntimeException("Errore encoding JSON: " . json_last_error_msg());
+    }
+
+    // Scrittura atomica con lock
+    return file_put_contents($path, $json, LOCK_EX) !== false;
+}
+
+// Uso
+$config = ['database' => 'mysql', 'cache' => 'redis', 'debug' => true];
+writeJSON('config.json', $config, true);
+
+$loadedConfig = readJSON('config.json');
+print_r($loadedConfig);
+?>
+\end{lstlisting}
+
+\section{Permessi e sicurezza}
+
+\subsection{Verifica permessi}
+\begin{lstlisting}
+<?php
+// Verifica esistenza e permessi
+$path = 'data.txt';
+
+if (!file_exists($path)) {
+    echo "File non esistente\n";
+}
+
+if (!is_file($path)) {
+    echo "Non è un file regolare\n";
+}
+
+if (!is_readable($path)) {
+    echo "File non leggibile (permessi insufficienti)\n";
+}
+
+if (!is_writable($path)) {
+    echo "File non scrivibile (permessi insufficienti)\n";
+}
+
+// Informazioni permessi
+$perms = fileperms($path);
+echo sprintf("Permessi: %o\n", $perms);  // Es: 100644 = rw-r--r--
+
+// Proprietario
+$owner = posix_getpwuid(fileowner($path));
+echo "Proprietario: " . $owner['name'] . "\n";
+?>
+\end{lstlisting}
+
+\subsection{Cambio permessi (se root o owner)}
+\begin{lstlisting}
+<?php
+// Cambia permessi (solo se proprietario o root)
+chmod('data.txt', 0644);  // rw-r--r--
+chmod('script.sh', 0755); // rwxr-xr-x
+
+// Cambia proprietario (solo root)
+// chown('data.txt', 'www-data');
+// chgrp('data.txt', 'www-data');
+?>
+\end{lstlisting}
+
+\section{Operazioni su directory}
+
+\subsection{Scansione directory}
+\begin{lstlisting}
+<?php
+// Elenca file in directory
+$dir = __DIR__ . '/uploads';
+$files = scandir($dir);
+
+foreach ($files as $file) {
+    if ($file === '.' || $file === '..') {
+        continue;  // Salta . e ..
+    }
+
+    $fullPath = $dir . '/' . $file;
+
+    if (is_file($fullPath)) {
+        echo "File: $file (" . filesize($fullPath) . " byte)\n";
+    } elseif (is_dir($fullPath)) {
+        echo "Directory: $file\n";
+    }
+}
+?>
+\end{lstlisting}
+
+\subsection{Ricerca ricorsiva}
+\begin{lstlisting}
+<?php
+// Trova tutti i file .txt ricorsivamente
+function findFiles(string $dir, string $extension): array {
+    $result = [];
+
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+
+    foreach ($iterator as $file) {
+        if ($file->isFile() && $file->getExtension() === $extension) {
+            $result[] = $file->getPathname();
+        }
+    }
+
+    return $result;
+}
+
+// Uso
+$txtFiles = findFiles(__DIR__, 'txt');
+print_r($txtFiles);
+?>
+\end{lstlisting}
+
+\subsection{Creazione e rimozione directory}
+\begin{lstlisting}
+<?php
+// Crea directory (ricorsivo con permessi)
+$dir = __DIR__ . '/uploads/images/2024';
+if (!is_dir($dir)) {
+    mkdir($dir, 0755, true);  // true = ricorsivo
+}
+
+// Rimuovi directory vuota
+if (is_dir($dir) && count(scandir($dir)) === 2) {  // Solo . e ..
+    rmdir($dir);
+}
+
+// Rimuovi directory ricorsivamente (ATTENZIONE!)
+function rmdirRecursive(string $dir): void {
+    if (!is_dir($dir)) {
+        return;
+    }
+
+    $files = array_diff(scandir($dir), ['.', '..']);
+
+    foreach ($files as $file) {
+        $path = $dir . '/' . $file;
+        is_dir($path) ? rmdirRecursive($path) : unlink($path);
+    }
+
+    rmdir($dir);
+}
+?>
+\end{lstlisting}
+
+\section{Operazioni su percorsi}
+
+\begin{lstlisting}
+<?php
+$path = '/var/www/html/uploads/photo.jpg';
+
+// Estrae componenti
+echo basename($path);              // photo.jpg
+echo basename($path, '.jpg');      // photo
+echo dirname($path);               // /var/www/html/uploads
+echo pathinfo($path, PATHINFO_EXTENSION);  // jpg
+echo pathinfo($path, PATHINFO_FILENAME);   // photo
+
+// Path info completo
+$info = pathinfo($path);
+print_r($info);
+/*
+Array (
+    [dirname] => /var/www/html/uploads
+    [basename] => photo.jpg
+    [extension] => jpg
+    [filename] => photo
+)
+*/
+
+// Percorso assoluto
+echo realpath('../../data.txt');  // /var/www/data.txt
+
+// Costruisci percorso sicuro
+$safeDir = __DIR__ . '/uploads';
+$userFile = 'photo.jpg';  // Input utente
+$safePath = $safeDir . '/' . basename($userFile);  // Previene directory traversal
+?>
+\end{lstlisting}
+
+\section{File temporanei}
+
+\begin{lstlisting}
+<?php
+// Crea file temporaneo univoco
+$tmpFile = tempnam(sys_get_temp_dir(), 'myapp_');
+file_put_contents($tmpFile, "Dati temporanei\n");
+echo "File temp: $tmpFile\n";
+
+// Usa e rimuovi
+$data = file_get_contents($tmpFile);
+unlink($tmpFile);  // Rimuovi quando fatto
+
+// Directory temporanea
+echo "Temp dir: " . sys_get_temp_dir() . "\n";
+?>
+\end{lstlisting}
+
+\section{Esempi pratici avanzati}
+
+\subsection{Logger con rotazione file}
+\begin{lstlisting}
+<?php
+class FileLogger {
+    private string $logPath;
+    private int $maxSize;
+
+    public function __construct(string $logPath, int $maxSize = 1048576) {  // 1MB default
+        $this->logPath = $logPath;
+        $this->maxSize = $maxSize;
+    }
+
+    public function log(string $level, string $message): void {
+        // Rotazione se troppo grande
+        if (file_exists($this->logPath) && filesize($this->logPath) > $this->maxSize) {
+            $this->rotate();
+        }
+
+        // Formato log
+        $timestamp = date('Y-m-d H:i:s');
+        $entry = "[$timestamp] [$level] $message\n";
+
+        // Scrivi con lock
+        file_put_contents($this->logPath, $entry, FILE_APPEND | LOCK_EX);
+    }
+
+    private function rotate(): void {
+        $timestamp = date('YmdHis');
+        $rotatedPath = $this->logPath . '.' . $timestamp;
+        rename($this->logPath, $rotatedPath);
+    }
+}
+
+// Uso
+$logger = new FileLogger(__DIR__ . '/app.log');
+$logger->log('INFO', 'Applicazione avviata');
+$logger->log('ERROR', 'Errore connessione database');
+?>
+\end{lstlisting}
+
+\subsection{Configuration manager}
+\begin{lstlisting}
+<?php
+class ConfigManager {
+    private string $configPath;
+    private array $config = [];
+
+    public function __construct(string $configPath) {
+        $this->configPath = $configPath;
+        $this->load();
+    }
+
+    private function load(): void {
+        if (!file_exists($this->configPath)) {
+            $this->config = [];
+            return;
+        }
+
+        $content = file_get_contents($this->configPath);
+        $this->config = json_decode($content, true) ?? [];
+    }
+
+    public function get(string $key, $default = null) {
+        return $this->config[$key] ?? $default;
+    }
+
+    public function set(string $key, $value): void {
+        $this->config[$key] = $value;
+    }
+
+    public function save(): bool {
+        $json = json_encode($this->config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+        // Scrittura atomica
+        $tempPath = $this->configPath . '.tmp.' . uniqid();
+        if (file_put_contents($tempPath, $json, LOCK_EX) === false) {
+            return false;
+        }
+
+        return rename($tempPath, $this->configPath);
+    }
+}
+
+// Uso
+$config = new ConfigManager(__DIR__ . '/config.json');
+$config->set('database', 'mysql');
+$config->set('cache', 'redis');
+$config->save();
+
+echo $config->get('database');  // mysql
+?>
+\end{lstlisting}
+
+\subsection{Data importer/exporter}
+\begin{lstlisting}
+<?php
+class DataExporter {
+    public function exportToCSV(array $data, string $path, string $delimiter = ','): bool {
+        if (empty($data)) {
+            return false;
+        }
+
+        $fp = fopen($path, 'w');
+        if (!$fp) {
+            return false;
+        }
+
+        // Lock esclusivo
+        flock($fp, LOCK_EX);
+
+        // Header
+        fputcsv($fp, array_keys($data[0]), $delimiter);
+
+        // Dati
+        foreach ($data as $row) {
+            fputcsv($fp, $row, $delimiter);
+        }
+
+        flock($fp, LOCK_UN);
+        fclose($fp);
+
+        return true;
+    }
+
+    public function importFromCSV(string $path, string $delimiter = ','): array {
+        if (!is_readable($path)) {
+            throw new RuntimeException("File non leggibile");
+        }
+
+        $fp = fopen($path, 'r');
+        flock($fp, LOCK_SH);  // Lock condiviso (lettura)
+
+        $header = fgetcsv($fp, 0, $delimiter);
+        if (!$header) {
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            throw new RuntimeException("CSV vuoto");
+        }
+
+        $rows = [];
+        while (($row = fgetcsv($fp, 0, $delimiter)) !== false) {
+            $rows[] = array_combine($header, $row);
+        }
+
+        flock($fp, LOCK_UN);
+        fclose($fp);
+
+        return $rows;
+    }
+}
+
+// Uso
+$exporter = new DataExporter();
+
+// Export
+$users = [
+    ['id' => 1, 'nome' => 'Mario', 'email' => 'mario@example.com'],
+    ['id' => 2, 'nome' => 'Laura', 'email' => 'laura@example.com']
+];
+$exporter->exportToCSV($users, 'users.csv');
+
+// Import
+$imported = $exporter->importFromCSV('users.csv');
+print_r($imported);
+?>
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Best practices]
+\begin{itemize}
+  \item Usa sempre \texttt{LOCK\_EX} per scritture concorrenti
+  \item Preferisci lettura riga-per-riga per file grandi (evita memory exhaustion)
+  \item Valida sempre input utente prima di usarlo in path (previeni directory traversal)
+  \item Usa \texttt{file\_exists()} e \texttt{is\_readable()} prima di operazioni critiche
+  \item Gestisci esplicitamente errori con \texttt{try-catch} o controlli booleani
+  \item Per scritture critiche, usa scrittura atomica (write temp + rename)
+  \item Chiudi sempre file aperti con \texttt{fclose()} o usa \texttt{file\_get\_contents}
+  \item Usa \texttt{fflush()} prima di \texttt{fclose()} per garantire scrittura buffer
+  \item Sanitizza output con \texttt{htmlspecialchars()} quando mostri contenuto file
+  \item Logga errori I/O per debugging (non solo fallisci silenziosamente)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Errori comuni]
+\begin{itemize}
+  \item Non verificare permessi prima di apertura (causa warning)
+  \item Ignorare valore di ritorno di \texttt{fwrite()} (potrebbe scrivere parzialmente)
+  \item Usare \texttt{file\_get\_contents()} su file di GB (memory exhaustion)
+  \item Non usare lock in scritture concorrenti (file corrotto)
+  \item Separatori CSV inconsistenti tra lettura e scrittura
+  \item Dimenticare \texttt{fclose()} (resource leak, lock non rilasciati)
+  \item Non gestire encoding (problemi con caratteri speciali)
+  \item Path relativi senza \texttt{\_\_DIR\_\_} (cambiano con working directory)
+  \item Non validare JSON dopo \texttt{json\_decode()} (usa \texttt{json\_last\_error()})
+  \item Usare \texttt{w} invece di \texttt{a} per log (sovrascrive tutto!)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Troubleshooting}
+
+\textbf{Problema}: Warning "failed to open stream: Permission denied"
+\begin{itemize}
+  \item Verifica permessi file/directory con \texttt{ls -la}
+  \item Assicurati che web server (es. www-data) abbia accesso
+  \item Usa \texttt{chmod 755} per directory, \texttt{644} per file
+\end{itemize}
+
+\textbf{Problema}: File corrotto dopo crash durante scrittura
+\begin{itemize}
+  \item Usa scrittura atomica (write temp + rename)
+  \item Lock esclusivo non previene corruzione da crash, solo race condition
+\end{itemize}
+
+\textbf{Problema}: Memory exhaustion con file grandi
+\begin{itemize}
+  \item Non usare \texttt{file\_get\_contents()} per file > 100MB
+  \item Usa lettura riga-per-riga o chunked (8KB blocchi)
+\end{itemize}
+
+\textbf{Problema}: Lock non funziona tra processi
+\begin{itemize}
+  \item Verifica che filesystem supporti flock (NFS potrebbe non supportarlo)
+  \item Usa lock advisory, non mandatory (Linux default)
+\end{itemize}
 
 \section{Esercizi}
+
+\subsection{Livello base}
 \begin{itemize}
-  \item Implementa una funzione che scrive JSON su file con lock e controlla permessi.
-  \item Leggi un CSV e costruisci un array associativo indicizzato per chiave.
+  \item Scrivi una funzione che legge un file di configurazione INI e ritorna array associativo
+  \item Implementa un counter di visite salvato su file con lock
+  \item Crea script che legge CSV utenti e stampa solo quelli con email valida
+\end{itemize}
+
+\subsection{Livello intermedio}
+\begin{itemize}
+  \item Implementa sistema di logging con 3 livelli (INFO, WARNING, ERROR) e rotazione
+  \item Crea funzione che importa CSV, valida dati e li esporta come JSON
+  \item Scrivi classe Cache che salva/legge dati da file con TTL (time-to-live)
+\end{itemize}
+
+\subsection{Livello avanzato}
+\begin{itemize}
+  \item Implementa file-based queue: \texttt{enqueue()}, \texttt{dequeue()}, gestione concorrenza
+  \item Crea sistema backup incrementale: salva solo file modificati da ultimo backup
+  \item Scrivi data migration tool: legge vecchio formato, converte, scrive nuovo formato atomicamente
 \end{itemize}
 
 \section{Verifica}
+
 \begin{itemize}
   \item Qual è la differenza tra \texttt{LOCK\_EX} e \texttt{LOCK\_SH}?
-  \item Perché è importante impostare un encoding coerente?
+  \item Perché \texttt{file\_get\_contents()} non è adatto per file di 2GB?
+  \item Come garantire che una scrittura sia atomica?
+  \item Cosa fa la modalità \texttt{c+} rispetto a \texttt{w+}?
+  \item Perché usare \texttt{fflush()} prima di \texttt{fclose()}?
+  \item Come prevenire directory traversal con path da input utente?
+  \item Differenza tra \texttt{file()} e \texttt{fgets()} in loop?
+  \item Cosa succede se non rilasci \texttt{LOCK\_EX} prima di \texttt{fclose()}?
 \end{itemize}
 
 \section{Riferimenti}
 \begin{itemize}
-  \item Manuale PHP — File system: \url{https://www.php.net/manual/en/book.filesystem.php}
+  \item Manuale PHP — Filesystem: \url{https://www.php.net/manual/en/book.filesystem.php}
+  \item PHP flock() documentation: \url{https://www.php.net/manual/en/function.flock.php}
+  \item CSV handling: \url{https://www.php.net/manual/en/function.fgetcsv.php}
 \end{itemize}

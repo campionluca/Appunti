@@ -1,0 +1,923 @@
+\chapter{Best Practices e Security}\label{cap:best_practices}
+
+\section{Introduzione}
+Security, optimization e best practices sono fondamentali per production-ready Docker deployments. Questo capitolo copre Dockerfile optimization, layer caching, .dockerignore, security hardening, vulnerability scanning, e compliance requirements.
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+\textbf{Sezioni}: Dockerfile best practices, Layer caching optimization, .dockerignore patterns, Security hardening, User namespaces, Secrets management, Image scanning, Network security, Resource limits, Production checklist.
+\end{tcolorbox}
+
+\section{Obiettivi di Apprendimento}
+\begin{itemize}
+    \item Ottimizzare Dockerfiles per build speed e image size
+    \item Implementare security best practices (non-root users, read-only filesystem)
+    \item Configurare .dockerignore per build efficiency
+    \item Utilizzare layer caching e BuildKit features
+    \item Scansionare images per vulnerabilità
+    \item Applicare least privilege principle e network isolation
+\end{itemize}
+
+\section{Dockerfile Optimization}
+
+\subsection{Esempio: Before vs After Optimization}
+\begin{lstlisting}[language=docker, caption={Dockerfile NON Ottimizzato}]
+# ❌ BAD: Inefficient, large image, security issues
+FROM node:20
+
+WORKDIR /app
+
+# ❌ Copia tutto (inclusi node_modules, .git, etc)
+COPY . .
+
+# ❌ Esegue come root
+# ❌ No cache layer optimization
+RUN npm install
+
+# ❌ Exposes source code
+# ❌ Development dependencies included
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+\end{lstlisting}
+
+\begin{lstlisting}[language=docker, caption={Dockerfile OTTIMIZZATO}]
+# ✅ GOOD: Multi-stage, optimized, secure
+# syntax=docker/dockerfile:1.4
+
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+COPY . .
+RUN npm run build
+
+# Stage 3: Production
+FROM node:20-alpine AS production
+
+# Install security updates
+RUN apk upgrade --no-cache
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy only production artifacts
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --chown=nodejs:nodejs package.json ./
+
+# Security: run as non-root
+USER nodejs
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
+    CMD node healthcheck.js || exit 1
+
+EXPOSE 3000
+
+# Use exec form for proper signal handling
+CMD ["node", "dist/server.js"]
+
+# Metadata labels
+LABEL org.opencontainers.image.source="https://github.com/org/repo"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.licenses="MIT"
+\end{lstlisting}
+
+\subsection{Layer Caching Optimization}
+\begin{lstlisting}[language=docker, caption={Optimal Layer Order}]
+# Ordine corretto per massimizzare cache hits
+FROM python:3.11-slim
+
+# 1. System packages (cambiano raramente)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Requirements (cambiano occasionalmente)
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r requirements.txt
+
+# 3. Application code (cambia frequentemente)
+COPY . .
+
+# Questo ordine garantisce:
+# - System packages: cache hit quasi sempre
+# - Requirements: cache hit se requirements.txt non cambia
+# - Code: rebuild solo questo layer se cambia codice
+\end{lstlisting}
+
+\subsection{BuildKit Advanced Features}
+\begin{lstlisting}[language=docker, caption={BuildKit Cache Mounts e Secrets}]
+# syntax=docker/dockerfile:1.4
+
+FROM golang:1.21-alpine AS builder
+
+WORKDIR /app
+
+# Cache mount per Go modules
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# Secret mount (non saved in image)
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go build -o app .
+
+# SSH mount per private repos
+RUN --mount=type=ssh \
+    git clone git@github.com:private/repo.git
+
+# Bind mount (source files non copiati nell'image)
+RUN --mount=type=bind,source=.,target=/src \
+    cd /src && go build -o /app/binary
+
+FROM alpine:latest
+COPY --from=builder /app/binary /usr/local/bin/
+CMD ["binary"]
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Build con BuildKit Features}]
+# Enable BuildKit
+export DOCKER_BUILDKIT=1
+
+# Build con secret
+docker build \
+  --secret id=netrc,src=$HOME/.netrc \
+  --ssh default \
+  --tag myapp:latest .
+
+# Build con cache from registry
+docker build \
+  --cache-from myregistry.io/myapp:latest \
+  --tag myapp:latest .
+
+# Export cache to registry
+docker build \
+  --cache-to type=registry,ref=myregistry.io/myapp:buildcache \
+  --tag myapp:latest .
+\end{lstlisting}
+
+\section{.dockerignore Best Practices}
+
+\subsection{Comprehensive .dockerignore}
+\begin{lstlisting}[caption={.dockerignore - Complete Template}]
+# Version control
+.git
+.gitignore
+.gitattributes
+.gitmodules
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+*.md
+
+# Dependencies (rebuild from package files)
+node_modules/
+vendor/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Build artifacts
+dist/
+build/
+target/
+*.o
+*.a
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+
+# Test files
+tests/
+test/
+spec/
+*.test.js
+*.spec.js
+coverage/
+.nyc_output/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Temp files
+tmp/
+temp/
+*.tmp
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Build cache
+.cache/
+.npm/
+.yarn/
+
+# OS files
+Thumbs.db
+desktop.ini
+
+# Large data files (if not needed)
+*.csv
+*.zip
+*.tar.gz
+datasets/
+
+# Negative patterns (exceptions)
+!dist/index.html  # Include specific file
+\end{lstlisting}
+
+\begin{tcolorbox}[title=.dockerignore Impact]
+\textbf{Benefici}:
+\begin{itemize}
+\item \textbf{Build Speed}: Riduce context size da GB a MB
+\item \textbf{Security}: Esclude .env, .git con secrets
+\item \textbf{Image Size}: Non include test files, docs
+\item \textbf{Cache}: Migliora layer caching efficiency
+\end{itemize}
+
+\textbf{Esempio}:
+\begin{itemize}
+\item Senza .dockerignore: Context 2.5 GB, build 5 minuti
+\item Con .dockerignore: Context 50 MB, build 30 secondi
+\end{itemize}
+\end{tcolorbox}
+
+\section{Security Hardening}
+
+\subsection{Non-Root User}
+\begin{lstlisting}[language=docker, caption={Multiple User Strategies}]
+# Strategy 1: Alpine adduser
+FROM alpine:latest
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+USER appuser
+
+# Strategy 2: Debian/Ubuntu useradd
+FROM ubuntu:22.04
+RUN groupadd -r appgroup -g 1001 && \
+    useradd -r -u 1001 -g appgroup appuser
+USER appuser
+
+# Strategy 3: Existing user (nginx example)
+FROM nginx:alpine
+USER nginx
+
+# Strategy 4: Numeric UID (Kubernetes SecurityContext)
+FROM node:20-alpine
+USER 1001:1001
+
+# Permissions per non-root user
+FROM node:20-alpine
+RUN adduser -D -u 1001 nodejs
+WORKDIR /app
+COPY --chown=nodejs:nodejs . .
+USER nodejs
+\end{lstlisting}
+
+\subsection{Read-Only Root Filesystem}
+\begin{lstlisting}[language=yaml, caption={Read-Only Filesystem in Docker Compose}]
+version: '3.8'
+
+services:
+  app:
+    image: myapp:latest
+    read_only: true  # Root filesystem read-only
+    tmpfs:
+      - /tmp:size=100M,mode=1777
+      - /var/run:size=10M,mode=755
+    volumes:
+      # Writable volumes only where necessary
+      - app-cache:/app/cache:rw
+      - app-logs:/app/logs:rw
+
+volumes:
+  app-cache:
+  app-logs:
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Read-Only in Kubernetes}]
+# kubernetes-security.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1001
+    fsGroup: 1001
+    seccompProfile:
+      type: RuntimeDefault
+
+  containers:
+  - name: app
+    image: myapp:latest
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    volumeMounts:
+    - name: cache
+      mountPath: /tmp
+    - name: logs
+      mountPath: /var/log
+
+  volumes:
+  - name: cache
+    emptyDir: {}
+  - name: logs
+    emptyDir: {}
+\end{lstlisting}
+
+\subsection{Security Scanning}
+
+\subsubsection{Trivy - Comprehensive Scanning}
+\begin{lstlisting}[language=bash, caption={Trivy Security Scanning}]
+# Install Trivy
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+# Scan image per vulnerabilities
+trivy image myapp:latest
+
+# Scan solo CRITICAL e HIGH
+trivy image --severity CRITICAL,HIGH myapp:latest
+
+# Output formattato
+trivy image --format json --output results.json myapp:latest
+trivy image --format sarif --output trivy-results.sarif myapp:latest
+
+# Scan Dockerfile
+trivy config Dockerfile
+
+# Scan filesystem
+trivy fs /path/to/project
+
+# Scan con exit code (CI/CD integration)
+trivy image --exit-code 1 --severity CRITICAL myapp:latest
+
+# Ignore unfixed vulnerabilities
+trivy image --ignore-unfixed myapp:latest
+
+# Scan con database update
+trivy image --download-db-only
+trivy image --skip-db-update myapp:latest
+\end{lstlisting}
+
+\subsubsection{Docker Scout}
+\begin{lstlisting}[language=bash, caption={Docker Scout Analysis}]
+# Enable Docker Scout
+docker scout quickview myapp:latest
+
+# Detailed CVE report
+docker scout cves myapp:latest
+
+# Compare images
+docker scout compare --to myapp:v1.0 myapp:latest
+
+# Recommendations
+docker scout recommendations myapp:latest
+
+# SBOM (Software Bill of Materials)
+docker scout sbom myapp:latest
+\end{lstlisting}
+
+\subsubsection{Snyk Container Security}
+\begin{lstlisting}[language=bash, caption={Snyk Scanning}]
+# Install Snyk CLI
+npm install -g snyk
+
+# Authenticate
+snyk auth
+
+# Test image
+snyk container test myapp:latest
+
+# Monitor image in Snyk dashboard
+snyk container monitor myapp:latest
+
+# Test con severity threshold
+snyk container test myapp:latest --severity-threshold=high
+
+# Generate HTML report
+snyk container test myapp:latest --json | snyk-to-html -o results.html
+\end{lstlisting}
+
+\section{Network Security}
+
+\subsection{Network Isolation}
+\begin{lstlisting}[language=yaml, caption={Network Segmentation}]
+# docker-compose-network-security.yml
+version: '3.8'
+
+services:
+  # Frontend (public)
+  frontend:
+    image: nginx:alpine
+    networks:
+      - public
+      - frontend-backend
+    ports:
+      - "80:80"
+      - "443:443"
+
+  # Backend (internal)
+  backend:
+    image: myapp:latest
+    networks:
+      - frontend-backend
+      - backend-database
+    # No ports exposed externally
+
+  # Database (isolated)
+  database:
+    image: postgres:15-alpine
+    networks:
+      - backend-database  # Solo backend può accedere
+    # No external access
+
+networks:
+  public:
+    driver: bridge
+  frontend-backend:
+    driver: bridge
+    internal: false
+  backend-database:
+    driver: bridge
+    internal: true  # No internet access
+\end{lstlisting}
+
+\subsection{Kubernetes Network Policies}
+\begin{lstlisting}[language=yaml, caption={NetworkPolicy - Deny All by Default}]
+# deny-all.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: production
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+
+---
+# Allow specific traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-db
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow database access
+  - to:
+    - podSelector:
+        matchLabels:
+          app: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Allow ingress to frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-frontend
+  namespace: production
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 443
+\end{lstlisting}
+
+\section{Resource Limits}
+
+\subsection{Docker Resource Constraints}
+\begin{lstlisting}[language=yaml, caption={Resource Limits in Docker Compose}]
+version: '3.8'
+
+services:
+  app:
+    image: myapp:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'         # Max 1.5 CPU cores
+          memory: 1024M       # Max 1GB RAM
+          pids: 100           # Max 100 processes
+        reservations:
+          cpus: '0.5'         # Guaranteed 0.5 CPU
+          memory: 512M        # Guaranteed 512MB
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # OOMKilled prevention
+  database:
+    image: postgres:15
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    # Memory swappiness (0-100, lower = less swap)
+    sysctls:
+      - vm.swappiness=10
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Docker Run Resource Limits}]
+# CPU limits
+docker run -d \
+  --cpus="1.5" \
+  --cpu-shares=1024 \
+  myapp:latest
+
+# Memory limits
+docker run -d \
+  --memory="1g" \
+  --memory-reservation="512m" \
+  --memory-swap="2g" \
+  --oom-kill-disable=false \
+  myapp:latest
+
+# Disk I/O limits
+docker run -d \
+  --device-read-bps /dev/sda:10mb \
+  --device-write-bps /dev/sda:10mb \
+  myapp:latest
+
+# PIDs limit
+docker run -d \
+  --pids-limit=100 \
+  myapp:latest
+\end{lstlisting}
+
+\section{Secrets Management}
+
+\subsection{Docker Secrets (Swarm)}
+\begin{lstlisting}[language=bash, caption={Docker Secrets Best Practices}]
+# Create secret from file
+docker secret create db_password /path/to/password.txt
+
+# Create secret from stdin
+echo "supersecretpassword" | docker secret create db_password -
+
+# Create secret with labels
+docker secret create db_password - <<EOF
+$(openssl rand -base64 32)
+EOF
+
+# Use in stack
+cat <<EOF | docker stack deploy -c - myapp
+version: '3.8'
+services:
+  app:
+    image: myapp:latest
+    secrets:
+      - db_password
+      - api_key
+    environment:
+      DB_PASSWORD_FILE: /run/secrets/db_password
+
+secrets:
+  db_password:
+    external: true
+  api_key:
+    external: true
+EOF
+
+# Rotate secret
+docker secret create db_password_v2 - < new_password.txt
+docker service update \
+  --secret-rm db_password \
+  --secret-add source=db_password_v2,target=db_password \
+  myapp
+\end{lstlisting}
+
+\subsection{Kubernetes Secrets}
+\begin{lstlisting}[language=bash, caption={Kubernetes Secrets with Encryption}]
+# Create generic secret
+kubectl create secret generic db-credentials \
+  --from-literal=username=admin \
+  --from-literal=password=$(openssl rand -base64 32)
+
+# Create from file
+kubectl create secret generic tls-cert \
+  --from-file=tls.crt=./server.crt \
+  --from-file=tls.key=./server.key
+
+# Encryption at rest configuration
+# /etc/kubernetes/enc/enc.yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: EncryptionConfiguration
+resources:
+  - resources:
+      - secrets
+    providers:
+      - aescbc:
+          keys:
+            - name: key1
+              secret: $(head -c 32 /dev/urandom | base64)
+      - identity: {}
+
+# Apply encryption config in API server
+# --encryption-provider-config=/etc/kubernetes/enc/enc.yaml
+\end{lstlisting}
+
+\subsection{External Secrets Operator}
+\begin{lstlisting}[language=yaml, caption={HashiCorp Vault Integration}]
+# Install External Secrets Operator
+helm repo add external-secrets https://charts.external-secrets.io
+helm install external-secrets external-secrets/external-secrets
+
+# SecretStore (Vault backend)
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+  namespace: production
+spec:
+  provider:
+    vault:
+      server: "https://vault.example.com"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "production"
+
+---
+# ExternalSecret
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: database-credentials
+  namespace: production
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: db-credentials
+    creationPolicy: Owner
+  data:
+  - secretKey: username
+    remoteRef:
+      key: database/prod
+      property: username
+  - secretKey: password
+    remoteRef:
+      key: database/prod
+      property: password
+\end{lstlisting}
+
+\section{Image Signing and Verification}
+
+\subsection{Cosign - Image Signing}
+\begin{lstlisting}[language=bash, caption={Cosign Image Signing}]
+# Install Cosign
+go install github.com/sigstore/cosign/v2/cmd/cosign@latest
+
+# Generate key pair
+cosign generate-key-pair
+
+# Sign image
+cosign sign --key cosign.key myregistry.io/myapp:v1.0.0
+
+# Verify signature
+cosign verify --key cosign.pub myregistry.io/myapp:v1.0.0
+
+# Keyless signing (Sigstore)
+COSIGN_EXPERIMENTAL=1 cosign sign myregistry.io/myapp:v1.0.0
+
+# Attach SBOM
+syft myapp:latest -o spdx-json > sbom.spdx.json
+cosign attach sbom --sbom sbom.spdx.json myregistry.io/myapp:v1.0.0
+
+# Policy enforcement (Kubernetes)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: signed-pod
+  annotations:
+    cosign.sigstore.dev/signature: "verified"
+spec:
+  containers:
+  - name: app
+    image: myregistry.io/myapp:v1.0.0
+\end{lstlisting}
+
+\section{Production Deployment Checklist}
+
+\begin{tcolorbox}[title=Security \& Best Practices Checklist]
+\textbf{Dockerfile}:
+\begin{itemize}
+\item[$\square$] Multi-stage build per minimizzare image size
+\item[$\square$] Non-root user configurato
+\item[$\square$] No secrets hardcoded
+\item[$\square$] Health check implementato
+\item[$\square$] .dockerignore completo
+\item[$\square$] Base image aggiornata (no vulnerabilities)
+\end{itemize}
+
+\textbf{Security}:
+\begin{itemize}
+\item[$\square$] Image scanning (Trivy/Snyk) in CI/CD
+\item[$\square$] Read-only root filesystem
+\item[$\square$] Capabilities dropped (Linux capabilities)
+\item[$\square$] Secrets in external vault (no env vars)
+\item[$\square$] Network policies configurate
+\item[$\square$] Image signing con Cosign
+\end{itemize}
+
+\textbf{Resources}:
+\begin{itemize}
+\item[$\square$] CPU/Memory limits definiti
+\item[$\square$] Resource requests configurati
+\item[$\square$] PID limits per prevenire fork bombs
+\item[$\square$] Disk I/O limits se necessario
+\end{itemize}
+
+\textbf{Observability}:
+\begin{itemize}
+\item[$\square$] Structured logging implementato
+\item[$\square$] Prometheus metrics exposed
+\item[$\square$] Health/Readiness probes configurati
+\item[$\square$] Distributed tracing setup
+\end{itemize}
+
+\textbf{Compliance}:
+\begin{itemize}
+\item[$\square$] SBOM generato e attached
+\item[$\square$] License compliance verificata
+\item[$\square$] Audit logs abilitati
+\item[$\square$] Data encryption at rest
+\end{itemize}
+\end{tcolorbox}
+
+\section{Common Security Anti-Patterns}
+
+\begin{itemize}
+\item \textbf{Anti-Pattern}: Running as root user
+\begin{itemize}
+\item \textbf{Risk}: Container breakout, privilege escalation
+\item \textbf{Fix}: USER directive, SecurityContext in K8s
+\end{itemize}
+
+\item \textbf{Anti-Pattern}: Secrets in ENV variables
+\begin{itemize}
+\item \textbf{Risk}: Visible in docker inspect, logs
+\item \textbf{Fix}: File-based secrets, Vault integration
+\end{itemize}
+
+\item \textbf{Anti-Pattern}: Using 'latest' tag in production
+\begin{itemize}
+\item \textbf{Risk}: Non-deterministic deployments
+\item \textbf{Fix}: Semantic versioning, SHA digests
+\end{itemize}
+
+\item \textbf{Anti-Pattern}: No resource limits
+\begin{itemize}
+\item \textbf{Risk}: Resource exhaustion, noisy neighbor
+\item \textbf{Fix}: Explicit CPU/Memory limits
+\end{itemize}
+
+\item \textbf{Anti-Pattern}: Ignoring CVE vulnerabilities
+\begin{itemize}
+\item \textbf{Risk}: Exploitable vulnerabilities in production
+\item \textbf{Fix}: Automated scanning, patch management
+\end{itemize}
+\end{itemize}
+
+\section{Performance Optimization}
+
+\subsection{Image Size Reduction}
+\begin{lstlisting}[language=bash, caption={Image Size Comparison}]
+# Bad: Ubuntu base (hundreds of MB)
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y python3
+# Result: ~500MB
+
+# Better: Slim variant
+FROM python:3.11-slim
+# Result: ~150MB
+
+# Best: Alpine (minimal)
+FROM python:3.11-alpine
+# Result: ~50MB
+
+# Distroless (no shell, minimal attack surface)
+FROM gcr.io/distroless/python3
+# Result: ~60MB, ultra-secure
+\end{lstlisting}
+
+\section{Errori Comuni}
+
+\begin{itemize}
+\item \textbf{Errore}: Layer caching inefficace
+\begin{itemize}
+\item \textbf{Sintomo}: Build sempre da zero, lenti
+\item \textbf{Soluzione}: Ordine corretto layer, BuildKit cache
+\end{itemize}
+
+\item \textbf{Errore}: Context troppo grande
+\begin{itemize}
+\item \textbf{Sintomo}: "Sending build context" richiede minuti
+\item \textbf{Soluzione}: .dockerignore completo
+\end{itemize}
+
+\item \textbf{Errore}: Permessi file sbagliati con COPY
+\begin{itemize}
+\item \textbf{Sintomo}: Permission denied quando esegue app
+\item \textbf{Soluzione}: --chown flag in COPY
+\end{itemize}
+\end{itemize}
+
+\section{Riepilogo}
+
+Best practices Docker richiedono Dockerfile optimization (multi-stage, layer caching), security hardening (non-root, read-only FS, network policies), secrets management (Vault, External Secrets), vulnerability scanning (Trivy, Snyk), e resource limits. Production deployments devono seguire checklist completa per security, performance, e compliance.
+
+\section{Riferimenti}
+\begin{itemize}
+\item Docker Security: \url{https://docs.docker.com/engine/security/}
+\item CIS Docker Benchmark: \url{https://www.cisecurity.org/benchmark/docker}
+\item OWASP Container Security: \url{https://owasp.org/www-project-docker-top-10/}
+\item Trivy: \url{https://trivy.dev/}
+\item Sigstore Cosign: \url{https://docs.sigstore.dev/cosign/}
+\end{itemize}

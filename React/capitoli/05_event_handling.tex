@@ -1,0 +1,1088 @@
+\chapter{Event Handling}
+
+\section{Eventi in React}
+
+React gestisce gli eventi in modo simile al DOM nativo, ma con alcune differenze importanti. Gli eventi in React sono chiamati "Synthetic Events" (eventi sintetici).
+
+\subsection{Differenze tra Eventi React e DOM}
+
+\begin{lstlisting}[language=JavaScript, caption=React vs DOM eventi]
+// ❌ DOM nativo (HTML)
+<button onclick="handleClick()">Click me</button>
+
+// ✅ React (JSX)
+<button onClick={handleClick}>Click me</button>
+
+// Differenze principali:
+// 1. camelCase invece di lowercase (onClick vs onclick)
+// 2. Funzione invece di stringa ({handleClick} vs "handleClick()")
+// 3. preventDefault() invece di return false
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{DOM} & \textbf{React} \\
+\hline
+Naming & lowercase & camelCase \\
+\hline
+Handler & Stringa & Funzione \\
+\hline
+Prevent default & return false & e.preventDefault() \\
+\hline
+Event object & Event nativo & SyntheticEvent \\
+\hline
+\end{tabular}
+\end{center}
+
+\section{Synthetic Events}
+
+React wrappa gli eventi nativi del browser in un SyntheticEvent cross-browser.
+
+\subsection{Cos'è un SyntheticEvent?}
+
+\begin{lstlisting}[language=JavaScript, caption=SyntheticEvent structure]
+function Component() {
+    const handleClick = (event) => {
+        // event è un SyntheticEvent
+        console.log(event);
+
+        // Proprietà comuni
+        console.log(event.type);           // "click"
+        console.log(event.target);         // Elemento DOM che ha generato l'evento
+        console.log(event.currentTarget);  // Elemento con l'handler
+        console.log(event.timeStamp);      // Timestamp
+        console.log(event.bubbles);        // true/false
+
+        // Metodi
+        event.preventDefault();  // Previeni comportamento default
+        event.stopPropagation(); // Ferma propagazione
+
+        // Accesso all'evento nativo
+        const nativeEvent = event.nativeEvent;
+        console.log(nativeEvent);
+    };
+
+    return <button onClick={handleClick}>Click</button>;
+}
+\end{lstlisting}
+
+\subsection{Event Pooling (React < 17)}
+
+\begin{lstlisting}[language=JavaScript, caption=Event pooling in React 16]
+// In React 16 e precedenti, gli eventi venivano "pooled"
+function OldComponent() {
+    const handleClick = (event) => {
+        console.log(event.type); // "click"
+
+        setTimeout(() => {
+            // ❌ event è null qui!
+            console.log(event.type); // null
+        }, 1000);
+
+        // ✅ Soluzione: persist()
+        event.persist();
+        setTimeout(() => {
+            console.log(event.type); // "click"
+        }, 1000);
+    };
+
+    return <button onClick={handleClick}>Click</button>;
+}
+
+// React 17+: Event pooling rimosso!
+function NewComponent() {
+    const handleClick = (event) => {
+        setTimeout(() => {
+            // ✅ Funziona in React 17+
+            console.log(event.type); // "click"
+        }, 1000);
+    };
+
+    return <button onClick={handleClick}>Click</button>;
+}
+\end{lstlisting}
+
+\section{onClick: Eventi Click}
+
+onClick è l'evento più comune in React.
+
+\subsection{onClick Base}
+
+\begin{lstlisting}[language=JavaScript, caption=onClick esempi]
+function ClickExamples() {
+    // 1. Inline arrow function
+    return (
+        <button onClick={() => console.log('Clicked!')}>
+            Click 1
+        </button>
+    );
+
+    // 2. Named function
+    const handleClick = () => {
+        console.log('Clicked!');
+    };
+
+    return <button onClick={handleClick}>Click 2</button>;
+
+    // 3. Con parametri
+    const handleClickWithParam = (id) => {
+        console.log('Clicked item:', id);
+    };
+
+    return (
+        <button onClick={() => handleClickWithParam(123)}>
+            Click 3
+        </button>
+    );
+
+    // 4. Con event object
+    const handleClickWithEvent = (e) => {
+        console.log('Clicked:', e.target);
+    };
+
+    return <button onClick={handleClickWithEvent}>Click 4</button>;
+
+    // 5. Con event e parametri
+    const handleClickBoth = (id, e) => {
+        console.log('ID:', id, 'Event:', e);
+    };
+
+    return (
+        <button onClick={(e) => handleClickBoth(123, e)}>
+            Click 5
+        </button>
+    );
+}
+\end{lstlisting}
+
+\subsection{onClick Patterns}
+
+\begin{lstlisting}[language=JavaScript, caption=Pattern comuni onClick]
+function ClickPatterns() {
+    const [count, setCount] = useState(0);
+    const [items, setItems] = useState(['A', 'B', 'C']);
+
+    // Pattern 1: Aggiornamento state
+    const increment = () => {
+        setCount(count + 1);
+    };
+
+    // Pattern 2: Toggle boolean
+    const [isOpen, setIsOpen] = useState(false);
+    const toggle = () => setIsOpen(!isOpen);
+
+    // Pattern 3: Handler con parametro da lista
+    const handleItemClick = (item) => {
+        console.log('Clicked:', item);
+    };
+
+    // Pattern 4: Prevent default
+    const handleLinkClick = (e) => {
+        e.preventDefault();
+        console.log('Link clicked but not followed');
+    };
+
+    // Pattern 5: Conditional handler
+    const handleConditionalClick = () => {
+        if (count < 10) {
+            setCount(count + 1);
+        } else {
+            alert('Limite raggiunto!');
+        }
+    };
+
+    return (
+        <div>
+            {/* Pattern 1 */}
+            <button onClick={increment}>Count: {count}</button>
+
+            {/* Pattern 2 */}
+            <button onClick={toggle}>
+                {isOpen ? 'Chiudi' : 'Apri'}
+            </button>
+
+            {/* Pattern 3 */}
+            {items.map(item => (
+                <button key={item} onClick={() => handleItemClick(item)}>
+                    {item}
+                </button>
+            ))}
+
+            {/* Pattern 4 */}
+            <a href="https://example.com" onClick={handleLinkClick}>
+                Link
+            </a>
+
+            {/* Pattern 5 */}
+            <button onClick={handleConditionalClick}>
+                Incrementa (max 10)
+            </button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{Gestione Click Multipli}
+
+\begin{lstlisting}[language=JavaScript, caption=Double click e timing]
+function MultiClickExample() {
+    const [clicks, setClicks] = useState(0);
+    const [lastClick, setLastClick] = useState(0);
+
+    // Single click
+    const handleClick = () => {
+        setClicks(prev => prev + 1);
+    };
+
+    // Double click
+    const handleDoubleClick = () => {
+        console.log('Double clicked!');
+        setClicks(0); // Reset
+    };
+
+    // Debounced click
+    const timeoutRef = useRef(null);
+
+    const handleDebouncedClick = () => {
+        clearTimeout(timeoutRef.current);
+
+        timeoutRef.current = setTimeout(() => {
+            console.log('Clicked (debounced)');
+        }, 300);
+    };
+
+    // Click con delay detection
+    const handleClickWithDelay = () => {
+        const now = Date.now();
+        const timeSinceLastClick = now - lastClick;
+
+        if (timeSinceLastClick < 300) {
+            console.log('Quick click!');
+        } else {
+            console.log('Slow click!');
+        }
+
+        setLastClick(now);
+    };
+
+    return (
+        <div>
+            <button onClick={handleClick} onDoubleClick={handleDoubleClick}>
+                Clicks: {clicks} (double click to reset)
+            </button>
+
+            <button onClick={handleDebouncedClick}>
+                Debounced Click
+            </button>
+
+            <button onClick={handleClickWithDelay}>
+                Click with timing
+            </button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{onChange: Eventi Input}
+
+onChange è usato per gestire cambiamenti nei form elements.
+
+\subsection{onChange con Input}
+
+\begin{lstlisting}[language=JavaScript, caption=onChange input types]
+function InputExamples() {
+    const [text, setText] = useState('');
+    const [number, setNumber] = useState(0);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    return (
+        <div>
+            {/* Text input */}
+            <input
+                type="text"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Nome"
+            />
+            <p>Testo: {text}</p>
+
+            {/* Number input */}
+            <input
+                type="number"
+                value={number}
+                onChange={(e) => setNumber(Number(e.target.value))}
+                placeholder="Età"
+            />
+            <p>Numero: {number}</p>
+
+            {/* Email input con validazione */}
+            <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+            />
+            <p style={{ color: email.includes('@') ? 'green' : 'red' }}>
+                Email: {email}
+            </p>
+
+            {/* Password input */}
+            <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+            />
+            <p>Password length: {password.length}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onChange con Select}
+
+\begin{lstlisting}[language=JavaScript, caption=onChange select]
+function SelectExamples() {
+    const [country, setCountry] = useState('');
+    const [language, setLanguage] = useState('it');
+    const [categories, setCategories] = useState([]);
+
+    return (
+        <div>
+            {/* Select singolo */}
+            <select value={country} onChange={(e) => setCountry(e.target.value)}>
+                <option value="">Seleziona paese...</option>
+                <option value="IT">Italia</option>
+                <option value="US">USA</option>
+                <option value="UK">UK</option>
+            </select>
+            <p>Paese selezionato: {country}</p>
+
+            {/* Select con default */}
+            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+                <option value="it">Italiano</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+            </select>
+            <p>Lingua: {language}</p>
+
+            {/* Select multiplo */}
+            <select
+                multiple
+                value={categories}
+                onChange={(e) => {
+                    const selected = Array.from(
+                        e.target.selectedOptions,
+                        option => option.value
+                    );
+                    setCategories(selected);
+                }}
+            >
+                <option value="tech">Tech</option>
+                <option value="sport">Sport</option>
+                <option value="music">Musica</option>
+                <option value="travel">Viaggi</option>
+            </select>
+            <p>Categorie: {categories.join(', ')}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onChange con Checkbox e Radio}
+
+\begin{lstlisting}[language=JavaScript, caption=onChange checkbox/radio]
+function CheckboxRadioExamples() {
+    const [isChecked, setIsChecked] = useState(false);
+    const [gender, setGender] = useState('');
+    const [interests, setInterests] = useState([]);
+
+    // Checkbox singola
+    const handleCheckboxChange = (e) => {
+        setIsChecked(e.target.checked);
+    };
+
+    // Radio buttons
+    const handleRadioChange = (e) => {
+        setGender(e.target.value);
+    };
+
+    // Checkbox multiple
+    const handleInterestChange = (interest) => {
+        setInterests(prev =>
+            prev.includes(interest)
+                ? prev.filter(i => i !== interest)
+                : [...prev, interest]
+        );
+    };
+
+    return (
+        <div>
+            {/* Checkbox singola */}
+            <label>
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={handleCheckboxChange}
+                />
+                Accetto i termini
+            </label>
+            <p>Accettato: {isChecked ? 'Sì' : 'No'}</p>
+
+            {/* Radio buttons */}
+            <div>
+                <label>
+                    <input
+                        type="radio"
+                        name="gender"
+                        value="male"
+                        checked={gender === 'male'}
+                        onChange={handleRadioChange}
+                    />
+                    Maschio
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        name="gender"
+                        value="female"
+                        checked={gender === 'female'}
+                        onChange={handleRadioChange}
+                    />
+                    Femmina
+                </label>
+            </div>
+            <p>Genere: {gender}</p>
+
+            {/* Checkbox multiple */}
+            <div>
+                {['Sport', 'Musica', 'Lettura', 'Viaggi'].map(interest => (
+                    <label key={interest}>
+                        <input
+                            type="checkbox"
+                            checked={interests.includes(interest)}
+                            onChange={() => handleInterestChange(interest)}
+                        />
+                        {interest}
+                    </label>
+                ))}
+            </div>
+            <p>Interessi: {interests.join(', ')}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onChange con Textarea}
+
+\begin{lstlisting}[language=JavaScript, caption=onChange textarea]
+function TextareaExample() {
+    const [message, setMessage] = useState('');
+    const maxLength = 200;
+
+    const handleChange = (e) => {
+        const value = e.target.value;
+
+        // Limita lunghezza
+        if (value.length <= maxLength) {
+            setMessage(value);
+        }
+    };
+
+    const remainingChars = maxLength - message.length;
+
+    return (
+        <div>
+            <textarea
+                value={message}
+                onChange={handleChange}
+                placeholder="Scrivi un messaggio..."
+                rows={5}
+                cols={50}
+            />
+
+            <p>
+                Caratteri rimanenti: {remainingChars} / {maxLength}
+            </p>
+
+            <p>Righe: {message.split('\n').length}</p>
+
+            <p style={{ color: remainingChars < 20 ? 'red' : 'black' }}>
+                {remainingChars < 20 && 'Stai raggiungendo il limite!'}
+            </p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{Altri Eventi Comuni}
+
+\subsection{onSubmit: Form Submission}
+
+\begin{lstlisting}[language=JavaScript, caption=onSubmit form]
+function FormSubmitExample() {
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: ''
+    });
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault(); // ⚠️ IMPORTANTE: Previeni reload pagina
+
+        console.log('Form submitted:', formData);
+
+        // Validazione
+        if (!formData.username || !formData.email || !formData.password) {
+            alert('Compila tutti i campi!');
+            return;
+        }
+
+        // Invia dati
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Reset form
+            setFormData({ username: '', email: '', password: '' });
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <input
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Username"
+            />
+
+            <input
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Email"
+            />
+
+            <input
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Password"
+            />
+
+            <button type="submit">Registrati</button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\subsection{onFocus e onBlur}
+
+\begin{lstlisting}[language=JavaScript, caption=onFocus e onBlur]
+function FocusBlurExample() {
+    const [isFocused, setIsFocused] = useState(false);
+    const [value, setValue] = useState('');
+    const [touched, setTouched] = useState(false);
+
+    const handleFocus = () => {
+        setIsFocused(true);
+    };
+
+    const handleBlur = () => {
+        setIsFocused(false);
+        setTouched(true);
+    };
+
+    // Validazione solo dopo blur
+    const error = touched && value.length < 3
+        ? 'Minimo 3 caratteri'
+        : '';
+
+    return (
+        <div>
+            <input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                placeholder="Nome"
+                style={{
+                    borderColor: isFocused ? 'blue' : error ? 'red' : 'gray'
+                }}
+            />
+
+            <p>Focus: {isFocused ? 'Sì' : 'No'}</p>
+
+            {error && <span style={{ color: 'red' }}>{error}</span>}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onKeyDown, onKeyUp, onKeyPress}
+
+\begin{lstlisting}[language=JavaScript, caption=Eventi keyboard]
+function KeyboardEvents() {
+    const [input, setInput] = useState('');
+    const [lastKey, setLastKey] = useState('');
+
+    const handleKeyDown = (e) => {
+        setLastKey(e.key);
+
+        // Enter per submit
+        if (e.key === 'Enter') {
+            console.log('Enter pressed!');
+        }
+
+        // Escape per cancellare
+        if (e.key === 'Escape') {
+            setInput('');
+        }
+
+        // Ctrl + S per salvare
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            console.log('Saving...');
+        }
+
+        // Arrow keys
+        if (e.key === 'ArrowUp') {
+            console.log('Up arrow');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        // Solo caratteri alfanumerici
+        if (!/[a-zA-Z0-9]/.test(e.key)) {
+            e.preventDefault();
+        }
+    };
+
+    return (
+        <div>
+            <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onKeyPress={handleKeyPress}
+                placeholder="Prova i tasti..."
+            />
+
+            <p>Ultimo tasto: {lastKey}</p>
+            <p>Input: {input}</p>
+
+            <ul>
+                <li>Enter: Submit</li>
+                <li>Escape: Cancella</li>
+                <li>Ctrl+S: Salva</li>
+            </ul>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onMouseEnter e onMouseLeave}
+
+\begin{lstlisting}[language=JavaScript, caption=Eventi mouse hover]
+function HoverExample() {
+    const [isHovering, setIsHovering] = useState(false);
+    const [hoverCount, setHoverCount] = useState(0);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+
+    const handleMouseEnter = () => {
+        setIsHovering(true);
+        setHoverCount(prev => prev + 1);
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovering(false);
+    };
+
+    const handleMouseMove = (e) => {
+        // Posizione relativa all'elemento
+        const rect = e.currentTarget.getBoundingClientRect();
+        setPosition({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        });
+    };
+
+    return (
+        <div>
+            <div
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseMove={handleMouseMove}
+                style={{
+                    width: '300px',
+                    height: '200px',
+                    backgroundColor: isHovering ? 'lightblue' : 'lightgray',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s'
+                }}
+            >
+                <div>
+                    <p>Hovering: {isHovering ? 'Sì' : 'No'}</p>
+                    <p>Hover count: {hoverCount}</p>
+                    <p>Position: ({position.x.toFixed(0)}, {position.y.toFixed(0)})</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{onScroll}
+
+\begin{lstlisting}[language=JavaScript, caption=Evento scroll]
+function ScrollExample() {
+    const [scrollPosition, setScrollPosition] = useState(0);
+    const [isTop, setIsTop] = useState(true);
+    const scrollRef = useRef(null);
+
+    const handleScroll = (e) => {
+        const scrollTop = e.target.scrollTop;
+        setScrollPosition(scrollTop);
+        setIsTop(scrollTop === 0);
+    };
+
+    // Window scroll
+    useEffect(() => {
+        const handleWindowScroll = () => {
+            setScrollPosition(window.scrollY);
+        };
+
+        window.addEventListener('scroll', handleWindowScroll);
+        return () => window.removeEventListener('scroll', handleWindowScroll);
+    }, []);
+
+    return (
+        <div>
+            {/* Scrollable container */}
+            <div
+                ref={scrollRef}
+                onScroll={handleScroll}
+                style={{
+                    height: '300px',
+                    overflow: 'auto',
+                    border: '1px solid black'
+                }}
+            >
+                <div style={{ height: '1000px', padding: '20px' }}>
+                    <p>Scroll position: {scrollPosition}px</p>
+                    <p>At top: {isTop ? 'Sì' : 'No'}</p>
+                    <p>Contenuto scrollabile...</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{Event Delegation e Bubbling}
+
+\subsection{Event Bubbling}
+
+\begin{lstlisting}[language=JavaScript, caption=Event bubbling]
+function BubblingExample() {
+    const handleParentClick = (e) => {
+        console.log('Parent clicked');
+        console.log('Target:', e.target.tagName);        // Elemento cliccato
+        console.log('CurrentTarget:', e.currentTarget.tagName); // Elemento con handler
+    };
+
+    const handleChildClick = (e) => {
+        console.log('Child clicked');
+
+        // Ferma la propagazione
+        // e.stopPropagation();
+    };
+
+    return (
+        <div
+            onClick={handleParentClick}
+            style={{ padding: '20px', backgroundColor: 'lightblue' }}
+        >
+            Parent
+            <button onClick={handleChildClick}>
+                Child (clicca qui)
+            </button>
+        </div>
+    );
+    // Se clicchi il button, vedi:
+    // "Child clicked"
+    // "Parent clicked" (bubbling!)
+}
+\end{lstlisting}
+
+\subsection{Event Delegation}
+
+\begin{lstlisting}[language=JavaScript, caption=Event delegation pattern]
+function TodoList() {
+    const [todos, setTodos] = useState([
+        { id: 1, text: 'Todo 1' },
+        { id: 2, text: 'Todo 2' },
+        { id: 3, text: 'Todo 3' }
+    ]);
+
+    // ❌ Handler per ogni elemento (non scalabile)
+    const BadApproach = () => (
+        <ul>
+            {todos.map(todo => (
+                <li key={todo.id}>
+                    {todo.text}
+                    <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+                </li>
+            ))}
+        </ul>
+    );
+
+    // ✅ Event delegation (un solo handler)
+    const handleListClick = (e) => {
+        // Verifica se è un button delete
+        if (e.target.classList.contains('delete-btn')) {
+            const id = Number(e.target.dataset.id);
+            deleteTodo(id);
+        }
+    };
+
+    const deleteTodo = (id) => {
+        setTodos(todos.filter(todo => todo.id !== id));
+    };
+
+    return (
+        <ul onClick={handleListClick}>
+            {todos.map(todo => (
+                <li key={todo.id}>
+                    {todo.text}
+                    <button
+                        className="delete-btn"
+                        data-id={todo.id}
+                    >
+                        Delete
+                    </button>
+                </li>
+            ))}
+        </ul>
+    );
+}
+\end{lstlisting}
+
+\section{Custom Events}
+
+\subsection{Eventi Personalizzati}
+
+\begin{lstlisting}[language=JavaScript, caption=Custom events pattern]
+function CustomEventExample() {
+    const handleCustomEvent = (data) => {
+        console.log('Custom event:', data);
+    };
+
+    return (
+        <div>
+            <CustomButton onCustomClick={handleCustomEvent} />
+        </div>
+    );
+}
+
+function CustomButton({ onCustomClick }) {
+    const handleClick = (e) => {
+        // Raccogli dati aggiuntivi
+        const data = {
+            timestamp: Date.now(),
+            position: {
+                x: e.clientX,
+                y: e.clientY
+            },
+            button: e.button
+        };
+
+        // Chiama callback con dati custom
+        onCustomClick?.(data);
+    };
+
+    return <button onClick={handleClick}>Click me</button>;
+}
+\end{lstlisting}
+
+\section{Performance e Best Practices}
+
+\subsection{1. Evita Inline Functions nei Render}
+
+\begin{lstlisting}[language=JavaScript, caption=Ottimizzazione event handlers]
+function TodoItem({ todo, onToggle, onDelete }) {
+    // ❌ MALE: Crea nuova funzione ad ogni render
+    return (
+        <li>
+            <input
+                type="checkbox"
+                onChange={() => onToggle(todo.id)}
+            />
+            <button onClick={() => onDelete(todo.id)}>Delete</button>
+        </li>
+    );
+}
+
+// ✅ MEGLIO: useCallback
+function TodoList() {
+    const [todos, setTodos] = useState([...]);
+
+    const handleToggle = useCallback((id) => {
+        setTodos(prev => prev.map(todo =>
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        ));
+    }, []);
+
+    const handleDelete = useCallback((id) => {
+        setTodos(prev => prev.filter(todo => todo.id !== id));
+    }, []);
+
+    return (
+        <ul>
+            {todos.map(todo => (
+                <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={handleToggle}
+                    onDelete={handleDelete}
+                />
+            ))}
+        </ul>
+    );
+}
+\end{lstlisting}
+
+\subsection{2. Debouncing e Throttling}
+
+\begin{lstlisting}[language=JavaScript, caption=Debounce e throttle]
+// Debounce: Esegui dopo che l'utente smette di digitare
+function SearchWithDebounce() {
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState([]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (query) {
+                fetch(`/api/search?q=${query}`)
+                    .then(res => res.json())
+                    .then(setResults);
+            }
+        }, 500); // Aspetta 500ms dopo l'ultimo input
+
+        return () => clearTimeout(timer);
+    }, [query]);
+
+    return (
+        <div>
+            <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Cerca..."
+            />
+            <ul>
+                {results.map(result => (
+                    <li key={result.id}>{result.name}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+// Throttle: Esegui al massimo una volta ogni X ms
+function ScrollProgress() {
+    const [progress, setProgress] = useState(0);
+    const throttleRef = useRef(null);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (throttleRef.current) return;
+
+            throttleRef.current = setTimeout(() => {
+                const winScroll = document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight -
+                              document.documentElement.clientHeight;
+                const scrolled = (winScroll / height) * 100;
+
+                setProgress(scrolled);
+                throttleRef.current = null;
+            }, 100); // Max una volta ogni 100ms
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: `${progress}%`,
+            height: '4px',
+            backgroundColor: 'blue'
+        }} />
+    );
+}
+\end{lstlisting}
+
+\subsection{3. Passive Event Listeners}
+
+\begin{lstlisting}[language=JavaScript, caption=Passive listeners per performance]
+function PassiveListenerExample() {
+    useEffect(() => {
+        const handleTouchMove = (e) => {
+            // Non chiama preventDefault()
+            console.log('Touch move');
+        };
+
+        // Passive listener per scroll performance
+        document.addEventListener(
+            'touchmove',
+            handleTouchMove,
+            { passive: true }
+        );
+
+        return () => {
+            document.removeEventListener('touchmove', handleTouchMove);
+        };
+    }, []);
+
+    return <div>Swipe qui</div>;
+}
+\end{lstlisting}
+
+\section{Conclusione}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item Synthetic Events in React
+    \item onClick per gestione click
+    \item onChange per input e form
+    \item Altri eventi: onSubmit, onFocus, onBlur, keyboard, mouse
+    \item Event bubbling e delegation
+    \item Performance optimization: debounce, throttle, useCallback
+    \item Best practices per event handling
+\end{itemize}
+
+Nel prossimo capitolo approfondiremo i form!

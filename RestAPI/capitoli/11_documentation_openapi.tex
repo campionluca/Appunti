@@ -1,0 +1,1625 @@
+% 11_documentation_openapi.tex
+\chapter{Documentazione e OpenAPI}
+
+La documentazione è fondamentale per l'adozione e l'utilizzo corretto di un'API. OpenAPI Specification (precedentemente Swagger) è lo standard de facto per documentare REST API.
+
+\section{Introduzione a OpenAPI}
+
+\subsection{Cos'è OpenAPI}
+
+OpenAPI Specification (OAS) è uno standard per descrivere REST API in formato machine-readable (YAML o JSON).
+
+\begin{tcolorbox}[title=Benefici di OpenAPI]
+\begin{itemize}
+\item \textbf{Documentazione interattiva}: Genera Swagger UI automaticamente
+\item \textbf{Code generation}: Genera client/server in vari linguaggi
+\item \textbf{Validazione}: Valida request/response automaticamente
+\item \textbf{Testing}: Genera test cases automaticamente
+\item \textbf{Mocking}: Crea mock server per sviluppo
+\item \textbf{Contract-first}: Progetta API prima di implementare
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Versioni OpenAPI}
+
+\begin{itemize}
+\item \textbf{OpenAPI 2.0} (Swagger 2.0): Versione legacy
+\item \textbf{OpenAPI 3.0}: Versione attuale (focus di questo capitolo)
+\item \textbf{OpenAPI 3.1}: Versione più recente, compatibile con JSON Schema
+\end{itemize}
+
+\section{Struttura Base OpenAPI 3.0}
+
+\subsection{Documento Minimale}
+
+\begin{lstlisting}[caption=OpenAPI 3.0 - Struttura Minimale]
+openapi: 3.0.3
+info:
+  title: My API
+  version: 1.0.0
+  description: API description
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /users:
+    get:
+      summary: List users
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+\end{lstlisting}
+
+\subsection{Sezioni Principali}
+
+\begin{enumerate}
+\item \textbf{openapi}: Versione della spec
+\item \textbf{info}: Metadati dell'API
+\item \textbf{servers}: URL dei server
+\item \textbf{paths}: Endpoint e operazioni
+\item \textbf{components}: Componenti riutilizzabili (schemas, responses, etc)
+\item \textbf{security}: Schemi di sicurezza
+\item \textbf{tags}: Raggruppamento endpoint
+\item \textbf{externalDocs}: Documentazione esterna
+\end{enumerate}
+
+\section{Info Object}
+
+\begin{lstlisting}[caption=Info Object Completo]
+info:
+  title: E-commerce API
+  version: 2.1.0
+  description: |
+    # E-commerce REST API
+
+    API completa per gestione e-commerce con:
+    - Gestione prodotti e categorie
+    - Carrello e ordini
+    - Autenticazione utenti
+    - Pagamenti
+
+    ## Autenticazione
+
+    Usa OAuth 2.0 per autenticazione.
+    Vedi la sezione Security per dettagli.
+
+    ## Rate Limiting
+
+    - Free tier: 100 req/hour
+    - Pro tier: 1000 req/hour
+
+  termsOfService: https://example.com/terms
+  contact:
+    name: API Support
+    email: api@example.com
+    url: https://example.com/support
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+\end{lstlisting}
+
+\section{Servers}
+
+\begin{lstlisting}[caption=Configurazione Server]
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+
+  - url: https://staging-api.example.com/v1
+    description: Staging server
+
+  - url: http://localhost:3000/v1
+    description: Local development server
+
+  # Server con variabili
+  - url: https://{environment}.example.com/v{version}
+    description: Configurable server
+    variables:
+      environment:
+        default: api
+        enum:
+          - api
+          - staging
+          - sandbox
+        description: Server environment
+      version:
+        default: '1'
+        enum:
+          - '1'
+          - '2'
+        description: API version
+\end{lstlisting}
+
+\section{Paths e Operations}
+
+\subsection{Definizione Path}
+
+\begin{lstlisting}[caption=Path con Operazioni Complete]
+paths:
+  /users:
+    get:
+      summary: List all users
+      description: |
+        Returns a paginated list of users.
+        Supports filtering, sorting, and field selection.
+      operationId: listUsers
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - name: status
+          in: query
+          description: Filter by user status
+          required: false
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+        - name: sort
+          in: query
+          description: Sort fields (comma-separated, prefix with - for desc)
+          schema:
+            type: string
+            example: "-created_at,name"
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      security:
+        - bearerAuth: []
+
+    post:
+      summary: Create a new user
+      description: Creates a new user with the provided data
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+            examples:
+              basic:
+                summary: Basic user creation
+                value:
+                  email: user@example.com
+                  name: Mario Rossi
+                  password: SecurePass123!
+              admin:
+                summary: Admin user creation
+                value:
+                  email: admin@example.com
+                  name: Admin User
+                  password: SecurePass123!
+                  role: admin
+      responses:
+        '201':
+          description: User created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+              description: URL of the created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: duplicate_resource
+                  message: A user with this email already exists
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: Unique user identifier
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+        example: 12345
+
+    get:
+      summary: Get user by ID
+      description: Returns detailed information about a specific user
+      operationId: getUser
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    put:
+      summary: Update user
+      description: Updates an existing user (full replacement)
+      operationId: updateUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    patch:
+      summary: Partially update user
+      description: Updates specific fields of a user
+      operationId: patchUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatch'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: []
+
+    delete:
+      summary: Delete user
+      description: Permanently deletes a user
+      operationId: deleteUser
+      tags:
+        - Users
+      responses:
+        '204':
+          description: User deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - bearerAuth: [admin:delete]
+\end{lstlisting}
+
+\section{Components - Schemas}
+
+\subsection{Schema Object}
+
+\begin{lstlisting}[caption=Definizione Schemas Riutilizzabili]
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Unique user identifier
+          example: 12345
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Full name of the user
+          example: Mario Rossi
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user avatar image
+          example: https://cdn.example.com/avatars/12345.jpg
+        role:
+          type: string
+          enum: [user, admin, moderator]
+          default: user
+          description: User role
+        status:
+          type: string
+          enum: [active, inactive, pending, suspended]
+          default: pending
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of user creation
+          example: "2023-11-13T12:34:56Z"
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Timestamp of last update
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Custom metadata
+          example:
+            source: web_signup
+            referral: campaign_123
+
+    UserCreate:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          writeOnly: true
+          description: User password (min 8 characters)
+        role:
+          type: string
+          enum: [user, admin]
+          default: user
+
+    UserUpdate:
+      type: object
+      required:
+        - email
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+
+    UserPatch:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+
+    UserList:
+      type: object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 1543
+        count:
+          type: integer
+          description: Number of items in current page
+          example: 10
+        per_page:
+          type: integer
+          description: Items per page
+          example: 10
+        current_page:
+          type: integer
+          description: Current page number
+          example: 2
+        total_pages:
+          type: integer
+          description: Total number of pages
+          example: 155
+        links:
+          type: object
+          properties:
+            first:
+              type: string
+              format: uri
+            prev:
+              type: string
+              format: uri
+              nullable: true
+            self:
+              type: string
+              format: uri
+            next:
+              type: string
+              format: uri
+              nullable: true
+            last:
+              type: string
+              format: uri
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              example: validation_error
+            message:
+              type: string
+              description: Human-readable error message
+              example: Validation failed
+            details:
+              type: object
+              description: Additional error details
+            request_id:
+              type: string
+              description: Request ID for debugging
+              example: req_abc123xyz
+            timestamp:
+              type: string
+              format: date-time
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            error:
+              type: object
+              properties:
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field:
+                        type: string
+                      code:
+                        type: string
+                      message:
+                        type: string
+\end{lstlisting}
+
+\subsection{Composizione con allOf, oneOf, anyOf}
+
+\begin{lstlisting}[caption=Schema Composition]
+components:
+  schemas:
+    # Eredità con allOf
+    AdminUser:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            admin_level:
+              type: integer
+              minimum: 1
+              maximum: 10
+            permissions:
+              type: array
+              items:
+                type: string
+
+    # oneOf - esattamente uno
+    Pet:
+      oneOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+      discriminator:
+        propertyName: pet_type
+        mapping:
+          cat: '#/components/schemas/Cat'
+          dog: '#/components/schemas/Dog'
+
+    Cat:
+      type: object
+      required: [pet_type, meow_volume]
+      properties:
+        pet_type:
+          type: string
+          enum: [cat]
+        meow_volume:
+          type: integer
+
+    Dog:
+      type: object
+      required: [pet_type, bark_volume]
+      properties:
+        pet_type:
+          type: string
+          enum: [dog]
+        bark_volume:
+          type: integer
+
+    # anyOf - uno o più
+    SearchResult:
+      anyOf:
+        - $ref: '#/components/schemas/User'
+        - $ref: '#/components/schemas/Product'
+        - $ref: '#/components/schemas/Order'
+\end{lstlisting}
+
+\section{Components - Parameters}
+
+\begin{lstlisting}[caption=Parametri Riutilizzabili]
+components:
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PerPageParam:
+      name: per_page
+      in: query
+      description: Items per page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+    SortParam:
+      name: sort
+      in: query
+      description: |
+        Sort fields (comma-separated).
+        Prefix with - for descending order.
+      schema:
+        type: string
+      example: "-created_at,name"
+
+    FieldsParam:
+      name: fields
+      in: query
+      description: Comma-separated list of fields to include
+      schema:
+        type: string
+      example: "id,name,email"
+
+    IfMatchHeader:
+      name: If-Match
+      in: header
+      description: ETag for optimistic locking
+      required: false
+      schema:
+        type: string
+      example: '"33a64df551425fcc55e4d42a148795d9f25f89d4"'
+
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      description: Preferred language for response
+      schema:
+        type: string
+        default: en
+      example: "it-IT,it;q=0.9,en;q=0.8"
+\end{lstlisting}
+
+\section{Components - Responses}
+
+\begin{lstlisting}[caption=Response Riutilizzabili]
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: bad_request
+              message: The request could not be understood
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+          example: Bearer realm="example.com"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: unauthorized
+              message: Authentication required
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: forbidden
+              message: You don't have permission to access this resource
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: resource_not_found
+              message: The requested resource was not found
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+\end{lstlisting}
+
+\section{Security Schemes}
+
+\begin{lstlisting}[caption=Security Schemes Completi]
+components:
+  securitySchemes:
+    # HTTP Basic Auth
+    basicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic Authentication
+
+    # Bearer Token
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token authentication
+
+    # API Key
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for application identification
+
+    # OAuth 2.0
+    oauth2:
+      type: oauth2
+      description: OAuth 2.0 authentication
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/oauth/authorize
+          tokenUrl: https://auth.example.com/oauth/token
+          refreshUrl: https://auth.example.com/oauth/refresh
+          scopes:
+            read:users: Read user information
+            write:users: Create and modify users
+            delete:users: Delete users
+            read:orders: Read orders
+            write:orders: Create and modify orders
+            admin:all: Full administrative access
+
+        clientCredentials:
+          tokenUrl: https://auth.example.com/oauth/token
+          scopes:
+            api:read: Read API data
+            api:write: Write API data
+
+        password:
+          tokenUrl: https://auth.example.com/oauth/token
+          refreshUrl: https://auth.example.com/oauth/refresh
+          scopes:
+            read:users: Read user information
+            write:users: Modify user information
+
+# Security globale (applicata a tutti gli endpoint)
+security:
+  - bearerAuth: []
+
+# Override per endpoint specifici
+paths:
+  /public/status:
+    get:
+      summary: Public API status
+      security: []  # Nessuna autenticazione richiesta
+
+  /admin/users:
+    delete:
+      summary: Delete user (admin only)
+      security:
+        - oauth2: [admin:all]
+\end{lstlisting}
+
+\section{Request Body}
+
+\begin{lstlisting}[caption=Request Body con Content-Type Multipli]
+paths:
+  /users/{userId}/avatar:
+    post:
+      summary: Upload user avatar
+      operationId: uploadAvatar
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          # Immagine
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+
+          # Multipart form
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Avatar image file
+                description:
+                  type: string
+                  description: Optional image description
+            encoding:
+              file:
+                contentType: image/png, image/jpeg
+      responses:
+        '200':
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avatar_url:
+                    type: string
+                    format: uri
+
+  /data/import:
+    post:
+      summary: Import data from file
+      requestBody:
+        required: true
+        content:
+          # JSON
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportData'
+
+          # CSV
+          text/csv:
+            schema:
+              type: string
+            example: |
+              name,email,age
+              Mario Rossi,mario@example.com,30
+              Laura Bianchi,laura@example.com,25
+
+          # XML
+          application/xml:
+            schema:
+              type: object
+\end{lstlisting}
+
+\section{Callbacks e Webhooks}
+
+\begin{lstlisting}[caption=Definizione Callbacks]
+paths:
+  /webhooks/subscribe:
+    post:
+      summary: Subscribe to webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - events
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Webhook callback URL
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [user.created, user.updated, order.placed]
+      responses:
+        '201':
+          description: Webhook subscription created
+
+      # Callback definition
+      callbacks:
+        userEvent:
+          '{$request.body#/url}':
+            post:
+              summary: User event notification
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        event:
+                          type: string
+                          enum: [user.created, user.updated]
+                        timestamp:
+                          type: string
+                          format: date-time
+                        data:
+                          $ref: '#/components/schemas/User'
+              responses:
+                '200':
+                  description: Webhook received successfully
+\end{lstlisting}
+
+\section{Spec Completa E-commerce API}
+
+\begin{lstlisting}[caption=OpenAPI 3.0 Completa - E-commerce]
+openapi: 3.0.3
+info:
+  title: E-commerce API
+  version: 2.0.0
+  description: |
+    # E-commerce REST API
+
+    API completa per piattaforma e-commerce.
+
+    ## Funzionalità
+
+    - **Prodotti**: Gestione catalogo prodotti e categorie
+    - **Carrello**: Carrello acquisti multi-item
+    - **Ordini**: Gestione ordini e pagamenti
+    - **Utenti**: Autenticazione e profili utente
+
+    ## Autenticazione
+
+    L'API usa OAuth 2.0. Ottieni un access token tramite:
+
+    ```bash
+    curl -X POST https://api.example.com/oauth/token \
+      -d grant_type=client_credentials \
+      -d client_id=YOUR_CLIENT_ID \
+      -d client_secret=YOUR_CLIENT_SECRET
+    ```
+
+    Includi il token nelle richieste:
+
+    ```
+    Authorization: Bearer YOUR_ACCESS_TOKEN
+    ```
+
+  contact:
+    name: API Support
+    email: api-support@example.com
+    url: https://example.com/support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.example.com/v2
+    description: Production
+  - url: https://sandbox-api.example.com/v2
+    description: Sandbox
+
+tags:
+  - name: Products
+    description: Product catalog management
+  - name: Categories
+    description: Product categories
+  - name: Cart
+    description: Shopping cart operations
+  - name: Orders
+    description: Order management
+  - name: Users
+    description: User management
+  - name: Auth
+    description: Authentication
+
+paths:
+  # Products
+  /products:
+    get:
+      summary: List products
+      tags: [Products]
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/PerPageParam'
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: price_min
+          in: query
+          schema:
+            type: number
+        - name: price_max
+          in: query
+          schema:
+            type: number
+        - name: in_stock
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      summary: Create product
+      tags: [Products]
+      security:
+        - oauth2: [write:products]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+
+    get:
+      summary: Get product details
+      tags: [Products]
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Cart
+  /cart:
+    get:
+      summary: Get current cart
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cart contents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  /cart/items:
+    post:
+      summary: Add item to cart
+      tags: [Cart]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [product_id, quantity]
+              properties:
+                product_id:
+                  type: string
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+
+  # Orders
+  /orders:
+    get:
+      summary: List orders
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, shipped, delivered, cancelled]
+      responses:
+        '200':
+          description: Orders list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+
+    post:
+      summary: Create order from cart
+      tags: [Orders]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: EUR
+        category:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        in_stock:
+          type: boolean
+        stock_quantity:
+          type: integer
+
+    ProductCreate:
+      type: object
+      required: [name, price, category]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        category:
+          type: string
+
+    Cart:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          type: number
+        total:
+          type: number
+
+    CartItem:
+      type: object
+      properties:
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+        price:
+          type: number
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        order_number:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, shipped, delivered, cancelled]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        product_id:
+          type: string
+        product_name:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+
+    OrderCreate:
+      type: object
+      required: [shipping_address, payment_method]
+      properties:
+        shipping_address:
+          $ref: '#/components/schemas/Address'
+        payment_method:
+          type: string
+          enum: [credit_card, paypal, bank_transfer]
+
+    Address:
+      type: object
+      required: [street, city, postal_code, country]
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+          pattern: '^[A-Z]{2}$'
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        per_page:
+          type: integer
+        pages:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PerPageParam:
+      name: per_page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.example.com/oauth/token
+          scopes:
+            read:products: Read products
+            write:products: Create/update products
+            read:orders: Read orders
+            write:orders: Create orders
+
+security:
+  - bearerAuth: []
+\end{lstlisting}
+
+\section{Swagger UI}
+
+\subsection{Hosting Swagger UI}
+
+\begin{lstlisting}[language=HTML, caption=Swagger UI HTML]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Documentation</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: '/api/openapi.yaml',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  </script>
+</body>
+</html>
+\end{lstlisting>
+
+\subsection{Servire OpenAPI con Flask}
+
+\begin{lstlisting}[language=Python, caption=Flask OpenAPI Endpoint]
+from flask import Flask, send_file
+import yaml
+
+app = Flask(__name__)
+
+@app.route('/api/openapi.yaml')
+def openapi_spec():
+    """Serve OpenAPI specification"""
+    return send_file('openapi.yaml', mimetype='application/x-yaml')
+
+@app.route('/api/openapi.json')
+def openapi_spec_json():
+    """Serve OpenAPI as JSON"""
+    with open('openapi.yaml') as f:
+        spec = yaml.safe_load(f)
+    return jsonify(spec)
+
+@app.route('/docs')
+def api_docs():
+    """Serve Swagger UI"""
+    return send_file('swagger-ui.html')
+\end{lstlisting}
+
+\section{Code Generation}
+
+\subsection{Generare Client}
+
+\begin{lstlisting}[language=bash, caption=OpenAPI Generator - Client]
+# Installa OpenAPI Generator
+npm install -g @openapitools/openapi-generator-cli
+
+# Genera client Python
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g python \
+  -o ./client/python \
+  --additional-properties=packageName=ecommerce_client
+
+# Genera client JavaScript/TypeScript
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g typescript-axios \
+  -o ./client/typescript
+
+# Genera client Java
+openapi-generator-cli generate \
+  -i openapi.yaml \
+  -g java \
+  -o ./client/java \
+  --additional-properties=library=okhttp-gson
+\end{lstlisting}
+
+\subsection{Utilizzo Client Generato}
+
+\begin{lstlisting}[language=Python, caption=Uso Client Python Generato]
+from ecommerce_client import ApiClient, Configuration
+from ecommerce_client.api import ProductsApi, OrdersApi
+from ecommerce_client.models import ProductCreate
+
+# Configurazione
+config = Configuration(
+    host="https://api.example.com/v2",
+    access_token="YOUR_ACCESS_TOKEN"
+)
+
+# Client
+with ApiClient(config) as api_client:
+    # Products API
+    products_api = ProductsApi(api_client)
+
+    # List products
+    products = products_api.list_products(
+        page=1,
+        per_page=10,
+        category="electronics"
+    )
+
+    print(f"Found {len(products.data)} products")
+
+    # Create product
+    new_product = ProductCreate(
+        name="Laptop",
+        price=999.99,
+        category="electronics"
+    )
+
+    created = products_api.create_product(new_product)
+    print(f"Created product ID: {created.id}")
+\end{lstlisting}
+
+\section{Validazione}
+
+\subsection{Validare Spec OpenAPI}
+
+\begin{lstlisting}[language=bash, caption=Validazione OpenAPI]
+# Con openapi-generator
+openapi-generator-cli validate -i openapi.yaml
+
+# Con speccy
+npm install -g speccy
+speccy lint openapi.yaml
+
+# Con swagger-cli
+npm install -g @apidevtools/swagger-cli
+swagger-cli validate openapi.yaml
+\end{lstlisting>
+
+\subsection{Validare Request/Response}
+
+\begin{lstlisting}[language=Python, caption=Validazione Runtime con OpenAPI]
+from flask import Flask, request, jsonify
+from openapi_core import create_spec
+from openapi_core.validation.request.validators import RequestValidator
+from openapi_core.contrib.flask import FlaskOpenAPIRequest
+
+app = Flask(__name__)
+
+# Carica spec
+with open('openapi.yaml') as f:
+    spec_dict = yaml.safe_load(f)
+spec = create_spec(spec_dict)
+
+# Middleware validazione
+@app.before_request
+def validate_request():
+    """Valida request contro OpenAPI spec"""
+    if request.method in ['POST', 'PUT', 'PATCH']:
+        openapi_request = FlaskOpenAPIRequest(request)
+        validator = RequestValidator(spec)
+        result = validator.validate(openapi_request)
+
+        if result.errors:
+            errors = [
+                {
+                    'path': '.'.join(str(p) for p in err.schema_path),
+                    'message': err.message
+                }
+                for err in result.errors
+            ]
+
+            return jsonify({
+                'error': {
+                    'code': 'schema_validation_error',
+                    'message': 'Request does not match OpenAPI schema',
+                    'errors': errors
+                }
+            }), 400
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Checklist OpenAPI]
+\begin{itemize}
+\item[$\square$] Usa versione OpenAPI 3.0 o superiore
+\item[$\square$] Includi esempi per tutti gli schema
+\item[$\square$] Documenta tutti i parametri e proprietà
+\item[$\square$] Definisci tutti i possibili status code
+\item[$\square$] Usa \$ref per riutilizzare componenti
+\item[$\square$] Testa la spec con validator
+\item[$\square$] Mantieni spec sincronizzata con codice
+\item[$\square$] Versionna la spec insieme al codice
+\item[$\square$] Genera e testa i client
+\item[$\square$] Usa descrizioni Markdown per formattazione
+\end{itemize}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+OpenAPI 3.0 è lo standard per documentare REST API. Fornisce:
+
+\begin{itemize}
+\item Documentazione interattiva con Swagger UI
+\item Validazione automatica request/response
+\item Code generation per client e server
+\item Contract-first development
+\item Testing automatizzato
+\end{itemize}
+
+Investire tempo in una spec OpenAPI completa ripaga enormemente in termini di developer experience e manutenibilità.

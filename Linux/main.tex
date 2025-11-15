@@ -1,0 +1,92 @@
+% main.tex — Documento principale LaTeX per "Linux & Bash Scripting"
+\documentclass[a4paper,11pt]{book}
+
+% Lingua e codifica
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+% Layout
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Hyperlink e colori
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Codice sorgente (Bash)
+\usepackage{listings}
+\usepackage{listingsutf8}
+\lstdefinestyle{bash}{
+  language=bash,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  frame=single,
+  breaklines=true
+}
+\lstset{style=bash, inputencoding=utf8,
+  literate={à}{{\`a}}1 {è}{{\`e}}1 {é}{{\'e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+           {À}{{\`A}}1 {È}{{\`E}}1 {É}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+           {–}{{-}}1 {—}{{-}}1 {‑}{{-}}1 {→}{{->}}2 {…}{{...}}3}
+
+% Box informativi
+\usepackage[skins, breakable]{tcolorbox}
+\tcbset{
+  colback=gray!5,
+  colframe=gray!60,
+  coltitle=black,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt,
+  breakable
+}
+
+% Grafica
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes}
+
+% Tipografia
+\usepackage[protrusion=true,expansion=true]{microtype}
+\setlength{\emergencystretch}{3em}
+
+% Metadati documento
+\title{Linux \& Bash Scripting\\[0.5cm]\large Guida Completa al Sistema Operativo e Shell Scripting}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\mainmatter
+
+% Inclusione dei capitoli
+\include{capitoli/00_prefazione}
+\include{capitoli/01_introduzione_linux}
+\include{capitoli/02_comandi_base}
+\include{capitoli/03_filesystem_permessi}
+\include{capitoli/04_gestione_processi}
+\include{capitoli/05_bash_scripting}
+\include{capitoli/06_text_processing}
+\include{capitoli/07_networking}
+\include{capitoli/08_amministrazione_sistema}
+\include{capitoli/09_ssh_sicurezza}
+\include{capitoli/10_automatizzazione}
+
+\appendix
+\include{capitoli/appendice_comandi}
+\include{capitoli/appendice_esercizi}
+
+\end{document}

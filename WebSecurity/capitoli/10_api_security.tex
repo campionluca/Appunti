@@ -1,0 +1,1207 @@
+\chapter{API Security}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, API Authentication (JWT, OAuth 2.0, API Keys), Rate limiting, Input validation, CORS, API versioning, GraphQL security, WebSocket security, Monitoring, Compliance.
+\end{tcolorbox}
+
+\section*{Introduzione}
+Le API (Application Programming Interfaces) sono il backbone delle applicazioni moderne. REST API, GraphQL e WebSocket permettono comunicazione tra frontend e backend, tra microservizi e con servizi terzi. Questo capitolo copre autenticazione, autorizzazione, protezione contro abusi e best practices per API sicure.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Implementare autenticazione API con JWT
+    \item Configurare OAuth 2.0 per delegated authorization
+    \item Gestire API keys in modo sicuro
+    \item Implementare rate limiting e throttling
+    \item Validare e sanitizzare input API
+    \item Configurare CORS correttamente
+    \item Proteggere GraphQL da query abusive
+    \item Implementare WebSocket authentication
+    \item Monitorare e loggare attività API
+    \item Garantire compliance GDPR e PCI-DSS
+\end{itemize}
+
+\section{REST API Authentication}
+
+\subsection{JWT (JSON Web Tokens)}
+
+JWT è lo standard de-facto per autenticazione stateless in API REST.
+
+\begin{lstlisting}[language=text, caption={Struttura JWT}]
+JWT = Header.Payload.Signature
+
+Header (Base64URL encoded):
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+Payload (Base64URL encoded):
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "iat": 1516239022,
+  "exp": 1516242622
+}
+
+Signature:
+HMACSHA256(
+  base64UrlEncode(header) + "." + base64UrlEncode(payload),
+  secret
+)
+
+Esempio JWT completo:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+\end{lstlisting}
+
+\subsection{Implementazione JWT sicura}
+
+\begin{lstlisting}[language=Python, caption={JWT authentication con Flask}]
+from flask import Flask, request, jsonify
+import jwt
+import datetime
+from functools import wraps
+
+app = Flask(__name__)
+
+# IMPORTANTE: In produzione, usa environment variable!
+# SECRET_KEY deve essere:
+# - Lungo (almeno 256 bit)
+# - Casuale
+# - Segreto (mai in repository)
+app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
+
+def generate_token(user_id, username):
+    """Genera JWT token"""
+    payload = {
+        'sub': user_id,  # Subject (user ID)
+        'username': username,
+        'iat': datetime.datetime.utcnow(),  # Issued at
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)  # Expiration
+    }
+
+    token = jwt.encode(
+        payload,
+        app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
+
+    return token
+
+def verify_token(token):
+    """Verifica e decodifica JWT token"""
+    try:
+        payload = jwt.decode(
+            token,
+            app.config['SECRET_KEY'],
+            algorithms=['HS256']
+        )
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  # Token scaduto
+    except jwt.InvalidTokenError:
+        return None  # Token invalido
+
+def token_required(f):
+    """Decorator per proteggere route"""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        # Estrai token da Authorization header
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            # Format: "Bearer <token>"
+            parts = auth_header.split()
+            if len(parts) == 2 and parts[0] == 'Bearer':
+                token = parts[1]
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        # Verifica token
+        payload = verify_token(token)
+        if payload is None:
+            return jsonify({'error': 'Token is invalid or expired'}), 401
+
+        # Passa user info alla route
+        return f(current_user=payload, *args, **kwargs)
+
+    return decorated
+
+# Routes
+@app.route('/api/login', methods=['POST'])
+def login():
+    """Login endpoint"""
+    data = request.get_json()
+
+    username = data.get('username')
+    password = data.get('password')
+
+    # Valida credenziali (esempio semplificato)
+    # In produzione: query database, verifica password hash
+    if username == 'admin' and password == 'password':
+        user_id = 1
+
+        # Genera token
+        token = generate_token(user_id, username)
+
+        return jsonify({
+            'token': token,
+            'expires_in': 86400  # 24 ore in secondi
+        }), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+@app.route('/api/protected', methods=['GET'])
+@token_required
+def protected_route(current_user):
+    """Route protetta - richiede token valido"""
+    return jsonify({
+        'message': f'Hello {current_user["username"]}!',
+        'user_id': current_user['sub']
+    }), 200
+
+@app.route('/api/refresh', methods=['POST'])
+@token_required
+def refresh_token(current_user):
+    """Rinnova token"""
+    new_token = generate_token(
+        current_user['sub'],
+        current_user['username']
+    )
+
+    return jsonify({
+        'token': new_token,
+        'expires_in': 86400
+    }), 200
+
+if __name__ == '__main__':
+    app.run(debug=False)  # NEVER debug=True in production!
+\end{lstlisting}
+
+\subsection{JWT Best Practices}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=JWT Security Best Practices]
+\begin{enumerate}
+    \item \textbf{Usa HS256 o RS256}: Evita 'none' algorithm
+    \item \textbf{Short expiration}: Max 1 ora per access token
+    \item \textbf{Usa refresh tokens}: Separa access token (short) e refresh token (long)
+    \item \textbf{Valida sempre}: Verifica signature, exp, iss, aud
+    \item \textbf{Non mettere dati sensibili}: JWT è decodificabile (Base64)
+    \item \textbf{HTTPS only}: Trasmetti token solo su HTTPS
+    \item \textbf{Revocation}: Implementa token blacklist per logout
+    \item \textbf{Strong secret}: Usa secret >= 256 bit per HS256
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Vulnerabilità JWT Comuni]
+\textbf{Algorithm Confusion Attack}:
+\begin{lstlisting}
+// Token originale firmato con RS256 (asymmetric)
+{
+  "alg": "RS256",
+  "typ": "JWT"
+}
+
+// Attaccante modifica in HS256 (symmetric)
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+
+// Server usa chiave pubblica come HMAC secret
+// Attaccante firma con chiave pubblica (che è pubblica!)
+\end{lstlisting}
+
+\textbf{Difesa}: Specificare sempre algoritmo atteso in verify()
+\begin{verbatim}
+jwt.decode(token, key, algorithms=['RS256'])  # ✓
+jwt.decode(token, key)  # ✗ Vulnerabile
+\end{verbatim}
+\end{tcolorbox}
+
+\subsection{Refresh Token Pattern}
+
+\begin{lstlisting}[language=JavaScript, caption={Refresh token implementation}]
+// Backend (Node.js + Express)
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+
+// In-memory store (usa Redis in produzione)
+const refreshTokens = new Map();
+
+function generateAccessToken(user) {
+    return jwt.sign(
+        { userId: user.id, username: user.username },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '15m' }  // Short-lived
+    );
+}
+
+function generateRefreshToken(user) {
+    const refreshToken = uuidv4();
+
+    // Salva refresh token con scadenza
+    refreshTokens.set(refreshToken, {
+        userId: user.id,
+        expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000)  // 7 giorni
+    });
+
+    return refreshToken;
+}
+
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    // Valida credenziali
+    const user = await authenticateUser(username, password);
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Genera tokens
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // Refresh token in HttpOnly cookie (sicuro)
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,  // HTTPS only
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000  // 7 giorni
+    });
+
+    res.json({ accessToken });
+});
+
+app.post('/api/refresh', (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+        return res.status(401).json({ error: 'Refresh token missing' });
+    }
+
+    // Verifica refresh token
+    const tokenData = refreshTokens.get(refreshToken);
+
+    if (!tokenData || tokenData.expiresAt < Date.now()) {
+        return res.status(401).json({ error: 'Refresh token invalid or expired' });
+    }
+
+    // Genera nuovo access token
+    const user = getUserById(tokenData.userId);
+    const accessToken = generateAccessToken(user);
+
+    res.json({ accessToken });
+});
+
+app.post('/api/logout', (req, res) => {
+    const refreshToken = req.cookies.refreshToken;
+
+    // Revoca refresh token
+    refreshTokens.delete(refreshToken);
+
+    res.clearCookie('refreshToken');
+    res.json({ message: 'Logged out successfully' });
+});
+
+// Frontend usage
+async function apiCall(endpoint, options = {}) {
+    let token = localStorage.getItem('accessToken');
+
+    const response = await fetch(endpoint, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'  // Invia cookies
+    });
+
+    // Se token scaduto, refresh
+    if (response.status === 401) {
+        const refreshResponse = await fetch('/api/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        });
+
+        if (refreshResponse.ok) {
+            const { accessToken } = await refreshResponse.json();
+            localStorage.setItem('accessToken', accessToken);
+
+            // Riprova richiesta originale
+            return fetch(endpoint, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } else {
+            // Refresh fallito - redirect a login
+            window.location.href = '/login';
+        }
+    }
+
+    return response;
+}
+\end{lstlisting}
+
+\section{OAuth 2.0}
+
+OAuth 2.0 è lo standard per delegated authorization (es. "Login with Google").
+
+\subsection{OAuth 2.0 Flows}
+
+\begin{description}
+    \item[\textbf{Authorization Code Flow}] ✓ Raccomandato per web apps con backend
+    \item[\textbf{PKCE}] ✓ Authorization Code + PKCE per mobile/SPA
+    \item[\textbf{Client Credentials}] ✓ Machine-to-machine (no utente)
+    \item[\textbf{Implicit Flow}] ❌ DEPRECATO - vulnerabile
+    \item[\textbf{Password Grant}] ❌ SCONSIGLIATO - usa solo se necessario
+\end{description}
+
+\subsection{Authorization Code Flow}
+
+\begin{lstlisting}[language=text, caption={OAuth 2.0 Authorization Code Flow}]
+1. User → Client App:
+   "Voglio fare login con Google"
+
+2. Client → Authorization Server:
+   GET /authorize?
+     response_type=code&
+     client_id=abc123&
+     redirect_uri=https://myapp.com/callback&
+     scope=openid email profile&
+     state=random_csrf_token
+
+3. Authorization Server → User:
+   "MyApp vuole accedere a email e profile. Autorizzi?"
+
+4. User → Authorization Server:
+   "Sì, autorizzo"
+
+5. Authorization Server → Client (redirect):
+   https://myapp.com/callback?
+     code=xyz789&
+     state=random_csrf_token
+
+6. Client → Authorization Server (backend):
+   POST /token
+   Content-Type: application/x-www-form-urlencoded
+
+   grant_type=authorization_code&
+   code=xyz789&
+   redirect_uri=https://myapp.com/callback&
+   client_id=abc123&
+   client_secret=secret456
+
+7. Authorization Server → Client:
+   {
+     "access_token": "eyJhbGc...",
+     "token_type": "Bearer",
+     "expires_in": 3600,
+     "refresh_token": "tGzv3JOkF0...",
+     "id_token": "eyJhbGc..."  // OpenID Connect
+   }
+
+8. Client → Resource Server (API):
+   GET /api/user
+   Authorization: Bearer eyJhbGc...
+
+9. Resource Server → Client:
+   {
+     "id": "12345",
+     "email": "user@example.com",
+     "name": "John Doe"
+   }
+\end{lstlisting}
+
+\subsection{Implementazione OAuth 2.0 Client}
+
+\begin{lstlisting}[language=Python, caption={OAuth 2.0 con Google (Python)}]
+from flask import Flask, redirect, request, session, url_for
+from authlib.integrations.flask_client import OAuth
+import os
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+oauth = OAuth(app)
+
+# Configura Google OAuth
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+@app.route('/login')
+def login():
+    """Inizia OAuth flow"""
+    # Genera redirect URI
+    redirect_uri = url_for('authorize', _external=True)
+
+    # Redirect a Google per autorizzazione
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/authorize')
+def authorize():
+    """Callback OAuth"""
+    try:
+        # Scambia authorization code per access token
+        token = google.authorize_access_token()
+
+        # Ottieni user info
+        user_info = google.parse_id_token(token)
+
+        # Salva in sessione
+        session['user'] = {
+            'id': user_info['sub'],
+            'email': user_info['email'],
+            'name': user_info['name'],
+            'picture': user_info.get('picture')
+        }
+
+        # Salva user in database
+        save_or_update_user(user_info)
+
+        return redirect('/dashboard')
+
+    except Exception as e:
+        return f'Error: {str(e)}', 400
+
+@app.route('/logout')
+def logout():
+    """Logout"""
+    session.pop('user', None)
+    return redirect('/')
+
+@app.route('/dashboard')
+def dashboard():
+    """Protected route"""
+    user = session.get('user')
+    if not user:
+        return redirect('/login')
+
+    return f"Hello {user['name']}!"
+
+def save_or_update_user(user_info):
+    """Salva o aggiorna utente nel database"""
+    # Implementa logica database
+    pass
+
+if __name__ == '__main__':
+    app.run(ssl_context='adhoc')  # HTTPS richiesto per OAuth
+\end{lstlisting}
+
+\section{API Keys}
+
+API keys sono semplici ma meno sicure di OAuth/JWT. Usale solo per autenticazione server-to-server.
+
+\subsection{Implementazione API Keys}
+
+\begin{lstlisting}[language=PHP, caption={Sistema API Keys}]
+<?php
+class APIKeyManager {
+    private $db;
+
+    public function generateAPIKey($userId, $name, $permissions = []) {
+        // Genera API key casuale (256 bit)
+        $apiKey = bin2hex(random_bytes(32));
+
+        // Hash per storage (come password)
+        $hashedKey = password_hash($apiKey, PASSWORD_BCRYPT);
+
+        // Salva in database
+        $stmt = $this->db->prepare("
+            INSERT INTO api_keys
+            (user_id, name, key_hash, permissions, created_at, last_used_at)
+            VALUES (?, ?, ?, ?, NOW(), NULL)
+        ");
+
+        $permissionsJson = json_encode($permissions);
+        $stmt->bind_param('isss', $userId, $name, $hashedKey, $permissionsJson);
+        $stmt->execute();
+
+        // Restituisci chiave in chiaro (UNICA volta che è visibile)
+        return [
+            'api_key' => $apiKey,
+            'message' => 'Save this key securely. It will not be shown again.'
+        ];
+    }
+
+    public function validateAPIKey($apiKey) {
+        // Ottieni tutte le chiavi (in produzione, usa index su prefix)
+        $stmt = $this->db->prepare("
+            SELECT id, user_id, key_hash, permissions, is_active
+            FROM api_keys
+            WHERE is_active = TRUE
+        ");
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+            // Verifica hash
+            if (password_verify($apiKey, $row['key_hash'])) {
+                // Aggiorna last_used_at
+                $this->updateLastUsed($row['id']);
+
+                return [
+                    'valid' => true,
+                    'user_id' => $row['user_id'],
+                    'permissions' => json_decode($row['permissions'], true)
+                ];
+            }
+        }
+
+        return ['valid' => false];
+    }
+
+    private function updateLastUsed($keyId) {
+        $stmt = $this->db->prepare("
+            UPDATE api_keys
+            SET last_used_at = NOW()
+            WHERE id = ?
+        ");
+        $stmt->bind_param('i', $keyId);
+        $stmt->execute();
+    }
+
+    public function revokeAPIKey($keyId, $userId) {
+        $stmt = $this->db->prepare("
+            UPDATE api_keys
+            SET is_active = FALSE, revoked_at = NOW()
+            WHERE id = ? AND user_id = ?
+        ");
+        $stmt->bind_param('ii', $keyId, $userId);
+        $stmt->execute();
+    }
+
+    public function listUserKeys($userId) {
+        $stmt = $this->db->prepare("
+            SELECT id, name, created_at, last_used_at, is_active
+            FROM api_keys
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ");
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+}
+
+// Middleware per proteggere API routes
+function requireAPIKey() {
+    global $apiKeyManager;
+
+    // Estrai API key da header
+    $apiKey = null;
+    if (isset($_SERVER['HTTP_X_API_KEY'])) {
+        $apiKey = $_SERVER['HTTP_X_API_KEY'];
+    } elseif (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        // Format: "Bearer <api_key>"
+        $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
+        if (count($parts) === 2 && $parts[0] === 'Bearer') {
+            $apiKey = $parts[1];
+        }
+    }
+
+    if (!$apiKey) {
+        http_response_code(401);
+        die(json_encode(['error' => 'API key required']));
+    }
+
+    // Valida API key
+    $result = $apiKeyManager->validateAPIKey($apiKey);
+
+    if (!$result['valid']) {
+        // Log tentativo accesso con chiave invalida
+        logSecurityEvent('INVALID_API_KEY', [
+            'ip' => $_SERVER['REMOTE_ADDR'],
+            'user_agent' => $_SERVER['HTTP_USER_AGENT']
+        ]);
+
+        http_response_code(401);
+        die(json_encode(['error' => 'Invalid API key']));
+    }
+
+    // Salva user info in globals per uso nelle route
+    $GLOBALS['api_user_id'] = $result['user_id'];
+    $GLOBALS['api_permissions'] = $result['permissions'];
+}
+
+// Uso
+requireAPIKey();
+
+// Route protetta
+if (!in_array('read:users', $GLOBALS['api_permissions'])) {
+    http_response_code(403);
+    die(json_encode(['error' => 'Permission denied']));
+}
+
+// Procedi con logica API
+?>
+\end{lstlisting}
+
+\section{Rate Limiting}
+
+Rate limiting previene abusi limitando numero di richieste per client.
+
+\subsection{Algoritmi Rate Limiting}
+
+\begin{description}
+    \item[\textbf{Fixed Window}] Limite fisso per intervallo tempo (es. 100 req/hour)
+    \item[\textbf{Sliding Window}] Simile a fixed ma finestra "scorre"
+    \item[\textbf{Token Bucket}] Accumula "tokens", ogni richiesta consuma token
+    \item[\textbf{Leaky Bucket}] Processa richieste a rate costante, queue overflow rifiutate
+\end{description}
+
+\subsection{Implementazione Rate Limiting}
+
+\begin{lstlisting}[language=Python, caption={Rate limiting con Redis}]
+import redis
+import time
+from flask import Flask, request, jsonify
+from functools import wraps
+
+app = Flask(__name__)
+redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
+class RateLimiter:
+    def __init__(self, redis_client):
+        self.redis = redis_client
+
+    def is_allowed(self, key, max_requests, window_seconds):
+        """
+        Sliding window rate limiting
+
+        Args:
+            key: Identificatore client (IP, user_id, API key)
+            max_requests: Numero massimo richieste
+            window_seconds: Finestra temporale (secondi)
+
+        Returns:
+            (allowed: bool, retry_after: int)
+        """
+        now = time.time()
+        window_start = now - window_seconds
+
+        # Redis sorted set: score = timestamp, member = request_id
+        pipe = self.redis.pipeline()
+
+        # 1. Rimuovi richieste vecchie (fuori finestra)
+        pipe.zremrangebyscore(key, 0, window_start)
+
+        # 2. Conta richieste nella finestra
+        pipe.zcard(key)
+
+        # 3. Aggiungi richiesta corrente
+        pipe.zadd(key, {f"{now}:{id(request)}": now})
+
+        # 4. Set expiration per cleanup
+        pipe.expire(key, window_seconds)
+
+        results = pipe.execute()
+        request_count = results[1]
+
+        if request_count < max_requests:
+            return True, 0
+        else:
+            # Calcola quando finestra si libera
+            oldest_request = self.redis.zrange(key, 0, 0, withscores=True)
+            if oldest_request:
+                oldest_timestamp = oldest_request[0][1]
+                retry_after = int(oldest_timestamp + window_seconds - now)
+                return False, max(retry_after, 1)
+
+            return False, window_seconds
+
+def rate_limit(max_requests=100, window_seconds=3600):
+    """
+    Decorator per rate limiting
+
+    Default: 100 requests per hour
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Identifica client (priorità: API key > user_id > IP)
+            if hasattr(request, 'api_key'):
+                identifier = f"api:{request.api_key}"
+            elif hasattr(request, 'user_id'):
+                identifier = f"user:{request.user_id}"
+            else:
+                identifier = f"ip:{request.remote_addr}"
+
+            rate_limiter = RateLimiter(redis_client)
+            allowed, retry_after = rate_limiter.is_allowed(
+                f"rate_limit:{identifier}",
+                max_requests,
+                window_seconds
+            )
+
+            if not allowed:
+                response = jsonify({
+                    'error': 'Rate limit exceeded',
+                    'retry_after': retry_after
+                })
+                response.status_code = 429
+                response.headers['Retry-After'] = str(retry_after)
+                response.headers['X-RateLimit-Limit'] = str(max_requests)
+                response.headers['X-RateLimit-Remaining'] = '0'
+                response.headers['X-RateLimit-Reset'] = str(int(time.time()) + retry_after)
+                return response
+
+            # Aggiungi rate limit headers
+            remaining = max_requests - rate_limiter.redis.zcard(
+                f"rate_limit:{identifier}"
+            )
+
+            response = f(*args, **kwargs)
+            if hasattr(response, 'headers'):
+                response.headers['X-RateLimit-Limit'] = str(max_requests)
+                response.headers['X-RateLimit-Remaining'] = str(remaining)
+                response.headers['X-RateLimit-Reset'] = str(int(time.time()) + window_seconds)
+
+            return response
+
+        return decorated_function
+    return decorator
+
+# Uso
+@app.route('/api/search', methods=['GET'])
+@rate_limit(max_requests=10, window_seconds=60)  # 10 req/min
+def search():
+    query = request.args.get('q')
+    results = perform_search(query)
+    return jsonify(results)
+
+@app.route('/api/expensive-operation', methods=['POST'])
+@rate_limit(max_requests=5, window_seconds=3600)  # 5 req/hour
+def expensive_operation():
+    # Operazione costosa
+    return jsonify({'status': 'completed'})
+\end{lstlisting}
+
+\subsection{Rate Limiting con Nginx}
+
+\begin{lstlisting}[language=nginx, caption={Rate limiting a livello Nginx}]
+# /etc/nginx/nginx.conf
+
+http {
+    # Definisci rate limit zones
+    # Zone per IP: max 10 MB, 10 req/sec
+    limit_req_zone $binary_remote_addr zone=by_ip:10m rate=10r/s;
+
+    # Zone per API key: max 10 MB, 100 req/sec
+    limit_req_zone $http_x_api_key zone=by_api_key:10m rate=100r/s;
+
+    server {
+        location /api/ {
+            # Applica rate limit
+            # burst: permetti brevi picchi fino a 20 richieste
+            # nodelay: non ritarda richieste in burst
+            limit_req zone=by_ip burst=20 nodelay;
+
+            # Custom error page per 429
+            error_page 429 = @rate_limit_exceeded;
+
+            proxy_pass http://backend;
+        }
+
+        location /api/premium/ {
+            # Rate limit diverso per premium API
+            limit_req zone=by_api_key burst=200 nodelay;
+
+            proxy_pass http://backend;
+        }
+
+        location @rate_limit_exceeded {
+            default_type application/json;
+            return 429 '{"error": "Rate limit exceeded", "retry_after": 60}';
+        }
+
+        # Status endpoint (no rate limit)
+        location /api/health {
+            limit_req off;
+            proxy_pass http://backend;
+        }
+    }
+}
+\end{lstlisting}
+
+\section{Input Validation}
+
+\subsection{API Input Validation}
+
+\begin{lstlisting}[language=Python, caption={Input validation con Pydantic}]
+from pydantic import BaseModel, Field, validator, EmailStr
+from typing import Optional, List
+from datetime import datetime
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+class CreateUserRequest(BaseModel):
+    """Schema validazione per creazione utente"""
+
+    username: str = Field(..., min_length=3, max_length=50, regex=r'^[a-zA-Z0-9_]+$')
+    email: EmailStr
+    password: str = Field(..., min_length=12, max_length=128)
+    age: Optional[int] = Field(None, ge=18, le=120)
+    roles: List[str] = Field(default_factory=list)
+
+    @validator('username')
+    def username_no_special_chars(cls, v):
+        if not v.replace('_', '').isalnum():
+            raise ValueError('Username must be alphanumeric')
+        return v
+
+    @validator('password')
+    def password_strength(cls, v):
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain uppercase letter')
+        if not any(c.islower() for c in v):
+            raise ValueError('Password must contain lowercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain digit')
+        if not any(c in '!@#$%^&*()_+-=' for c in v):
+            raise ValueError('Password must contain special character')
+        return v
+
+    @validator('roles')
+    def validate_roles(cls, v):
+        allowed_roles = ['user', 'admin', 'moderator']
+        for role in v:
+            if role not in allowed_roles:
+                raise ValueError(f'Invalid role: {role}')
+        return v
+
+class UpdateProductRequest(BaseModel):
+    """Schema per aggiornamento prodotto"""
+
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    description: Optional[str] = Field(None, max_length=1000)
+    price: Optional[float] = Field(None, gt=0, le=1000000)
+    quantity: Optional[int] = Field(None, ge=0)
+    tags: Optional[List[str]] = None
+
+    @validator('tags')
+    def validate_tags(cls, v):
+        if v and len(v) > 10:
+            raise ValueError('Maximum 10 tags allowed')
+        return v
+
+@app.route('/api/users', methods=['POST'])
+def create_user():
+    """Endpoint con validazione automatica"""
+    try:
+        # Parse e valida input
+        user_data = CreateUserRequest(**request.get_json())
+
+        # Input validato - procedi con business logic
+        user = save_user(user_data.dict())
+
+        return jsonify({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }), 201
+
+    except ValidationError as e:
+        # Errori validazione
+        return jsonify({
+            'error': 'Validation failed',
+            'details': e.errors()
+        }), 400
+    except Exception as e:
+        # Altri errori
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/products/<int:product_id>', methods=['PATCH'])
+def update_product(product_id):
+    """Update parziale con validazione"""
+    try:
+        # Valida input
+        update_data = UpdateProductRequest(**request.get_json())
+
+        # Aggiorna solo campi forniti
+        product = get_product(product_id)
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+
+        # Update
+        for field, value in update_data.dict(exclude_unset=True).items():
+            setattr(product, field, value)
+
+        product.save()
+
+        return jsonify(product.to_dict()), 200
+
+    except ValidationError as e:
+        return jsonify({
+            'error': 'Validation failed',
+            'details': e.errors()
+        }), 400
+\end{lstlisting}
+
+\section{CORS (Cross-Origin Resource Sharing)}
+
+\subsection{Configurazione CORS sicura}
+
+\begin{lstlisting}[language=Python, caption={CORS configuration con Flask-CORS}]
+from flask import Flask
+from flask_cors import CORS
+
+app = Flask(__name__)
+
+# CONFIGURAZIONE INSICURA - NON USARE IN PRODUZIONE
+# CORS(app, origins="*")  # ❌ Permette qualsiasi origine
+
+# CONFIGURAZIONE SICURA
+CORS(app,
+     origins=[
+         "https://www.example.com",
+         "https://app.example.com"
+     ],
+     methods=["GET", "POST", "PUT", "DELETE"],
+     allow_headers=["Content-Type", "Authorization"],
+     expose_headers=["X-Total-Count"],
+     supports_credentials=True,  # Permetti cookies
+     max_age=3600  # Cache preflight per 1 ora
+)
+
+# CORS per route specifiche
+@app.route('/api/public')
+@cross_origin(origins="*")  # Public API, any origin OK
+def public_api():
+    return jsonify({'data': 'public'})
+
+@app.route('/api/private')
+@cross_origin(origins=["https://app.example.com"],
+              supports_credentials=True)
+def private_api():
+    return jsonify({'data': 'private'})
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=CORS Security Issues]
+\textbf{Problema}: CORS mal configurato può permettere attacchi CSRF e data leaks
+
+❌ Configurazioni pericolose:
+\begin{verbatim}
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+
+Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}  // Riflette qualsiasi origin!
+\end{verbatim}
+
+✓ Configurazione sicura:
+\begin{itemize}
+    \item Whitelist specifica di origins
+    \item Mai "*" con credentials
+    \item Valida origin contro whitelist
+    \item Usa SameSite cookies come defense in depth
+\end{itemize}
+\end{tcolorbox}
+
+\section{GraphQL Security}
+
+\subsection{Query Depth Limiting}
+
+\begin{lstlisting}[language=JavaScript, caption={GraphQL depth limiting}]
+const depthLimit = require('graphql-depth-limit');
+const { ApolloServer } = require('apollo-server');
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    validationRules: [
+        depthLimit(
+            7,  // Max depth
+            { ignore: ['queryName'] }
+        )
+    ]
+});
+
+// Query pericolosa (depth attack):
+/*
+query {
+  user {
+    friends {
+      friends {
+        friends {
+          friends {
+            friends {
+              friends {
+                friends {
+                  name  // Depth 8 - BLOCKED
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+*/
+\end{lstlisting}
+
+\subsection{Query Complexity Limiting}
+
+\begin{lstlisting}[language=JavaScript, caption={GraphQL complexity limiting}]
+const { createComplexityLimitRule } = require('graphql-validation-complexity');
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    validationRules: [
+        createComplexityLimitRule(1000, {
+            scalarCost: 1,
+            objectCost: 10,
+            listFactor: 20
+        })
+    ]
+});
+
+// Schema con costi
+const typeDefs = `
+  type Query {
+    users(limit: Int = 10): [User] @cost(complexity: 20, multipliers: ["limit"])
+    user(id: ID!): User @cost(complexity: 1)
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    posts: [Post] @cost(complexity: 10)
+  }
+`;
+\end{lstlisting}
+
+\section{Monitoring e Logging}
+
+\begin{lstlisting}[language=Python, caption={API monitoring e logging}]
+import logging
+from pythonjsonlogger import jsonlogger
+from flask import Flask, request, g
+import time
+import uuid
+
+app = Flask(__name__)
+
+# Structured logging
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter(
+    '%(timestamp)s %(level)s %(name)s %(message)s'
+)
+logHandler.setFormatter(formatter)
+logger = logging.getLogger()
+logger.addHandler(logHandler)
+logger.setLevel(logging.INFO)
+
+@app.before_request
+def before_request():
+    """Log richiesta"""
+    g.request_id = str(uuid.uuid4())
+    g.start_time = time.time()
+
+    logger.info('API Request', extra={
+        'request_id': g.request_id,
+        'method': request.method,
+        'path': request.path,
+        'ip': request.remote_addr,
+        'user_agent': request.user_agent.string,
+        'user_id': getattr(g, 'user_id', None)
+    })
+
+@app.after_request
+def after_request(response):
+    """Log risposta"""
+    duration = time.time() - g.start_time
+
+    logger.info('API Response', extra={
+        'request_id': g.request_id,
+        'status_code': response.status_code,
+        'duration_ms': round(duration * 1000, 2),
+        'user_id': getattr(g, 'user_id', None)
+    })
+
+    # Aggiungi Request ID a header
+    response.headers['X-Request-ID'] = g.request_id
+
+    return response
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Log errori"""
+    logger.error('API Error', extra={
+        'request_id': g.request_id,
+        'error': str(e),
+        'error_type': type(e).__name__,
+        'path': request.path,
+        'user_id': getattr(g, 'user_id', None)
+    }, exc_info=True)
+
+    return jsonify({'error': 'Internal server error'}), 500
+
+# Metrics
+from prometheus_client import Counter, Histogram, generate_latest
+
+request_count = Counter(
+    'api_requests_total',
+    'Total API requests',
+    ['method', 'endpoint', 'status_code']
+)
+
+request_duration = Histogram(
+    'api_request_duration_seconds',
+    'API request duration',
+    ['method', 'endpoint']
+)
+
+@app.route('/metrics')
+def metrics():
+    """Prometheus metrics endpoint"""
+    return generate_latest()
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementa autenticazione JWT con refresh tokens
+    \item Configura OAuth 2.0 login con GitHub
+    \item Implementa rate limiting con strategia sliding window
+    \item Crea sistema API keys con permessi granulari
+    \item Configura CORS sicuro per SPA
+    \item Implementa input validation con Pydantic per tutte le API routes
+    \item Proteggi GraphQL API da query depth e complexity attacks
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Qual è la differenza tra access token e refresh token?
+    \item Come funziona OAuth 2.0 Authorization Code Flow?
+    \item Cos'è il problema dell'algorithm confusion in JWT?
+    \item Quali sono i vantaggi del rate limiting?
+    \item Perché CORS "*" con credentials è pericoloso?
+    \item Come proteggi GraphQL da query abusive?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item OWASP API Security Top 10: \url{https://owasp.org/www-project-api-security/}
+    \item JWT Best Practices: \url{https://tools.ietf.org/html/rfc8725}
+    \item OAuth 2.0: \url{https://oauth.net/2/}
+    \item GraphQL Security: \url{https://www.apollographql.com/docs/apollo-server/security/}
+\end{itemize}

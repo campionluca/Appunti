@@ -1,0 +1,835 @@
+% Appendice A — Cheat Sheet Comandi
+\chapter{Cheat Sheet Comandi}
+
+\section{Introduzione}
+Questa appendice fornisce una reference rapida dei comandi Linux più utilizzati, organizzati per categoria. Ogni sezione include sintassi, opzioni comuni ed esempi pratici.
+
+\section{Navigazione File System}
+
+\begin{tcolorbox}[title=pwd - Print Working Directory]
+\begin{lstlisting}
+# Mostra directory corrente
+pwd
+
+# Mostra path fisico (segue symlink)
+pwd -P
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=cd - Change Directory]
+\begin{lstlisting}
+cd /path/to/directory    # Vai a directory assoluta
+cd relative/path         # Vai a directory relativa
+cd ~                     # Vai a home directory
+cd                       # Vai a home (equivalente)
+cd -                     # Torna a directory precedente
+cd ..                    # Vai a directory parent
+cd ../..                 # Sali due livelli
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=ls - List Directory Contents]
+\begin{lstlisting}
+ls                       # Lista file directory corrente
+ls -l                    # Long format (permessi, owner, size)
+ls -a                    # Mostra file nascosti (iniziano con .)
+ls -lh                   # Long format con dimensioni human-readable
+ls -la                   # Long format + file nascosti
+ls -lt                   # Ordina per tempo modifica (recenti prima)
+ls -ltr                  # Ordina per tempo (vecchi prima)
+ls -lS                   # Ordina per dimensione
+ls -R                    # Ricorsivo
+ls -d */                 # Solo directory
+ls -1                    # Un file per riga
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Operazioni su File e Directory}
+
+\begin{tcolorbox}[title=Creazione]
+\begin{lstlisting}
+touch file.txt           # Crea file vuoto
+mkdir directory          # Crea directory
+mkdir -p path/to/dir     # Crea path completo (parent directories)
+mkdir dir1 dir2 dir3     # Crea multiple directory
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Copia]
+\begin{lstlisting}
+cp source dest           # Copia file
+cp -r source/ dest/      # Copia directory ricorsivamente
+cp -p file dest          # Preserva permessi, timestamps
+cp -i file dest          # Interactive (chiedi conferma)
+cp -u file dest          # Copia solo se source più recente
+cp file{,.bak}           # Crea backup (file.bak)
+cp file1 file2 dir/      # Copia multipli file in directory
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Spostamento e Rinomina]
+\begin{lstlisting}
+mv oldname newname       # Rinomina file/directory
+mv source dest/          # Sposta in altra directory
+mv -i source dest        # Interactive (chiedi conferma)
+mv -u source dest        # Sposta solo se più recente
+mv *.txt dir/            # Sposta tutti .txt in directory
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Eliminazione]
+\begin{lstlisting}
+rm file.txt              # Elimina file
+rm -i file.txt           # Interactive (chiedi conferma)
+rm -f file.txt           # Force (no conferma, ignora errori)
+rm -r directory/         # Elimina directory ricorsivamente
+rm -rf directory/        # Force recursive (PERICOLOSO!)
+rmdir directory          # Elimina directory vuota
+rm *.log                 # Elimina tutti .log
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Visualizzazione Contenuti File}
+
+\begin{tcolorbox}[title=cat - Concatenate and Print]
+\begin{lstlisting}
+cat file.txt             # Mostra intero file
+cat file1 file2          # Concatena e mostra file multipli
+cat -n file.txt          # Mostra con numeri riga
+cat -b file.txt          # Numera solo righe non vuote
+cat > file.txt           # Crea file (Ctrl+D per terminare)
+cat >> file.txt          # Append a file
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=less/more - Paginazione]
+\begin{lstlisting}
+less file.txt            # Visualizza con paginazione
+# Comandi in less:
+# Spazio: pagina avanti
+# b: pagina indietro
+# /pattern: cerca
+# n: prossima occorrenza
+# q: esci
+
+more file.txt            # Paginazione semplice (solo avanti)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=head/tail - Inizio/Fine File]
+\begin{lstlisting}
+head file.txt            # Prime 10 righe
+head -n 20 file.txt      # Prime 20 righe
+head -n -5 file.txt      # Tutte tranne ultime 5
+
+tail file.txt            # Ultime 10 righe
+tail -n 20 file.txt      # Ultime 20 righe
+tail -n +10 file.txt     # Dalla riga 10 in poi
+tail -f file.log         # Follow (aggiornamenti real-time)
+tail -f -n 50 file.log   # Follow ultime 50 righe
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Ricerca File}
+
+\begin{tcolorbox}[title=find - Cerca File]
+\begin{lstlisting}
+# Per nome
+find . -name "*.txt"                    # File .txt
+find . -iname "*.TXT"                   # Case-insensitive
+find /home -name "file.txt"             # In path specifico
+
+# Per tipo
+find . -type f                          # Solo file
+find . -type d                          # Solo directory
+find . -type l                          # Solo symlink
+
+# Per dimensione
+find . -size +100M                      # Più grandi di 100MB
+find . -size -1k                        # Più piccoli di 1KB
+find . -size 50M                        # Esattamente 50MB
+
+# Per tempo
+find . -mtime -7                        # Modificati ultimi 7 giorni
+find . -mtime +30                       # Modificati più di 30 giorni fa
+find . -mmin -60                        # Modificati ultima ora
+find . -atime -1                        # Acceduti ieri
+
+# Per permessi
+find . -perm 644                        # Permessi esatti
+find . -perm -644                       # Almeno questi permessi
+find . -perm /u+w,g+w                   # Owner O group writable
+
+# Azioni
+find . -name "*.log" -delete            # Elimina trovati
+find . -name "*.txt" -exec cat {} \;    # Esegui comando
+find . -type f -exec chmod 644 {} \;    # Cambia permessi
+find . -name "*.tmp" -ok rm {} \;       # Interactive delete
+
+# Combinazioni
+find . -name "*.txt" -size +1M -mtime -7
+find /var/log -name "*.log" -mtime +30 -delete
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=grep - Cerca Pattern nei File]
+\begin{lstlisting}
+grep "pattern" file.txt                 # Cerca pattern
+grep -i "pattern" file.txt              # Case-insensitive
+grep -r "pattern" directory/            # Ricorsivo
+grep -n "pattern" file.txt              # Mostra numeri riga
+grep -v "pattern" file.txt              # Inverted (righe NON matching)
+grep -c "pattern" file.txt              # Conta occorrenze
+grep -l "pattern" *.txt                 # Solo nomi file
+grep -w "word" file.txt                 # Match parola intera
+grep -A 3 "pattern" file.txt            # 3 righe After match
+grep -B 3 "pattern" file.txt            # 3 righe Before match
+grep -C 3 "pattern" file.txt            # 3 righe Context (before+after)
+
+# Regex
+grep "^start" file.txt                  # Inizia con "start"
+grep "end$" file.txt                    # Finisce con "end"
+grep "err.*fatal" file.txt              # err seguito da fatal
+grep -E "error|warn" file.txt           # Extended regex (OR)
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Permessi e Ownership}
+
+\begin{tcolorbox}[title=chmod - Cambia Permessi]
+\begin{lstlisting}
+# Notazione simbolica
+chmod u+x file.sh                       # User: aggiungi execute
+chmod g-w file.txt                      # Group: rimuovi write
+chmod o+r file.txt                      # Others: aggiungi read
+chmod a+x file.sh                       # All: aggiungi execute
+chmod u+rwx,g+rx,o+r file              # Combinato
+
+# Notazione numerica
+chmod 644 file.txt                      # rw-r--r--
+chmod 755 script.sh                     # rwxr-xr-x
+chmod 700 private.key                   # rwx------
+chmod 600 config.conf                   # rw-------
+chmod 777 shared/                       # rwxrwxrwx (sconsigliato)
+
+# Ricorsivo
+chmod -R 755 directory/
+
+# Permessi speciali
+chmod u+s executable                    # SUID
+chmod g+s directory                     # SGID
+chmod +t directory                      # Sticky bit
+chmod 4755 file                         # SUID + 755
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=chown - Cambia Owner]
+\begin{lstlisting}
+chown user file.txt                     # Cambia owner
+chown user:group file.txt               # Cambia owner e group
+chown :group file.txt                   # Solo group
+chown -R user:group directory/          # Ricorsivo
+chown --reference=ref.txt file.txt      # Copia ownership da altro file
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Gestione Processi}
+
+\begin{tcolorbox}[title=ps - Process Status]
+\begin{lstlisting}
+ps                                      # Processi sessione corrente
+ps aux                                  # Tutti processi (BSD style)
+ps -ef                                  # Tutti processi (Unix style)
+ps -u username                          # Processi di user
+ps -p 1234                              # Processo specifico PID
+ps aux | grep nginx                     # Filtra processi
+ps aux --sort=-%cpu                     # Ordina per CPU
+ps aux --sort=-%mem                     # Ordina per memoria
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=top/htop - Monitor Processi]
+\begin{lstlisting}
+top                                     # Monitor interattivo
+# Comandi in top:
+# k: kill processo
+# r: renice (cambia priorità)
+# M: ordina per memoria
+# P: ordina per CPU
+# q: quit
+
+htop                                    # top migliorato (se installato)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=kill - Termina Processi]
+\begin{lstlisting}
+kill PID                                # SIGTERM (graceful shutdown)
+kill -9 PID                             # SIGKILL (force kill)
+kill -15 PID                            # SIGTERM (default)
+kill -HUP PID                           # SIGHUP (reload config)
+killall process_name                    # Kill per nome
+pkill pattern                           # Kill per pattern
+pgrep pattern                           # Trova PID per pattern
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Background e Jobs]
+\begin{lstlisting}
+command &                               # Esegui in background
+jobs                                    # Lista jobs correnti
+fg                                      # Porta job in foreground
+fg %1                                   # Porta job 1 in foreground
+bg                                      # Continua job in background
+Ctrl+Z                                  # Sospendi processo corrente
+nohup command &                         # Esegui immune a hangup
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Compressione e Archivi}
+
+\begin{tcolorbox}[title=tar - Tape Archive]
+\begin{lstlisting}
+# Creare archivio
+tar -cf archive.tar files/              # Crea tar
+tar -czf archive.tar.gz files/          # Crea tar.gz (gzip)
+tar -cjf archive.tar.bz2 files/         # Crea tar.bz2 (bzip2)
+tar -cJf archive.tar.xz files/          # Crea tar.xz (xz)
+
+# Estrarre
+tar -xf archive.tar                     # Estrai tar
+tar -xzf archive.tar.gz                 # Estrai tar.gz
+tar -xjf archive.tar.bz2                # Estrai tar.bz2
+tar -xf archive.tar -C /path/           # Estrai in path specifico
+
+# Visualizzare contenuti
+tar -tf archive.tar                     # Lista file
+tar -tzf archive.tar.gz                 # Lista file in tar.gz
+
+# Append
+tar -rf archive.tar newfile             # Aggiungi file
+
+# Opzioni comuni
+tar -cvzf archive.tar.gz files/         # v=verbose
+tar -xvzf archive.tar.gz                # verbose extract
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=gzip/gunzip - Compressione]
+\begin{lstlisting}
+gzip file.txt                           # Comprimi (crea file.txt.gz)
+gzip -k file.txt                        # Comprimi, mantieni originale
+gzip -9 file.txt                        # Max compressione
+gunzip file.txt.gz                      # Decomprimi
+gzip -d file.txt.gz                     # Decomprimi (alternativa)
+gzip -l file.txt.gz                     # Info file compresso
+zcat file.txt.gz                        # Visualizza senza decomprimere
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=zip/unzip]
+\begin{lstlisting}
+zip archive.zip file1 file2             # Crea zip
+zip -r archive.zip directory/           # Zip ricorsivo
+zip -e secure.zip file.txt              # Zip con password
+unzip archive.zip                       # Estrai zip
+unzip archive.zip -d /path/             # Estrai in directory
+unzip -l archive.zip                    # Lista contenuti
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Networking}
+
+\begin{tcolorbox}[title=Configurazione Interfacce]
+\begin{lstlisting}
+# ip (moderno)
+ip addr show                            # Mostra interfacce
+ip link show                            # Mostra link status
+ip route show                           # Mostra routing table
+ip neigh show                           # Mostra ARP
+
+# ifconfig (legacy)
+ifconfig                                # Mostra interfacce
+ifconfig eth0                           # Interfaccia specifica
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Test Connettività]
+\begin{lstlisting}
+ping google.com                         # Ping hostname
+ping -c 4 8.8.8.8                       # 4 ping
+ping -i 0.2 192.168.1.1                 # Interval 0.2s
+
+traceroute google.com                   # Traccia route
+traceroute -n 8.8.8.8                   # No DNS resolution
+
+nc -zv host 80                          # Test porta TCP
+nc -zvu host 53                         # Test porta UDP
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Connessioni e Porte]
+\begin{lstlisting}
+# ss (moderno)
+ss -tulpn                               # TCP/UDP listening ports
+ss -t                                   # TCP connections
+ss -ta                                  # All TCP sockets
+ss -s                                   # Statistiche
+
+# netstat (legacy)
+netstat -tulpn                          # Listening ports
+netstat -an                             # All connections
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=DNS]
+\begin{lstlisting}
+nslookup google.com                     # Query DNS
+nslookup google.com 8.8.8.8             # Query server specifico
+
+dig google.com                          # DNS lookup dettagliato
+dig google.com +short                   # Solo risposta
+dig google.com MX                       # Record MX
+dig -x 8.8.8.8                          # Reverse lookup
+
+host google.com                         # Semplice lookup
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Trasferimento File]
+\begin{lstlisting}
+# scp
+scp file.txt user@host:/path/           # Upload file
+scp user@host:/path/file.txt ./         # Download file
+scp -r dir/ user@host:/path/            # Upload directory
+scp -P 2222 file.txt user@host:/path/   # Porta custom
+
+# rsync
+rsync -av source/ dest/                 # Sync directories
+rsync -avz source/ user@host:/dest/     # Sync remoto
+rsync -avz --delete source/ dest/       # Sync + delete
+rsync -avzP source/ dest/               # Con progress
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Download]
+\begin{lstlisting}
+# wget
+wget https://example.com/file.zip       # Download file
+wget -O output.zip URL                  # Nome custom
+wget -c URL                             # Resume download
+wget -r -np URL                         # Download ricorsivo
+
+# curl
+curl https://api.example.com/data       # GET request
+curl -o file.zip URL                    # Salva file
+curl -O URL                             # Usa nome originale
+curl -L URL                             # Segui redirect
+curl -X POST -d "data" URL              # POST request
+curl -H "Header: value" URL             # Custom header
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Gestione Utenti}
+
+\begin{tcolorbox}[title=User Management]
+\begin{lstlisting}
+# Creazione/modifica utenti
+sudo useradd username                   # Crea utente
+sudo useradd -m -s /bin/bash user       # Con home e shell
+sudo passwd username                    # Imposta password
+sudo usermod -aG group username         # Aggiungi a gruppo
+sudo userdel username                   # Elimina utente
+sudo userdel -r username                # Elimina + home
+
+# Info utenti
+id                                      # Info utente corrente
+id username                             # Info utente specifico
+whoami                                  # Username corrente
+who                                     # Utenti loggati
+w                                       # Utenti loggati + attività
+last                                    # Storico login
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Group Management]
+\begin{lstlisting}
+sudo groupadd groupname                 # Crea gruppo
+sudo groupdel groupname                 # Elimina gruppo
+groups username                         # Gruppi di utente
+getent group groupname                  # Info gruppo
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Systemd e Servizi}
+
+\begin{tcolorbox}[title=Service Management]
+\begin{lstlisting}
+sudo systemctl start service            # Avvia servizio
+sudo systemctl stop service             # Ferma servizio
+sudo systemctl restart service          # Riavvia servizio
+sudo systemctl reload service           # Ricarica config
+sudo systemctl status service           # Status servizio
+
+sudo systemctl enable service           # Abilita avvio automatico
+sudo systemctl disable service          # Disabilita avvio
+sudo systemctl enable --now service     # Enable + start
+
+systemctl is-active service             # Check se attivo
+systemctl is-enabled service            # Check se enabled
+
+systemctl list-units --type=service     # Lista servizi
+systemctl --failed                      # Servizi falliti
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Logs con journalctl]
+\begin{lstlisting}
+journalctl                              # Tutti i log
+journalctl -u service                   # Log di servizio
+journalctl -f                           # Follow (real-time)
+journalctl -u nginx -f                  # Follow servizio
+journalctl -n 50                        # Ultime 50 righe
+journalctl --since today                # Da oggi
+journalctl --since "1 hour ago"         # Ultima ora
+journalctl --since "2025-01-01"         # Da data
+journalctl -p err                       # Solo errori
+journalctl -b                           # Boot corrente
+journalctl -k                           # Kernel messages
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Disk Usage}
+
+\begin{tcolorbox}[title=df - Disk Free]
+\begin{lstlisting}
+df                                      # Spazio disco
+df -h                                   # Human-readable
+df -i                                   # Inode usage
+df -T                                   # Mostra filesystem type
+df /path                                # Spazio per path specifico
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=du - Disk Usage]
+\begin{lstlisting}
+du -sh directory/                       # Dimensione directory
+du -sh *                                # Dimensione file/dir correnti
+du -sh /* | sort -rh | head -10         # Top 10 directory
+du -ah directory/                       # All files (human-readable)
+du -d 1 directory/                      # Depth 1
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Text Processing}
+
+\begin{tcolorbox}[title=awk]
+\begin{lstlisting}
+awk '{print $1}' file.txt               # Prima colonna
+awk '{print $1, $3}' file.txt           # Colonne 1 e 3
+awk -F: '{print $1}' /etc/passwd        # Delimiter custom
+awk 'NR==5' file.txt                    # Riga 5
+awk '/pattern/' file.txt                # Righe con pattern
+awk '$3 > 100' file.txt                 # Condizione numerica
+awk '{sum+=$1} END {print sum}' file    # Somma colonna
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=sed - Stream Editor]
+\begin{lstlisting}
+sed 's/old/new/' file.txt               # Sostituisci (prima occorrenza)
+sed 's/old/new/g' file.txt              # Sostituisci (tutte)
+sed -i 's/old/new/g' file.txt           # Modifica file in-place
+sed -n '5,10p' file.txt                 # Stampa righe 5-10
+sed '/pattern/d' file.txt               # Elimina righe con pattern
+sed 's/^/prefix /' file.txt             # Aggiungi prefix
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=cut]
+\begin{lstlisting}
+cut -d: -f1 /etc/passwd                 # Campo 1 (delimiter :)
+cut -c1-10 file.txt                     # Caratteri 1-10
+cut -d, -f1,3 file.csv                  # Campi 1 e 3 (CSV)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=sort]
+\begin{lstlisting}
+sort file.txt                           # Ordina alfabeticamente
+sort -r file.txt                        # Reverse
+sort -n file.txt                        # Ordine numerico
+sort -u file.txt                        # Unique (rimuovi duplicati)
+sort -k2 file.txt                       # Ordina per colonna 2
+sort -t: -k3 -n /etc/passwd             # Ordina per campo 3 numerico
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=uniq]
+\begin{lstlisting}
+uniq file.txt                           # Rimuovi righe duplicate consecutive
+uniq -c file.txt                        # Conta occorrenze
+uniq -d file.txt                        # Solo duplicati
+uniq -u file.txt                        # Solo unique
+
+# Tipico uso con sort
+sort file.txt | uniq                    # Rimuovi tutti duplicati
+sort file.txt | uniq -c | sort -rn      # Conta + ordina
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Variabili e Environment}
+
+\begin{tcolorbox}[title=Environment Variables]
+\begin{lstlisting}
+# Visualizzare
+echo $HOME                              # Variabile specifica
+echo $PATH
+env                                     # Tutte le variabili
+printenv                                # Alternativa a env
+printenv HOME                           # Variabile specifica
+
+# Impostare
+export VAR=value                        # Export variabile
+VAR=value                               # Solo sessione corrente
+export PATH=$PATH:/new/path             # Aggiungi a PATH
+
+# File configurazione
+~/.bashrc                               # Bash configuration
+~/.bash_profile                         # Login shell
+~/.profile                              # Generic shell
+/etc/environment                        # System-wide
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Redirection e Pipe}
+
+\begin{tcolorbox}[title=Redirection]
+\begin{lstlisting}
+command > file.txt                      # Redirect stdout (overwrite)
+command >> file.txt                     # Redirect stdout (append)
+command 2> error.log                    # Redirect stderr
+command &> all.log                      # Redirect stdout + stderr
+command > output.txt 2>&1               # Redirect both (alternativa)
+command < input.txt                     # Input da file
+command > /dev/null                     # Scarta output
+command 2>&1 | tee file.log             # Output + salva
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Pipe e Combinazioni]
+\begin{lstlisting}
+command1 | command2                     # Pipe output a command2
+cmd1 && cmd2                            # Esegui cmd2 se cmd1 OK
+cmd1 || cmd2                            # Esegui cmd2 se cmd1 fallisce
+cmd1 ; cmd2                             # Esegui sequenzialmente
+cmd1 & cmd2                             # Esegui in parallelo
+(cmd1; cmd2)                            # Subshell
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Package Management}
+
+\begin{tcolorbox}[title=APT (Debian/Ubuntu)]
+\begin{lstlisting}
+sudo apt update                         # Aggiorna package list
+sudo apt upgrade                        # Aggiorna packages
+sudo apt install package                # Installa package
+sudo apt remove package                 # Rimuovi package
+sudo apt purge package                  # Rimuovi + config
+sudo apt autoremove                     # Rimuovi dipendenze non usate
+apt search keyword                      # Cerca package
+apt show package                        # Info package
+apt list --installed                    # Lista packages installati
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=YUM/DNF (RedHat/CentOS/Fedora)]
+\begin{lstlisting}
+sudo yum update                         # Aggiorna packages
+sudo yum install package                # Installa package
+sudo yum remove package                 # Rimuovi package
+yum search keyword                      # Cerca package
+yum info package                        # Info package
+yum list installed                      # Lista installed
+
+# DNF (newer)
+sudo dnf update
+sudo dnf install package
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Shortcuts Bash}
+
+\begin{tcolorbox}[title=Editing Command Line]
+\begin{lstlisting}
+Ctrl+A          # Vai a inizio riga
+Ctrl+E          # Vai a fine riga
+Ctrl+U          # Cancella da cursore a inizio
+Ctrl+K          # Cancella da cursore a fine
+Ctrl+W          # Cancella parola precedente
+Ctrl+Y          # Incolla ultimo cancellato
+Ctrl+L          # Clear screen
+Ctrl+C          # Interrompi comando
+Ctrl+D          # EOF / logout
+Ctrl+Z          # Sospendi processo
+Ctrl+R          # Ricerca history
+!!              # Ripeti ultimo comando
+!$              # Ultimo argomento comando precedente
+!*              # Tutti argomenti comando precedente
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Reference Rapida Simboli}
+
+\begin{tcolorbox}[title=Special Characters]
+\begin{tabular}{ll}
+\textbf{Simbolo} & \textbf{Significato} \\
+\hline
+\texttt{.} & Directory corrente \\
+\texttt{..} & Directory parent \\
+\texttt{\textasciitilde} & Home directory \\
+\texttt{/} & Root directory \\
+\texttt{*} & Wildcard (qualsiasi caratteri) \\
+\texttt{?} & Wildcard (un carattere) \\
+\texttt{[]} & Character class \\
+\texttt{\textbackslash} & Escape character \\
+\texttt{|} & Pipe \\
+\texttt{>} & Redirect output \\
+\texttt{>>} & Append output \\
+\texttt{<} & Input redirect \\
+\texttt{\&} & Background execution \\
+\texttt{;} & Command separator \\
+\texttt{\&\&} & AND operator \\
+\texttt{||} & OR operator \\
+\texttt{\$} & Variable prefix \\
+\texttt{\#} & Comment \\
+\end{tabular}
+\end{tcolorbox}
+
+\section{Permessi Numerici Reference}
+
+\begin{tcolorbox}[title=Permission Numbers]
+\begin{tabular}{ll}
+\textbf{Numero} & \textbf{Permessi} \\
+\hline
+0 & --- \\
+1 & --x \\
+2 & -w- \\
+3 & -wx \\
+4 & r-- \\
+5 & r-x \\
+6 & rw- \\
+7 & rwx \\
+\end{tabular}
+
+\vspace{0.5em}
+Esempi comuni:
+\begin{itemize}
+\item \texttt{644}: rw-r--r-- (file normali)
+\item \texttt{755}: rwxr-xr-x (script, directory)
+\item \texttt{700}: rwx------ (file privati)
+\item \texttt{600}: rw------- (chiavi SSH, config)
+\item \texttt{777}: rwxrwxrwx (tutto permesso - sconsigliato!)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Signal Reference}
+
+\begin{tcolorbox}[title=Common Signals]
+\begin{tabular}{lll}
+\textbf{Signal} & \textbf{Numero} & \textbf{Azione} \\
+\hline
+SIGHUP & 1 & Hangup (reload config) \\
+SIGINT & 2 & Interrupt (Ctrl+C) \\
+SIGQUIT & 3 & Quit \\
+SIGKILL & 9 & Kill (non catchable) \\
+SIGTERM & 15 & Terminate (graceful) \\
+SIGSTOP & 19 & Stop (non catchable) \\
+SIGTSTP & 20 & Stop (Ctrl+Z) \\
+SIGCONT & 18 & Continue \\
+\end{tabular}
+\end{tcolorbox}
+
+\section{Exit Codes}
+
+\begin{tcolorbox}[title=Common Exit Codes]
+\begin{tabular}{ll}
+\textbf{Code} & \textbf{Significato} \\
+\hline
+0 & Success \\
+1 & General errors \\
+2 & Misuse of shell command \\
+126 & Command cannot execute \\
+127 & Command not found \\
+128 & Invalid exit argument \\
+130 & Terminated by Ctrl+C \\
+255 & Exit status out of range \\
+\end{tabular}
+
+Verificare exit code ultimo comando:
+\begin{lstlisting}
+command
+echo $?
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{Formati Data e Tempo}
+
+\begin{tcolorbox}[title=date Command Formats]
+\begin{lstlisting}
+date                                    # Data/ora corrente
+date +%Y-%m-%d                          # 2025-01-15
+date +%Y%m%d                            # 20250115
+date +%H:%M:%S                          # 14:30:45
+date +%s                                # Unix timestamp
+date -d "yesterday"                     # Ieri
+date -d "2 days ago"                    # 2 giorni fa
+date -d "next Monday"                   # Prossimo lunedì
+date -d @1234567890                     # Da timestamp
+
+# Formati comuni
+date +%Y%m%d_%H%M%S                     # 20250115_143045
+date +"%Y-%m-%d %H:%M:%S"               # 2025-01-15 14:30:45
+\end{lstlisting}
+\end{tcolorbox}
+
+\section{One-Liners Utili}
+
+\begin{tcolorbox}[title=Useful One-Liners]
+\begin{lstlisting}
+# Top 10 comandi più usati
+history | awk '{print $2}' | sort | uniq -c | sort -rn | head -10
+
+# File più grandi
+find . -type f -exec du -h {} \; | sort -rh | head -10
+
+# Processi che usano più CPU
+ps aux --sort=-%cpu | head -10
+
+# Processi che usano più memoria
+ps aux --sort=-%mem | head -10
+
+# IP connessi
+netstat -tn 2>/dev/null | grep :80 | awk '{print $5}' | \
+    cut -d: -f1 | sort | uniq -c | sort -rn
+
+# File modificati oggi
+find . -type f -mtime 0
+
+# Backup rapido
+tar -czf backup_$(date +%Y%m%d).tar.gz directory/
+
+# Kill processi per nome
+pkill -9 -f "process_name"
+
+# Port check
+for p in {1..1024}; do nc -zv localhost $p 2>&1 | grep succeeded; done
+
+# Monitor file size real-time
+watch -n 1 'du -sh /var/log'
+
+# Download intero sito
+wget --mirror --convert-links --page-requisites --no-parent URL
+\end{lstlisting}
+\end{tcolorbox}

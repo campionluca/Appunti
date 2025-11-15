@@ -1,0 +1,1176 @@
+\chapter{Introduzione a React}
+
+\section{Cos'è React?}
+
+React è una libreria JavaScript dichiarativa, efficiente e flessibile per costruire interfacce utente. A differenza di framework completi come Angular, React si concentra esclusivamente sul layer di visualizzazione, lasciando agli sviluppatori la libertà di scegliere le soluzioni migliori per routing, state management e altre funzionalità.
+
+\subsection{Caratteristiche Principali}
+
+\textbf{1. Libreria, Non Framework}
+
+React è una libreria focalizzata sulla UI, non un framework completo:
+
+\begin{lstlisting}[language=JavaScript, caption=React fornisce solo la UI]
+// React fornisce
+import { useState } from 'react';
+
+function App() {
+    return <div>Hello React</div>;
+}
+
+// Tu scegli il resto:
+// - Routing: React Router, TanStack Router, etc.
+// - State: Redux, Zustand, MobX, etc.
+// - Data fetching: TanStack Query, SWR, etc.
+// - Forms: React Hook Form, Formik, etc.
+\end{lstlisting}
+
+\textbf{2. Component-Based}
+
+Tutto in React è un componente riutilizzabile:
+
+\begin{lstlisting}[language=JavaScript, caption=Componenti come building blocks]
+// Componente Button
+function Button({ children, onClick }) {
+    return <button onClick={onClick}>{children}</button>;
+}
+
+// Componente Form che usa Button
+function LoginForm() {
+    return (
+        <form>
+            <input type="email" />
+            <input type="password" />
+            <Button onClick={() => console.log('Login')}>
+                Accedi
+            </Button>
+        </form>
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Dichiarativo}
+
+Descrivi cosa vuoi vedere, React si occupa del resto:
+
+\begin{lstlisting}[language=JavaScript, caption=Codice dichiarativo]
+function Counter() {
+    const [count, setCount] = useState(0);
+
+    // Dichiari COSA mostrare in base allo stato
+    return (
+        <div>
+            <p>Hai cliccato {count} volte</p>
+            <button onClick={() => setCount(count + 1)}>
+                Incrementa
+            </button>
+        </div>
+    );
+    // React aggiorna il DOM automaticamente quando count cambia
+}
+\end{lstlisting}
+
+\section{Il Virtual DOM}
+
+Il Virtual DOM è uno dei concetti fondamentali che rendono React efficiente e performante.
+
+\subsection{Cos'è il Virtual DOM?}
+
+Il Virtual DOM è una rappresentazione leggera del DOM reale mantenuta in memoria come oggetto JavaScript. Invece di manipolare direttamente il DOM (operazione costosa), React lavora con questa rappresentazione virtuale.
+
+\textbf{Struttura del Virtual DOM:}
+
+\begin{lstlisting}[language=JavaScript, caption=Rappresentazione Virtual DOM]
+// JSX
+<div className="container">
+    <h1>Titolo</h1>
+    <p>Paragrafo</p>
+</div>
+
+// Viene trasformato in Virtual DOM object
+{
+    type: 'div',
+    props: {
+        className: 'container',
+        children: [
+            {
+                type: 'h1',
+                props: {
+                    children: 'Titolo'
+                }
+            },
+            {
+                type: 'p',
+                props: {
+                    children: 'Paragrafo'
+                }
+            }
+        ]
+    }
+}
+\end{lstlisting}
+
+\subsection{Come Funziona il Virtual DOM}
+
+Il processo di rendering in React segue questi passaggi:
+
+\textbf{Fase 1: Render Iniziale}
+
+\begin{lstlisting}[language=JavaScript, caption=Primo rendering]
+function App() {
+    const [items, setItems] = useState(['A', 'B', 'C']);
+
+    return (
+        <ul>
+            {items.map(item => <li key={item}>{item}</li>)}
+        </ul>
+    );
+}
+
+// React crea Virtual DOM:
+{
+    type: 'ul',
+    props: {
+        children: [
+            { type: 'li', props: { children: 'A', key: 'A' } },
+            { type: 'li', props: { children: 'B', key: 'B' } },
+            { type: 'li', props: { children: 'C', key: 'C' } }
+        ]
+    }
+}
+
+// React crea il DOM reale basandosi sul Virtual DOM
+\end{lstlisting}
+
+\textbf{Fase 2: Update}
+
+\begin{lstlisting}[language=JavaScript, caption=Aggiornamento stato]
+// Quando lo stato cambia (aggiungiamo 'D')
+setItems(['A', 'B', 'C', 'D']);
+
+// React crea un NUOVO Virtual DOM tree:
+{
+    type: 'ul',
+    props: {
+        children: [
+            { type: 'li', props: { children: 'A', key: 'A' } },
+            { type: 'li', props: { children: 'B', key: 'B' } },
+            { type: 'li', props: { children: 'C', key: 'C' } },
+            { type: 'li', props: { children: 'D', key: 'D' } } // NUOVO
+        ]
+    }
+}
+\end{lstlisting}
+
+\textbf{Fase 3: Diffing}
+
+React confronta il nuovo Virtual DOM con quello precedente:
+
+\begin{lstlisting}[language=JavaScript, caption=Algoritmo di Diffing]
+// Pseudo-codice del diffing
+function diff(oldVTree, newVTree) {
+    // Confronta tipo
+    if (oldVTree.type !== newVTree.type) {
+        return { action: 'REPLACE', node: newVTree };
+    }
+
+    // Confronta props
+    const propsDiff = diffProps(oldVTree.props, newVTree.props);
+
+    // Confronta children ricorsivamente
+    const childrenDiff = diffChildren(
+        oldVTree.props.children,
+        newVTree.props.children
+    );
+
+    return {
+        action: 'UPDATE',
+        propChanges: propsDiff,
+        childChanges: childrenDiff
+    };
+}
+
+// Nel nostro esempio, React identifica:
+// - 3 elementi uguali (A, B, C)
+// - 1 elemento nuovo (D) da aggiungere
+\end{lstlisting}
+
+\textbf{Fase 4: Reconciliation}
+
+React applica solo le modifiche necessarie al DOM reale:
+
+\begin{lstlisting}[language=JavaScript, caption=Applicazione modifiche]
+// Invece di ricreare tutta la lista:
+// ❌ ul.innerHTML = '<li>A</li><li>B</li><li>C</li><li>D</li>';
+
+// React fa solo:
+// ✅ ul.appendChild(document.createElement('li')); // Aggiunge solo D
+\end{lstlisting}
+
+\subsection{Diagramma del Processo Virtual DOM}
+
+\begin{verbatim}
+┌─────────────────────────────────────────────────────────────┐
+│                    VIRTUAL DOM WORKFLOW                      │
+└─────────────────────────────────────────────────────────────┘
+
+1. STATE CHANGE
+   └─> setItems(['A', 'B', 'C', 'D'])
+        │
+        ▼
+2. NEW VIRTUAL DOM TREE CREATED
+   ┌──────────────────┐
+   │  Virtual DOM v2  │
+   │  [A, B, C, D]    │
+   └──────────────────┘
+        │
+        ▼
+3. DIFFING ALGORITHM
+   ┌──────────────────┐      ┌──────────────────┐
+   │  Virtual DOM v1  │ vs   │  Virtual DOM v2  │
+   │  [A, B, C]       │      │  [A, B, C, D]    │
+   └──────────────────┘      └──────────────────┘
+        │
+        └──────> Identifica: "Aggiungere D alla fine"
+                 │
+                 ▼
+4. RECONCILIATION
+   Applica SOLO le modifiche minime al DOM reale
+   └─> appendChild(<li>D</li>)
+\end{verbatim}
+
+\subsection{Vantaggi del Virtual DOM}
+
+\textbf{1. Performance}
+
+\begin{lstlisting}[language=JavaScript, caption=Confronto performance]
+// ❌ Manipolazione diretta del DOM (LENTA)
+function updateList(items) {
+    const ul = document.getElementById('list');
+    ul.innerHTML = ''; // Rimuove tutto
+
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        ul.appendChild(li); // Ogni append causa reflow
+    });
+}
+
+// ✅ Con React Virtual DOM (VELOCE)
+function List({ items }) {
+    return (
+        <ul>
+            {items.map(item => <li key={item}>{item}</li>)}
+        </ul>
+    );
+    // React aggiorna solo gli elementi modificati
+}
+\end{lstlisting}
+
+\textbf{2. Batch Updates}
+
+React raggruppa più aggiornamenti:
+
+\begin{lstlisting}[language=JavaScript, caption=Batching automatico]
+function MultiUpdate() {
+    const [count, setCount] = useState(0);
+    const [flag, setFlag] = useState(false);
+
+    const handleClick = () => {
+        setCount(count + 1);  // Update 1
+        setFlag(!flag);       // Update 2
+        // React raggruppa entrambi e fa un solo re-render
+    };
+
+    console.log('Render!'); // Viene chiamato UNA sola volta
+
+    return (
+        <div>
+            <p>Count: {count}</p>
+            <p>Flag: {flag.toString()}</p>
+            <button onClick={handleClick}>Update</button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Prevedibilità}
+
+Il rendering diventa deterministico:
+
+\begin{lstlisting}[language=JavaScript, caption=Rendering prevedibile]
+// Stesso stato = stesso output SEMPRE
+function UserCard({ user }) {
+    return (
+        <div>
+            <h3>{user.name}</h3>
+            <p>{user.email}</p>
+        </div>
+    );
+}
+
+// Se user è identico, output identico
+// Facile da testare e debuggare
+\end{lstlisting}
+
+\section{React vs Altri Framework}
+
+\subsection{React vs Angular}
+
+\textbf{Angular}
+
+\begin{lstlisting}[language=TypeScript, caption=Componente Angular]
+// user.component.ts
+import { Component, Input } from '@angular/core';
+
+@Component({
+    selector: 'app-user',
+    template: `
+        <div class="user-card">
+            <h3>{{ user.name }}</h3>
+            <p>{{ user.email }}</p>
+            <button (click)="onEdit()">Edit</button>
+        </div>
+    `,
+    styleUrls: ['./user.component.css']
+})
+export class UserComponent {
+    @Input() user: User;
+
+    onEdit() {
+        console.log('Editing', this.user);
+    }
+}
+\end{lstlisting}
+
+\textbf{React}
+
+\begin{lstlisting}[language=JavaScript, caption=Componente React equivalente]
+// UserCard.jsx
+import './UserCard.css';
+
+function UserCard({ user }) {
+    const handleEdit = () => {
+        console.log('Editing', user);
+    };
+
+    return (
+        <div className="user-card">
+            <h3>{user.name}</h3>
+            <p>{user.email}</p>
+            <button onClick={handleEdit}>Edit</button>
+        </div>
+    );
+}
+
+export default UserCard;
+\end{lstlisting}
+
+\textbf{Confronto:}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{React} & \textbf{Angular} \\
+\hline
+Tipo & Libreria & Framework completo \\
+\hline
+Linguaggio & JavaScript/TypeScript & TypeScript \\
+\hline
+Learning Curve & Media & Ripida \\
+\hline
+Bundle Size & \textasciitilde45KB & \textasciitilde150KB \\
+\hline
+Data Binding & Unidirezionale & Bidirezionale \\
+\hline
+Dependency Injection & No (context/props) & Sì (built-in) \\
+\hline
+Routing & Libreria esterna & Built-in \\
+\hline
+State Management & Libreria esterna & RxJS/Services \\
+\hline
+Template & JSX & HTML + direttive \\
+\hline
+Mobile & React Native & Ionic/NativeScript \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{React vs Vue}
+
+\textbf{Vue}
+
+\begin{lstlisting}[language=JavaScript, caption=Componente Vue]
+<!-- UserCard.vue -->
+<template>
+    <div class="user-card">
+        <h3>{{ user.name }}</h3>
+        <p>{{ user.email }}</p>
+        <button @click="handleEdit">Edit</button>
+    </div>
+</template>
+
+<script setup>
+import { defineProps } from 'vue';
+
+const props = defineProps({
+    user: Object
+});
+
+const handleEdit = () => {
+    console.log('Editing', props.user);
+};
+</script>
+
+<style scoped>
+.user-card {
+    border: 1px solid #ccc;
+}
+</style>
+\end{lstlisting}
+
+\textbf{React}
+
+\begin{lstlisting}[language=JavaScript, caption=Componente React equivalente]
+// UserCard.jsx
+import styles from './UserCard.module.css';
+
+function UserCard({ user }) {
+    const handleEdit = () => {
+        console.log('Editing', user);
+    };
+
+    return (
+        <div className={styles.userCard}>
+            <h3>{user.name}</h3>
+            <p>{user.email}</p>
+            <button onClick={handleEdit}>Edit</button>
+        </div>
+    );
+}
+
+export default UserCard;
+\end{lstlisting}
+
+\textbf{Confronto:}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Aspetto} & \textbf{React} & \textbf{Vue} \\
+\hline
+Tipo & Libreria & Framework progressivo \\
+\hline
+Learning Curve & Media & Facile \\
+\hline
+Template & JSX & HTML-based \\
+\hline
+Reattività & useState/useReducer & Proxy-based \\
+\hline
+Community & Molto grande & Grande \\
+\hline
+Job Market & Ampio & Buono \\
+\hline
+Ecosistema & Vasto & Integrato \\
+\hline
+Performance & Eccellente & Eccellente \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Quando Scegliere React}
+
+\textbf{Scegli React se:}
+
+\begin{itemize}
+    \item Vuoi massima flessibilità nella scelta delle librerie
+    \item Hai bisogno di un'ottima integrazione con TypeScript
+    \item Il mercato del lavoro è un fattore importante
+    \item Vuoi costruire anche app mobile (React Native)
+    \item Preferisci JavaScript/JSX ai template HTML
+    \item Hai bisogno di un ecosistema vasto
+\end{itemize}
+
+\textbf{Scegli Vue se:}
+
+\begin{itemize}
+    \item Vuoi una curva di apprendimento più dolce
+    \item Preferisci template HTML con direttive
+    \item Vuoi un framework più "opinionated" ma flessibile
+    \item Apprezzi la documentazione eccellente
+\end{itemize}
+
+\textbf{Scegli Angular se:}
+
+\begin{itemize}
+    \item Lavori su applicazioni enterprise di grandi dimensioni
+    \item Hai bisogno di TypeScript robusto
+    \item Vuoi un framework completo "tutto incluso"
+    \item Apprezzi structure e convention rigide
+\end{itemize}
+
+\section{Setup dell'Ambiente di Sviluppo}
+
+\subsection{Prerequisiti}
+
+Prima di iniziare, assicurati di avere installato:
+
+\begin{lstlisting}[language=bash, caption=Verifica installazioni]
+# Node.js (versione 18 o superiore)
+node --version
+# Output: v20.10.0
+
+# npm (viene installato con Node.js)
+npm --version
+# Output: 10.2.3
+
+# Git (opzionale ma raccomandato)
+git --version
+# Output: git version 2.42.0
+\end{lstlisting}
+
+\subsection{Opzione 1: Vite (Raccomandato 2024)}
+
+Vite è il build tool moderno più veloce per progetti React:
+
+\begin{lstlisting}[language=bash, caption=Creare progetto con Vite]
+# Crea nuovo progetto
+npm create vite@latest my-react-app -- --template react
+
+# Entra nella directory
+cd my-react-app
+
+# Installa dipendenze
+npm install
+
+# Avvia development server
+npm run dev
+# Server running at http://localhost:5173
+\end{lstlisting}
+
+\textbf{Struttura progetto Vite:}
+
+\begin{verbatim}
+my-react-app/
+├── node_modules/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── assets/
+│   ├── App.css
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+├── .gitignore
+├── index.html
+├── package.json
+└── vite.config.js
+\end{verbatim}
+
+\textbf{File principali:}
+
+\begin{lstlisting}[language=JavaScript, caption=main.jsx - Entry point]
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+)
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=App.jsx - Componente principale]
+import { useState } from 'react'
+import './App.css'
+
+function App() {
+    const [count, setCount] = useState(0)
+
+    return (
+        <div className="App">
+            <h1>Vite + React</h1>
+            <div className="card">
+                <button onClick={() => setCount((count) => count + 1)}>
+                    count is {count}
+                </button>
+            </div>
+        </div>
+    )
+}
+
+export default App
+\end{lstlisting}
+
+\begin{lstlisting}[language=JavaScript, caption=vite.config.js - Configurazione]
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+    plugins: [react()],
+    server: {
+        port: 3000, // Cambia porta se necessario
+        open: true  // Apri browser automaticamente
+    }
+})
+\end{lstlisting}
+
+\textbf{Vantaggi di Vite:}
+
+\begin{itemize}
+    \item \textbf{Velocissimo}: HMR (Hot Module Replacement) istantaneo
+    \item \textbf{Leggero}: Build ottimizzate con Rollup
+    \item \textbf{Moderno}: ESM nativo, supporto TypeScript out-of-the-box
+    \item \textbf{Semplice}: Configurazione minimale
+\end{itemize}
+
+\subsection{Opzione 2: Create React App (Legacy)}
+
+Create React App (CRA) è stato lo standard per anni, ma ora è meno raccomandato:
+
+\begin{lstlisting}[language=bash, caption=Creare progetto con CRA]
+# Crea nuovo progetto
+npx create-react-app my-app
+
+# Entra nella directory
+cd my-app
+
+# Avvia development server
+npm start
+# Server running at http://localhost:3000
+\end{lstlisting}
+
+\textbf{Nota}: Create React App è ora in maintenance mode. La documentazione ufficiale React raccomanda Vite o framework come Next.js.
+
+\subsection{Opzione 3: Setup Manuale}
+
+Per comprendere meglio come funziona:
+
+\begin{lstlisting}[language=bash, caption=Setup manuale da zero]
+# Crea directory e inizializza progetto
+mkdir my-react-app
+cd my-react-app
+npm init -y
+
+# Installa React e ReactDOM
+npm install react react-dom
+
+# Installa Vite come dev dependency
+npm install -D vite @vitejs/plugin-react
+
+# Crea struttura
+mkdir src public
+touch src/main.jsx src/App.jsx index.html vite.config.js
+\end{lstlisting}
+
+\begin{lstlisting}[language=HTML, caption=index.html]
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My React App</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+\end{lstlisting}
+
+\begin{lstlisting}[language=JSON, caption=package.json - Aggiungi scripts]
+{
+    "name": "my-react-app",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "vite": "^5.0.0",
+        "@vitejs/plugin-react": "^4.2.0"
+    }
+}
+\end{lstlisting}
+
+\subsection{Opzione 4: Framework Full-Stack}
+
+Per applicazioni più complesse, considera framework completi:
+
+\textbf{Next.js (Raccomandato per produzione):}
+
+\begin{lstlisting}[language=bash, caption=Setup Next.js]
+npx create-next-app@latest my-next-app
+
+# Scegli opzioni:
+# ✓ TypeScript? No/Yes
+# ✓ ESLint? Yes
+# ✓ Tailwind CSS? No/Yes
+# ✓ App Router? Yes (raccomandato)
+# ✓ Customize import alias? No
+
+cd my-next-app
+npm run dev
+\end{lstlisting}
+
+\textbf{Remix:}
+
+\begin{lstlisting}[language=bash, caption=Setup Remix]
+npx create-remix@latest my-remix-app
+cd my-remix-app
+npm run dev
+\end{lstlisting}
+
+\section{Il Primo Progetto React}
+
+Creiamo una semplice applicazione TODO per esplorare i concetti base:
+
+\begin{lstlisting}[language=bash, caption=Setup progetto TODO]
+npm create vite@latest react-todo -- --template react
+cd react-todo
+npm install
+npm run dev
+\end{lstlisting}
+
+\subsection{App.jsx - TODO List Completa}
+
+\begin{lstlisting}[language=JavaScript, caption=Applicazione TODO completa]
+import { useState } from 'react';
+import './App.css';
+
+function App() {
+    const [todos, setTodos] = useState([
+        { id: 1, text: 'Imparare React', completed: false },
+        { id: 2, text: 'Costruire un progetto', completed: false }
+    ]);
+    const [inputValue, setInputValue] = useState('');
+
+    // Aggiungi nuovo todo
+    const addTodo = () => {
+        if (inputValue.trim() === '') return;
+
+        const newTodo = {
+            id: Date.now(),
+            text: inputValue,
+            completed: false
+        };
+
+        setTodos([...todos, newTodo]);
+        setInputValue('');
+    };
+
+    // Toggle completamento
+    const toggleTodo = (id) => {
+        setTodos(todos.map(todo =>
+            todo.id === id
+                ? { ...todo, completed: !todo.completed }
+                : todo
+        ));
+    };
+
+    // Elimina todo
+    const deleteTodo = (id) => {
+        setTodos(todos.filter(todo => todo.id !== id));
+    };
+
+    // Gestisci Enter key
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            addTodo();
+        }
+    };
+
+    // Statistiche
+    const totalTodos = todos.length;
+    const completedTodos = todos.filter(t => t.completed).length;
+    const pendingTodos = totalTodos - completedTodos;
+
+    return (
+        <div className="app">
+            <div className="container">
+                <h1>📝 My TODO List</h1>
+
+                {/* Statistiche */}
+                <div className="stats">
+                    <span>Totale: {totalTodos}</span>
+                    <span>Completati: {completedTodos}</span>
+                    <span>Da fare: {pendingTodos}</span>
+                </div>
+
+                {/* Input nuovo todo */}
+                <div className="input-section">
+                    <input
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Aggiungi un nuovo task..."
+                    />
+                    <button onClick={addTodo}>Aggiungi</button>
+                </div>
+
+                {/* Lista todos */}
+                <ul className="todo-list">
+                    {todos.length === 0 ? (
+                        <li className="empty">Nessun task. Aggiungine uno!</li>
+                    ) : (
+                        todos.map(todo => (
+                            <li
+                                key={todo.id}
+                                className={todo.completed ? 'completed' : ''}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={todo.completed}
+                                    onChange={() => toggleTodo(todo.id)}
+                                />
+                                <span onClick={() => toggleTodo(todo.id)}>
+                                    {todo.text}
+                                </span>
+                                <button
+                                    className="delete-btn"
+                                    onClick={() => deleteTodo(todo.id)}
+                                >
+                                    🗑️
+                                </button>
+                            </li>
+                        ))
+                    )}
+                </ul>
+
+                {/* Clear completed */}
+                {completedTodos > 0 && (
+                    <button
+                        className="clear-completed"
+                        onClick={() => setTodos(todos.filter(t => !t.completed))}
+                    >
+                        Rimuovi completati ({completedTodos})
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default App;
+\end{lstlisting}
+
+\subsection{App.css - Styling}
+
+\begin{lstlisting}[language=CSS, caption=Stili per TODO app]
+.app {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 8px;
+}
+
+.stats span {
+    font-size: 14px;
+    color: #666;
+}
+
+.input-section {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.input-section input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.input-section input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.input-section button {
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.input-section button:hover {
+    background: #5568d3;
+}
+
+.todo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.todo-list li {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    gap: 10px;
+}
+
+.todo-list li.completed span {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.todo-list li span {
+    flex: 1;
+    cursor: pointer;
+}
+
+.todo-list li input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.delete-btn:hover {
+    opacity: 1;
+}
+
+.clear-completed {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.clear-completed:hover {
+    background: #da190b;
+}
+
+.empty {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-style: italic;
+}
+\end{lstlisting}
+
+\section{React Developer Tools}
+
+\subsection{Installazione}
+
+React DevTools è un'estensione essenziale per il debugging:
+
+\begin{itemize}
+    \item \textbf{Chrome}: Chrome Web Store → "React Developer Tools"
+    \item \textbf{Firefox}: Firefox Add-ons → "React DevTools"
+    \item \textbf{Edge}: Edge Add-ons → "React Developer Tools"
+\end{itemize}
+
+\subsection{Funzionalità Principali}
+
+\textbf{1. Components Tab}
+
+Visualizza l'albero dei componenti e le loro props/state:
+
+\begin{verbatim}
+Components
+├─ App
+   ├─ TodoList
+   │  ├─ props: { todos: [...] }
+   │  └─ state: { filter: 'all' }
+   └─ TodoItem (x3)
+      └─ props: { todo: {...}, onToggle: f }
+\end{verbatim}
+
+\textbf{2. Profiler Tab}
+
+Analizza le performance dei rendering:
+
+\begin{lstlisting}[language=JavaScript, caption=Usare il Profiler]
+import { Profiler } from 'react';
+
+function App() {
+    const onRenderCallback = (
+        id,
+        phase,
+        actualDuration,
+        baseDuration,
+        startTime,
+        commitTime
+    ) => {
+        console.log(`${id} (${phase}) took ${actualDuration}ms`);
+    };
+
+    return (
+        <Profiler id="App" onRender={onRenderCallback}>
+            <TodoList />
+        </Profiler>
+    );
+}
+\end{lstlisting}
+
+\section{Best Practices Iniziali}
+
+\subsection{1. Organizzazione File}
+
+\begin{verbatim}
+src/
+├── components/
+│   ├── TodoList/
+│   │   ├── TodoList.jsx
+│   │   ├── TodoList.css
+│   │   └── index.js
+│   └── TodoItem/
+│       ├── TodoItem.jsx
+│       ├── TodoItem.css
+│       └── index.js
+├── hooks/
+│   └── useTodos.js
+├── utils/
+│   └── helpers.js
+├── App.jsx
+└── main.jsx
+\end{verbatim}
+
+\subsection{2. Naming Convention}
+
+\begin{lstlisting}[language=JavaScript, caption=Convenzioni di naming]
+// Componenti: PascalCase
+function TodoList() {}
+function UserProfile() {}
+
+// File componenti: stesso nome del componente
+// TodoList.jsx, UserProfile.jsx
+
+// Funzioni/variabili: camelCase
+const handleClick = () => {};
+const userData = {};
+
+// Costanti: UPPER_SNAKE_CASE
+const API_URL = 'https://api.example.com';
+const MAX_ITEMS = 100;
+
+// Custom hooks: use + PascalCase
+function useTodos() {}
+function useLocalStorage() {}
+\end{lstlisting}
+
+\subsection{3. Componenti Puliti}
+
+\begin{lstlisting}[language=JavaScript, caption=Componente ben strutturato]
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import './TodoList.css';
+
+// 1. Imports
+
+// 2. Costanti
+const FILTER_OPTIONS = ['all', 'active', 'completed'];
+
+// 3. Componente
+function TodoList({ initialTodos = [] }) {
+    // 3.1 State
+    const [todos, setTodos] = useState(initialTodos);
+    const [filter, setFilter] = useState('all');
+
+    // 3.2 Effects
+    useEffect(() => {
+        console.log('Todos changed:', todos);
+    }, [todos]);
+
+    // 3.3 Handlers
+    const handleAddTodo = (text) => {
+        // ...
+    };
+
+    // 3.4 Computed values
+    const filteredTodos = todos.filter(todo => {
+        if (filter === 'active') return !todo.completed;
+        if (filter === 'completed') return todo.completed;
+        return true;
+    });
+
+    // 3.5 Render
+    return (
+        <div className="todo-list">
+            {/* JSX */}
+        </div>
+    );
+}
+
+// 4. PropTypes
+TodoList.propTypes = {
+    initialTodos: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        text: PropTypes.string.isRequired,
+        completed: PropTypes.bool.isRequired
+    }))
+};
+
+// 5. Export
+export default TodoList;
+\end{lstlisting}
+
+\section{Conclusione}
+
+In questo capitolo abbiamo esplorato:
+
+\begin{itemize}
+    \item Cos'è React e le sue caratteristiche principali
+    \item Il funzionamento del Virtual DOM
+    \item Confronto con Angular e Vue
+    \item Setup dell'ambiente con Vite
+    \item Creazione del primo progetto React
+    \item React DevTools e best practices
+\end{itemize}
+
+Ora sei pronto per approfondire JSX e i componenti nel prossimo capitolo!

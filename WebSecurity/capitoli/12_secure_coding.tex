@@ -1,0 +1,1439 @@
+\chapter{Secure Coding Practices}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Input validation, Output encoding, Secure design patterns, Error handling, Logging, File operations, Code review, Static analysis, Dependency management, SDLC security.
+\end{tcolorbox}
+
+\section*{Introduzione}
+Il secure coding è la pratica di scrivere codice resistente ad attacchi e vulnerabilità. La maggior parte delle vulnerabilità web deriva da errori di programmazione evitabili. Questo capitolo copre principi, pattern e tecniche per scrivere codice sicuro fin dall'inizio, riducendo drasticamente la superficie d'attacco.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Applicare principi di secure coding (Defense in Depth, Least Privilege)
+    \item Implementare input validation robusta
+    \item Utilizzare output encoding corretto per ogni contesto
+    \item Riconoscere e applicare secure design patterns
+    \item Gestire errori in modo sicuro
+    \item Implementare logging sicuro e completo
+    \item Eseguire code review orientate alla sicurezza
+    \item Utilizzare static analysis tools (SAST)
+    \item Gestire dipendenze e vulnerabilità note
+    \item Integrare security nel SDLC
+\end{itemize}
+
+\section{Principi di Secure Coding}
+
+\subsection{Defense in Depth}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Defense in Depth]
+Non affidarsi a un singolo meccanismo di sicurezza. Implementare molteplici layer di difesa.
+
+\textbf{Esempio - Protezione da SQLi}:
+\begin{enumerate}
+    \item \textbf{Layer 1 - Input validation}: Whitelist caratteri permessi
+    \item \textbf{Layer 2 - Prepared statements}: Parameterized queries
+    \item \textbf{Layer 3 - Least privilege}: Database user con permessi limitati
+    \item \textbf{Layer 4 - WAF}: Web Application Firewall filtra pattern SQLi
+    \item \textbf{Layer 5 - Monitoring}: Detect anomalie query
+\end{enumerate}
+
+Se un layer fallisce, altri layer proteggono ancora l'applicazione.
+\end{tcolorbox}
+
+\subsection{Fail Securely}
+
+\begin{lstlisting}[language=Python, caption={Fail securely principle}]
+# ❌ INSICURO - Default to allow in caso errore
+def check_permission(user, resource):
+    try:
+        return database.has_permission(user, resource)
+    except Exception:
+        return True  # Default allow - PERICOLOSO!
+
+# ✓ SICURO - Default to deny
+def check_permission(user, resource):
+    try:
+        return database.has_permission(user, resource)
+    except Exception as e:
+        logger.error(f"Permission check failed: {e}")
+        return False  # Fail securely - deny access
+
+# ✓ SICURO - Explicit error handling
+def check_permission(user, resource):
+    if not user or not resource:
+        return False  # Invalid input
+
+    try:
+        result = database.has_permission(user, resource)
+        if result is None:
+            logger.warning("Permission query returned None")
+            return False  # Treat None as deny
+        return result
+    except DatabaseError as e:
+        logger.error(f"Database error in permission check: {e}")
+        return False
+    except Exception as e:
+        logger.critical(f"Unexpected error in permission check: {e}")
+        return False
+\end{lstlisting}
+
+\subsection{Complete Mediation}
+
+\begin{lstlisting}[language=PHP, caption={Complete mediation - verificare ogni accesso}]
+<?php
+// ❌ INSICURO - Verifica permesso solo al primo accesso
+class DocumentController {
+    private $document;
+
+    public function show($id) {
+        if (!$this->hasPermission($id)) {
+            abort(403);
+        }
+
+        $this->document = Document::find($id);
+        return view('document', ['doc' => $this->document]);
+    }
+
+    public function edit($id) {
+        // Riusa $this->document senza ri-verificare permessi
+        // VULNERABILITÀ: Se $id diverso, permessi non verificati!
+        $this->document->update($_POST);
+    }
+}
+
+// ✓ SICURO - Verifica permessi ad ogni accesso
+class SecureDocumentController {
+    public function show($id) {
+        $document = Document::findOrFail($id);
+
+        // Verifica permessi
+        if (!$this->hasPermission(auth()->user(), $document)) {
+            abort(403);
+        }
+
+        return view('document', ['doc' => $document]);
+    }
+
+    public function edit($id) {
+        $document = Document::findOrFail($id);
+
+        // RI-VERIFICA permessi (complete mediation)
+        if (!$this->hasPermission(auth()->user(), $document)) {
+            abort(403);
+        }
+
+        $document->update($this->validateInput());
+        return redirect()->route('document.show', $id);
+    }
+
+    private function hasPermission($user, $document) {
+        return $document->user_id === $user->id ||
+               $user->hasRole('admin');
+    }
+}
+?>
+\end{lstlisting}
+
+\section{Input Validation}
+
+\subsection{Whitelist vs Blacklist}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Whitelist > Blacklist]
+\textbf{Whitelist}: Definisci esattamente cosa è permesso
+
+\textbf{Blacklist}: Definisci cosa è proibito
+
+\textbf{SEMPRE preferire whitelist!}
+
+Motivo: Impossibile prevedere tutti i possibili input malevoli.
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption={Whitelist input validation}]
+import re
+from typing import Optional
+
+class InputValidator:
+    @staticmethod
+    def validate_username(username: str) -> bool:
+        """
+        Whitelist: Solo caratteri alfanumerici e underscore
+        Lunghezza: 3-20 caratteri
+        """
+        if not username:
+            return False
+
+        # Whitelist pattern
+        pattern = r'^[a-zA-Z0-9_]{3,20}$'
+        return bool(re.match(pattern, username))
+
+    @staticmethod
+    def validate_email(email: str) -> bool:
+        """Whitelist: RFC 5322 email format"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def validate_integer(value: str, min_val: int = None,
+                        max_val: int = None) -> Optional[int]:
+        """
+        Validate e converti a integer
+        Returns None se invalid
+        """
+        try:
+            num = int(value)
+
+            if min_val is not None and num < min_val:
+                return None
+            if max_val is not None and num > max_val:
+                return None
+
+            return num
+        except (ValueError, TypeError):
+            return None
+
+    @staticmethod
+    def validate_enum(value: str, allowed_values: list) -> bool:
+        """Whitelist: Solo valori specifici permessi"""
+        return value in allowed_values
+
+    @staticmethod
+    def sanitize_filename(filename: str) -> str:
+        """
+        Sanitize filename per prevenire path traversal
+        Whitelist: alfanumerici, -, _, .
+        """
+        # Rimuovi path (solo filename)
+        filename = os.path.basename(filename)
+
+        # Whitelist caratteri sicuri
+        safe_chars = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+
+        # Previeni nomi speciali
+        if safe_chars in ['', '.', '..']:
+            safe_chars = 'file'
+
+        return safe_chars
+
+# Esempio utilizzo
+validator = InputValidator()
+
+# Username
+username = request.form.get('username')
+if not validator.validate_username(username):
+    return jsonify({'error': 'Invalid username'}), 400
+
+# Email
+email = request.form.get('email')
+if not validator.validate_email(email):
+    return jsonify({'error': 'Invalid email'}), 400
+
+# Age
+age = validator.validate_integer(request.form.get('age'), min_val=18, max_val=120)
+if age is None:
+    return jsonify({'error': 'Invalid age'}), 400
+
+# Role (enum)
+role = request.form.get('role')
+if not validator.validate_enum(role, ['user', 'admin', 'moderator']):
+    return jsonify({'error': 'Invalid role'}), 400
+
+# File upload
+uploaded_file = request.files['file']
+safe_filename = validator.sanitize_filename(uploaded_file.filename)
+\end{lstlisting}
+
+\subsection{Server-Side Validation}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=IMPORTANTE: Server-Side Validation}
+\textbf{MAI affidarsi solo a client-side validation!}
+
+Client-side validation:
+\begin{itemize}
+    \item ✓ Migliora UX (feedback immediato)
+    \item ✓ Riduce richieste server
+    \item ❌ Facilmente bypassabile (disabled JavaScript, Burp)
+\end{itemize}
+
+Server-side validation:
+\begin{itemize}
+    \item ✓ OBBLIGATORIA per sicurezza
+    \item ✓ Non bypassabile
+    \item ✓ Authoritative
+\end{itemize}
+
+Strategia: \textbf{Client-side + Server-side} (defense in depth)
+\end{tcolorbox}
+
+\begin{lstlisting}[language=JavaScript, caption={Client-side + Server-side validation}]
+// CLIENT-SIDE (user experience)
+<form id="registerForm">
+  <input type="text" id="username" required minlength="3" maxlength="20">
+  <input type="email" id="email" required>
+  <input type="password" id="password" required minlength="12">
+  <button type="submit">Register</button>
+</form>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  // Client-side validation (UX)
+  if (username.length < 3) {
+    alert('Username must be at least 3 characters');
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    alert('Username can only contain letters, numbers, and underscore');
+    return;
+  }
+
+  // Invia al server
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({username, email, password})
+  });
+
+  // Server validation errors
+  if (!response.ok) {
+    const data = await response.json();
+    alert(data.error);
+  }
+});
+</script>
+
+// SERVER-SIDE (security - NON BYPASSABILE)
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+
+    # SEMPRE validare server-side!
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    # Validation
+    errors = []
+
+    if not InputValidator.validate_username(username):
+        errors.append('Invalid username')
+
+    if not InputValidator.validate_email(email):
+        errors.append('Invalid email')
+
+    if len(password) < 12:
+        errors.append('Password must be at least 12 characters')
+
+    if not any(c.isupper() for c in password):
+        errors.append('Password must contain uppercase')
+
+    if not any(c.islower() for c in password):
+        errors.append('Password must contain lowercase')
+
+    if not any(c.isdigit() for c in password):
+        errors.append('Password must contain digit')
+
+    if errors:
+        return jsonify({'error': ', '.join(errors)}), 400
+
+    # Procedi con registrazione
+    user = create_user(username, email, password)
+    return jsonify({'id': user.id}), 201
+\end{lstlisting}
+
+\section{Output Encoding}
+
+\subsection{Context-Aware Encoding}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=Encoding dipende dal CONTESTO}
+Stesso dato richiede encoding DIVERSO in contesti diversi:
+
+\begin{itemize}
+    \item HTML context: HTML entity encoding
+    \item JavaScript context: JavaScript encoding
+    \item URL context: URL encoding
+    \item CSS context: CSS encoding
+    \item SQL context: SQL escaping (meglio: prepared statements)
+\end{itemize}
+
+\textbf{Encoding sbagliato = vulnerabilità XSS!}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption={Context-aware output encoding}]
+import html
+import json
+from urllib.parse import quote
+import re
+
+class OutputEncoder:
+    @staticmethod
+    def html(text: str) -> str:
+        """
+        HTML context encoding
+        Previene XSS in HTML body
+        """
+        return html.escape(text, quote=True)
+
+    @staticmethod
+    def html_attribute(text: str) -> str:
+        """
+        HTML attribute context
+        Usa sempre virgolette per attributi!
+        """
+        return html.escape(text, quote=True)
+
+    @staticmethod
+    def javascript(text: str) -> str:
+        """
+        JavaScript context encoding
+        """
+        return json.dumps(text)[1:-1]  # Rimuovi outer quotes
+
+    @staticmethod
+    def url(text: str) -> str:
+        """URL parameter encoding"""
+        return quote(text)
+
+    @staticmethod
+    def css(text: str) -> str:
+        """
+        CSS context - molto restrittivo
+        Permetti solo alfanumerici
+        """
+        return re.sub(r'[^a-zA-Z0-9]', '', text)
+
+# Template examples (Jinja2)
+# ❌ VULNERABLE - No encoding
+"""
+<div>Welcome {{username}}</div>
+<!-- Se username = "<script>alert(1)</script>" → XSS! -->
+"""
+
+# ✓ SAFE - HTML encoding (Jinja2 auto-escape)
+"""
+<div>Welcome {{username}}</div>
+<!-- Output: Welcome &lt;script&gt;alert(1)&lt;/script&gt; -->
+"""
+
+# ✓ SAFE - HTML attribute context
+"""
+<div data-username="{{username}}">...</div>
+<!-- Jinja2 auto-escape in attributes -->
+"""
+
+# ❌ VULNERABLE - JavaScript context senza encoding
+"""
+<script>
+var username = "{{username}}";  // WRONG!
+</script>
+<!-- Se username = '"; alert(1); //' → XSS! -->
+"""
+
+# ✓ SAFE - JavaScript context con encoding
+"""
+<script>
+var username = {{username|tojson}};  // Jinja2 tojson filter
+</script>
+<!-- Output: var username = "\"; alert(1); \/\/"; (escaped) -->
+"""
+
+# ✓ SAFE - URL context
+"""
+<a href="/profile?user={{username|urlencode}}">Profile</a>
+"""
+
+# ❌ DANGEROUS - CSS context
+"""
+<style>
+.user-color { color: {{user_color}}; }
+</style>
+<!-- NEVER inject user input in CSS! -->
+"""
+
+# Esempio Python/Flask
+@app.route('/profile/<username>')
+def profile(username):
+    # Flask/Jinja2 auto-escape HTML context
+    return render_template('profile.html', username=username)
+
+# profile.html
+"""
+<h1>{{username}}</h1>  <!-- Auto-escaped -->
+
+<script>
+// JavaScript context - usa tojson
+var user = {{username|tojson}};
+</script>
+
+<a href="/search?q={{username|urlencode}}">Search</a>
+"""
+\end{lstlisting}
+
+\subsection{Template Engines e Auto-Escaping}
+
+\begin{lstlisting}[language=text, caption={Auto-escaping in template engines}]
+# Jinja2 (Python - Flask, Django)
+✓ Auto-escape abilitato di default
+{{ user_input }}  # Auto-escaped
+{{ user_input|safe }}  # Disable escape - DANGEROUS!
+
+# React (JavaScript)
+✓ Auto-escape in JSX
+<div>{userInput}</div>  # Auto-escaped
+<div dangerouslySetInnerHTML={{__html: userInput}}></div>  # DANGEROUS!
+
+# Vue.js
+✓ Auto-escape
+<div>{{ userInput }}</div>  # Auto-escaped
+<div v-html="userInput"></div>  # DANGEROUS!
+
+# Angular
+✓ Auto-escape e sanitization
+<div>{{ userInput }}</div>  # Auto-escaped
+<div [innerHTML]="userInput"></div>  # Sanitized (ma evitare)
+
+# PHP (Blade - Laravel)
+✓ Auto-escape
+{{ $userInput }}  # Escaped
+{!! $userInput !!}  # NOT escaped - DANGEROUS!
+
+# Handlebars
+✓ Auto-escape
+{{userInput}}  # Escaped
+{{{userInput}}}  # NOT escaped - DANGEROUS!
+\end{lstlisting}
+
+\section{Secure Design Patterns}
+
+\subsection{Repository Pattern}
+
+\begin{lstlisting}[language=PHP, caption={Repository pattern per sicurezza database}]
+<?php
+// Repository pattern centralizza accesso dati
+// Benefici security:
+// - Prepared statements in un solo posto
+// - Validazione centralizzata
+// - Easier code review
+
+interface UserRepositoryInterface {
+    public function find(int $id): ?User;
+    public function findByEmail(string $email): ?User;
+    public function create(array $data): User;
+    public function update(int $id, array $data): bool;
+    public function delete(int $id): bool;
+}
+
+class UserRepository implements UserRepositoryInterface {
+    private $db;
+
+    public function __construct(PDO $db) {
+        $this->db = $db;
+    }
+
+    public function find(int $id): ?User {
+        // ✓ Prepared statement
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE id = ?"
+        );
+        $stmt->execute([$id]);
+
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $data ? new User($data) : null;
+    }
+
+    public function findByEmail(string $email): ?User {
+        // ✓ Validazione + prepared statement
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException('Invalid email');
+        }
+
+        $stmt = $this->db->prepare(
+            "SELECT * FROM users WHERE email = ?"
+        );
+        $stmt->execute([$email]);
+
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $data ? new User($data) : null;
+    }
+
+    public function create(array $data): User {
+        // ✓ Validazione
+        $this->validateUserData($data);
+
+        // ✓ Hash password
+        $data['password'] = password_hash(
+            $data['password'],
+            PASSWORD_BCRYPT
+        );
+
+        // ✓ Prepared statement
+        $stmt = $this->db->prepare(
+            "INSERT INTO users (username, email, password, created_at)
+             VALUES (?, ?, ?, NOW())"
+        );
+
+        $stmt->execute([
+            $data['username'],
+            $data['email'],
+            $data['password']
+        ]);
+
+        $id = $this->db->lastInsertId();
+        return $this->find($id);
+    }
+
+    public function update(int $id, array $data): bool {
+        // ✓ Validazione
+        $this->validateUserData($data, partial: true);
+
+        // Build dynamic UPDATE (solo campi forniti)
+        $fields = [];
+        $values = [];
+
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['username', 'email'])) {
+                $fields[] = "$key = ?";
+                $values[] = $value;
+            }
+        }
+
+        if (empty($fields)) {
+            return false;
+        }
+
+        $values[] = $id;
+        $sql = "UPDATE users SET " . implode(', ', $fields) .
+               " WHERE id = ?";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($values);
+    }
+
+    private function validateUserData(array $data, bool $partial = false) {
+        if (!$partial && !isset($data['username'])) {
+            throw new InvalidArgumentException('Username required');
+        }
+
+        if (isset($data['username'])) {
+            if (strlen($data['username']) < 3) {
+                throw new InvalidArgumentException(
+                    'Username too short'
+                );
+            }
+        }
+
+        if (isset($data['email'])) {
+            if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                throw new InvalidArgumentException('Invalid email');
+            }
+        }
+
+        if (isset($data['password'])) {
+            if (strlen($data['password']) < 12) {
+                throw new InvalidArgumentException(
+                    'Password too short'
+                );
+            }
+        }
+    }
+}
+
+// Usage in controller
+class UserController {
+    private $userRepo;
+
+    public function __construct(UserRepositoryInterface $repo) {
+        $this->userRepo = $repo;
+    }
+
+    public function show($id) {
+        $user = $this->userRepo->find($id);
+
+        if (!$user) {
+            abort(404);
+        }
+
+        // Authorization check
+        if (!$this->canView(auth()->user(), $user)) {
+            abort(403);
+        }
+
+        return view('user.show', ['user' => $user]);
+    }
+}
+?>
+\end{lstlisting}
+
+\subsection{Command Pattern per Audit}
+
+\begin{lstlisting}[language=Python, caption={Command pattern per audit logging}]
+from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any
+import json
+
+class Command(ABC):
+    """Base command con audit logging"""
+
+    def __init__(self, user_id: int):
+        self.user_id = user_id
+        self.executed_at = None
+        self.result = None
+
+    @abstractmethod
+    def execute(self) -> Any:
+        """Esegui comando"""
+        pass
+
+    @abstractmethod
+    def get_audit_data(self) -> dict:
+        """Dati per audit log"""
+        pass
+
+    def run(self) -> Any:
+        """Wrapper con audit logging"""
+        self.executed_at = datetime.now()
+
+        try:
+            # Esegui comando
+            self.result = self.execute()
+
+            # Log successo
+            self._log_audit(success=True)
+
+            return self.result
+
+        except Exception as e:
+            # Log fallimento
+            self._log_audit(success=False, error=str(e))
+            raise
+
+    def _log_audit(self, success: bool, error: str = None):
+        """Scrivi audit log"""
+        log_entry = {
+            'command': self.__class__.__name__,
+            'user_id': self.user_id,
+            'timestamp': self.executed_at.isoformat(),
+            'success': success,
+            'data': self.get_audit_data()
+        }
+
+        if error:
+            log_entry['error'] = error
+
+        AuditLogger.log(log_entry)
+
+class DeleteUserCommand(Command):
+    def __init__(self, user_id: int, target_user_id: int):
+        super().__init__(user_id)
+        self.target_user_id = target_user_id
+
+    def execute(self):
+        # Verifica permessi
+        if not has_permission(self.user_id, 'users.delete'):
+            raise PermissionDenied('User cannot delete users')
+
+        # Non permettere self-delete
+        if self.user_id == self.target_user_id:
+            raise ValidationError('Cannot delete own account')
+
+        # Elimina user
+        user = User.query.get(self.target_user_id)
+        if not user:
+            raise NotFoundError('User not found')
+
+        user_email = user.email
+        db.session.delete(user)
+        db.session.commit()
+
+        return {'deleted_user': user_email}
+
+    def get_audit_data(self):
+        return {
+            'target_user_id': self.target_user_id,
+            'result': self.result
+        }
+
+class UpdateUserRoleCommand(Command):
+    def __init__(self, user_id: int, target_user_id: int, new_role: str):
+        super().__init__(user_id)
+        self.target_user_id = target_user_id
+        self.new_role = new_role
+
+    def execute(self):
+        # Verifica permessi
+        if not has_permission(self.user_id, 'users.update_role'):
+            raise PermissionDenied('User cannot update roles')
+
+        # Valida role
+        if self.new_role not in ['user', 'admin', 'moderator']:
+            raise ValidationError(f'Invalid role: {self.new_role}')
+
+        # Update
+        user = User.query.get(self.target_user_id)
+        if not user:
+            raise NotFoundError('User not found')
+
+        old_role = user.role
+        user.role = self.new_role
+        db.session.commit()
+
+        return {
+            'user_id': user.id,
+            'old_role': old_role,
+            'new_role': self.new_role
+        }
+
+    def get_audit_data(self):
+        return {
+            'target_user_id': self.target_user_id,
+            'new_role': self.new_role,
+            'result': self.result
+        }
+
+# Usage
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+@login_required
+def delete_user(user_id):
+    command = DeleteUserCommand(
+        user_id=current_user.id,
+        target_user_id=user_id
+    )
+
+    try:
+        result = command.run()  # Auto-logged
+        return jsonify(result), 200
+    except PermissionDenied as e:
+        return jsonify({'error': str(e)}), 403
+    except NotFoundError as e:
+        return jsonify({'error': str(e)}), 404
+
+# Audit log automatically contains:
+# {
+#   "command": "DeleteUserCommand",
+#   "user_id": 5,
+#   "timestamp": "2024-01-15T10:30:00",
+#   "success": true,
+#   "data": {
+#     "target_user_id": 123,
+#     "result": {"deleted_user": "user@example.com"}
+#   }
+# }
+\end{lstlisting}
+
+\section{Error Handling}
+
+\subsection{Secure Error Messages}
+
+\begin{lstlisting}[language=Python, caption={Gestione errori sicura}]
+# ❌ INSICURO - Rivela informazioni sensibili
+@app.route('/login', methods=['POST'])
+def login_insecure():
+    username = request.form['username']
+    password = request.form['password']
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return "Username does not exist", 401  # ❌ Rivela esistenza username
+
+    if not user.check_password(password):
+        return "Incorrect password", 401  # ❌ Rivela che username esiste
+
+    # Login...
+
+# ✓ SICURO - Messaggi generici
+@app.route('/login', methods=['POST'])
+def login_secure():
+    username = request.form['username']
+    password = request.form['password']
+
+    user = User.query.filter_by(username=username).first()
+
+    # Messaggio generico - non rivela se username esiste
+    if not user or not user.check_password(password):
+        # Log tentativo fallito
+        logger.warning(f"Failed login attempt for username: {username}")
+
+        return jsonify({
+            'error': 'Invalid credentials'  # Generico
+        }), 401
+
+    # Login...
+    return jsonify({'token': generate_token(user)}), 200
+
+# ❌ INSICURO - Stack trace in produzione
+@app.errorhandler(Exception)
+def handle_error_insecure(e):
+    return str(e), 500  # ❌ Rivela stack trace, paths, etc.
+
+# ✓ SICURO - Messaggi generici, log dettagliato
+@app.errorhandler(Exception)
+def handle_error_secure(e):
+    # Log completo (interno)
+    logger.error(f"Unhandled exception: {e}", exc_info=True)
+
+    # Response generico (pubblico)
+    if app.debug:
+        # Solo in development
+        return jsonify({
+            'error': str(e),
+            'type': type(e).__name__
+        }), 500
+    else:
+        # Produzione - messaggio generico
+        return jsonify({
+            'error': 'Internal server error'
+        }), 500
+
+# Database errors
+@app.errorhandler(DatabaseError)
+def handle_db_error(e):
+    logger.error(f"Database error: {e}", exc_info=True)
+
+    # ❌ INSICURO
+    # return f"Database error: {e}", 500
+
+    # ✓ SICURO
+    return jsonify({
+        'error': 'A database error occurred. Please try again later.'
+    }), 500
+
+# File not found
+@app.errorhandler(404)
+def not_found(e):
+    # ✓ SICURO - Non rivelare struttura directory
+    return jsonify({'error': 'Resource not found'}), 404
+
+    # ❌ INSICURO
+    # return f"File {request.path} not found in /var/www/app/public/", 404
+\end{lstlisting}
+
+\section{Secure Logging}
+
+\subsection{What to Log}
+
+\begin{lstlisting}[language=Python, caption={Comprehensive security logging}]
+import logging
+from pythonjsonlogger import jsonlogger
+
+# Structured logging
+logHandler = logging.FileHandler('/var/log/app/security.log')
+formatter = jsonlogger.JsonFormatter(
+    '%(timestamp)s %(level)s %(name)s %(message)s'
+)
+logHandler.setFormatter(formatter)
+security_logger = logging.getLogger('security')
+security_logger.addHandler(logHandler)
+security_logger.setLevel(logging.INFO)
+
+class SecurityLogger:
+    @staticmethod
+    def log_authentication(event_type, username, success, **kwargs):
+        """Log authentication events"""
+        security_logger.info('Authentication Event', extra={
+            'event_type': event_type,  # login, logout, password_change
+            'username': username,
+            'success': success,
+            'ip_address': request.remote_addr,
+            'user_agent': request.user_agent.string,
+            **kwargs
+        })
+
+    @staticmethod
+    def log_authorization(event_type, user_id, resource, success, **kwargs):
+        """Log authorization events"""
+        security_logger.info('Authorization Event', extra={
+            'event_type': event_type,  # access_granted, access_denied
+            'user_id': user_id,
+            'resource': resource,
+            'success': success,
+            'ip_address': request.remote_addr,
+            **kwargs
+        })
+
+    @staticmethod
+    def log_data_access(user_id, table, action, record_id, **kwargs):
+        """Log sensitive data access"""
+        security_logger.info('Data Access', extra={
+            'user_id': user_id,
+            'table': table,
+            'action': action,  # read, create, update, delete
+            'record_id': record_id,
+            'timestamp': datetime.now().isoformat(),
+            **kwargs
+        })
+
+    @staticmethod
+    def log_security_event(event_type, severity, description, **kwargs):
+        """Log security events"""
+        log_func = getattr(security_logger, severity.lower())
+        log_func('Security Event', extra={
+            'event_type': event_type,
+            'description': description,
+            **kwargs
+        })
+
+# Usage examples
+
+# Login success
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    # ... authenticate ...
+
+    SecurityLogger.log_authentication(
+        event_type='login',
+        username=username,
+        success=True
+    )
+
+# Login failure
+SecurityLogger.log_authentication(
+    event_type='login',
+    username=username,
+    success=False,
+    reason='invalid_password'
+)
+
+# Access denied
+@app.route('/admin/users')
+@login_required
+def admin_users():
+    if not current_user.is_admin:
+        SecurityLogger.log_authorization(
+            event_type='access_denied',
+            user_id=current_user.id,
+            resource='/admin/users',
+            success=False,
+            reason='insufficient_privileges'
+        )
+        abort(403)
+
+# Sensitive data access
+def get_user_credit_card(user_id, card_id):
+    card = CreditCard.query.get(card_id)
+
+    # Log access to sensitive data
+    SecurityLogger.log_data_access(
+        user_id=user_id,
+        table='credit_cards',
+        action='read',
+        record_id=card_id,
+        fields_accessed=['last_four', 'expiry']
+    )
+
+    return card
+
+# Security anomaly
+def detect_brute_force(username):
+    failed_attempts = get_failed_login_count(username, last_minutes=5)
+
+    if failed_attempts >= 5:
+        SecurityLogger.log_security_event(
+            event_type='brute_force_detected',
+            severity='WARNING',
+            description=f'Multiple failed logins for {username}',
+            failed_attempts=failed_attempts,
+            ip_address=request.remote_addr
+        )
+
+        # Lock account or implement rate limiting
+        lock_account(username)
+\end{lstlisting}
+
+\subsection{What NOT to Log}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=NEVER Log Sensitive Data}
+\textbf{MAI loggare}:
+\begin{itemize}
+    \item Password (anche hashate)
+    \item Session tokens / API keys
+    \item Numeri carte di credito completi
+    \item SSN, codici fiscali
+    \item Dati sanitari (HIPAA)
+    \item Encryption keys
+\end{itemize}
+
+\textbf{Log con cautela}:
+\begin{itemize}
+    \item Email (PII sotto GDPR)
+    \item Indirizzi IP (PII sotto GDPR)
+    \item Dati finanziari (compliance PCI-DSS)
+\end{itemize}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption={Redact sensitive data from logs}]
+import re
+
+class LogSanitizer:
+    @staticmethod
+    def redact_password(log_data):
+        """Rimuovi password da logs"""
+        if isinstance(log_data, dict):
+            return {
+                k: '***REDACTED***' if 'password' in k.lower() else v
+                for k, v in log_data.items()
+            }
+        return log_data
+
+    @staticmethod
+    def redact_credit_card(text):
+        """Maschera numeri carte credito"""
+        # Trova pattern carte credito
+        pattern = r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'
+        return re.sub(pattern, '**** **** **** ****', text)
+
+    @staticmethod
+    def redact_ssn(text):
+        """Maschera SSN/Codice Fiscale"""
+        # US SSN pattern
+        text = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '***-**-****', text)
+        # Italian CF pattern (semplificato)
+        text = re.sub(
+            r'\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b',
+            '******##*##*###*',
+            text
+        )
+        return text
+
+    @staticmethod
+    def sanitize_log(log_data):
+        """Sanitize completo"""
+        if isinstance(log_data, str):
+            log_data = LogSanitizer.redact_credit_card(log_data)
+            log_data = LogSanitizer.redact_ssn(log_data)
+
+        elif isinstance(log_data, dict):
+            log_data = LogSanitizer.redact_password(log_data)
+
+        return log_data
+
+# Custom logging handler
+class SanitizingHandler(logging.Handler):
+    def emit(self, record):
+        # Sanitize message
+        record.msg = LogSanitizer.sanitize_log(record.msg)
+
+        # Sanitize args
+        if record.args:
+            record.args = tuple(
+                LogSanitizer.sanitize_log(arg)
+                for arg in record.args
+            )
+
+        # Passa a handler reale
+        return super().emit(record)
+\end{lstlisting}
+
+\section{File Operations Security}
+
+\begin{lstlisting}[language=Python, caption={Secure file upload handling}]
+import os
+import magic
+from werkzeug.utils import secure_filename
+
+class SecureFileUpload:
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+    UPLOAD_FOLDER = '/var/www/uploads'
+
+    @staticmethod
+    def validate_file(file):
+        """Validazione completa file upload"""
+        errors = []
+
+        # 1. Check file exists
+        if not file or file.filename == '':
+            errors.append('No file provided')
+            return False, errors
+
+        # 2. Check file size
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+
+        if size > SecureFileUpload.MAX_FILE_SIZE:
+            errors.append(f'File too large (max {SecureFileUpload.MAX_FILE_SIZE} bytes)')
+
+        # 3. Validate filename
+        filename = secure_filename(file.filename)
+        if not filename:
+            errors.append('Invalid filename')
+
+        # 4. Check extension (whitelist)
+        ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+        if ext not in SecureFileUpload.ALLOWED_EXTENSIONS:
+            errors.append(f'File type not allowed (allowed: {SecureFileUpload.ALLOWED_EXTENSIONS})')
+
+        # 5. Validate MIME type (defense in depth)
+        mime = magic.from_buffer(file.read(1024), mime=True)
+        file.seek(0)
+
+        allowed_mimes = {
+            'image/png', 'image/jpeg', 'image/gif', 'application/pdf'
+        }
+
+        if mime not in allowed_mimes:
+            errors.append(f'Invalid file type: {mime}')
+
+        # 6. Scan for malware (se disponibile ClamAV)
+        # if not SecureFileUpload.scan_malware(file):
+        #     errors.append('File failed malware scan')
+
+        return len(errors) == 0, errors
+
+    @staticmethod
+    def save_file(file, user_id):
+        """Salva file in modo sicuro"""
+        is_valid, errors = SecureFileUpload.validate_file(file)
+
+        if not is_valid:
+            raise ValidationError(', '.join(errors))
+
+        # Genera nome file sicuro e unico
+        original_filename = secure_filename(file.filename)
+        ext = original_filename.rsplit('.', 1)[1].lower()
+
+        # UUID per unicità
+        import uuid
+        safe_filename = f"{uuid.uuid4().hex}.{ext}"
+
+        # Path con subdirectory per user
+        user_folder = os.path.join(
+            SecureFileUpload.UPLOAD_FOLDER,
+            str(user_id)
+        )
+
+        # Crea directory se non esiste
+        os.makedirs(user_folder, exist_ok=True)
+
+        # Full path
+        filepath = os.path.join(user_folder, safe_filename)
+
+        # Verifica path traversal (extra safety)
+        if not os.path.abspath(filepath).startswith(
+            os.path.abspath(SecureFileUpload.UPLOAD_FOLDER)
+        ):
+            raise SecurityError('Path traversal attempt detected')
+
+        # Salva file
+        file.save(filepath)
+
+        # Set permissions (read-only)
+        os.chmod(filepath, 0o444)
+
+        # Salva metadata in database
+        file_record = File.create(
+            user_id=user_id,
+            original_filename=original_filename,
+            stored_filename=safe_filename,
+            filepath=filepath,
+            size=os.path.getsize(filepath),
+            mime_type=magic.from_file(filepath, mime=True)
+        )
+
+        return file_record
+
+# File download sicuro
+@app.route('/files/<int:file_id>/download')
+@login_required
+def download_file(file_id):
+    file_record = File.query.get_or_404(file_id)
+
+    # Authorization check
+    if file_record.user_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    # Verifica file esiste
+    if not os.path.exists(file_record.filepath):
+        abort(404)
+
+    # Log download
+    SecurityLogger.log_data_access(
+        user_id=current_user.id,
+        table='files',
+        action='download',
+        record_id=file_id
+    )
+
+    # Send file
+    return send_file(
+        file_record.filepath,
+        as_attachment=True,
+        download_name=file_record.original_filename
+    )
+\end{lstlisting}
+
+\section{Static Analysis (SAST)}
+
+\begin{lstlisting}[language=bash, caption={Static analysis tools}]
+# Python - Bandit
+pip install bandit
+bandit -r /path/to/project
+
+# Example output:
+# >> Issue: [B608:hardcoded_sql_expressions] Possible SQL injection vector
+#    Severity: Medium   Confidence: Low
+#    Location: app.py:42
+#    41    def get_user(user_id):
+#    42        query = f"SELECT * FROM users WHERE id = {user_id}"
+#    43        return db.execute(query)
+
+# Python - Semgrep
+pip install semgrep
+semgrep --config=auto /path/to/project
+
+# JavaScript - ESLint security plugin
+npm install --save-dev eslint-plugin-security
+# .eslintrc.json
+{
+  "plugins": ["security"],
+  "extends": ["plugin:security/recommended"]
+}
+
+# PHP - Psalm
+composer require --dev vimeo/psalm
+vendor/bin/psalm --init
+vendor/bin/psalm
+
+# PHP - RIPS (commercial)
+# Detecta:
+# - SQLi
+# - XSS
+# - Command injection
+# - File inclusion
+# - XXE
+
+# Multi-language - SonarQube
+docker run -d --name sonarqube -p 9000:9000 sonarqube
+# Setup project e scan
+
+# GitHub - CodeQL
+# .github/workflows/codeql.yml
+name: "CodeQL"
+on: [push]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: github/codeql-action/init@v2
+        with:
+          languages: python, javascript
+      - uses: github/codeql-action/analyze@v2
+\end{lstlisting}
+
+\section{Dependency Management}
+
+\begin{lstlisting}[language=bash, caption={Gestione vulnerabilità dipendenze}]
+# Python - Safety
+pip install safety
+safety check
+
+# Output:
+# +==============================================================================+
+# |                                                                              |
+# |                               /$$$$$$            /$$                         |
+# |                              /$$__  $$          | $$                         |
+# |           /$$$$$$$  /$$$$$$ | $$  \__//$$$$$$  /$$$$$$   /$$   /$$           |
+# |          /$$_____/ |____  $$| $$$$   /$$__  $$|_  $$_/  | $$  | $$           |
+# |         |  $$$$$$   /$$$$$$$| $$_/  | $$$$$$$$  | $$    | $$  | $$           |
+# |          \____  $$ /$$__  $$| $$    | $$_____/  | $$ /$$| $$  | $$           |
+# |          /$$$$$$$/|  $$$$$$$| $$    |  $$$$$$$  |  $$$$/|  $$$$$$$           |
+# |         |_______/  \_______/|__/     \_______/   \___/   \____  $$           |
+# |                                                          /$$  | $$           |
+# |                                                         |  $$$$$$/           |
+# |  by pyup.io                                              \______/            |
+# |                                                                              |
+# +==============================================================================+
+# | REPORT                                                                       |
+# +============================+===========+==========================+==========+
+# | package                    | installed | affected                 | ID       |
+# +============================+===========+==========================+==========+
+# | flask                      | 0.12.2    | <0.12.3                  | 36388    |
+# +==============================================================================+
+
+# Python - pip-audit
+pip install pip-audit
+pip-audit
+
+# JavaScript - npm audit
+npm audit
+
+# Fix automatico
+npm audit fix
+
+# JavaScript - Snyk
+npm install -g snyk
+snyk test
+snyk monitor  # Continuous monitoring
+
+# PHP - Composer
+composer audit
+
+# GitHub - Dependabot
+# .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+# Docker images - Trivy
+trivy image myapp:latest
+
+# Output:
+# myapp:latest (alpine 3.15.0)
+# =============================
+# Total: 5 (UNKNOWN: 0, LOW: 0, MEDIUM: 3, HIGH: 1, CRITICAL: 1)
+#
+# +--------------+------------------+----------+-------------------+
+# | Library      | Vulnerability ID | Severity | Installed Version |
+# +--------------+------------------+----------+-------------------+
+# | libssl1.1    | CVE-2022-0778    | CRITICAL | 1.1.1l-r0         |
+# +--------------+------------------+----------+-------------------+
+\end{lstlisting}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Implementa input validation completa per form registrazione
+    \item Crea template con output encoding corretto per tutti i contesti
+    \item Implementa Repository pattern per User entity
+    \item Setup logging sicuro con redaction dati sensibili
+    \item Implementa file upload sicuro con validazione MIME type
+    \item Esegui SAST scan su progetto esistente e correggi findings
+    \item Setup Dependabot per automated dependency updates
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Perché whitelist è preferibile a blacklist?
+    \item Cos'è context-aware encoding?
+    \item Perché il Repository pattern migliora sicurezza?
+    \item Cosa NON si deve mai loggare?
+    \item Come validi in modo sicuro un file upload?
+    \item Cos'è SAST e come si differenzia da DAST?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item OWASP Secure Coding Practices: \url{https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/}
+    \item CWE Top 25: \url{https://cwe.mitre.org/top25/}
+    \item CERT Secure Coding Standards
+    \item NIST Secure Software Development Framework
+\end{itemize}

@@ -82,6 +82,119 @@ public class TestOggetti {
 
 In questo esempio, \texttt{p1} e \texttt{p2} sono riferimenti a due oggetti distinti della classe \texttt{Persona}. Ogni oggetto \texttt{Persona} avrà i propri valori per \texttt{nome}, \texttt{cognome}, \texttt{eta} e \texttt{codiceFiscale}.
 
+\subsection{Memoria: Stack e Heap}
+
+Quando creiamo oggetti in Java, è importante comprendere come la memoria viene organizzata. Java utilizza due aree di memoria principali: lo \textbf{Stack} e l'\textbf{Heap}.
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Stack (sinistra)
+    \node[font=\bfseries, above] at (1.5, 5.5) {STACK};
+    \draw[thick] (0,0) rectangle (3,5);
+    \node[above right, font=\small] at (0,5) {Frame: main()};
+
+    % Variabili locali nello stack
+    \draw[fill=blue!20] (0.3,4.2) rectangle (2.7,4.8);
+    \node[font=\small] at (0.7,4.5) {p1};
+    \draw[->, thick, red] (2.5,4.5) -- (5,3.8);
+
+    \draw[fill=blue!20] (0.3,3.4) rectangle (2.7,4.0);
+    \node[font=\small] at (0.7,3.7) {p2};
+    \draw[->, thick, red] (2.5,3.7) -- (5,2.3);
+
+    \draw[fill=blue!20] (0.3,2.6) rectangle (2.7,3.2);
+    \node[font=\small] at (0.7,2.9) {x};
+    \node[font=\small] at (2.2,2.9) {10};
+
+    \draw[fill=blue!20] (0.3,1.8) rectangle (2.7,2.4);
+    \node[font=\small] at (0.7,2.1) {y};
+    \node[font=\small] at (2.2,2.1) {20};
+
+    % Annotazioni Stack
+    \node[below, font=\footnotesize, align=center, text width=3cm] at (1.5,-0.3) {
+        Variabili locali\\
+        Parametri\\
+        Riferimenti agli oggetti
+    };
+
+    % Heap (destra)
+    \node[font=\bfseries, above] at (7.5, 5.5) {HEAP};
+    \draw[thick] (5,0) rectangle (10,5);
+
+    % Oggetto Persona p1
+    \draw[fill=green!20, thick] (5.2,3.3) rectangle (7.8,4.5);
+    \node[font=\small\bfseries] at (6.5,4.2) {Persona@1a2b};
+    \draw[densely dotted] (5.2,4.0) -- (7.8,4.0);
+    \node[font=\footnotesize, align=left] at (5.5,3.65) {
+        nome: "Mario"\\
+        cognome: "Rossi"\\
+        eta: 30
+    };
+
+    % Oggetto Persona p2
+    \draw[fill=orange!20, thick] (5.2,1.7) rectangle (7.8,2.9);
+    \node[font=\small\bfseries] at (6.5,2.6) {Persona@3c4d};
+    \draw[densely dotted] (5.2,2.4) -- (7.8,2.4);
+    \node[font=\footnotesize, align=left] at (5.5,2.05) {
+        nome: "Anna"\\
+        cognome: "Verdi"\\
+        eta: 25
+    };
+
+    % Oggetto String (condiviso)
+    \draw[fill=yellow!20, thick] (8.0,3.8) rectangle (9.8,4.4);
+    \node[font=\footnotesize\bfseries] at (8.9,4.1) {String@5e6f};
+    \node[font=\footnotesize] at (8.9,3.95) {"Mario"};
+
+    % Annotazioni Heap
+    \node[below, font=\footnotesize, align=center, text width=5cm] at (7.5,-0.3) {
+        Oggetti creati con \texttt{new}\\
+        Gestito dal Garbage Collector
+    };
+
+    % Legenda
+    \draw[->, thick, red] (11,4.5) -- (12,4.5);
+    \node[right, font=\footnotesize] at (12.1,4.5) {Riferimento};
+
+    % Note esplicative
+    \node[below, font=\footnotesize, align=left, text width=7cm] at (7,-1.5) {
+        \textbf{Stack}: Allocazione veloce, dimensione fissa, scope locale\\
+        \textbf{Heap}: Allocazione dinamica, dimensione variabile, GC automatico
+    };
+\end{tikzpicture}
+\end{center}
+
+\begin{description}
+    \item[Stack:] Contiene variabili locali, parametri dei metodi e riferimenti agli oggetti. Lo stack è organizzato per frame (ogni metodo ha il suo frame). Quando un metodo termina, il suo frame viene rimosso.
+
+    \item[Heap:] Contiene gli oggetti effettivi creati con \texttt{new}. Gli oggetti nell'heap possono essere accessibili da più variabili (riferimenti). Il Garbage Collector rimuove automaticamente gli oggetti non più referenziati.
+
+    \item[Riferimenti:] Le variabili di tipo oggetto (\texttt{Persona p1}) contengono riferimenti (indirizzi) agli oggetti nell'heap, non gli oggetti stessi. I tipi primitivi (\texttt{int x}) contengono direttamente il valore.
+\end{description}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Esempio pratico]
+\begin{lstlisting}
+public static void main(String[] args) {
+    // Stack: crea riferimento p1 (null inizialmente)
+    Persona p1;
+
+    // Heap: crea oggetto Persona, Stack: p1 punta all'oggetto
+    p1 = new Persona("Mario", "Rossi", 30);
+
+    // Stack: crea p2 che punta allo STESSO oggetto di p1
+    Persona p2 = p1;
+
+    // Modificando p2, modifichi l'oggetto puntato anche da p1!
+    p2.setEta(31);
+    System.out.println(p1.getEta());  // Stampa 31!
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{attenzione}
+Quando assegni \texttt{p2 = p1}, stai copiando il \textbf{riferimento}, non l'oggetto! Entrambe le variabili puntano allo stesso oggetto nell'heap. Se vuoi una copia indipendente, devi creare un nuovo oggetto.
+\end{attenzione}
+
 \section{Costruttori e Metodi}
 
 Le classi non sono complete senza costruttori per inizializzare gli oggetti e metodi per definirne il comportamento.

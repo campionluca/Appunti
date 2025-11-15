@@ -1,0 +1,405 @@
+% 00_prefazione.tex — Prefazione e Obiettivi del Corso
+\chapter*{Prefazione}
+\addcontentsline{toc}{chapter}{Prefazione}
+
+\section*{Benvenuti in Linux \& Bash Scripting}
+
+Questo manuale rappresenta una guida completa all'utilizzo del sistema operativo Linux e alla programmazione in Bash, pensata sia per chi si avvicina per la prima volta a questo mondo, sia per chi desidera approfondire le proprie conoscenze e competenze.
+
+Linux è molto più di un semplice sistema operativo: è una filosofia, un ecosistema di software libero e open source che ha rivoluzionato il modo in cui concepiamo l'informatica. Nato nel 1991 come progetto personale di Linus Torvalds, oggi Linux alimenta la maggior parte dei server web mondiali, tutti i supercomputer della Top500, milioni di dispositivi Android, e innumerevoli sistemi embedded.
+
+\section*{A chi è rivolto questo manuale}
+
+Questo testo è stato concepito per diverse categorie di lettori:
+
+\begin{itemize}
+    \item \textbf{Studenti universitari} di informatica, ingegneria informatica e discipline affini che necessitano di una solida base nell'uso di sistemi Unix-like
+    \item \textbf{Professionisti IT} che desiderano ampliare le proprie competenze in ambito system administration e DevOps
+    \item \textbf{Sviluppatori} che vogliono automatizzare task ripetitivi e migliorare il proprio workflow
+    \item \textbf{Appassionati} di tecnologia che desiderano comprendere a fondo il funzionamento dei sistemi operativi
+    \item \textbf{Utenti Windows/macOS} che vogliono esplorare un sistema operativo alternativo
+\end{itemize}
+
+Non sono richieste conoscenze pregresse di Linux, ma è necessaria una buona familiarità con i concetti base dell'informatica.
+
+\section*{Struttura del manuale}
+
+Il testo è organizzato in capitoli progressivi che guidano il lettore dall'installazione del sistema fino alla scrittura di script avanzati:
+
+\begin{enumerate}
+    \item \textbf{Introduzione a Linux}: storia, filosofia, distribuzioni e architettura del sistema
+    \item \textbf{Comandi Base}: navigazione nel filesystem, manipolazione file e directory
+    \item \textbf{Filesystem e Permessi}: struttura delle directory, gestione permessi e proprietà
+    \item \textbf{Gestione Processi}: monitoraggio, controllo e schedulazione dei processi
+    \item \textbf{Bash Scripting}: programmazione shell, variabili, strutture di controllo
+    \item \textbf{Text Processing}: elaborazione testi con sed, awk e altri strumenti
+    \item \textbf{Networking}: configurazione rete, troubleshooting e strumenti di diagnostica
+    \item \textbf{Amministrazione Sistema}: gestione utenti, pacchetti, servizi e log
+    \item \textbf{SSH e Sicurezza}: accesso remoto sicuro, chiavi SSH, best practices
+    \item \textbf{Automatizzazione}: cron, systemd timer, gestione backup e deployment
+\end{enumerate}
+
+Ogni capitolo include:
+\begin{itemize}
+    \item Spiegazioni teoriche chiare e concise
+    \item Esempi pratici con codice commentato
+    \item Esercizi di difficoltà crescente
+    \item Best practices evidenziate in box colorati
+    \item Riferimenti a documentazione approfondita
+\end{itemize}
+
+\section*{Metodologia di apprendimento}
+
+L'approccio didattico di questo manuale si basa sui seguenti principi:
+
+\subsection*{Learning by Doing}
+
+La migliore modalità per imparare Linux è \textbf{usarlo attivamente}. Ogni concetto teorico è immediatamente seguito da esempi pratici che il lettore è invitato a sperimentare direttamente sul proprio sistema. Non limitatevi a leggere: aprite un terminale e provate ogni comando!
+
+\subsection*{Progressione Graduale}
+
+I contenuti sono organizzati secondo una difficoltà crescente. I primi capitoli introducono concetti fondamentali che saranno ripresi e approfonditi nei capitoli successivi. Consigliamo di seguire l'ordine proposto, specialmente se siete alle prime armi.
+
+\subsection*{Approccio Problem-Solving}
+
+Ogni sezione presenta problemi reali e mostra come risolverli con gli strumenti Linux. Questo approccio orientato alla risoluzione di problemi concreti favorisce un apprendimento più efficace e memorabile.
+
+\subsection*{Comprensione Profonda}
+
+Non ci limitiamo a mostrare "cosa" fare, ma spieghiamo anche "perché" e "come" funziona. Comprendere i meccanismi sottostanti vi renderà utenti più consapevoli e capaci di risolvere problemi nuovi.
+
+\section*{Obiettivi di apprendimento}
+
+Al termine di questo percorso sarete in grado di:
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Competenze Tecniche]
+\begin{itemize}
+    \item Navigare efficacemente nel filesystem Linux
+    \item Gestire file, directory e permessi con padronanza
+    \item Monitorare e controllare processi di sistema
+    \item Scrivere script Bash per automatizzare task complessi
+    \item Elaborare file di testo con sed, awk e regex
+    \item Configurare e risolvere problemi di rete
+    \item Amministrare utenti, gruppi e servizi di sistema
+    \item Implementare procedure di backup e recovery
+    \item Utilizzare SSH per accesso remoto sicuro
+    \item Schedulare job automatici con cron e systemd
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Competenze Trasversali]
+\begin{itemize}
+    \item \textbf{Pensiero computazionale}: capacità di scomporre problemi complessi in task elementari
+    \item \textbf{Automazione}: identificare processi ripetitivi e automatizzarli
+    \item \textbf{Debugging}: diagnosticare e risolvere problemi in modo sistematico
+    \item \textbf{Documentazione}: leggere e interpretare man pages e documentazione tecnica
+    \item \textbf{Best practices}: scrivere codice pulito, manutenibile e sicuro
+    \item \textbf{Command-line efficiency}: lavorare produttivamente senza interfaccia grafica
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Prerequisiti e strumenti}
+
+\subsection*{Conoscenze Richieste}
+
+Per affrontare proficuamente questo manuale è consigliabile avere:
+
+\begin{itemize}
+    \item Familiarità con concetti informatici di base (file, directory, processi)
+    \item Capacità di utilizzo di un computer a livello utente
+    \item Conoscenze elementari di logica e algoritmi (utile ma non indispensabile)
+    \item Buona conoscenza della lingua inglese per consultare documentazione
+\end{itemize}
+
+\subsection*{Ambiente di Lavoro}
+
+Per seguire gli esempi e svolgere gli esercizi avrete bisogno di:
+
+\begin{tcolorbox}[colback=yellow!5, colframe=yellow!60, title=Setup Consigliato]
+\begin{itemize}
+    \item \textbf{Sistema Linux installato}: distribuzioni consigliate
+    \begin{itemize}
+        \item Ubuntu/Debian: eccellenti per principianti, vasta documentazione
+        \item Fedora/CentOS: orientate al mondo enterprise
+        \item Arch Linux: per utenti avanzati che vogliono controllare ogni aspetto
+    \end{itemize}
+    \item \textbf{Macchina virtuale}: VirtualBox o VMware se volete provare Linux senza modificare il vostro sistema principale
+    \item \textbf{WSL2}: Windows Subsystem for Linux se usate Windows 10/11
+    \item \textbf{Editor di testo}: vim, nano, o Visual Studio Code con estensioni per Bash
+    \item \textbf{Connessione internet}: per installare pacchetti e consultare documentazione
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Convenzioni tipografiche}
+
+Per facilitare la lettura, in questo manuale adottiamo le seguenti convenzioni:
+
+\begin{itemize}
+    \item \texttt{comando}: comandi, file e directory sono in carattere monospazio
+    \item \texttt{\$}: indica il prompt della shell come utente normale
+    \item \texttt{\#}: indica il prompt della shell come root (amministratore)
+    \item \texttt{<parametro>}: parametro da sostituire con valore effettivo
+    \item \texttt{[opzione]}: parametro opzionale
+\end{itemize}
+
+I blocchi di codice sono presentati così:
+
+\begin{lstlisting}[style=bash]
+# Questo è un commento esplicativo
+comando argomento1 argomento2
+
+# Output atteso:
+# risultato dell'esecuzione
+\end{lstlisting}
+
+Le note importanti sono evidenziate in box colorati:
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Attenzione!]
+Informazioni critiche, warning su operazioni potenzialmente pericolose
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Suggerimento]
+Tips, trucchi e best practices per lavorare più efficacemente
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Approfondimento]
+Collegamenti a risorse esterne, approfondimenti teorici, curiosità
+\end{tcolorbox}
+
+\section*{Filosofia Unix}
+
+Prima di iniziare il viaggio pratico in Linux, è fondamentale comprendere la filosofia che sottende i sistemi Unix e Unix-like. Questi principi, enunciati dai pionieri di Unix negli anni '70, guidano ancora oggi lo sviluppo e l'utilizzo di questi sistemi.
+
+\subsection*{I Principi Fondamentali}
+
+\begin{enumerate}
+    \item \textbf{Scrivi programmi che fanno una cosa sola e la fanno bene}
+
+    Ogni comando Unix è specializzato in un compito specifico. Piuttosto che creare programmi monolitici, si preferisce avere tanti piccoli tool specializzati.
+
+    \item \textbf{Scrivi programmi che collaborano}
+
+    I programmi dovrebbero essere progettati per lavorare insieme, con interfacce standardizzate (input/output testuale). Questo è il fondamento delle pipeline.
+
+    \item \textbf{Scrivi programmi che gestiscono flussi di testo}
+
+    Il testo è un'interfaccia universale. I dati testuali possono essere facilmente ispezionati, modificati e processati da umani e programmi.
+
+    \item \textbf{Evita l'interfaccia utente captive}
+
+    I programmi dovrebbero poter essere scriptati e automatizzati, non richiedere necessariamente interazione umana.
+
+    \item \textbf{Tutto è un file}
+
+    Dispositivi hardware, processi, socket di rete: tutto è rappresentato come file nel filesystem, fornendo un'interfaccia uniforme.
+\end{enumerate}
+
+\subsection*{Implicazioni Pratiche}
+
+Questi principi si traducono in caratteristiche concrete:
+
+\begin{itemize}
+    \item \textbf{Composibilità}: concatenare comandi semplici per ottenere risultati complessi
+    \item \textbf{Automazione}: script che combinano tool esistenti invece di riscrivere tutto da zero
+    \item \textbf{Riusabilità}: lo stesso comando utilizzabile in contesti diversi
+    \item \textbf{Trasparenza}: comportamento prevedibile e documentato
+\end{itemize}
+
+Esempio pratico della filosofia Unix:
+
+\begin{lstlisting}[style=bash]
+# Invece di un comando monolitico per "trova i 10 utenti più attivi"
+# Si combinano tool specializzati:
+
+# 1. Estrai nomi utenti dal log
+cat access.log | cut -d' ' -f1 \
+    # 2. Conta occorrenze
+    | sort | uniq -c \
+    # 3. Ordina per frequenza
+    | sort -rn \
+    # 4. Prendi i primi 10
+    | head -10
+
+# Ogni tool fa una cosa sola, ma insieme risolvono problemi complessi
+\end{lstlisting}
+
+\section*{Open Source e Software Libero}
+
+Linux è parte del movimento del Software Libero e Open Source. È importante comprendere questa dimensione, che va oltre gli aspetti puramente tecnici.
+
+\subsection*{Le Quattro Libertà}
+
+Secondo la Free Software Foundation, un software è "libero" se garantisce queste libertà:
+
+\begin{enumerate}
+    \item[0.] Libertà di eseguire il programma per qualsiasi scopo
+    \item[1.] Libertà di studiare come funziona il programma e modificarlo
+    \item[2.] Libertà di redistribuire copie
+    \item[3.] Libertà di distribuire copie modificate
+\end{enumerate}
+
+\subsection*{Vantaggi Pratici}
+
+Questi principi si traducono in vantaggi concreti:
+
+\begin{tcolorbox}[colback=green!5, colframe=green!60, title=Perché Open Source]
+\begin{itemize}
+    \item \textbf{Trasparenza}: puoi verificare cosa fa realmente il software
+    \item \textbf{Sicurezza}: migliaia di occhi possono individuare vulnerabilità
+    \item \textbf{Personalizzazione}: adatti il software alle tue esigenze
+    \item \textbf{Apprendimento}: puoi studiare codice scritto da esperti
+    \item \textbf{Sostenibilità}: non dipendi da un singolo vendor
+    \item \textbf{Comunità}: ampio supporto da community globale
+    \item \textbf{Costo}: quasi sempre gratuito
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Come utilizzare questo manuale}
+
+\subsection*{Percorso Lineare}
+
+Se siete principianti, il consiglio è di procedere in ordine sequenziale:
+
+\begin{enumerate}
+    \item Leggete attentamente la teoria di ogni sezione
+    \item Provate gli esempi sul vostro sistema
+    \item Svolgete gli esercizi proposti
+    \item Consultate le risorse di approfondimento
+    \item Solo dopo, passate al capitolo successivo
+\end{enumerate}
+
+\subsection*{Consultazione Selettiva}
+
+Se avete già esperienza con Linux, potete usare il manuale come reference:
+
+\begin{itemize}
+    \item Consultate l'indice per trovare l'argomento di interesse
+    \item Focalizzatevi sui capitoli che colmano le vostre lacune
+    \item Utilizzate gli esempi come template per i vostri script
+    \item Fate riferimento ai box delle best practices
+\end{itemize}
+
+\subsection*{Apprendimento Attivo}
+
+\begin{tcolorbox}[colback=orange!5, colframe=orange!60, title=Suggerimenti per lo Studio]
+\begin{itemize}
+    \item \textbf{Praticate quotidianamente}: dedicate almeno 30 minuti al giorno
+    \item \textbf{Prendete appunti}: create il vostro cheatsheet personale
+    \item \textbf{Sperimentate}: modificate gli esempi, provate varianti
+    \item \textbf{Fate errori}: è il modo migliore per imparare
+    \item \textbf{Leggete i messaggi di errore}: contengono informazioni preziose
+    \item \textbf{Consultate man pages}: abituatevi a cercare informazioni
+    \item \textbf{Partecipate a community}: forum, IRC, Discord, Reddit
+    \item \textbf{Contribuite a progetti}: il modo migliore per consolidare le competenze
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Risorse complementari}
+
+Questo manuale è un punto di partenza, ma l'apprendimento non finisce qui:
+
+\subsection*{Documentazione Ufficiale}
+
+\begin{itemize}
+    \item \textbf{Man pages}: \texttt{man comando} - documentazione locale sempre disponibile
+    \item \textbf{Info pages}: \texttt{info comando} - documentazione estesa per tool GNU
+    \item \texttt{/usr/share/doc/}: documentazione installata con i pacchetti
+    \item \textbf{--help}: quasi tutti i comandi supportano \texttt{comando --help}
+\end{itemize}
+
+\subsection*{Risorse Online}
+
+\begin{itemize}
+    \item \textbf{The Linux Documentation Project}: tldp.org
+    \item \textbf{Arch Wiki}: wiki.archlinux.org (valida per tutte le distribuzioni)
+    \item \textbf{Stack Overflow}: stackoverflow.com (domande e risposte)
+    \item \textbf{GitHub}: milioni di repository con script di esempio
+    \item \textbf{ExplainShell}: explainshell.com (spiega comandi complessi)
+\end{itemize}
+
+\subsection*{Libri Consigliati}
+
+\begin{itemize}
+    \item \textit{The Linux Command Line} - William Shotts
+    \item \textit{UNIX and Linux System Administration Handbook} - Nemeth et al.
+    \item \textit{Classic Shell Scripting} - Robbins \& Beebe
+    \item \textit{Advanced Bash-Scripting Guide} - Mendel Cooper
+\end{itemize}
+
+\section*{Esercizi di riscaldamento}
+
+Prima di iniziare il primo capitolo, provate questi esercizi per familiarizzare con il terminale:
+
+\subsection*{Esercizio 0.1: Aprire il terminale}
+
+Trovate e aprite l'applicazione terminale sul vostro sistema:
+\begin{itemize}
+    \item Ubuntu/Debian: \texttt{Ctrl+Alt+T} o cercate "Terminal" nel menu
+    \item Fedora: cercate "Terminal" nelle applicazioni
+    \item macOS: \texttt{Cmd+Space}, poi digitate "Terminal"
+    \item WSL: cercate "Ubuntu" o "Debian" nel menu Start di Windows
+\end{itemize}
+
+\subsection*{Esercizio 0.2: Primi comandi}
+
+Provate questi comandi e osservate l'output:
+
+\begin{lstlisting}[style=bash]
+# Visualizza data e ora corrente
+date
+
+# Visualizza il nome dell'utente
+whoami
+
+# Visualizza la directory corrente
+pwd
+
+# Visualizza informazioni sul sistema
+uname -a
+
+# Visualizza un calendario
+cal
+\end{lstlisting}
+
+\subsection*{Esercizio 0.3: Navigazione base}
+
+\begin{lstlisting}[style=bash]
+# Lista file nella directory corrente
+ls
+
+# Lista dettagliata con file nascosti
+ls -la
+
+# Vai alla home directory
+cd ~
+
+# Torna alla directory precedente
+cd -
+
+# Visualizza contenuto di un file di testo
+cat /etc/os-release
+\end{lstlisting}
+
+\section*{Parole finali}
+
+L'apprendimento di Linux e Bash è un viaggio, non una destinazione. Non scoraggiatevi se inizialmente alcuni concetti sembrano oscuri: con la pratica costante diventeranno familiari e naturali.
+
+La comunità Linux è accogliente e pronta ad aiutare. Non abbiate paura di fare domande, ma prima provate a risolvere i problemi autonomamente: questa capacità di problem-solving è la competenza più preziosa che svilupperete.
+
+Ricordate: ogni esperto di Linux è stato un principiante. La differenza sta nella perseveranza e nella curiosità. Siete pronti a iniziare questo viaggio affascinante nel mondo del pinguino?
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Buon Apprendimento!]
+\begin{center}
+\textit{"The best way to predict the future is to invent it."} \\
+\textbf{— Alan Kay}
+\vspace{0.3cm}
+
+\textit{"Unix is simple. It just takes a genius to understand its simplicity."} \\
+\textbf{— Dennis Ritchie}
+\end{center}
+\end{tcolorbox}
+
+\vspace{1cm}
+
+\noindent Iniziamo il nostro viaggio con il Capitolo 1: Introduzione a Linux!
+

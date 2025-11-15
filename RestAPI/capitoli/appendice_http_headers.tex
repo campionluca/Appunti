@@ -1,0 +1,782 @@
+% appendice_http_headers.tex
+\chapter{Appendice: HTTP Headers Reference}
+
+Questa appendice fornisce una reference completa degli HTTP headers più comunemente usati nelle REST API.
+
+\section{Request Headers}
+
+\subsection{General Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Host} &
+Specifica l'host e porta del server. \newline
+\texttt{Host: api.example.com} \\ \hline
+
+\texttt{User-Agent} &
+Identifica il client che effettua la richiesta. \newline
+\texttt{User-Agent: Mozilla/5.0 (Windows NT 10.0)} \\ \hline
+
+\texttt{Referer} &
+URL della pagina da cui proviene la richiesta. \newline
+\texttt{Referer: https://example.com/page} \\ \hline
+\end{tabular}
+\caption{General Request Headers}
+\end{table}
+
+\subsection{Content Negotiation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Accept} &
+Media types accettati dal client. \newline
+\texttt{Accept: application/json} \newline
+\texttt{Accept: application/json, text/html; q=0.9} \\ \hline
+
+\texttt{Accept-Language} &
+Lingue preferite per la risposta. \newline
+\texttt{Accept-Language: it-IT, it; q=0.9, en; q=0.8} \\ \hline
+
+\texttt{Accept-Encoding} &
+Encoding di compressione accettati. \newline
+\texttt{Accept-Encoding: gzip, deflate, br} \\ \hline
+
+\texttt{Accept-Charset} &
+Character set accettati (deprecato, usa UTF-8). \newline
+\texttt{Accept-Charset: utf-8} \\ \hline
+\end{tabular}
+\caption{Content Negotiation Headers}
+\end{table}
+
+\subsection{Authentication}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Authorization} &
+Credenziali di autenticazione. \newline
+\texttt{Authorization: Basic dXNlcjpwYXNz} \newline
+\texttt{Authorization: Bearer eyJhbGciOiJIUzI1NiIs...} \\ \hline
+
+\texttt{Proxy-Authorization} &
+Credenziali per autenticazione proxy. \newline
+\texttt{Proxy-Authorization: Basic cHJveHk6cGFzcw==} \\ \hline
+
+\texttt{API-Key} &
+API key custom (non standard). \newline
+\texttt{X-API-Key: your-api-key-here} \\ \hline
+\end{tabular}
+\caption{Authentication Headers}
+\end{table}
+
+\subsection{Cache Control}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{If-Modified-Since} &
+Richiede risorsa solo se modificata dopo data. \newline
+\texttt{If-Modified-Since: Wed, 21 Oct 2023 07:28:00 GMT} \\ \hline
+
+\texttt{If-None-Match} &
+Richiede risorsa solo se ETag è cambiato. \newline
+\texttt{If-None-Match: "abc123"} \\ \hline
+
+\texttt{If-Match} &
+Esegue operazione solo se ETag corrisponde (optimistic locking). \newline
+\texttt{If-Match: "abc123"} \\ \hline
+
+\texttt{If-Unmodified-Since} &
+Esegue operazione solo se non modificata dopo data. \newline
+\texttt{If-Unmodified-Since: Wed, 21 Oct 2023 07:28:00 GMT} \\ \hline
+
+\texttt{If-Range} &
+Richiede range solo se risorsa non modificata. \newline
+\texttt{If-Range: "abc123"} \\ \hline
+
+\texttt{Cache-Control} &
+Direttive di caching per la richiesta. \newline
+\texttt{Cache-Control: no-cache} \newline
+\texttt{Cache-Control: max-age=0} \\ \hline
+\end{tabular}
+\caption{Cache Control Request Headers}
+\end{table}
+
+\subsection{Content Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Content-Type} &
+Media type del body della richiesta. \newline
+\texttt{Content-Type: application/json} \newline
+\texttt{Content-Type: application/x-www-form-urlencoded} \newline
+\texttt{Content-Type: multipart/form-data; boundary=----WebKitFormBoundary} \\ \hline
+
+\texttt{Content-Length} &
+Dimensione del body in bytes. \newline
+\texttt{Content-Length: 348} \\ \hline
+
+\texttt{Content-Encoding} &
+Encoding applicato al body. \newline
+\texttt{Content-Encoding: gzip} \\ \hline
+\end{tabular}
+\caption{Content Request Headers}
+\end{table}
+
+\subsection{Range Requests}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Range} &
+Richiede un range specifico di byte. \newline
+\texttt{Range: bytes=0-1023} \newline
+\texttt{Range: bytes=1024-} \newline
+\texttt{Range: bytes=-2048} (ultimi 2048 bytes) \\ \hline
+\end{tabular}
+\caption{Range Request Headers}
+\end{table}
+
+\subsection{Custom Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{X-Request-ID} &
+ID univoco per tracciare la richiesta. \newline
+\texttt{X-Request-ID: a7b3c9d2-1234-5678-9abc-def012345678} \\ \hline
+
+\texttt{X-Correlation-ID} &
+ID per correlazione tra microservizi. \newline
+\texttt{X-Correlation-ID: trace-abc-123} \\ \hline
+
+\texttt{Idempotency-Key} &
+Chiave per garantire idempotenza. \newline
+\texttt{Idempotency-Key: a7b3c9d2-1234-5678-9abc-def012345678} \\ \hline
+
+\texttt{X-Forwarded-For} &
+IP originale del client (tramite proxy). \newline
+\texttt{X-Forwarded-For: 203.0.113.195, 70.41.3.18} \\ \hline
+
+\texttt{X-Forwarded-Proto} &
+Protocollo originale (http/https). \newline
+\texttt{X-Forwarded-Proto: https} \\ \hline
+
+\texttt{X-Forwarded-Host} &
+Host originale richiesto. \newline
+\texttt{X-Forwarded-Host: api.example.com} \\ \hline
+\end{tabular}
+\caption{Custom Request Headers}
+\end{table}
+
+\section{Response Headers}
+
+\subsection{General Response Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Date} &
+Data e ora di generazione della risposta. \newline
+\texttt{Date: Wed, 13 Nov 2023 12:00:00 GMT} \\ \hline
+
+\texttt{Server} &
+Informazioni sul server (spesso rimosso per sicurezza). \newline
+\texttt{Server: nginx/1.18.0} \\ \hline
+
+\texttt{Connection} &
+Opzioni di connessione. \newline
+\texttt{Connection: keep-alive} \newline
+\texttt{Connection: close} \\ \hline
+\end{tabular}
+\caption{General Response Headers}
+\end{table}
+
+\subsection{Content Response Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Content-Type} &
+Media type della risposta. \newline
+\texttt{Content-Type: application/json; charset=utf-8} \\ \hline
+
+\texttt{Content-Length} &
+Dimensione del body in bytes. \newline
+\texttt{Content-Length: 1234} \\ \hline
+
+\texttt{Content-Encoding} &
+Encoding di compressione applicato. \newline
+\texttt{Content-Encoding: gzip} \\ \hline
+
+\texttt{Content-Language} &
+Lingua del contenuto. \newline
+\texttt{Content-Language: it-IT} \\ \hline
+
+\texttt{Content-Disposition} &
+Come il contenuto dovrebbe essere mostrato. \newline
+\texttt{Content-Disposition: inline} \newline
+\texttt{Content-Disposition: attachment; filename="data.json"} \\ \hline
+\end{tabular}
+\caption{Content Response Headers}
+\end{table}
+
+\subsection{Cache Control}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Cache-Control} &
+Direttive di caching. \newline
+\texttt{Cache-Control: public, max-age=3600} \newline
+\texttt{Cache-Control: private, no-cache} \newline
+\texttt{Cache-Control: no-store, no-cache, must-revalidate} \\ \hline
+
+\texttt{ETag} &
+Identificatore univoco della versione della risorsa. \newline
+\texttt{ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"} \newline
+\texttt{ETag: W/"abc123"} (weak ETag) \\ \hline
+
+\texttt{Expires} &
+Data di scadenza della cache (legacy, usa Cache-Control). \newline
+\texttt{Expires: Wed, 13 Nov 2023 13:00:00 GMT} \\ \hline
+
+\texttt{Last-Modified} &
+Data ultima modifica della risorsa. \newline
+\texttt{Last-Modified: Wed, 13 Nov 2023 12:00:00 GMT} \\ \hline
+
+\texttt{Age} &
+Tempo in secondi che l'oggetto è stato in cache. \newline
+\texttt{Age: 3600} \\ \hline
+
+\texttt{Vary} &
+Headers che influenzano la cache. \newline
+\texttt{Vary: Accept-Encoding} \newline
+\texttt{Vary: Accept, Accept-Language, Accept-Encoding} \\ \hline
+\end{tabular}
+\caption{Cache Control Response Headers}
+\end{table}
+
+\subsection{Redirection}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Location} &
+URL a cui il client dovrebbe essere reindirizzato. \newline
+Usato con 201 Created, 3xx redirects. \newline
+\texttt{Location: https://api.example.com/users/123} \\ \hline
+\end{tabular}
+\caption{Redirection Headers}
+\end{table}
+
+\subsection{Authentication}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{WWW-Authenticate} &
+Schema di autenticazione richiesto (con 401). \newline
+\texttt{WWW-Authenticate: Basic realm="API"} \newline
+\texttt{WWW-Authenticate: Bearer realm="api.example.com"} \newline
+\texttt{WWW-Authenticate: Bearer error="invalid\_token"} \\ \hline
+
+\texttt{Proxy-Authenticate} &
+Schema di autenticazione proxy richiesto (con 407). \newline
+\texttt{Proxy-Authenticate: Basic realm="Proxy"} \\ \hline
+\end{tabular}
+\caption{Authentication Response Headers}
+\end{table}
+
+\subsection{Rate Limiting}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{RateLimit-Limit} &
+Numero massimo di richieste consentite. \newline
+\texttt{RateLimit-Limit: 100} \\ \hline
+
+\texttt{RateLimit-Remaining} &
+Numero di richieste rimanenti. \newline
+\texttt{RateLimit-Remaining: 85} \\ \hline
+
+\texttt{RateLimit-Reset} &
+Unix timestamp di reset del limite. \newline
+\texttt{RateLimit-Reset: 1699876543} \\ \hline
+
+\texttt{X-RateLimit-*} &
+Varianti legacy con prefisso X-. \newline
+\texttt{X-RateLimit-Limit: 100} \newline
+\texttt{X-RateLimit-Remaining: 85} \newline
+\texttt{X-RateLimit-Reset: 1699876543} \\ \hline
+
+\texttt{Retry-After} &
+Secondi da attendere prima di riprovare (con 429, 503). \newline
+\texttt{Retry-After: 3600} \newline
+\texttt{Retry-After: Wed, 13 Nov 2023 13:00:00 GMT} \\ \hline
+\end{tabular}
+\caption{Rate Limiting Headers}
+\end{table}
+
+\subsection{Security Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Strict-Transport-Security} &
+Forza HTTPS (HSTS). \newline
+\texttt{Strict-Transport-Security: max-age=31536000; includeSubDomains; preload} \\ \hline
+
+\texttt{Content-Security-Policy} &
+Politica di sicurezza dei contenuti. \newline
+\texttt{Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'} \\ \hline
+
+\texttt{X-Content-Type-Options} &
+Previene MIME sniffing. \newline
+\texttt{X-Content-Type-Options: nosniff} \\ \hline
+
+\texttt{X-Frame-Options} &
+Controlla se la pagina può essere in frame (previene clickjacking). \newline
+\texttt{X-Frame-Options: DENY} \newline
+\texttt{X-Frame-Options: SAMEORIGIN} \\ \hline
+
+\texttt{X-XSS-Protection} &
+Abilita filtro XSS browser (legacy, usa CSP). \newline
+\texttt{X-XSS-Protection: 1; mode=block} \\ \hline
+
+\texttt{Referrer-Policy} &
+Controlla informazioni inviate nel Referer header. \newline
+\texttt{Referrer-Policy: strict-origin-when-cross-origin} \newline
+\texttt{Referrer-Policy: no-referrer} \\ \hline
+
+\texttt{Permissions-Policy} &
+Controlla feature browser disponibili. \newline
+\texttt{Permissions-Policy: geolocation=(), camera=(), microphone=()} \\ \hline
+\end{tabular}
+\caption{Security Headers}
+\end{table}
+
+\subsection{CORS}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Access-Control-Allow-Origin} &
+Origin permessi per CORS. \newline
+\texttt{Access-Control-Allow-Origin: https://example.com} \newline
+\texttt{Access-Control-Allow-Origin: *} \\ \hline
+
+\texttt{Access-Control-Allow-Methods} &
+HTTP methods permessi. \newline
+\texttt{Access-Control-Allow-Methods: GET, POST, PUT, DELETE} \\ \hline
+
+\texttt{Access-Control-Allow-Headers} &
+Headers permessi nelle richieste. \newline
+\texttt{Access-Control-Allow-Headers: Content-Type, Authorization} \\ \hline
+
+\texttt{Access-Control-Allow-Credentials} &
+Se le credenziali sono permesse. \newline
+\texttt{Access-Control-Allow-Credentials: true} \\ \hline
+
+\texttt{Access-Control-Expose-Headers} &
+Headers esposti al JavaScript client. \newline
+\texttt{Access-Control-Expose-Headers: X-Total-Count, Link} \\ \hline
+
+\texttt{Access-Control-Max-Age} &
+Tempo cache preflight in secondi. \newline
+\texttt{Access-Control-Max-Age: 86400} \\ \hline
+\end{tabular}
+\caption{CORS Headers}
+\end{table}
+
+\subsection{Pagination}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Link} &
+Link per navigazione paginazione (RFC 5988). \newline
+\texttt{Link: <https://api.example.com/users?page=2>; rel="next",} \newline
+\texttt{      <https://api.example.com/users?page=1>; rel="prev"} \\ \hline
+
+\texttt{X-Total-Count} &
+Numero totale di item (custom). \newline
+\texttt{X-Total-Count: 1543} \\ \hline
+
+\texttt{X-Page} &
+Numero pagina corrente (custom). \newline
+\texttt{X-Page: 2} \\ \hline
+
+\texttt{X-Per-Page} &
+Item per pagina (custom). \newline
+\texttt{X-Per-Page: 10} \\ \hline
+\end{tabular}
+\caption{Pagination Headers}
+\end{table}
+
+\subsection{Custom API Headers}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{X-Request-ID} &
+ID della richiesta per debugging. \newline
+\texttt{X-Request-ID: a7b3c9d2-1234-5678-9abc-def012345678} \\ \hline
+
+\texttt{X-Response-Time} &
+Tempo di elaborazione della richiesta in ms. \newline
+\texttt{X-Response-Time: 234} \\ \hline
+
+\texttt{X-API-Version} &
+Versione API (alternativa a URL versioning). \newline
+\texttt{X-API-Version: 2.0} \\ \hline
+
+\texttt{Deprecation} &
+Indica endpoint deprecato. \newline
+\texttt{Deprecation: true} \\ \hline
+
+\texttt{Sunset} &
+Data di rimozione endpoint. \newline
+\texttt{Sunset: Sat, 31 Dec 2024 23:59:59 GMT} \\ \hline
+
+\texttt{Warning} &
+Avvisi (deprecation, etc). \newline
+\texttt{Warning: 299 - "This endpoint is deprecated"} \\ \hline
+
+\texttt{Idempotent-Replayed} &
+Indica che la risposta è stata ripetuta da cache idempotency. \newline
+\texttt{Idempotent-Replayed: true} \\ \hline
+\end{tabular}
+\caption{Custom API Response Headers}
+\end{table}
+
+\subsection{Range Responses}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Header} & \textbf{Descrizione ed Esempio} \\ \hline
+\texttt{Accept-Ranges} &
+Indica se il server supporta range requests. \newline
+\texttt{Accept-Ranges: bytes} \newline
+\texttt{Accept-Ranges: none} \\ \hline
+
+\texttt{Content-Range} &
+Range di byte restituito (con 206 Partial Content). \newline
+\texttt{Content-Range: bytes 0-1023/4096} \newline
+\texttt{Content-Range: bytes */4096} (dimensione sconosciuta) \\ \hline
+\end{tabular}
+\caption{Range Response Headers}
+\end{table}
+
+\section{Direttive Cache-Control}
+
+\subsection{Request Directives}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Direttiva} & \textbf{Descrizione} \\ \hline
+\texttt{no-cache} & Richiede rivalidazione con server prima di usare cache \\ \hline
+\texttt{no-store} & Non cachare mai questa richiesta/risposta \\ \hline
+\texttt{max-age=<seconds>} & Età massima accettabile della cache \\ \hline
+\texttt{max-stale[=<seconds>]} & Accetta cache stale fino a N secondi \\ \hline
+\texttt{min-fresh=<seconds>} & Cache deve essere fresca per almeno N secondi \\ \hline
+\texttt{no-transform} & Non trasformare il contenuto \\ \hline
+\texttt{only-if-cached} & Usa solo cache, non contattare server \\ \hline
+\end{tabular}
+\caption{Cache-Control Request Directives}
+\end{table}
+
+\subsection{Response Directives}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Direttiva} & \textbf{Descrizione} \\ \hline
+\texttt{public} & Può essere cachato da chiunque (CDN, proxy, browser) \\ \hline
+\texttt{private} & Può essere cachato solo dal browser (non da proxy) \\ \hline
+\texttt{no-cache} & Può cachare ma deve rivalidare prima di usare \\ \hline
+\texttt{no-store} & Non cachare mai \\ \hline
+\texttt{max-age=<seconds>} & Tempo massimo di validità in secondi \\ \hline
+\texttt{s-maxage=<seconds>} & Come max-age ma solo per cache condivise (CDN, proxy) \\ \hline
+\texttt{must-revalidate} & Cache stale DEVE essere rivalidata \\ \hline
+\texttt{proxy-revalidate} & Come must-revalidate ma solo per cache condivise \\ \hline
+\texttt{no-transform} & Cache non deve trasformare il contenuto \\ \hline
+\texttt{immutable} & Contenuto non cambierà mai (performance optimization) \\ \hline
+\texttt{stale-while-revalidate=<seconds>} & Permette cache stale mentre rivalidazione in background \\ \hline
+\texttt{stale-if-error=<seconds>} & Permette cache stale se server in errore \\ \hline
+\end{tabular}
+\caption{Cache-Control Response Directives}
+\end{table}
+
+\subsection{Esempi Comuni}
+
+\begin{lstlisting}[caption=Cache-Control Examples]
+# No caching (dati sensibili)
+Cache-Control: no-store, no-cache, must-revalidate
+
+# Cache privata 5 minuti
+Cache-Control: private, max-age=300
+
+# Cache pubblica 1 ora
+Cache-Control: public, max-age=3600
+
+# Cache pubblica 1 anno (asset statici immutabili)
+Cache-Control: public, max-age=31536000, immutable
+
+# Cache CDN 1 ora, browser 5 minuti
+Cache-Control: public, max-age=300, s-maxage=3600
+
+# Usa cache stale mentre rivalidazione
+Cache-Control: public, max-age=600, stale-while-revalidate=300
+
+# Usa cache stale se server down
+Cache-Control: public, max-age=3600, stale-if-error=86400
+\end{lstlisting}
+
+\section{Media Types Comuni}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Media Type} & \textbf{Utilizzo} \\ \hline
+\texttt{application/json} & JSON (default per REST API) \\ \hline
+\texttt{application/xml} & XML \\ \hline
+\texttt{application/x-www-form-urlencoded} & Form data (POST form) \\ \hline
+\texttt{multipart/form-data} & Form con file upload \\ \hline
+\texttt{text/plain} & Testo semplice \\ \hline
+\texttt{text/html} & HTML \\ \hline
+\texttt{text/csv} & CSV \\ \hline
+\texttt{application/pdf} & PDF \\ \hline
+\texttt{image/jpeg} & JPEG image \\ \hline
+\texttt{image/png} & PNG image \\ \hline
+\texttt{image/gif} & GIF image \\ \hline
+\texttt{image/svg+xml} & SVG image \\ \hline
+\texttt{application/octet-stream} & Binary data generico \\ \hline
+\texttt{application/problem+json} & RFC 7807 Problem Details \\ \hline
+\texttt{application/hal+json} & HAL (Hypertext Application Language) \\ \hline
+\texttt{application/vnd.api+json} & JSON:API \\ \hline
+\end{tabular}
+\caption{Media Types Comuni}
+\end{table}
+
+\section{Status Code Reference}
+
+\subsection{1xx Informational}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando Usare} \\ \hline
+100 & Continue & Upload grandi file (dopo request headers) \\ \hline
+101 & Switching Protocols & Upgrade a WebSocket \\ \hline
+\end{tabular}
+\caption{1xx Status Codes}
+\end{table}
+
+\subsection{2xx Success}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando Usare} \\ \hline
+200 & OK & GET successo, PUT/PATCH ritorna risorsa \\ \hline
+201 & Created & POST crea risorsa (includi Location header) \\ \hline
+202 & Accepted & Richiesta accettata ma processing asincrono \\ \hline
+204 & No Content & DELETE successo, PUT senza body response \\ \hline
+206 & Partial Content & Range request successo \\ \hline
+\end{tabular}
+\caption{2xx Status Codes}
+\end{table}
+
+\subsection{3xx Redirection}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando Usare} \\ \hline
+301 & Moved Permanently & Risorsa spostata permanentemente \\ \hline
+302 & Found & Redirect temporaneo (legacy, usa 307) \\ \hline
+303 & See Other & POST redirect a GET \\ \hline
+304 & Not Modified & Cache validation (con ETag/If-Modified-Since) \\ \hline
+307 & Temporary Redirect & Redirect temporaneo (mantiene method) \\ \hline
+308 & Permanent Redirect & Redirect permanente (mantiene method) \\ \hline
+\end{tabular}
+\caption{3xx Status Codes}
+\end{table}
+
+\subsection{4xx Client Errors}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando Usare} \\ \hline
+400 & Bad Request & Request malformata, JSON invalido \\ \hline
+401 & Unauthorized & Autenticazione richiesta/fallita \\ \hline
+403 & Forbidden & Autenticato ma senza permessi \\ \hline
+404 & Not Found & Risorsa o endpoint non trovato \\ \hline
+405 & Method Not Allowed & HTTP method non supportato \\ \hline
+406 & Not Acceptable & Accept header non soddisfatto \\ \hline
+409 & Conflict & Conflitto (duplicato, versione) \\ \hline
+410 & Gone & Risorsa eliminata permanentemente \\ \hline
+415 & Unsupported Media Type & Content-Type non supportato \\ \hline
+422 & Unprocessable Entity & Errore validazione semantica \\ \hline
+429 & Too Many Requests & Rate limit superato \\ \hline
+\end{tabular}
+\caption{4xx Status Codes}
+\end{table}
+
+\subsection{5xx Server Errors}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando Usare} \\ \hline
+500 & Internal Server Error & Errore server generico \\ \hline
+501 & Not Implemented & Funzionalità non implementata \\ \hline
+502 & Bad Gateway & Errore da upstream server \\ \hline
+503 & Service Unavailable & Server temporaneamente non disponibile \\ \hline
+504 & Gateway Timeout & Timeout da upstream server \\ \hline
+\end{tabular}
+\caption{5xx Status Codes}
+\end{table}
+
+\section{Quick Reference}
+
+\begin{lstlisting}[caption=Esempio Request Completo]
+POST /api/users HTTP/1.1
+Host: api.example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+Accept: application/json
+Accept-Language: it-IT, it; q=0.9
+Accept-Encoding: gzip, deflate, br
+User-Agent: MyApp/1.0
+X-Request-ID: a7b3c9d2-1234-5678-9abc-def012345678
+Idempotency-Key: b8c4d0e3-2345-6789-0bcd-ef1234567890
+Content-Length: 123
+
+{
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "password": "SecurePass123!"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=Esempio Response Completo]
+HTTP/1.1 201 Created
+Date: Wed, 13 Nov 2023 12:00:00 GMT
+Content-Type: application/json; charset=utf-8
+Content-Length: 456
+Location: https://api.example.com/users/12345
+ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+Cache-Control: private, no-cache
+X-Request-ID: a7b3c9d2-1234-5678-9abc-def012345678
+X-Response-Time: 234
+RateLimit-Limit: 100
+RateLimit-Remaining: 95
+RateLimit-Reset: 1699876543
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+
+{
+  "id": 12345,
+  "name": "Mario Rossi",
+  "email": "mario@example.com",
+  "created_at": "2023-11-13T12:00:00Z",
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/users/12345"
+    }
+  }
+}
+\end{lstlisting}
+
+\section{Riepilogo}
+
+Questa appendice ha fornito una reference completa degli HTTP headers più comuni. Punti chiave:
+
+\begin{itemize}
+\item \textbf{Request headers}: Content-Type, Accept, Authorization, cache headers
+\item \textbf{Response headers}: Content-Type, Cache-Control, ETag, security headers
+\item \textbf{Custom headers}: Rate limiting, pagination, API-specific
+\item \textbf{CORS}: Access-Control-* headers per cross-origin requests
+\item \textbf{Security}: HSTS, CSP, X-Frame-Options, etc
+\end{itemize}
+
+Usa questa appendice come quick reference durante lo sviluppo API.

@@ -1,0 +1,665 @@
+\chapter{Workflow di Collaborazione}
+
+\section*{Introduzione}
+Un workflow Git definisce come team collabora usando branch, merge e release. Workflow strutturati prevengono caos e garantiscono qualità del codice. Questo capitolo presenta i workflow più popolari: Git Flow, GitHub Flow, Trunk-Based Development, e le pratiche di fork e pull request.
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere perché servono workflow strutturati
+    \item Implementare Git Flow per release cicliche
+    \item Usare GitHub Flow per deploy continuo
+    \item Conoscere Trunk-Based Development
+    \item Gestire fork e contribuire a progetti open source
+    \item Creare e review Pull Request
+    \item Best practices per code review
+    \item Strategie di release e versioning
+\end{itemize}
+
+\section{Perché Servono Workflow}
+
+\subsection{Il problema senza workflow}
+
+Senza workflow definito:
+\begin{itemize}
+    \item Sviluppatori committano direttamente su \texttt{main}
+    \item Produzione rompe frequentemente
+    \item Feature incomplete vanno in produzione
+    \item Impossibile rollback selettivo
+    \item Hotfix mescolati con feature
+    \item Code review inconsistente
+    \item Chaos totale in team \textgreater 2 persone
+\end{itemize}
+
+\subsection{Workflow risolve}
+
+Un workflow ben definito fornisce:
+\begin{itemize}
+    \item \textbf{Separazione}: Feature/hotfix/release isolati
+    \item \textbf{Stabilità}: \texttt{main} sempre deployabile
+    \item \textbf{Qualità}: Code review obbligatoria
+    \item \textbf{Tracciabilità}: Ogni feature ha branch dedicato
+    \item \textbf{Release control}: Gestione versioni chiara
+    \item \textbf{Rollback}: Facile tornare indietro
+\end{itemize}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Scegliere Workflow Giusto]
+\textbf{Non esiste workflow perfetto}. Dipende da:
+\begin{itemize}
+    \item \textbf{Team size}: 2 persone vs 50 persone
+    \item \textbf{Release cycle}: Continuous deploy vs release trimestrali
+    \item \textbf{Tipo progetto}: Web app vs libreria vs mobile app
+    \item \textbf{Cultura team}: Startup agile vs enterprise strutturata
+\end{itemize}
+
+Principio guida: \textbf{Semplicità}. Workflow complicato non viene seguito.
+\end{tcolorbox}
+
+\section{Git Flow}
+
+\subsection{Panoramica Git Flow}
+
+\textbf{Git Flow} è workflow strutturato creato da Vincent Driessen nel 2010. Ideale per progetti con release cicliche pianificate.
+
+\textbf{Branch principali}:
+\begin{description}
+    \item[\texttt{main}] Codice in produzione (sempre stabile)
+    \item[\texttt{develop}] Branch di integrazione (prossima release)
+\end{description}
+
+\textbf{Branch di supporto}:
+\begin{description}
+    \item[\texttt{feature/*}] Nuove feature (da develop)
+    \item[\texttt{release/*}] Preparazione release (da develop)
+    \item[\texttt{hotfix/*}] Fix urgenti produzione (da main)
+\end{description}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[
+        commit/.style={circle, draw, fill=blue!30, minimum size=0.6cm},
+        branch/.style={rectangle, draw, rounded corners, minimum width=1.5cm},
+        arrow/.style={->, thick}
+    ]
+        % Main branch
+        \node[branch, fill=red!20] at (-1, 6) {main};
+        \node[commit] (m1) at (0,6) {};
+        \node[commit] (m2) at (4,6) {};
+        \node[commit] (m3) at (8,6) {};
+        \draw[arrow, red, thick] (m1) -- (m2);
+        \draw[arrow, red, thick] (m2) -- (m3);
+        \node[right] at (8.3,6) {v1.0, v2.0};
+
+        % Develop branch
+        \node[branch, fill=green!20] at (-1, 4) {develop};
+        \node[commit] (d1) at (0,4) {};
+        \node[commit] (d2) at (2,4) {};
+        \node[commit] (d3) at (4,4) {};
+        \node[commit] (d4) at (6,4) {};
+        \node[commit] (d5) at (8,4) {};
+        \draw[arrow, green, thick] (d1) -- (d2);
+        \draw[arrow, green, thick] (d2) -- (d3);
+        \draw[arrow, green, thick] (d3) -- (d4);
+        \draw[arrow, green, thick] (d4) -- (d5);
+
+        % Feature branch
+        \node[branch, fill=blue!20] at (1, 2.5) {feature};
+        \node[commit] (f1) at (2,2) {};
+        \node[commit] (f2) at (3,2) {};
+        \draw[arrow, blue] (d2) -- (f1);
+        \draw[arrow, blue] (f1) -- (f2);
+        \draw[arrow, blue, dashed] (f2) -- (d3);
+
+        % Release branch
+        \node[branch, fill=yellow!40] at (5, 5.2) {release};
+        \node[commit] (r1) at (6,5) {};
+        \draw[arrow, yellow!70!black] (d4) to[bend left=20] (r1);
+        \draw[arrow, yellow!70!black] (r1) to[bend left=20] (m2);
+        \draw[arrow, yellow!70!black, dashed] (r1) to[bend right=20] (d5);
+
+        % Hotfix branch
+        \node[branch, fill=orange!40] at (5, 7.2) {hotfix};
+        \node[commit] (h1) at (6,7) {};
+        \draw[arrow, orange!70!black] (m2) to[bend left=20] (h1);
+        \draw[arrow, orange!70!black] (h1) to[bend left=20] (m3);
+        \draw[arrow, orange!70!black, dashed] (h1) to[bend right=30] (d5);
+    \end{tikzpicture}
+    \caption{Git Flow: branch main, develop, feature, release, hotfix}
+\end{figure}
+
+\subsection{Feature branches}
+
+\textbf{Scopo}: Sviluppare nuove feature isolate.
+
+\begin{lstlisting}[caption=Workflow feature branch]
+# Crea feature branch da develop
+$ git checkout develop
+$ git checkout -b feature/user-profile
+
+# Sviluppa feature (commit multipli)
+$ git add profile.py
+$ git commit -m "Add user profile model"
+$ git add profile_view.py
+$ git commit -m "Add profile view"
+
+# Merge feature in develop (quando completa)
+$ git checkout develop
+$ git merge --no-ff feature/user-profile
+# --no-ff crea merge commit (preserva storia feature)
+
+# Elimina feature branch
+$ git branch -d feature/user-profile
+
+# Push develop
+$ git push origin develop
+\end{lstlisting}
+
+\textbf{Naming convention}:
+\begin{itemize}
+    \item \texttt{feature/user-authentication}
+    \item \texttt{feature/payment-integration}
+    \item \texttt{feature/analytics-dashboard}
+\end{itemize}
+
+\subsection{Release branches}
+
+\textbf{Scopo}: Preparare nuova release (fix minori, versioning, changelog).
+
+\begin{lstlisting}[caption=Workflow release branch]
+# Crea release branch da develop
+$ git checkout develop
+$ git checkout -b release/1.2.0
+
+# Fix minori, update versioning
+$ echo "1.2.0" > VERSION
+$ git commit -am "Bump version to 1.2.0"
+
+# Update changelog
+$ vim CHANGELOG.md
+$ git commit -am "Update changelog for 1.2.0"
+
+# Merge in main (produzione)
+$ git checkout main
+$ git merge --no-ff release/1.2.0
+$ git tag -a v1.2.0 -m "Release version 1.2.0"
+
+# Merge back in develop (per avere fix)
+$ git checkout develop
+$ git merge --no-ff release/1.2.0
+
+# Elimina release branch
+$ git branch -d release/1.2.0
+
+# Push tutto
+$ git push origin main develop --tags
+\end{lstlisting}
+
+\textbf{Release branch permette}:
+\begin{itemize}
+    \item Develop continua con nuove feature
+    \item Team QA testa release branch
+    \item Fix minori su release senza bloccare develop
+    \item Deploy quando pronto (non legato a develop)
+\end{itemize}
+
+\subsection{Hotfix branches}
+
+\textbf{Scopo}: Fix urgenti in produzione.
+
+\begin{lstlisting}[caption=Workflow hotfix branch]
+# Bug critico in produzione (main)
+$ git checkout main
+$ git checkout -b hotfix/security-patch
+
+# Fix bug
+$ vim security.py
+$ git commit -am "Fix SQL injection vulnerability"
+
+# Bump version (patch)
+$ echo "1.2.1" > VERSION
+$ git commit -am "Bump version to 1.2.1"
+
+# Merge in main
+$ git checkout main
+$ git merge --no-ff hotfix/security-patch
+$ git tag -a v1.2.1 -m "Hotfix: security patch"
+
+# Merge in develop (per avere fix)
+$ git checkout develop
+$ git merge --no-ff hotfix/security-patch
+
+# Elimina hotfix branch
+$ git branch -d hotfix/security-patch
+
+# Deploy urgente
+$ git push origin main develop --tags
+\end{lstlisting}
+
+\subsection{Vantaggi e svantaggi Git Flow}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi Git Flow]
+\begin{itemize}
+    \item Struttura chiara e ben documentata
+    \item Adatto a release pianificate (ogni mese, trimestre)
+    \item Separazione netta develop/produzione
+    \item Hotfix non bloccano sviluppo feature
+    \item Supporta release multiple in parallelo
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Svantaggi Git Flow]
+\begin{itemize}
+    \item Complesso per team piccoli o progetti semplici
+    \item Overhead di gestione branch
+    \item Non adatto a continuous deployment
+    \item Curva apprendimento per junior
+    \item Merge conflicts frequenti con branch longevi
+\end{itemize}
+\end{tcolorbox}
+
+\section{GitHub Flow}
+
+\subsection{Panoramica GitHub Flow}
+
+\textbf{GitHub Flow} è workflow semplificato per continuous deployment. Usato da GitHub stesso e molte startup.
+
+\textbf{Principi}:
+\begin{enumerate}
+    \item \texttt{main} è sempre deployabile
+    \item Feature branch per ogni modifica
+    \item Pull request per code review
+    \item Deploy dopo merge (continuous)
+\end{enumerate}
+
+\textbf{Branch}:
+\begin{itemize}
+    \item \texttt{main}: Codice in produzione (protetto)
+    \item \texttt{feature/*}: Branch temporanei per feature/fix
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[
+        commit/.style={circle, draw, fill=blue!30, minimum size=0.6cm},
+        branch/.style={rectangle, draw, rounded corners},
+        arrow/.style={->, thick}
+    ]
+        % Main branch
+        \node[branch, fill=green!20] at (-1, 3) {main};
+        \node[commit] (m1) at (0,3) {};
+        \node[commit] (m2) at (3,3) {};
+        \node[commit] (m3) at (6,3) {};
+        \node[commit] (m4) at (9,3) {};
+        \draw[arrow, green, very thick] (m1) -- (m2);
+        \draw[arrow, green, very thick] (m2) -- (m3);
+        \draw[arrow, green, very thick] (m3) -- (m4);
+
+        % Feature 1
+        \node[commit] (f1) at (1,1.5) {};
+        \node[commit] (f2) at (2,1.5) {};
+        \draw[arrow, blue] (m1) to[bend right=30] (f1);
+        \draw[arrow, blue] (f1) -- (f2);
+        \draw[arrow, blue, dashed] (f2) to[bend right=30] (m2);
+        \node[right, blue] at (2,1.2) {PR \#42};
+
+        % Feature 2
+        \node[commit] (f3) at (4,1.5) {};
+        \node[commit] (f4) at (5,1.5) {};
+        \draw[arrow, purple] (m2) to[bend right=30] (f3);
+        \draw[arrow, purple] (f3) -- (f4);
+        \draw[arrow, purple, dashed] (f4) to[bend right=30] (m3);
+        \node[right, purple] at (5,1.2) {PR \#43};
+
+        % Deploy markers
+        \node[below, red] at (3,2.7) {Deploy};
+        \node[below, red] at (6,2.7) {Deploy};
+        \node[below, red] at (9,2.7) {Deploy};
+    \end{tikzpicture}
+    \caption{GitHub Flow: main + feature branches + PR + deploy}
+\end{figure}
+
+\subsection{Workflow GitHub Flow}
+
+\begin{lstlisting}[caption=GitHub Flow step-by-step]
+# 1. Crea feature branch da main
+$ git checkout main
+$ git pull origin main
+$ git checkout -b feature/add-search
+
+# 2. Commit modifiche
+$ git add search.py
+$ git commit -m "Add basic search functionality"
+$ git add search_tests.py
+$ git commit -m "Add search tests"
+
+# 3. Push branch
+$ git push -u origin feature/add-search
+
+# 4. Apri Pull Request su GitHub
+#    - Descrivi modifiche
+#    - Request review da colleghi
+#    - CI/CD testa automaticamente
+
+# 5. Code review
+#    - Colleghi reviewano codice
+#    - Suggerimenti e richieste modifiche
+#    - Fix e push aggiuntivi
+
+$ git add search.py
+$ git commit -m "Address review feedback"
+$ git push
+
+# 6. Merge PR (quando approvata)
+#    - Merge su GitHub (squash/merge commit/rebase)
+#    - CI/CD deploya automaticamente
+#    - Branch eliminato automaticamente
+
+# 7. Pull main aggiornato
+$ git checkout main
+$ git pull origin main
+$ git branch -d feature/add-search
+\end{lstlisting}
+
+\subsection{Branch protection rules}
+
+\begin{lstlisting}[caption=Proteggere main branch (su GitHub)]
+# Settings > Branches > Branch protection rules
+# Per "main":
+- Require pull request before merging
+- Require approvals: 2
+- Require status checks to pass (CI)
+- Require branches to be up to date
+- Require conversation resolution before merging
+- Do not allow bypassing the above settings
+\end{lstlisting}
+
+\textbf{Effetto}:
+\begin{itemize}
+    \item Impossibile push diretto a \texttt{main}
+    \item Tutte le modifiche via Pull Request
+    \item Review obbligatoria (2 approvazioni)
+    \item Test devono passare
+    \item Garantisce qualità codice
+\end{itemize}
+
+\subsection{Vantaggi e svantaggi GitHub Flow}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Vantaggi GitHub Flow]
+\begin{itemize}
+    \item Semplicissimo: un branch principale + feature
+    \item Ideale per continuous deployment
+    \item Code review integrata (Pull Request)
+    \item Deploy frequenti (anche più volte al giorno)
+    \item Branch short-lived (meno conflitti)
+    \item Curva apprendimento bassa
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Svantaggi GitHub Flow]
+\begin{itemize}
+    \item Non adatto a release pianificate
+    \item Richiede CI/CD robusto
+    \item Richiede testing automatico esteso
+    \item Difficile gestire multiple versioni in produzione
+    \item Hotfix = feature branch (nessun trattamento speciale)
+\end{itemize}
+\end{tcolorbox}
+
+\section{Trunk-Based Development}
+
+\subsection{Panoramica}
+
+\textbf{Trunk-Based Development} è workflow estremo: sviluppatori committano direttamente su \texttt{main} (trunk) o usano branch brevissimi (1-2 giorni max).
+
+\textbf{Principi}:
+\begin{itemize}
+    \item Un branch principale (\texttt{main}/\texttt{trunk})
+    \item Commit piccoli e frequenti
+    \item Feature flags per feature incomplete
+    \item CI/CD estremamente robusto
+    \item Test automatici estesi
+\end{itemize}
+
+\begin{lstlisting}[caption=Trunk-Based Development]
+# Commit diretto su main (se feature completa)
+$ git checkout main
+$ git pull
+$ git add feature.py
+$ git commit -m "Add small feature (behind feature flag)"
+$ git push
+
+# Oppure branch brevissimo (max 1-2 giorni)
+$ git checkout -b quick-fix
+$ git commit -am "Fix navbar alignment"
+$ git push -u origin quick-fix
+# Immediate PR + merge (stesso giorno)
+\end{lstlisting}
+
+\subsection{Feature flags}
+
+\begin{lstlisting}[caption=Feature flags per trunk-based]
+# Codice in produzione ma feature disabilitata
+def new_dashboard():
+    if feature_flag('new_dashboard_enabled'):
+        return render_new_dashboard()
+    else:
+        return render_old_dashboard()
+
+# Deploy codice incomplete ma safe
+# Abilita feature quando pronta (runtime toggle)
+\end{lstlisting}
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Deploy continuo anche con feature incomplete
+    \item Test in produzione con subset utenti
+    \item Rollback istantaneo (toggle flag)
+    \item No branch longevi
+\end{itemize}
+
+\subsection{Quando usare Trunk-Based}
+
+\textbf{Adatto per}:
+\begin{itemize}
+    \item Team senior esperti
+    \item CI/CD molto maturo
+    \item Test coverage \textgreater 90\%
+    \item Deploy multipli al giorno
+    \item Culture DevOps forte
+\end{itemize}
+
+\textbf{Non adatto per}:
+\begin{itemize}
+    \item Team junior
+    \item Progetti senza CI/CD
+    \item Code review richiesta
+    \item Release pianificate
+\end{itemize}
+
+\section{Pull Request e Code Review}
+
+\subsection{Cos'è una Pull Request}
+
+\textbf{Pull Request (PR)} è richiesta di merge branch feature in branch principale. Include:
+\begin{itemize}
+    \item Descrizione modifiche
+    \item Diff completo del codice
+    \item Conversazione/commenti
+    \item Review/approvazioni
+    \item Status check CI/CD
+\end{itemize}
+
+\subsection{Creare Pull Request efficace}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Template Pull Request]
+\textbf{Titolo}: Add user authentication with JWT
+
+\textbf{Description}:
+\begin{verbatim}
+## Cosa cambia
+- Implementa JWT authentication
+- Aggiunge login/logout endpoints
+- Protegge API endpoints
+
+## Perché
+Richiesto per proteggere API da accessi non autorizzati.
+
+## Come testare
+1. POST /api/login con username/password
+2. Ricevi JWT token
+3. Usa token in header Authorization: Bearer <token>
+4. Accedi a /api/protected (prima restituiva 401)
+
+## Checklist
+- [x] Test scritti e passano
+- [x] Documentazione aggiornata
+- [x] Nessun breaking change
+- [x] Code review requested
+
+## Screenshots
+[Allegati screenshot se UI changes]
+
+Fixes #123
+\end{verbatim}
+\end{tcolorbox}
+
+\subsection{Code Review Best Practices}
+
+\textbf{Per autore PR}:
+\begin{itemize}
+    \item PR piccola (max 400 righe, ideale \textless 200)
+    \item Descrizione chiara e completa
+    \item Self-review prima di request
+    \item Test inclusi e passano
+    \item Un PR = una feature/fix
+    \item Rispondi a feedback costruttivamente
+\end{itemize}
+
+\textbf{Per reviewer}:
+\begin{itemize}
+    \item Review entro 24h (non bloccare altri)
+    \item Feedback costruttivo, non critica personale
+    \item Distingui: \textit{must fix} vs \textit{nice to have}
+    \item Approva quando "abbastanza buono", non "perfetto"
+    \item Se molti commenti, call invece di 50 commenti
+\end{itemize}
+
+\begin{lstlisting}[caption=Commenti review esempi]
+# Bad review comment
+"This is wrong."
+
+# Good review comment
+"Considera usare dict comprehension qui per migliore readability:
+users = {u.id: u for u in user_list}
+Cosa ne pensi?"
+
+# Nitpick (non blocking)
+"Nit: Typo in commento 'recieve' -> 'receive'"
+
+# Blocking (must fix)
+"Questo causa SQL injection. Usa parametrized query:
+cursor.execute('SELECT * FROM users WHERE id = ?', (user_id,))"
+\end{lstlisting}
+
+\subsection{Merge strategies su PR}
+
+\textbf{Merge commit} (default):
+\begin{itemize}
+    \item Preserva storia completa
+    \item Crea merge commit
+    \item Storia non lineare
+\end{itemize}
+
+\textbf{Squash and merge}:
+\begin{itemize}
+    \item Tutti commit feature → 1 commit
+    \item Storia main pulita
+    \item Perde storia intermedia feature
+\end{itemize}
+
+\textbf{Rebase and merge}:
+\begin{itemize}
+    \item Replay commit su main
+    \item Storia lineare
+    \item Nessun merge commit
+\end{itemize}
+
+\begin{lstlisting}[caption=Configurare merge strategy (GitHub)]
+# Settings > General > Pull Requests
+- Allow merge commits
+- Allow squash merging (raccomandato per feature)
+- Allow rebase merging
+
+# Default: squash per main, merge per develop
+\end{lstlisting}
+
+\section{Confronto Workflow}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Caratteristica} & \textbf{Git Flow} & \textbf{GitHub Flow} & \textbf{Trunk-Based} \\
+\hline
+Complessità & Alta & Bassa & Molto bassa \\
+Branch principali & 2 (main+develop) & 1 (main) & 1 (main) \\
+Branch supporto & 3 tipi & 1 tipo & Nessuno/brevi \\
+Release cycle & Pianificato & Continuo & Continuo \\
+Team size & Grande & Medio & Piccolo/senior \\
+CI/CD & Consigliato & Richiesto & Essenziale \\
+Code review & Opzionale & Obbligatorio & Opzionale \\
+Curva apprendimento & Ripida & Moderata & Bassa \\
+\hline
+\end{tabular}
+\caption{Confronto workflow Git}
+\end{table}
+
+\section*{Riepilogo concetti chiave}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Concetti fondamentali]
+\begin{itemize}
+    \item \textbf{Workflow} definisce come team collabora con Git
+    \item \textbf{Git Flow}: main+develop, feature/release/hotfix, release pianificate
+    \item \textbf{GitHub Flow}: main+feature, PR, continuous deployment
+    \item \textbf{Trunk-Based}: commit diretti/branch brevissimi, feature flags
+    \item \textbf{Pull Request}: Richiesta merge + code review + CI
+    \item \textbf{Branch protection}: Impedisce push diretto, forza PR
+    \item \textbf{Code review}: Qualità codice, knowledge sharing
+    \item \textbf{Merge strategies}: merge commit vs squash vs rebase
+    \item Workflow dipende da: team size, release cycle, CI/CD maturity
+    \item \textbf{Semplicità} è chiave: workflow complesso non viene seguito
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Simula Git Flow: crea \texttt{develop}, feature branch, release branch, merge in \texttt{main}.
+
+    \item Pratica GitHub Flow: crea feature, push, apri PR (su GitHub), merge.
+
+    \item Configura branch protection su repository GitHub per \texttt{main}.
+
+    \item Scrivi PR description completa per feature recente (usa template).
+
+    \item Fai code review di PR (proprio o altrui), pratica commenti costruttivi.
+
+    \item Sperimenta merge strategies: merge commit vs squash vs rebase, confronta storia.
+
+    \item Simula hotfix workflow in Git Flow.
+
+    \item Configura GitHub Actions per CI su PR (test automatici).
+
+    \item Crea fork, contribuisci a progetto open source, apri PR.
+
+    \item Discuti con team quale workflow è adatto al vostro progetto.
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item Git Flow originale: \url{https://nvie.com/posts/a-successful-git-branching-model/}
+    \item GitHub Flow: \url{https://guides.github.com/introduction/flow/}
+    \item Trunk-Based Development: \url{https://trunkbaseddevelopment.com/}
+    \item Code Review Best Practices: \url{https://google.github.io/eng-practices/review/}
+    \item Pull Request template: \url{https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests}
+\end{itemize}

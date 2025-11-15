@@ -1,0 +1,1701 @@
+% 10_api_integration.tex - Fetch, Axios, Error Handling, Loading States, React Query
+
+\chapter{Integrazione con API}
+\label{ch:api_integration}
+
+\section{Introduzione}
+
+L'integrazione con API è fondamentale nelle moderne applicazioni React. Questo capitolo copre le tecniche per effettuare richieste HTTP, gestire loading states, error handling e caching dei dati.
+
+\subsection{Metodi Principali}
+
+\begin{itemize}
+\item \textbf{Fetch API}: API nativa del browser
+\item \textbf{Axios}: Libreria HTTP con features avanzate
+\item \textbf{React Query/TanStack Query}: Libreria per data fetching e caching
+\end{itemize}
+
+\section{Fetch API}
+
+Fetch è l'API nativa per richieste HTTP nei browser moderni.
+
+\subsection{GET Request Base}
+
+\begin{lstlisting}[caption={Fetch GET base con useState e useEffect}]
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/users')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        setError(error.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (error) return <div>Errore: {error}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\subsection{Async/Await con Fetch}
+
+\begin{lstlisting}[caption={Fetch con async/await}]
+import { useState, useEffect } from 'react';
+
+function Posts() {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+
+        const response = await fetch(
+          'https://jsonplaceholder.typicode.com/posts'
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setPosts(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (error) return <div>Errore: {error}</div>;
+
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h3>{post.title}</h3>
+          <p>{post.body}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{POST Request}
+
+\begin{lstlisting}[caption={Fetch POST per creare risorsa}]
+import { useState } from 'react';
+
+function CreatePost() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+
+      const response = await fetch(
+        'https://jsonplaceholder.typicode.com/posts',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title,
+            body,
+            userId: 1
+          })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to create post');
+      }
+
+      const data = await response.json();
+      console.log('Created post:', data);
+
+      setSuccess(true);
+      setTitle('');
+      setBody('');
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Crea Post</h2>
+
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">Post creato con successo!</div>}
+
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Titolo"
+        required
+      />
+
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        placeholder="Contenuto"
+        required
+      />
+
+      <button type="submit" disabled={loading}>
+        {loading ? 'Creazione...' : 'Crea Post'}
+      </button>
+    </form>
+  );
+}
+\end{lstlisting}
+
+\subsection{PUT e DELETE Requests}
+
+\begin{lstlisting}[caption={Update e Delete con Fetch}]
+import { useState } from 'react';
+
+function PostManager({ postId }) {
+  const [loading, setLoading] = useState(false);
+
+  // UPDATE
+  const updatePost = async (updates) => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${postId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update post');
+      }
+
+      const data = await response.json();
+      console.log('Updated post:', data);
+    } catch (error) {
+      console.error('Update error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // PATCH (partial update)
+  const patchPost = async (updates) => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${postId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates)
+        }
+      );
+
+      const data = await response.json();
+      console.log('Patched post:', data);
+    } catch (error) {
+      console.error('Patch error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // DELETE
+  const deletePost = async () => {
+    if (!confirm('Sei sicuro di voler eliminare questo post?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${postId}`,
+        {
+          method: 'DELETE'
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to delete post');
+      }
+
+      console.log('Post deleted');
+    } catch (error) {
+      console.error('Delete error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={() => updatePost({ title: 'Nuovo titolo' })}>
+        Update
+      </button>
+      <button onClick={() => patchPost({ title: 'Titolo modificato' })}>
+        Patch
+      </button>
+      <button onClick={deletePost} disabled={loading}>
+        Delete
+      </button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Gestione Autenticazione con Headers}
+
+\begin{lstlisting}[caption={Richieste autenticate con token}]
+import { useState, useEffect } from 'react';
+
+function ProtectedData() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProtectedData = async () => {
+      try {
+        // Recupera token dal localStorage
+        const token = localStorage.getItem('authToken');
+
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await fetch('https://api.example.com/protected', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.status === 401) {
+          // Token scaduto o invalido
+          throw new Error('Unauthorized - Please login again');
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setData(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProtectedData();
+  }, []);
+
+  if (loading) return <div>Caricamento...</div>;
+  if (error) return <div>Errore: {error}</div>;
+
+  return <div>{JSON.stringify(data, null, 2)}</div>;
+}
+\end{lstlisting}
+
+\subsection{AbortController per Cancellazione}
+
+\begin{lstlisting}[caption={Cancellazione richieste con AbortController}]
+import { useState, useEffect } from 'react';
+
+function SearchResults({ searchTerm }) {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!searchTerm) {
+      setResults([]);
+      return;
+    }
+
+    // Crea AbortController
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const fetchResults = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `https://api.example.com/search?q=${searchTerm}`,
+          { signal } // Passa signal alla fetch
+        );
+
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
+
+        const data = await response.json();
+
+        // Controlla se non abortito
+        if (!signal.aborted) {
+          setResults(data);
+        }
+      } catch (error) {
+        // Ignora errori di abort
+        if (error.name !== 'AbortError') {
+          setError(error.message);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchResults();
+
+    // Cleanup: abort fetch quando searchTerm cambia
+    return () => {
+      controller.abort();
+    };
+  }, [searchTerm]);
+
+  if (loading) return <div>Ricerca in corso...</div>;
+  if (error) return <div>Errore: {error}</div>;
+
+  return (
+    <ul>
+      {results.map(result => (
+        <li key={result.id}>{result.name}</li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\section{Custom Hook useFetch}
+
+Creare un custom hook riutilizzabile per fetch.
+
+\begin{lstlisting}[caption={Custom hook useFetch}]
+// hooks/useFetch.js
+import { useState, useEffect } from 'react';
+
+function useFetch(url, options = {}) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const json = await response.json();
+        setData(json);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setError(error.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      controller.abort();
+    };
+  }, [url]); // Dipende solo da url
+
+  return { data, loading, error };
+}
+
+export default useFetch;
+
+// Utilizzo
+function Users() {
+  const { data: users, loading, error } = useFetch(
+    'https://jsonplaceholder.typicode.com/users'
+  );
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\section{Axios}
+
+Axios è una libreria HTTP più feature-rich di Fetch.
+
+\subsection{Installazione}
+
+\begin{lstlisting}[caption={Installazione Axios}]
+npm install axios
+
+# o con yarn
+yarn add axios
+\end{lstlisting}
+
+\subsection{GET Request con Axios}
+
+\begin{lstlisting}[caption={Axios GET request}]
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function Users() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+
+        // Axios gestisce automaticamente JSON
+        const response = await axios.get(
+          'https://jsonplaceholder.typicode.com/users'
+        );
+
+        // I dati sono direttamente in response.data
+        setUsers(response.data);
+      } catch (error) {
+        // Axios fornisce error.response per errori HTTP
+        if (error.response) {
+          setError(`Error: ${error.response.status}`);
+        } else if (error.request) {
+          setError('No response from server');
+        } else {
+          setError(error.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+\end{lstlisting}
+
+\subsection{POST, PUT, DELETE con Axios}
+
+\begin{lstlisting}[caption={CRUD operations con Axios}]
+import axios from 'axios';
+
+const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+// CREATE
+async function createPost(postData) {
+  try {
+    const response = await axios.post(API_URL, postData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// READ
+async function getPost(id) {
+  try {
+    const response = await axios.get(`${API_URL}/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// UPDATE (full)
+async function updatePost(id, postData) {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, postData);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// UPDATE (partial)
+async function patchPost(id, updates) {
+  try {
+    const response = await axios.patch(`${API_URL}/${id}`, updates);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// DELETE
+async function deletePost(id) {
+  try {
+    await axios.delete(`${API_URL}/${id}`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// Utilizzo in componente
+function PostEditor({ postId }) {
+  const handleUpdate = async () => {
+    const result = await updatePost(postId, {
+      title: 'Titolo aggiornato',
+      body: 'Corpo aggiornato'
+    });
+
+    if (result.success) {
+      console.log('Post aggiornato:', result.data);
+    } else {
+      console.error('Errore:', result.error);
+    }
+  };
+
+  const handleDelete = async () => {
+    const result = await deletePost(postId);
+
+    if (result.success) {
+      console.log('Post eliminato');
+    } else {
+      console.error('Errore:', result.error);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleUpdate}>Aggiorna</button>
+      <button onClick={handleDelete}>Elimina</button>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Axios Instance e Interceptors}
+
+\begin{lstlisting}[caption={Configurazione Axios instance}]
+// api/axios.js
+import axios from 'axios';
+
+// Crea instance personalizzata
+const axiosInstance = axios.create({
+  baseURL: 'https://api.example.com',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Aggiungi token ad ogni richiesta
+    const token = localStorage.getItem('authToken');
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    console.log('Request:', config.method.toUpperCase(), config.url);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+axiosInstance.interceptors.response.use(
+  (response) => {
+    console.log('Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    // Gestione errori globale
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          // Unauthorized - redirect al login
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+          break;
+
+        case 403:
+          // Forbidden
+          console.error('Access forbidden');
+          break;
+
+        case 404:
+          console.error('Resource not found');
+          break;
+
+        case 500:
+          console.error('Server error');
+          break;
+
+        default:
+          console.error('Request error:', error.response.status);
+      }
+    } else if (error.request) {
+      console.error('No response from server');
+    } else {
+      console.error('Error:', error.message);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;
+
+// Utilizzo
+import api from './api/axios';
+
+function MyComponent() {
+  const fetchData = async () => {
+    try {
+      // L'interceptor aggiunge automaticamente il token
+      const response = await api.get('/protected-route');
+      console.log(response.data);
+    } catch (error) {
+      // L'error interceptor ha già loggato l'errore
+      console.error('Failed to fetch data');
+    }
+  };
+
+  return <button onClick={fetchData}>Fetch Data</button>;
+}
+\end{lstlisting}
+
+\subsection{Cancellazione con Axios}
+
+\begin{lstlisting}[caption={Cancel token in Axios}]
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+function SearchComponent({ query }) {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Crea cancel token
+    const source = axios.CancelToken.source();
+
+    const fetchResults = async () => {
+      try {
+        setLoading(true);
+
+        const response = await axios.get(
+          `https://api.example.com/search?q=${query}`,
+          {
+            cancelToken: source.token
+          }
+        );
+
+        setResults(response.data);
+      } catch (error) {
+        if (axios.isCancel(error)) {
+          console.log('Request canceled:', error.message);
+        } else {
+          console.error('Error:', error);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (query) {
+      fetchResults();
+    }
+
+    // Cleanup: cancella richiesta
+    return () => {
+      source.cancel('Operation canceled by user');
+    };
+  }, [query]);
+
+  return (
+    <div>
+      {loading && <div>Searching...</div>}
+      {results.map(result => (
+        <div key={result.id}>{result.name}</div>
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{React Query (TanStack Query)}
+
+React Query è la soluzione moderna per data fetching, caching e sincronizzazione.
+
+\subsection{Installazione}
+
+\begin{lstlisting}[caption={Installazione React Query}]
+npm install @tanstack/react-query
+
+# o con yarn
+yarn add @tanstack/react-query
+\end{lstlisting}
+
+\subsection{Setup Base}
+
+\begin{lstlisting}[caption={QueryClient setup}]
+// main.jsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+// Crea query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minuti
+      cacheTime: 1000 * 60 * 10, // 10 minuti
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
+  }
+});
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
+);
+\end{lstlisting}
+
+\subsection{useQuery Hook}
+
+\begin{lstlisting}[caption={Fetch data con useQuery}]
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+
+// Funzione di fetch
+const fetchUsers = async () => {
+  const { data } = await axios.get(
+    'https://jsonplaceholder.typicode.com/users'
+  );
+  return data;
+};
+
+function Users() {
+  const {
+    data: users,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching
+  } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
+  });
+
+  if (isLoading) return <div>Caricamento iniziale...</div>;
+  if (isError) return <div>Errore: {error.message}</div>;
+
+  return (
+    <div>
+      <button onClick={() => refetch()}>
+        {isFetching ? 'Aggiornamento...' : 'Aggiorna'}
+      </button>
+
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Query con Parametri}
+
+\begin{lstlisting}[caption={useQuery con parametri dinamici}]
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+
+const fetchUser = async (userId) => {
+  const { data } = await axios.get(
+    `https://jsonplaceholder.typicode.com/users/${userId}`
+  );
+  return data;
+};
+
+function UserProfile({ userId }) {
+  const {
+    data: user,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['user', userId], // Include userId nella key
+    queryFn: () => fetchUser(userId),
+    enabled: !!userId // Esegue solo se userId esiste
+  });
+
+  if (!userId) return <div>Seleziona un utente</div>;
+  if (isLoading) return <div>Caricamento...</div>;
+  if (isError) return <div>Errore: {error.message}</div>;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>Email: {user.email}</p>
+      <p>Website: {user.website}</p>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{useMutation Hook}
+
+\begin{lstlisting}[caption={Mutations per CREATE, UPDATE, DELETE}]
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+
+const createPost = async (newPost) => {
+  const { data } = await axios.post(
+    'https://jsonplaceholder.typicode.com/posts',
+    newPost
+  );
+  return data;
+};
+
+function CreatePost() {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: (data) => {
+      // Invalida e refetch
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+      // Oppure aggiungi manualmente alla cache
+      // queryClient.setQueryData(['posts'], (old) => [...old, data]);
+
+      console.log('Post creato:', data);
+    },
+    onError: (error) => {
+      console.error('Errore creazione:', error);
+    }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    mutation.mutate({
+      title: 'Nuovo Post',
+      body: 'Contenuto del post',
+      userId: 1
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? 'Creazione...' : 'Crea Post'}
+      </button>
+
+      {mutation.isError && (
+        <div>Errore: {mutation.error.message}</div>
+      )}
+
+      {mutation.isSuccess && (
+        <div>Post creato con successo!</div>
+      )}
+    </form>
+  );
+}
+\end{lstlisting}
+
+\subsection{Esempio Completo: CRUD con React Query}
+
+\begin{lstlisting}[caption={CRUD completo con React Query}]
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { useState } from 'react';
+
+const API_URL = 'https://jsonplaceholder.typicode.com/posts';
+
+// API functions
+const fetchPosts = async () => {
+  const { data } = await axios.get(API_URL);
+  return data;
+};
+
+const createPost = async (newPost) => {
+  const { data } = await axios.post(API_URL, newPost);
+  return data;
+};
+
+const updatePost = async ({ id, updates }) => {
+  const { data } = await axios.put(`${API_URL}/${id}`, updates);
+  return data;
+};
+
+const deletePost = async (id) => {
+  await axios.delete(`${API_URL}/${id}`);
+  return id;
+};
+
+function PostsManager() {
+  const queryClient = useQueryClient();
+  const [editingId, setEditingId] = useState(null);
+
+  // GET - Fetch all posts
+  const {
+    data: posts,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetchPosts
+  });
+
+  // CREATE
+  const createMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    }
+  });
+
+  // UPDATE
+  const updateMutation = useMutation({
+    mutationFn: updatePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      setEditingId(null);
+    }
+  });
+
+  // DELETE
+  const deleteMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    }
+  });
+
+  const handleCreate = () => {
+    createMutation.mutate({
+      title: 'Nuovo Post',
+      body: 'Contenuto',
+      userId: 1
+    });
+  };
+
+  const handleUpdate = (id) => {
+    updateMutation.mutate({
+      id,
+      updates: {
+        title: 'Titolo Aggiornato',
+        body: 'Corpo Aggiornato'
+      }
+    });
+  };
+
+  const handleDelete = (id) => {
+    if (confirm('Eliminare questo post?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  if (isLoading) return <div>Caricamento...</div>;
+  if (isError) return <div>Errore: {error.message}</div>;
+
+  return (
+    <div>
+      <h1>Posts Manager</h1>
+
+      <button onClick={handleCreate} disabled={createMutation.isPending}>
+        {createMutation.isPending ? 'Creazione...' : 'Crea Nuovo Post'}
+      </button>
+
+      <div className="posts">
+        {posts.map(post => (
+          <div key={post.id} className="post">
+            <h3>{post.title}</h3>
+            <p>{post.body}</p>
+
+            <button
+              onClick={() => handleUpdate(post.id)}
+              disabled={updateMutation.isPending}
+            >
+              Update
+            </button>
+
+            <button
+              onClick={() => handleDelete(post.id)}
+              disabled={deleteMutation.isPending}
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Infinite Queries}
+
+\begin{lstlisting}[caption={Infinite scrolling con useInfiniteQuery}]
+import { useInfiniteQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { useEffect, useRef } from 'react';
+
+const fetchPosts = async ({ pageParam = 1 }) => {
+  const { data } = await axios.get(
+    `https://jsonplaceholder.typicode.com/posts?_page=${pageParam}&_limit=10`
+  );
+  return {
+    posts: data,
+    nextPage: pageParam + 1,
+    hasMore: data.length > 0
+  };
+};
+
+function InfinitePostList() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error
+  } = useInfiniteQuery({
+    queryKey: ['posts', 'infinite'],
+    queryFn: fetchPosts,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextPage : undefined,
+    initialPageParam: 1
+  });
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
+
+  if (isLoading) return <div>Caricamento...</div>;
+  if (isError) return <div>Errore: {error.message}</div>;
+
+  return (
+    <div>
+      <h1>Infinite Scroll Posts</h1>
+
+      {data.pages.map((page, pageIndex) => (
+        <div key={pageIndex}>
+          {page.posts.map(post => (
+            <article key={post.id} className="post">
+              <h3>{post.title}</h3>
+              <p>{post.body}</p>
+            </article>
+          ))}
+        </div>
+      ))}
+
+      <div ref={observerTarget} className="observer">
+        {isFetchingNextPage && <div>Caricamento altri post...</div>}
+        {!hasNextPage && <div>Fine dei post</div>}
+      </div>
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Optimistic Updates}
+
+\begin{lstlisting}[caption={Aggiornamenti ottimistici}]
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+
+function TodoList() {
+  const queryClient = useQueryClient();
+
+  const toggleTodoMutation = useMutation({
+    mutationFn: async ({ id, completed }) => {
+      const { data } = await axios.patch(
+        `https://api.example.com/todos/${id}`,
+        { completed: !completed }
+      );
+      return data;
+    },
+
+    // Optimistic update
+    onMutate: async ({ id, completed }) => {
+      // Cancella queries in uscita
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+
+      // Snapshot del valore precedente
+      const previousTodos = queryClient.getQueryData(['todos']);
+
+      // Aggiorna ottimisticamente
+      queryClient.setQueryData(['todos'], (old) =>
+        old.map(todo =>
+          todo.id === id
+            ? { ...todo, completed: !completed }
+            : todo
+        )
+      );
+
+      // Ritorna context con snapshot
+      return { previousTodos };
+    },
+
+    // Se la mutation fallisce, rollback
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['todos'], context.previousTodos);
+    },
+
+    // Sempre refetch dopo error o success
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    }
+  });
+
+  return (
+    // JSX component
+    <div>Todos</div>
+  );
+}
+\end{lstlisting}
+
+\section{Error Handling Avanzato}
+
+\subsection{Error Boundary per API Errors}
+
+\begin{lstlisting}[caption={Error boundary per gestione errori}]
+import { Component } from 'react';
+
+class ApiErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('API Error:', error, errorInfo);
+
+    // Log to error reporting service
+    // logErrorToService(error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-container">
+          <h2>Qualcosa è andato storto</h2>
+          <p>{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false })}>
+            Riprova
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Utilizzo
+function App() {
+  return (
+    <ApiErrorBoundary>
+      <DataFetchingComponent />
+    </ApiErrorBoundary>
+  );
+}
+\end{lstlisting}
+
+\subsection{Toast Notifications per Errori}
+
+\begin{lstlisting}[caption={Sistema di notifiche per errori API}]
+import { createContext, useContext, useState } from 'react';
+
+const ToastContext = createContext(null);
+
+export function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'info') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    // Auto-remove dopo 5 secondi
+    setTimeout(() => {
+      removeToast(id);
+    }, 5000);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
+  return (
+    <ToastContext.Provider value={{ addToast, removeToast }}>
+      {children}
+
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            {toast.message}
+            <button onClick={() => removeToast(toast.id)}>×</button>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+export function useToast() {
+  return useContext(ToastContext);
+}
+
+// Utilizzo con API
+function MyComponent() {
+  const { addToast } = useToast();
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch('https://api.example.com/data');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const data = await response.json();
+      addToast('Dati caricati con successo!', 'success');
+    } catch (error) {
+      addToast(error.message, 'error');
+    }
+  };
+
+  return <button onClick={fetchData}>Fetch Data</button>;
+}
+\end{lstlisting}
+
+\subsection{Retry Logic}
+
+\begin{lstlisting}[caption={Logica di retry personalizzata}]
+import { useState } from 'react';
+
+async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+  let lastError;
+
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+
+      // Non ritentare se è l'ultimo tentativo
+      if (i === maxRetries) {
+        break;
+      }
+
+      // Exponential backoff: attendi 1s, 2s, 4s, etc.
+      const delay = Math.pow(2, i) * 1000;
+      console.log(`Retry ${i + 1}/${maxRetries} after ${delay}ms`);
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError;
+}
+
+// Utilizzo
+function DataComponent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await fetchWithRetry(
+        'https://api.example.com/data',
+        {},
+        3 // max 3 tentativi
+      );
+
+      setData(result);
+    } catch (error) {
+      setError(`Failed after retries: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={loadData} disabled={loading}>
+        {loading ? 'Loading...' : 'Load Data'}
+      </button>
+      {error && <div className="error">{error}</div>}
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Loading States Avanzati}
+
+\subsection{Skeleton Screens}
+
+\begin{lstlisting}[caption={Skeleton loading component}]
+function Skeleton({ width, height, className = '' }) {
+  return (
+    <div
+      className={`skeleton ${className}`}
+      style={{
+        width,
+        height,
+        background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+        backgroundSize: '200% 100%',
+        animation: 'loading 1.5s ease-in-out infinite',
+        borderRadius: '4px'
+      }}
+    />
+  );
+}
+
+// CSS
+// @keyframes loading {
+//   0% {
+//     background-position: 200% 0;
+//   }
+//   100% {
+//     background-position: -200% 0;
+//   }
+// }
+
+function UserCardSkeleton() {
+  return (
+    <div className="user-card">
+      <Skeleton width={64} height={64} className="avatar" />
+      <div>
+        <Skeleton width={200} height={20} />
+        <Skeleton width={150} height={16} />
+      </div>
+    </div>
+  );
+}
+
+// Utilizzo
+function UserList() {
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUsers
+  });
+
+  if (isLoading) {
+    return (
+      <div>
+        {[...Array(5)].map((_, i) => (
+          <UserCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsection{Progress Indicator}
+
+\begin{lstlisting}[caption={Progress bar per upload}]
+import { useState } from 'react';
+import axios from 'axios';
+
+function FileUpload() {
+  const [file, setFile] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setUploading(true);
+
+      await axios.post('https://api.example.com/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setProgress(percentCompleted);
+        }
+      });
+
+      console.log('Upload completato!');
+    } catch (error) {
+      console.error('Upload fallito:', error);
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  };
+
+  return (
+    <div>
+      <input
+        type="file"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
+
+      <button onClick={handleUpload} disabled={!file || uploading}>
+        {uploading ? 'Uploading...' : 'Upload'}
+      </button>
+
+      {uploading && (
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${progress}%` }}
+          >
+            {progress}%
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\section{Caching e Revalidation}
+
+\subsection{React Query Cache Config}
+
+\begin{lstlisting}[caption={Configurazione cache avanzata}]
+import { QueryClient } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Dati considerati fresh per 5 minuti
+      staleTime: 1000 * 60 * 5,
+
+      // Dati mantenuti in cache per 10 minuti
+      cacheTime: 1000 * 60 * 10,
+
+      // Refetch quando la finestra riceve focus
+      refetchOnWindowFocus: true,
+
+      // Refetch quando si riconnette
+      refetchOnReconnect: true,
+
+      // Refetch on mount se dati stale
+      refetchOnMount: true,
+
+      // Retry fallite requests
+      retry: 2,
+
+      // Retry delay (exponential backoff)
+      retryDelay: (attemptIndex) =>
+        Math.min(1000 * 2 ** attemptIndex, 30000)
+    },
+    mutations: {
+      // Retry mutations
+      retry: 1
+    }
+  }
+});
+\end{lstlisting}
+
+\subsection{Manual Cache Updates}
+
+\begin{lstlisting}[caption={Aggiornamento manuale della cache}]
+import { useQueryClient } from '@tanstack/react-query';
+
+function UserProfile({ userId }) {
+  const queryClient = useQueryClient();
+
+  const updateUserName = (newName) => {
+    // Update cache direttamente
+    queryClient.setQueryData(['user', userId], (oldData) => ({
+      ...oldData,
+      name: newName
+    }));
+  };
+
+  const invalidateUser = () => {
+    // Invalida cache (forza refetch)
+    queryClient.invalidateQueries({ queryKey: ['user', userId] });
+  };
+
+  const prefetchUser = async (nextUserId) => {
+    // Prefetch dati per navigazione anticipata
+    await queryClient.prefetchQuery({
+      queryKey: ['user', nextUserId],
+      queryFn: () => fetchUser(nextUserId)
+    });
+  };
+
+  return <div>User Profile</div>;
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\begin{tcolorbox}[title=API Integration Best Practices]
+\begin{itemize}
+\item Usa React Query per data fetching complesso
+\item Implementa proper error handling con retry logic
+\item Mostra loading states significativi (skeleton, spinner)
+\item Cancella richieste quando componenti unmount
+\item Usa AbortController o cancel tokens
+\item Implementa caching per ridurre richieste
+\item Normalizza dati API per evitare duplicazioni
+\item Usa interceptors per logica globale (auth, logging)
+\item Gestisci stati di rete (offline/online)
+\item Implementa optimistic updates per UX migliore
+\item Testa error cases e edge cases
+\item Usa TypeScript per type safety delle risposte API
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusioni}
+
+L'integrazione con API è fondamentale per applicazioni React moderne. Le opzioni principali sono:
+
+\begin{itemize}
+\item \textbf{Fetch API}: Nativa, leggera, sufficiente per app semplici
+\item \textbf{Axios}: Feature-rich, interceptors, auto-JSON parsing
+\item \textbf{React Query}: Migliore per caching, sincronizzazione, states complessi
+\end{itemize}
+
+Per applicazioni moderne, React Query è la scelta consigliata per la gestione completa di server state, caching e sincronizzazione automatica.

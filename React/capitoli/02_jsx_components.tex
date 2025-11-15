@@ -1,0 +1,1226 @@
+\chapter{JSX e Componenti}
+
+\section{Introduzione a JSX}
+
+JSX (JavaScript XML) è un'estensione della sintassi JavaScript che permette di scrivere markup simile a HTML all'interno di JavaScript. È una delle caratteristiche più distintive di React.
+
+\subsection{Cos'è JSX?}
+
+JSX sembra HTML, ma è JavaScript:
+
+\begin{lstlisting}[language=JavaScript, caption=Esempio JSX base]
+// Questo è JSX
+const element = <h1>Hello, World!</h1>;
+
+// Viene trasformato in JavaScript puro:
+const element = React.createElement('h1', null, 'Hello, World!');
+\end{lstlisting}
+
+\textbf{JSX NON è:}
+\begin{itemize}
+    \item HTML (anche se somiglia)
+    \item Un template engine
+    \item Obbligatorio (ma altamente raccomandato)
+\end{itemize}
+
+\textbf{JSX È:}
+\begin{itemize}
+    \item JavaScript con sintassi estesa
+    \item Type-safe (con TypeScript)
+    \item Più espressivo e leggibile
+\end{itemize}
+
+\subsection{Sintassi JSX Fondamentale}
+
+\textbf{1. Espressioni JavaScript in JSX}
+
+Usa le parentesi graffe \{\} per inserire espressioni JavaScript:
+
+\begin{lstlisting}[language=JavaScript, caption=Espressioni in JSX]
+function Greeting() {
+    const name = 'Mario';
+    const age = 25;
+    const hobbies = ['coding', 'reading', 'gaming'];
+
+    return (
+        <div>
+            {/* Variabili */}
+            <h1>Ciao, {name}!</h1>
+
+            {/* Operazioni */}
+            <p>Tra 5 anni avrai {age + 5} anni</p>
+
+            {/* Condizioni ternarie */}
+            <p>Sei {age >= 18 ? 'maggiorenne' : 'minorenne'}</p>
+
+            {/* Chiamate a funzioni */}
+            <p>Nome uppercase: {name.toUpperCase()}</p>
+
+            {/* Map per liste */}
+            <ul>
+                {hobbies.map((hobby, index) => (
+                    <li key={index}>{hobby}</li>
+                ))}
+            </ul>
+
+            {/* Template literals */}
+            <p>{`${name} ha ${age} anni`}</p>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\textbf{2. Attributi in JSX}
+
+Gli attributi seguono la convenzione camelCase:
+
+\begin{lstlisting}[language=JavaScript, caption=Attributi JSX]
+function AttributesExample() {
+    const imageUrl = 'https://example.com/image.jpg';
+    const altText = 'Una bella immagine';
+    const isActive = true;
+
+    return (
+        <div>
+            {/* className invece di class */}
+            <div className="container"></div>
+
+            {/* htmlFor invece di for */}
+            <label htmlFor="input-id">Nome:</label>
+            <input id="input-id" type="text" />
+
+            {/* Attributi booleani */}
+            <input type="checkbox" checked={isActive} />
+            <input type="text" disabled />
+            <button type="submit" autoFocus>Invia</button>
+
+            {/* onClick invece di onclick */}
+            <button onClick={() => console.log('Click!')}>
+                Click me
+            </button>
+
+            {/* Style come oggetto */}
+            <div style={{
+                color: 'red',
+                fontSize: '20px',
+                backgroundColor: '#f0f0f0'
+            }}>
+                Testo stilizzato
+            </div>
+
+            {/* Attributi dinamici */}
+            <img src={imageUrl} alt={altText} />
+
+            {/* Data attributes */}
+            <div data-user-id="123" data-role="admin">
+                User info
+            </div>
+
+            {/* Spread attributes */}
+            <input {...{type: 'text', placeholder: 'Nome'}} />
+        </div>
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Differenze HTML vs JSX}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{HTML} & \textbf{JSX} & \textbf{Motivo} \\
+\hline
+class & className & class è keyword JS \\
+\hline
+for & htmlFor & for è keyword JS \\
+\hline
+onclick & onClick & camelCase convention \\
+\hline
+tabindex & tabIndex & camelCase convention \\
+\hline
+style="..." & style=\{\{\}\} & Oggetto JS \\
+\hline
+<!-- --> & \{/* */\} & Commenti JS \\
+\hline
+<br> & <br /> & Tag auto-chiudenti \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{4. Rendering Condizionale}
+
+\begin{lstlisting}[language=JavaScript, caption=Condizioni in JSX]
+function ConditionalRendering({ isLoggedIn, username, role }) {
+    // 1. If-else con ternario
+    return (
+        <div>
+            {isLoggedIn ? (
+                <h1>Benvenuto, {username}!</h1>
+            ) : (
+                <h1>Per favore, effettua il login</h1>
+            )}
+        </div>
+    );
+
+    // 2. Logical AND (&&) per rendering condizionale
+    return (
+        <div>
+            {isLoggedIn && <h1>Benvenuto, {username}!</h1>}
+            {role === 'admin' && <button>Pannello Admin</button>}
+        </div>
+    );
+
+    // 3. Variabile intermedia
+    let content;
+    if (isLoggedIn) {
+        content = <h1>Benvenuto, {username}!</h1>;
+    } else {
+        content = <h1>Per favore, effettua il login</h1>;
+    }
+    return <div>{content}</div>;
+
+    // 4. Early return
+    if (!isLoggedIn) {
+        return <LoginForm />;
+    }
+    return <Dashboard username={username} />;
+
+    // 5. Switch con oggetto
+    const statusMessages = {
+        loading: <Spinner />,
+        error: <ErrorMessage />,
+        success: <SuccessMessage />,
+        idle: null
+    };
+    return statusMessages[status];
+}
+\end{lstlisting}
+
+\textbf{5. Liste e Keys}
+
+\begin{lstlisting}[language=JavaScript, caption=Rendering liste]
+function ListRendering() {
+    const users = [
+        { id: 1, name: 'Mario', age: 25 },
+        { id: 2, name: 'Laura', age: 30 },
+        { id: 3, name: 'Giuseppe', age: 28 }
+    ];
+
+    return (
+        <div>
+            {/* ✅ Con key unica (id) */}
+            <ul>
+                {users.map(user => (
+                    <li key={user.id}>
+                        {user.name} - {user.age} anni
+                    </li>
+                ))}
+            </ul>
+
+            {/* ❌ Senza key (warning in console) */}
+            <ul>
+                {users.map(user => (
+                    <li>{user.name}</li>
+                ))}
+            </ul>
+
+            {/* ⚠️ Con index come key (evitare se possibile) */}
+            <ul>
+                {users.map((user, index) => (
+                    <li key={index}>{user.name}</li>
+                ))}
+            </ul>
+
+            {/* ✅ Liste complesse */}
+            <div>
+                {users
+                    .filter(user => user.age >= 28)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(user => (
+                        <UserCard key={user.id} user={user} />
+                    ))
+                }
+            </div>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\textbf{Perché le Keys sono Importanti:}
+
+\begin{lstlisting}[language=JavaScript, caption=Importanza delle keys]
+// Senza keys corrette, React può confondersi
+// nei riordinamenti
+
+function TodoList() {
+    const [todos, setTodos] = useState([
+        { id: 1, text: 'Primo' },
+        { id: 2, text: 'Secondo' },
+        { id: 3, text: 'Terzo' }
+    ]);
+
+    // Se riordini e usi index come key
+    // React potrebbe aggiornare l'elemento sbagliato
+
+    // ❌ Male - usa index
+    return (
+        <ul>
+            {todos.map((todo, index) => (
+                <li key={index}>
+                    <input type="checkbox" />
+                    {todo.text}
+                </li>
+            ))}
+        </ul>
+    );
+
+    // ✅ Bene - usa id univoco
+    return (
+        <ul>
+            {todos.map(todo => (
+                <li key={todo.id}>
+                    <input type="checkbox" />
+                    {todo.text}
+                </li>
+            ))}
+        </ul>
+    );
+}
+\end{lstlisting}
+
+\subsection{JSX Avanzato}
+
+\textbf{1. Fragments}
+
+Raggruppa elementi senza aggiungere nodi DOM:
+
+\begin{lstlisting}[language=JavaScript, caption=React Fragments]
+import { Fragment } from 'react';
+
+function Table() {
+    // ❌ Aggiunge un div extra nel DOM
+    return (
+        <div>
+            <td>Cella 1</td>
+            <td>Cella 2</td>
+        </div>
+    );
+
+    // ✅ Sintassi lunga
+    return (
+        <Fragment>
+            <td>Cella 1</td>
+            <td>Cella 2</td>
+        </Fragment>
+    );
+
+    // ✅ Sintassi corta (più comune)
+    return (
+        <>
+            <td>Cella 1</td>
+            <td>Cella 2</td>
+        </>
+    );
+
+    // ✅ Con key (necessario per liste)
+    return items.map(item => (
+        <Fragment key={item.id}>
+            <td>{item.name}</td>
+            <td>{item.value}</td>
+        </Fragment>
+    ));
+}
+\end{lstlisting}
+
+\textbf{2. Spread Props}
+
+\begin{lstlisting}[language=JavaScript, caption=Spread di props]
+function Button({ type = 'button', className, ...rest }) {
+    // Passa tutte le altre props al button
+    return (
+        <button
+            type={type}
+            className={`btn ${className}`}
+            {...rest}
+        />
+    );
+}
+
+// Uso
+function App() {
+    return (
+        <Button
+            onClick={() => console.log('Click')}
+            disabled
+            aria-label="Submit button"
+            data-testid="submit-btn"
+        >
+            Invia
+        </Button>
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Children come Function}
+
+\begin{lstlisting}[language=JavaScript, caption=Render Props pattern]
+function DataFetcher({ url, children }) {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                setData(data);
+                setLoading(false);
+            });
+    }, [url]);
+
+    // Children è una funzione
+    return children({ data, loading });
+}
+
+// Uso
+function App() {
+    return (
+        <DataFetcher url="/api/users">
+            {({ data, loading }) => (
+                loading ? <Spinner /> : <UserList users={data} />
+            )}
+        </DataFetcher>
+    );
+}
+\end{lstlisting}
+
+\section{Componenti Funzionali}
+
+I componenti funzionali sono il modo moderno e raccomandato di creare componenti React.
+
+\subsection{Anatomia di un Componente}
+
+\begin{lstlisting}[language=JavaScript, caption=Componente funzionale completo]
+// 1. Imports
+import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import './UserCard.css';
+
+// 2. Componente
+function UserCard({ user, onEdit, onDelete }) {
+    // 3. State locale
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // 4. Effects
+    useEffect(() => {
+        console.log('UserCard montato');
+        return () => console.log('UserCard smontato');
+    }, []);
+
+    // 5. Event handlers
+    const handleToggle = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    // 6. Computed values
+    const fullName = `${user.firstName} ${user.lastName}`;
+    const initials = `${user.firstName[0]}${user.lastName[0]}`;
+
+    // 7. Render
+    return (
+        <div className="user-card">
+            <div className="avatar">{initials}</div>
+
+            <div className="info">
+                <h3>{fullName}</h3>
+                <p>{user.email}</p>
+
+                {isExpanded && (
+                    <div className="details">
+                        <p>Ruolo: {user.role}</p>
+                        <p>Registrato: {user.registeredAt}</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="actions">
+                <button onClick={handleToggle}>
+                    {isExpanded ? 'Nascondi' : 'Mostra'}
+                </button>
+                <button onClick={() => onEdit(user.id)}>
+                    Modifica
+                </button>
+                <button onClick={() => onDelete(user.id)}>
+                    Elimina
+                </button>
+            </div>
+        </div>
+    );
+}
+
+// 8. PropTypes
+UserCard.propTypes = {
+    user: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        firstName: PropTypes.string.isRequired,
+        lastName: PropTypes.string.isRequired,
+        email: PropTypes.string.isRequired,
+        role: PropTypes.string,
+        registeredAt: PropTypes.string
+    }).isRequired,
+    onEdit: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired
+};
+
+// 9. Export
+export default UserCard;
+\end{lstlisting}
+
+\subsection{Props: Comunicazione tra Componenti}
+
+Props (properties) sono il meccanismo per passare dati dai componenti parent ai componenti child.
+
+\textbf{1. Props Base}
+
+\begin{lstlisting}[language=JavaScript, caption=Props fondamentali]
+// Parent component
+function App() {
+    const user = {
+        name: 'Mario Rossi',
+        age: 30,
+        email: 'mario@example.com'
+    };
+
+    return (
+        <div>
+            {/* Passaggio props */}
+            <Greeting name="Mario" />
+            <UserInfo user={user} />
+            <Button label="Click me" onClick={() => alert('Clicked!')} />
+        </div>
+    );
+}
+
+// Child components
+function Greeting({ name }) {
+    return <h1>Ciao, {name}!</h1>;
+}
+
+function UserInfo({ user }) {
+    return (
+        <div>
+            <p>Nome: {user.name}</p>
+            <p>Età: {user.age}</p>
+            <p>Email: {user.email}</p>
+        </div>
+    );
+}
+
+function Button({ label, onClick }) {
+    return <button onClick={onClick}>{label}</button>;
+}
+\end{lstlisting}
+
+\textbf{2. Props Destructuring}
+
+\begin{lstlisting}[language=JavaScript, caption=Destructuring di props]
+// ❌ Senza destructuring
+function UserCard(props) {
+    return (
+        <div>
+            <h3>{props.name}</h3>
+            <p>{props.email}</p>
+        </div>
+    );
+}
+
+// ✅ Con destructuring (raccomandato)
+function UserCard({ name, email }) {
+    return (
+        <div>
+            <h3>{name}</h3>
+            <p>{email}</p>
+        </div>
+    );
+}
+
+// ✅ Con valori di default
+function UserCard({
+    name = 'Guest',
+    email = 'No email',
+    role = 'user',
+    isActive = true
+}) {
+    return (
+        <div>
+            <h3>{name}</h3>
+            <p>{email}</p>
+            <span>{role}</span>
+            <span>{isActive ? 'Active' : 'Inactive'}</span>
+        </div>
+    );
+}
+
+// ✅ Rest props
+function Button({ children, className, ...rest }) {
+    return (
+        <button className={`btn ${className}`} {...rest}>
+            {children}
+        </button>
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Children Prop}
+
+\begin{lstlisting}[language=JavaScript, caption=Children prop]
+// Children come contenuto
+function Card({ children, title }) {
+    return (
+        <div className="card">
+            <h2>{title}</h2>
+            <div className="card-body">
+                {children}
+            </div>
+        </div>
+    );
+}
+
+// Uso
+function App() {
+    return (
+        <Card title="User Info">
+            <p>Nome: Mario</p>
+            <p>Email: mario@example.com</p>
+            <button>Contatta</button>
+        </Card>
+    );
+}
+
+// Children multipli
+function Layout({ header, sidebar, children, footer }) {
+    return (
+        <div className="layout">
+            <header>{header}</header>
+            <aside>{sidebar}</aside>
+            <main>{children}</main>
+            <footer>{footer}</footer>
+        </div>
+    );
+}
+
+// Uso
+function App() {
+    return (
+        <Layout
+            header={<Header />}
+            sidebar={<Sidebar />}
+            footer={<Footer />}
+        >
+            <h1>Contenuto principale</h1>
+            <p>Lorem ipsum...</p>
+        </Layout>
+    );
+}
+\end{lstlisting}
+
+\textbf{4. Callback Props}
+
+\begin{lstlisting}[language=JavaScript, caption=Props come callbacks]
+// Parent passa funzioni ai child
+function App() {
+    const [count, setCount] = useState(0);
+
+    const handleIncrement = () => {
+        setCount(count + 1);
+    };
+
+    const handleDecrement = () => {
+        setCount(count - 1);
+    };
+
+    const handleReset = () => {
+        setCount(0);
+    };
+
+    return (
+        <div>
+            <Display value={count} />
+            <Controls
+                onIncrement={handleIncrement}
+                onDecrement={handleDecrement}
+                onReset={handleReset}
+            />
+        </div>
+    );
+}
+
+function Display({ value }) {
+    return <h1>Contatore: {value}</h1>;
+}
+
+function Controls({ onIncrement, onDecrement, onReset }) {
+    return (
+        <div>
+            <button onClick={onDecrement}>-</button>
+            <button onClick={onReset}>Reset</button>
+            <button onClick={onIncrement}>+</button>
+        </div>
+    );
+}
+\end{lstlisting}
+
+\subsection{Composizione di Componenti}
+
+La composizione è il pattern principale per costruire UI complesse in React.
+
+\textbf{1. Composizione Base}
+
+\begin{lstlisting}[language=JavaScript, caption=Composizione semplice]
+// Componenti atomici
+function Avatar({ src, alt }) {
+    return <img src={src} alt={alt} className="avatar" />;
+}
+
+function UserName({ name }) {
+    return <h3 className="username">{name}</h3>;
+}
+
+function UserEmail({ email }) {
+    return <p className="email">{email}</p>;
+}
+
+// Componente composto
+function UserCard({ user }) {
+    return (
+        <div className="user-card">
+            <Avatar src={user.avatar} alt={user.name} />
+            <div>
+                <UserName name={user.name} />
+                <UserEmail email={user.email} />
+            </div>
+        </div>
+    );
+}
+
+// Lista di UserCard
+function UserList({ users }) {
+    return (
+        <div className="user-list">
+            {users.map(user => (
+                <UserCard key={user.id} user={user} />
+            ))}
+        </div>
+    );
+}
+\end{lstlisting}
+
+\textbf{2. Container/Presentational Pattern}
+
+\begin{lstlisting}[language=JavaScript, caption=Container e Presentational components]
+// Presentational Component (UI pura)
+function TodoListView({ todos, onToggle, onDelete }) {
+    return (
+        <ul className="todo-list">
+            {todos.map(todo => (
+                <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                />
+            ))}
+        </ul>
+    );
+}
+
+function TodoItem({ todo, onToggle, onDelete }) {
+    return (
+        <li className={todo.completed ? 'completed' : ''}>
+            <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
+            />
+            <span>{todo.text}</span>
+            <button onClick={() => onDelete(todo.id)}>Delete</button>
+        </li>
+    );
+}
+
+// Container Component (logica)
+function TodoListContainer() {
+    const [todos, setTodos] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchTodos().then(data => {
+            setTodos(data);
+            setLoading(false);
+        });
+    }, []);
+
+    const handleToggle = (id) => {
+        setTodos(todos.map(todo =>
+            todo.id === id
+                ? { ...todo, completed: !todo.completed }
+                : todo
+        ));
+    };
+
+    const handleDelete = (id) => {
+        setTodos(todos.filter(todo => todo.id !== id));
+    };
+
+    if (loading) return <Spinner />;
+
+    return (
+        <TodoListView
+            todos={todos}
+            onToggle={handleToggle}
+            onDelete={handleDelete}
+        />
+    );
+}
+\end{lstlisting}
+
+\textbf{3. Specializzazione}
+
+\begin{lstlisting}[language=JavaScript, caption=Componenti specializzati]
+// Componente generico
+function Dialog({ title, message, onClose, children }) {
+    return (
+        <div className="dialog">
+            <div className="dialog-header">
+                <h2>{title}</h2>
+                <button onClick={onClose}>×</button>
+            </div>
+            <div className="dialog-body">
+                {message && <p>{message}</p>}
+                {children}
+            </div>
+        </div>
+    );
+}
+
+// Componenti specializzati
+function WelcomeDialog({ onClose }) {
+    return (
+        <Dialog
+            title="Benvenuto"
+            message="Grazie per esserti registrato!"
+            onClose={onClose}
+        />
+    );
+}
+
+function ConfirmDialog({ title, message, onConfirm, onCancel }) {
+    return (
+        <Dialog title={title} message={message} onClose={onCancel}>
+            <div className="dialog-actions">
+                <button onClick={onCancel}>Annulla</button>
+                <button onClick={onConfirm}>Conferma</button>
+            </div>
+        </Dialog>
+    );
+}
+
+function AlertDialog({ message, onClose }) {
+    return (
+        <Dialog title="Attenzione" message={message} onClose={onClose}>
+            <button onClick={onClose}>OK</button>
+        </Dialog>
+    );
+}
+\end{lstlisting}
+
+\textbf{4. Compound Components}
+
+\begin{lstlisting}[language=JavaScript, caption=Compound Components pattern]
+// Tabs compound component
+function Tabs({ children, defaultActive = 0 }) {
+    const [activeIndex, setActiveIndex] = useState(defaultActive);
+
+    return (
+        <div className="tabs">
+            {React.Children.map(children, (child, index) => {
+                return React.cloneElement(child, {
+                    isActive: index === activeIndex,
+                    onClick: () => setActiveIndex(index),
+                    index
+                });
+            })}
+        </div>
+    );
+}
+
+function Tab({ label, children, isActive, onClick }) {
+    return (
+        <div className={`tab ${isActive ? 'active' : ''}`}>
+            <button onClick={onClick}>{label}</button>
+            {isActive && <div className="tab-content">{children}</div>}
+        </div>
+    );
+}
+
+// Uso
+function App() {
+    return (
+        <Tabs defaultActive={1}>
+            <Tab label="Tab 1">
+                <p>Contenuto Tab 1</p>
+            </Tab>
+            <Tab label="Tab 2">
+                <p>Contenuto Tab 2</p>
+            </Tab>
+            <Tab label="Tab 3">
+                <p>Contenuto Tab 3</p>
+            </Tab>
+        </Tabs>
+    );
+}
+\end{lstlisting}
+
+\section{Component Tree}
+
+\subsection{Diagramma Component Tree}
+
+Esempio di albero componenti per un'applicazione TODO:
+
+\begin{verbatim}
+App
+├── Header
+│   ├── Logo
+│   └── UserMenu
+│       ├── Avatar
+│       └── Dropdown
+│           ├── MenuItem (Profile)
+│           ├── MenuItem (Settings)
+│           └── MenuItem (Logout)
+│
+├── TodoApp
+│   ├── TodoInput
+│   │   ├── Input
+│   │   └── Button (Add)
+│   │
+│   ├── FilterBar
+│   │   ├── FilterButton (All)
+│   │   ├── FilterButton (Active)
+│   │   └── FilterButton (Completed)
+│   │
+│   ├── TodoList
+│   │   ├── TodoItem (x5)
+│   │   │   ├── Checkbox
+│   │   │   ├── Text
+│   │   │   └── Button (Delete)
+│   │   └── EmptyState (se vuoto)
+│   │
+│   └── TodoStats
+│       ├── Stat (Total)
+│       ├── Stat (Completed)
+│       └── Stat (Pending)
+│
+└── Footer
+    ├── Copyright
+    └── Links
+        ├── Link (Privacy)
+        └── Link (Terms)
+\end{verbatim}
+
+\subsection{Implementazione Component Tree}
+
+\begin{lstlisting}[language=JavaScript, caption=Implementazione albero completo]
+// App - Root component
+function App() {
+    const [user, setUser] = useState({
+        name: 'Mario Rossi',
+        avatar: '/avatar.jpg'
+    });
+
+    return (
+        <div className="app">
+            <Header user={user} onLogout={() => setUser(null)} />
+            <TodoApp />
+            <Footer />
+        </div>
+    );
+}
+
+// Header component
+function Header({ user, onLogout }) {
+    return (
+        <header className="header">
+            <Logo />
+            <UserMenu user={user} onLogout={onLogout} />
+        </header>
+    );
+}
+
+function Logo() {
+    return <div className="logo">📝 TodoApp</div>;
+}
+
+function UserMenu({ user, onLogout }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="user-menu">
+            <Avatar src={user.avatar} onClick={() => setIsOpen(!isOpen)} />
+            {isOpen && (
+                <Dropdown>
+                    <MenuItem label="Profile" onClick={() => {}} />
+                    <MenuItem label="Settings" onClick={() => {}} />
+                    <MenuItem label="Logout" onClick={onLogout} />
+                </Dropdown>
+            )}
+        </div>
+    );
+}
+
+// TodoApp component
+function TodoApp() {
+    const [todos, setTodos] = useState([]);
+    const [filter, setFilter] = useState('all');
+
+    const addTodo = (text) => {
+        setTodos([...todos, {
+            id: Date.now(),
+            text,
+            completed: false
+        }]);
+    };
+
+    const toggleTodo = (id) => {
+        setTodos(todos.map(todo =>
+            todo.id === id
+                ? { ...todo, completed: !todo.completed }
+                : todo
+        ));
+    };
+
+    const deleteTodo = (id) => {
+        setTodos(todos.filter(todo => todo.id !== id));
+    };
+
+    const filteredTodos = todos.filter(todo => {
+        if (filter === 'active') return !todo.completed;
+        if (filter === 'completed') return todo.completed;
+        return true;
+    });
+
+    return (
+        <main className="todo-app">
+            <TodoInput onAdd={addTodo} />
+            <FilterBar filter={filter} onFilterChange={setFilter} />
+            <TodoList
+                todos={filteredTodos}
+                onToggle={toggleTodo}
+                onDelete={deleteTodo}
+            />
+            <TodoStats todos={todos} />
+        </main>
+    );
+}
+
+// Componenti foglia (leaf components)
+function TodoInput({ onAdd }) {
+    const [text, setText] = useState('');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (text.trim()) {
+            onAdd(text);
+            setText('');
+        }
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="todo-input">
+            <Input
+                value={text}
+                onChange={setText}
+                placeholder="Nuovo task..."
+            />
+            <Button type="submit">Aggiungi</Button>
+        </form>
+    );
+}
+
+function TodoList({ todos, onToggle, onDelete }) {
+    if (todos.length === 0) {
+        return <EmptyState />;
+    }
+
+    return (
+        <ul className="todo-list">
+            {todos.map(todo => (
+                <TodoItem
+                    key={todo.id}
+                    todo={todo}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                />
+            ))}
+        </ul>
+    );
+}
+
+function TodoStats({ todos }) {
+    const total = todos.length;
+    const completed = todos.filter(t => t.completed).length;
+    const pending = total - completed;
+
+    return (
+        <div className="todo-stats">
+            <Stat label="Totale" value={total} />
+            <Stat label="Completati" value={completed} />
+            <Stat label="Da fare" value={pending} />
+        </div>
+    );
+}
+\end{lstlisting}
+
+\section{Best Practices}
+
+\subsection{1. Naming e Organizzazione}
+
+\begin{lstlisting}[language=JavaScript, caption=Convenzioni di naming]
+// ✅ Componenti: PascalCase
+function UserProfile() {}
+function TodoList() {}
+
+// ✅ File: stesso nome del componente
+// UserProfile.jsx
+// TodoList.jsx
+
+// ✅ Props: camelCase descrittivo
+function Button({ onClick, isDisabled, primaryColor }) {}
+
+// ✅ Event handlers: handle + Event
+const handleClick = () => {};
+const handleSubmit = () => {};
+const handleInputChange = () => {};
+
+// ✅ Boolean props: is/has/should prefix
+const isLoading = false;
+const hasError = true;
+const shouldRender = true;
+
+// ❌ Evitare nomi generici
+function Component() {} // Troppo generico
+function MyComponent() {} // "My" non aggiunge informazioni
+\end{lstlisting}
+
+\subsection{2. Componenti Piccoli e Focalizzati}
+
+\begin{lstlisting}[language=JavaScript, caption=Single Responsibility]
+// ❌ Componente che fa troppo
+function UserDashboard() {
+    // 100+ righe di logica mista
+    // Fetching dati, gestione form, rendering complesso
+}
+
+// ✅ Dividi responsabilità
+function UserDashboard() {
+    return (
+        <div>
+            <UserStats />
+            <UserActivity />
+            <UserSettings />
+        </div>
+    );
+}
+
+function UserStats() {
+    // Solo statistiche
+}
+
+function UserActivity() {
+    // Solo attività recente
+}
+
+function UserSettings() {
+    // Solo impostazioni
+}
+\end{lstlisting}
+
+\subsection{3. Props Validation}
+
+\begin{lstlisting}[language=JavaScript, caption=PropTypes per validazione]
+import PropTypes from 'prop-types';
+
+function UserCard({ user, onEdit, onDelete, isSelected }) {
+    // ...
+}
+
+UserCard.propTypes = {
+    user: PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        name: PropTypes.string.isRequired,
+        email: PropTypes.string.isRequired,
+        avatar: PropTypes.string,
+        role: PropTypes.oneOf(['admin', 'user', 'guest'])
+    }).isRequired,
+    onEdit: PropTypes.func.isRequired,
+    onDelete: PropTypes.func,
+    isSelected: PropTypes.bool
+};
+
+UserCard.defaultProps = {
+    isSelected: false,
+    onDelete: () => {}
+};
+\end{lstlisting}
+
+\subsection{4. Evitare Prop Drilling Eccessivo}
+
+\begin{lstlisting}[language=JavaScript, caption=Problema prop drilling]
+// ❌ Prop drilling eccessivo
+function App() {
+    const [theme, setTheme] = useState('light');
+    return <Layout theme={theme} setTheme={setTheme} />;
+}
+
+function Layout({ theme, setTheme }) {
+    return <Sidebar theme={theme} setTheme={setTheme} />;
+}
+
+function Sidebar({ theme, setTheme }) {
+    return <ThemeToggle theme={theme} setTheme={setTheme} />;
+}
+
+function ThemeToggle({ theme, setTheme }) {
+    return <button onClick={() => setTheme(/* ... */)}>Toggle</button>;
+}
+
+// ✅ Usa Context (vedi capitoli successivi)
+const ThemeContext = createContext();
+
+function App() {
+    const [theme, setTheme] = useState('light');
+    return (
+        <ThemeContext.Provider value={{ theme, setTheme }}>
+            <Layout />
+        </ThemeContext.Provider>
+    );
+}
+
+function ThemeToggle() {
+    const { theme, setTheme } = useContext(ThemeContext);
+    return <button onClick={() => setTheme(/* ... */)}>Toggle</button>;
+}
+\end{lstlisting}
+
+\section{Conclusione}
+
+In questo capitolo abbiamo coperto:
+
+\begin{itemize}
+    \item Sintassi JSX completa e avanzata
+    \item Componenti funzionali moderni
+    \item Props e comunicazione tra componenti
+    \item Patterns di composizione
+    \item Component tree e architettura
+    \item Best practices fondamentali
+\end{itemize}
+
+Ora sei pronto per approfondire props, state e la gestione dei dati!
