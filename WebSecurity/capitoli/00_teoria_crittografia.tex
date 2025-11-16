@@ -1,0 +1,464 @@
+% Espansione Teorica per Web Security - Crittografia e Fondamenti
+% Da integrare nel capitolo 01_introduzione_security.tex e 08_crittografia.tex
+
+\section{Fondamenti Matematici della Crittografia}
+
+\subsection{Teoria dell'Informazione di Shannon}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Definizione: Entropia]
+L'\textbf{entropia} di una sorgente di informazione $X$ misura l'incertezza media:
+
+\[
+H(X) = -\sum_{i=1}^{n} p(x_i) \log_2 p(x_i) \text{ bit}
+\]
+
+Dove $p(x_i)$ è la probabilità dell'evento $x_i$.
+
+\textbf{Interpretazione}: Numero medio di bit necessari per codificare $X$ in modo ottimale.
+\end{tcolorbox}
+
+\textbf{Esempio: Password Entropy}
+
+\begin{lstlisting}[caption=Calcolo Entropia Password]
+# Password di 8 caratteri lowercase
+Alfabeto = 26 lettere
+Spazio possibilità = 26^8 = 208,827,064,576
+
+Entropia = log2(26^8) = 8 * log2(26) ≈ 37.6 bit
+
+# Password di 8 caratteri (upper, lower, numeri, simboli)
+Alfabeto = 26 + 26 + 10 + 32 = 94 caratteri
+Spazio = 94^8 ≈ 6.1 × 10^15
+
+Entropia = log2(94^8) ≈ 52.5 bit
+
+# Differenza: 2^52.5 / 2^37.6 ≈ 28,000x più sicuro!
+\end{lstlisting}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Teorema: Perfect Secrecy (Shannon, 1949)}
+\textbf{Teorema}: Un cifrario ha \textbf{perfect secrecy} (sicurezza perfetta) se:
+
+\[
+P(M = m | C = c) = P(M = m) \quad \forall m, c
+\]
+
+Ovvero: osservare il ciphertext $c$ non fornisce alcuna informazione sul plaintext $m$.
+
+\textbf{Condizioni necessarie e sufficienti}:
+\begin{enumerate}
+    \item Chiave lunga almeno quanto il messaggio: $|K| \geq |M|$
+    \item Ogni chiave deve essere usata con uguale probabilità
+    \item Ogni chiave deve essere usata una sola volta (one-time)
+\end{enumerate}
+
+\textbf{Esempio}: One-Time Pad (Vernam Cipher)
+\end{tcolorbox}
+
+\subsection{Crittografia Simmetrica: Fondamenti}
+
+\subsubsection{Cifrari a Flusso vs Cifrari a Blocchi}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Proprietà} & \textbf{Stream Cipher} & \textbf{Block Cipher} \\
+\hline
+\hline
+Unità elaborazione & 1 bit/byte & Blocco (64-128 bit) \\
+\hline
+Velocità & Molto veloce & Moderata \\
+\hline
+Propagazione errori & Locale (1 bit) & Intero blocco \\
+\hline
+Parallelizzazione & Difficile & Facile (ECB, CTR) \\
+\hline
+Esempi & RC4, ChaCha20 & AES, 3DES \\
+\hline
+Sicurezza & Richiede nonce unico & Mode of operation \\
+\hline
+\end{tabular}
+\caption{Confronto Stream vs Block Ciphers}
+\end{table}
+
+\subsubsection{Advanced Encryption Standard (AES)}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=AES: Struttura Matematica]
+AES opera su blocchi di 128 bit (16 byte) organizzati in una matrice $4 \times 4$ chiamata \textbf{State}:
+
+\[
+\text{State} = \begin{bmatrix}
+b_0 & b_4 & b_8 & b_{12} \\
+b_1 & b_5 & b_9 & b_{13} \\
+b_2 & b_6 & b_{10} & b_{14} \\
+b_3 & b_7 & b_{11} & b_{15}
+\end{bmatrix}
+\]
+
+\textbf{Operazioni per Round}:
+
+\begin{enumerate}
+    \item \textbf{SubBytes}: Sostituzione non lineare via S-box
+    \[
+    S(x) = f(x^{-1}) \text{ in } GF(2^8)
+    \]
+    Complessità: $O(1)$ per byte (lookup table)
+
+    \item \textbf{ShiftRows}: Permutazione ciclica delle righe
+    \[
+    \text{Row } i \rightarrow \text{left shift di } i \text{ posizioni}
+    \]
+
+    \item \textbf{MixColumns}: Moltiplicazione matriciale in $GF(2^8)$
+    \[
+    \begin{bmatrix} s'_0 \\ s'_1 \\ s'_2 \\ s'_3 \end{bmatrix} =
+    \begin{bmatrix}
+    02 & 03 & 01 & 01 \\
+    01 & 02 & 03 & 01 \\
+    01 & 01 & 02 & 03 \\
+    03 & 01 & 01 & 02
+    \end{bmatrix}
+    \begin{bmatrix} s_0 \\ s_1 \\ s_2 \\ s_3 \end{bmatrix}
+    \]
+
+    \item \textbf{AddRoundKey}: XOR con chiave di round
+    \[
+    \text{State} \oplus \text{RoundKey}
+    \]
+\end{enumerate}
+
+\textbf{Numero di Round}:
+\begin{itemize}
+    \item AES-128: 10 rounds
+    \item AES-192: 12 rounds
+    \item AES-256: 14 rounds
+\end{itemize}
+
+\textbf{Complessità}:
+\begin{itemize}
+    \item Encryption: $O(r \cdot n)$ dove $r$ = rounds, $n$ = blocchi
+    \item Brute-force: $O(2^{k})$ dove $k$ = lunghezza chiave
+    \item Best attack noto (AES-256): $2^{254.4}$ (impraticabile)
+\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Mode of Operation: Sicurezza Teorica}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Vulnerabilità: ECB Mode]
+\textbf{Electronic Codebook (ECB)}:
+\[
+C_i = E_K(P_i)
+\]
+
+\textbf{Problema}: Blocchi identici producono ciphertext identici!
+
+\textbf{Attacco}: Frequency analysis e pattern recognition
+
+\textbf{Esempio pratico}:
+\begin{lstlisting}
+Plaintext:  "HELLO HELLO WORLD WORLD"
+Blocks:     [HELLO] [HELLO] [WORLD] [WORLD]
+ECB cipher: [X5f2a] [X5f2a] [Y9b3c] [Y9b3c]
+                ↑       ↑       ↑       ↑
+            Pattern visibile! Attaccabile!
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=Sicurezza: CBC e GCM Mode]
+\textbf{Cipher Block Chaining (CBC)}:
+\[
+\begin{cases}
+C_0 = \text{IV} \quad (\text{Initialization Vector}) \\
+C_i = E_K(P_i \oplus C_{i-1})
+\end{cases}
+\]
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Blocchi identici → ciphertext diversi
+    \item IV randomizzato → sicurezza IND-CPA
+    \item Ampiamente supportato
+\end{itemize}
+
+\textbf{Svantaggi}:
+\begin{itemize}
+    \item Non parallelizzabile (encryption)
+    \item Nessuna autenticazione
+    \item Padding oracle attacks
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Galois/Counter Mode (GCM)} — Recommended:
+\[
+\begin{cases}
+CTR_i = E_K(\text{nonce} || \text{counter}_i) \\
+C_i = P_i \oplus CTR_i \\
+\text{Tag} = \text{GHASH}(C, \text{AAD})
+\end{cases}
+\]
+
+\textbf{Vantaggi}:
+\begin{itemize}
+    \item Parallelizzabile: $O(n/p)$ con $p$ processori
+    \item AEAD (Authenticated Encryption with Associated Data)
+    \item Resistente a padding oracles
+    \item Performance eccellente con AES-NI
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Crittografia Asimmetrica: RSA}
+
+\subsubsection{Fondamenti Matematici}
+
+\begin{tcolorbox}[colback=purple!10, colframe=purple!60, title=Teorema di Eulero]
+\textbf{Teorema}: Se $\gcd(a, n) = 1$, allora:
+\[
+a^{\phi(n)} \equiv 1 \pmod{n}
+\]
+
+Dove $\phi(n)$ è la funzione totiente di Eulero:
+\[
+\phi(n) = n \prod_{p | n} \left(1 - \frac{1}{p}\right)
+\]
+
+Per $n = p \cdot q$ (prodotto di due primi):
+\[
+\phi(n) = (p-1)(q-1)
+\]
+\end{tcolorbox}
+
+\subsubsection{Algoritmo RSA}
+
+\begin{tcolorbox}[colback=cyan!10, colframe=cyan!60, title=RSA: Key Generation}
+\textbf{Input}: Lunghezza chiave $k$ (es: 2048 bit)
+
+\textbf{Output}: Chiave pubblica $(n, e)$, chiave privata $(n, d)$
+
+\textbf{Algoritmo}:
+\begin{enumerate}
+    \item Scegli primi casuali $p, q$ di $k/2$ bit
+    \item Calcola $n = p \cdot q$ e $\phi(n) = (p-1)(q-1)$
+    \item Scegli $e$ coprimo con $\phi(n)$ (tipicamente $e = 65537$)
+    \item Calcola $d \equiv e^{-1} \pmod{\phi(n)}$ (Extended Euclidean Algorithm)
+    \item Distruggi $p, q, \phi(n)$
+\end{enumerate}
+
+\textbf{Encryption}: $c = m^e \mod n$
+
+\textbf{Decryption}: $m = c^d \mod n$
+
+\textbf{Correttezza}:
+\begin{align*}
+c^d &= (m^e)^d = m^{ed} \pmod{n} \\
+ed &\equiv 1 \pmod{\phi(n)} \implies ed = k\phi(n) + 1 \\
+m^{ed} &= m^{k\phi(n)+1} = (m^{\phi(n)})^k \cdot m \equiv 1^k \cdot m = m \pmod{n}
+\end{align*}
+\end{tcolorbox}
+
+\textbf{Complessità Computazionale}:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Operazione} & \textbf{Complessità} & \textbf{Tempo (2048-bit)} \\
+\hline
+\hline
+Key Generation & $O(k^4)$ & ~100ms \\
+\hline
+Encryption & $O(k^3)$ & ~0.1ms \\
+\hline
+Decryption & $O(k^3)$ & ~5ms \\
+\hline
+Fattorizzazione (GNFS) & $O(e^{\sqrt[3]{64/9 \cdot \ln n \cdot (\ln \ln n)^2}})$ & $10^{20}$ anni \\
+\hline
+\end{tabular}
+\caption{Complessità RSA e sicurezza}
+\end{table}
+
+\begin{tcolorbox}[colback=yellow!10, colframe=orange!60, title=Vulnerabilità: Textbook RSA]
+\textbf{Problemi del RSA "puro"}:
+\begin{enumerate}
+    \item \textbf{Deterministico}: $m$ identici → $c$ identici
+    \item \textbf{Malleabile}: $c' = c \cdot 2^e \implies m' = 2m$
+    \item \textbf{Piccoli esponenti}: Se $e$ piccolo e $m^e < n$, allora $m = \sqrt[e]{c}$
+\end{enumerate}
+
+\textbf{Soluzione}: Padding schemes (OAEP, PSS)
+
+\textbf{OAEP (Optimal Asymmetric Encryption Padding)}:
+\begin{lstlisting}[caption=RSA-OAEP Structure]
+Plaintext M with random seed r:
+DB = Hash(L) || PS || 0x01 || M
+dbMask = MGF(maskedDB, |DB|)
+maskedDB = DB ⊕ dbMask
+seedMask = MGF(maskedDB, |seed|)
+maskedSeed = seed ⊕ seedMask
+EM = 0x00 || maskedSeed || maskedDB
+C = EM^e mod n
+\end{lstlisting}
+
+Garantisce: IND-CCA2 security (non malleability).
+\end{tcolorbox}
+
+\subsection{Funzioni Hash Crittografiche}
+
+\begin{tcolorbox}[colback=blue!10, colframe=blue!60, title=Definizione: Funzione Hash Crittografica]
+Una funzione $H: \{0,1\}^* \rightarrow \{0,1\}^n$ è \textbf{crittograficamente sicura} se soddisfa:
+
+\begin{enumerate}
+    \item \textbf{Preimage Resistance}:
+    \[
+    \text{Dato } h, \text{ difficile trovare } m : H(m) = h
+    \]
+    Complessità attacco: $O(2^n)$
+
+    \item \textbf{Second Preimage Resistance}:
+    \[
+    \text{Dato } m_1, \text{ difficile trovare } m_2 \neq m_1 : H(m_1) = H(m_2)
+    \]
+    Complessità: $O(2^n)$
+
+    \item \textbf{Collision Resistance}:
+    \[
+    \text{Difficile trovare } m_1 \neq m_2 : H(m_1) = H(m_2)
+    \]
+    Complessità: $O(2^{n/2})$ (Birthday Paradox)
+\end{enumerate}
+\end{tcolorbox}
+
+\subsubsection{Birthday Attack}
+
+\begin{tcolorbox}[colback=red!10, colframe=red!60, title=Teorema: Birthday Paradox]
+\textbf{Problema}: In un gruppo di $k$ persone, qual è la probabilità che due abbiano lo stesso compleanno?
+
+\textbf{Risultato controintuitivo}: Con $k = 23$, $P \approx 50\%$!
+
+\textbf{Generalizzazione per hash}:
+
+Dato hash di $n$ bit, per trovare una collisione con probabilità 50\%:
+\[
+k \approx 1.17 \sqrt{2^n} = 1.17 \cdot 2^{n/2}
+\]
+
+\textbf{Esempi}:
+\begin{itemize}
+    \item MD5 (128 bit): $2^{64} \approx 10^{19}$ hash → fattibile!
+    \item SHA-1 (160 bit): $2^{80} \approx 10^{24}$ hash → borderline
+    \item SHA-256 (256 bit): $2^{128} \approx 10^{38}$ hash → sicuro
+    \item SHA-512 (512 bit): $2^{256}$ hash → overkill
+\end{itemize}
+
+\textbf{Impatto pratico}:
+\begin{lstlisting}
+Attacco a MD5:
+- Costo computazionale: ~$75,000 (2025, Google Cloud)
+- Tempo: ~4-5 ore con GPU cluster
+- Risultato: Collision trovata!
+
+Implicazioni:
+✗ Non usare MD5 per certificati digitali
+✗ Non usare MD5 per integrity checking critico
+✓ Usare SHA-256 o superiore
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Modelli di Minaccia e Security Analysis}
+
+\subsubsection{STRIDE Threat Model}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{6cm}|l|}
+\hline
+\textbf{Minaccia} & \textbf{Descrizione} & \textbf{Proprietà} \\
+\hline
+\hline
+\textbf{S}poofing & Impersonare utente/sistema & Autenticazione \\
+\hline
+\textbf{T}ampering & Modificare dati senza autorizzazione & Integrità \\
+\hline
+\textbf{R}epudiation & Negare azioni compiute & Non-ripudio \\
+\hline
+\textbf{I}nformation Disclosure & Esporre informazioni sensibili & Confidenzialità \\
+\hline
+\textbf{D}enial of Service & Rendere servizio non disponibile & Disponibilità \\
+\hline
+\textbf{E}levation of Privilege & Ottenere permessi non autorizzati & Autorizzazione \\
+\hline
+\end{tabular}
+\caption{STRIDE Threat Model (Microsoft)}
+\end{table}
+
+\subsubsection{CIA Triad: Fondamento della Sicurezza}
+
+\begin{tcolorbox}[colback=green!10, colframe=green!60, title=CIA Triad]
+\begin{itemize}
+    \item \textbf{C}onfidentiality (Riservatezza):
+    \[
+    \forall \text{ attaccante } A: P(A \text{ legge } M) = \epsilon
+    \]
+    Tecnologie: Encryption, Access Control, VPN
+
+    \item \textbf{I}ntegrity (Integrità):
+    \[
+    P(\text{modifica non autorizzata}) = 0
+    \]
+    Tecnologie: Hash, HMAC, Digital Signatures, Checksums
+
+    \item \textbf{A}vailability (Disponibilità):
+    \[
+    \text{Uptime} = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}} \geq 99.9\%
+    \]
+    Tecnologie: Redundancy, Load Balancing, DDoS Protection
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Teoremi Fondamentali di Sicurezza}
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!60, title=Teorema: Kerckhoffs's Principle]
+\textbf{Teorema} (1883): La sicurezza di un sistema crittografico deve dipendere solo dalla segretezza della chiave, non dalla segretezza dell'algoritmo.
+
+\textbf{Formalmente}:
+\[
+\text{Security}(S) = f(K) \quad \text{e non} \quad f(A, K)
+\]
+
+Dove:
+\begin{itemize}
+    \item $S$ = sistema crittografico
+    \item $K$ = chiave segreta
+    \item $A$ = algoritmo (pubblico)
+\end{itemize}
+
+\textbf{Implicazioni pratiche}:
+\begin{itemize}
+    \item ✗ "Security by obscurity" è inefficace
+    \item ✓ Algoritmi pubblici (AES, RSA) → peer review
+    \item ✓ Chiavi lunghe e casuali
+    \item ✓ Rotazione chiavi periodica
+\end{itemize}
+\end{tcolorbox}
+
+\section*{Conclusione}
+
+I fondamenti teorici della sicurezza informatica si basano su:
+
+\begin{itemize}
+    \item \textbf{Teoria dell'informazione}: Entropia, perfect secrecy
+    \item \textbf{Teoria dei numeri}: RSA, DH, curve ellittiche
+    \item \textbf{Complessità computazionale}: Problemi difficili (fattorizzazione, logaritmo discreto)
+    \item \textbf{Probabilità}: Birthday attack, collision resistance
+    \item \textbf{Modelli formali}: STRIDE, CIA triad, threat modeling
+\end{itemize}
+
+La sicurezza non è un prodotto, ma un processo continuo che richiede:
+\begin{enumerate}
+    \item Comprensione profonda della teoria
+    \item Applicazione corretta delle primitive crittografiche
+    \item Analisi sistematica delle minacce
+    \item Verifica e testing continui
+\end{enumerate}
+
+Questi principi teorici saranno applicati nei capitoli successivi per costruire sistemi web sicuri.
