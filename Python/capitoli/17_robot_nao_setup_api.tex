@@ -3,9 +3,11 @@
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Preparazione ambiente di sviluppo e dipendenze.
-- Connessione sicura al robot e gestione rete.
-- Struttura di progetto per script e demo.
+\begin{itemize}
+  \item Preparazione ambiente di sviluppo e dipendenze.
+  \item Connessione sicura al robot e gestione rete.
+  \item Struttura di progetto per script e demo.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -44,15 +46,17 @@ import os, qi
 HOST = os.getenv("NAO_HOST", "nao.local")
 PORT = int(os.getenv("NAO_PORT", "9559"))
 
-def get_session():
+def getSession():
     s = qi.Session()
     s.connect(f"tcp://{HOST}:{PORT}")
     return s
 
-session = get_session()
+session = getSession()
 tts = session.service("ALTextToSpeech")
 tts.say("Configurazione caricata da ENV")
 \end{lstlisting}
 
-\textbf{Eccezioni e retry}: implementare un semplice \emph{retry} con backoff se la connessione fallisce; usare \texttt{time.sleep} e un numero massimo di tentativi.
+\begin{itemize}
+  \item \textbf{Eccezioni e retry}: implementare un semplice \emph{retry} con backoff se la connessione fallisce; usare \texttt{time.sleep} e un numero massimo di tentativi.
+\end{itemize}
 \end{tcolorbox}

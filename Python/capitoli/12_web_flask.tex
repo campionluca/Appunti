@@ -40,9 +40,11 @@ def home():
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \texttt{Flask(\_\_name\_\_)} crea l'app; \texttt{@app.route} definisce una route.
-- Separare creazione app in factory (\texttt{create\_app}) per testing/configurazioni.
-- Avviare con CLI \texttt{flask}; gestire segreti/config via variabili d'ambiente.
+\begin{itemize}
+  \item \texttt{Flask(\_\_name\_\_)} crea l'app; \texttt{@app.route} definisce una route.
+  \item Separare creazione app in factory (\texttt{create\_app}) per testing/configurazioni.
+  \item Avviare con CLI \texttt{flask}; gestire segreti/config via variabili d'ambiente.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Parametri}
@@ -55,9 +57,11 @@ def echo():
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- I parametri query si leggono da \texttt{request.args}; validare e sanificare input.
-- Usare metodi HTTP corretti (GET per lettura, POST per invio dati).
-- Gestire errori e codici di risposta appropriati (400/404/500).
+\begin{itemize}
+  \item I parametri query si leggono da \texttt{request.args}; validare e sanificare input.
+  \item Usare metodi HTTP corretti (GET per lettura, POST per invio dati).
+  \item Gestire errori e codici di risposta appropriati (400/404/500).
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Template}
@@ -69,16 +73,20 @@ def page():
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \texttt{render\_template} usa Jinja2: separa presentazione dalla logica.
-- Passare variabili al template e evitare concatenazioni manuali di HTML.
-- Proteggere da XSS/CSRF; usare form e token sicuri.
+\begin{itemize}
+  \item \texttt{render\_template} usa Jinja2: separa presentazione dalla logica.
+  \item Passare variabili al template e evitare concatenazioni manuali di HTML.
+  \item Proteggere da XSS/CSRF; usare form e token sicuri.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
-- Micro API per servizi interni.
-- Piccoli siti con template dinamici.
-- Dashboard leggere con form e validazioni.
-- Prototipi rapidi di microservizi.
+\begin{itemize}
+  \item Micro API per servizi interni.
+  \item Piccoli siti con template dinamici.
+  \item Dashboard leggere con form e validazioni.
+  \item Prototipi rapidi di microservizi.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Esercizi}
@@ -95,10 +103,12 @@ Hai definito una piccola app Flask con rotte e template.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Microservizi e API interne.
-- Siti dinamici con template.
-- Dashboard leggere con form e validazioni.
-- Prototipi rapidi integrati con DB/servizi.
+\begin{itemize}
+  \item Microservizi e API interne.
+  \item Siti dinamici con template.
+  \item Dashboard leggere con form e validazioni.
+  \item Prototipi rapidi integrati con DB/servizi.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}

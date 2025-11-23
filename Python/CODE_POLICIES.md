@@ -26,13 +26,13 @@
 ### Stile del Codice
 ```python
 # Esempio di stile preferito
-def calculate_total(items: list[dict], tax_rate: float = 0.2) -> float:
+def calculateTotal(items: list[dict], taxRate: float = 0.2) -> float:
     """Calculate total with tax."""
     if not items:
         return 0.0
 
     subtotal = sum(item["price"] for item in items)
-    total = subtotal * (1 + tax_rate)
+    total = subtotal * (1 + taxRate)
 
     return round(total, 2)
 
@@ -40,17 +40,17 @@ def calculate_total(items: list[dict], tax_rate: float = 0.2) -> float:
 class ShoppingCart:
     """Shopping cart implementation."""
 
-    def __init__(self, user_id: str) -> None:
-        self.user_id = user_id
+    def __init__(self, userId: str) -> None:
+        self.userId = userId
         self.items: list[dict] = []
 
-    def add_item(self, item: dict) -> None:
+    def addItem(self, item: dict) -> None:
         """Add item to cart."""
         self.items.append(item)
 ```
 
 ### Regole Generali
-- [ ] Seguire PEP 8 (Style Guide for Python Code)
+- [ ] Seguire PEP 8 ove compatibile con convenzione locale camelCase
 - [ ] Usare type hints (PEP 484)
 - [ ] Preferire list comprehension a map/filter
 - [ ] Usare f-strings per formattazione (Python 3.6+)
@@ -61,17 +61,17 @@ class ShoppingCart:
 ## Convenzioni di Nomenclatura
 
 ### Variabili e Funzioni
-- **Variabili**: `snake_case` - Esempio: `user_name`, `total_count`
+- **Variabili**: `camelCase` - Esempio: `userName`, `totalCount`
 - **Costanti**: `UPPER_SNAKE_CASE` - Esempio: `MAX_SIZE`, `API_KEY`
-- **Funzioni**: `snake_case` - Esempio: `calculate_total()`, `get_user_by_id()`
-- **Private**: `_leading_underscore` - Esempio: `_internal_method()`
+- **Funzioni**: `camelCase` - Esempio: `calculateTotal()`, `getUserById()`
+- **Private**: `_leading_underscore` - Esempio: `_internalMethod()`
 - **Dunder**: `__double_underscore__` - Solo per metodi speciali
 
 ### Classi e Moduli
 - **Classi**: `PascalCase` - Esempio: `UserManager`, `HttpClient`
 - **Exceptions**: `PascalCase` con suffisso Error - Esempio: `ValidationError`
-- **Moduli**: `snake_case` - Esempio: `user_service.py`, `data_processor.py`
-- **Packages**: `snake_case` - Esempio: `my_package`
+- **Moduli**: `camelCase` - Esempio: `userService.py`, `dataProcessor.py`
+- **Packages**: `camelCase` - Esempio: `myPackage`
 
 ### Type Variables
 - **Type vars**: `PascalCase` - Esempio: `T`, `KT`, `VT`
@@ -89,9 +89,9 @@ This module provides functionality for creating, updating, and managing
 user accounts in the system.
 
 Example:
-    >>> from user_manager import UserManager
+    >>> from userManager import UserManager
     >>> manager = UserManager()
-    >>> user = manager.create_user("john@example.com")
+    >>> user = manager.createUser("john@example.com")
 """
 
 from __future__ import annotations
@@ -143,7 +143,7 @@ class UserManager:
         self.config = config
         self._cache: dict[str, User] = {}
 
-    def get_user(self, user_id: str) -> Optional[User]:
+    def getUser(self, userId: str) -> Optional[User]:
         """
         Retrieve user by ID.
 
@@ -159,12 +159,12 @@ class UserManager:
         # Implementation
         pass
 
-    def _internal_method(self) -> None:
+    def _internalMethod(self) -> None:
         """Private helper method."""
         pass
 
 
-def standalone_function(param: str) -> int:
+def standaloneFunction(param: str) -> int:
     """
     Standalone function example.
 
@@ -200,11 +200,11 @@ class BaseClass:
         self.value = value
         self._internal_state: Optional[str] = None
 
-    def public_method(self) -> str:
+    def publicMethod(self) -> str:
         """Public method accessible from outside."""
-        return self._process_data()
+        return self._processData()
 
-    def _process_data(self) -> str:
+    def _processData(self) -> str:
         """Private method for internal use."""
         return f"{self.name}: {self.value}"
 
@@ -254,7 +254,7 @@ import sys
 from pathlib import Path
 
 
-def setup_logging(verbose: bool = False) -> None:
+def setupLogging(verbose: bool = False) -> None:
     """Configure logging."""
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
@@ -263,7 +263,7 @@ def setup_logging(verbose: bool = False) -> None:
     )
 
 
-def parse_args() -> argparse.Namespace:
+def parseArgs() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Script description")
     parser.add_argument(
@@ -289,8 +289,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     """Main entry point."""
-    args = parse_args()
-    setup_logging(args.verbose)
+    args = parseArgs()
+    setupLogging(args.verbose)
 
     logger = logging.getLogger(__name__)
     logger.info(f"Processing {args.input}")
@@ -372,7 +372,7 @@ def greet(name: str) -> str:
     return f"Hello, {name}"
 
 # Optional
-def find_user(user_id: str) -> Optional[User]:
+def findUser(userId: str) -> Optional[User]:
     pass
 
 # Union
@@ -380,7 +380,7 @@ def process(value: Union[int, str]) -> bool:
     pass
 
 # Collections (Python 3.9+)
-def process_items(items: list[dict[str, int]]) -> None:
+def processItems(items: list[dict[str, int]]) -> None:
     pass
 
 # Callable
@@ -412,7 +412,7 @@ def first(items: list[T]) -> Optional[T]:
 from contextlib import contextmanager
 
 @contextmanager
-def managed_resource(name: str):
+def managedResource(name: str):
     """Context manager example."""
     resource = acquire_resource(name)
     try:
@@ -421,14 +421,14 @@ def managed_resource(name: str):
         release_resource(resource)
 
 # Usage:
-with managed_resource("db") as db:
+with managedResource("db") as db:
     db.query()
 
 # Pattern 2: Decorator
 from functools import wraps
 import time
 
-def timing_decorator(func):
+def timingDecorator(func):
     """Decorator to measure execution time."""
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -439,8 +439,8 @@ def timing_decorator(func):
         return result
     return wrapper
 
-@timing_decorator
-def slow_function():
+@timingDecorator
+def slowFunction():
     time.sleep(1)
 
 # Pattern 3: Property
@@ -465,7 +465,7 @@ class Temperature:
         return self._celsius * 9/5 + 32
 
 # Pattern 4: Factory
-def create_processor(processor_type: str):
+def createProcessor(processorType: str):
     """Factory pattern."""
     processors = {
         "text": TextProcessor,
@@ -473,7 +473,7 @@ def create_processor(processor_type: str):
         "video": VideoProcessor,
     }
 
-    processor_class = processors.get(processor_type)
+    processor_class = processors.get(processorType)
     if processor_class is None:
         raise ValueError(f"Unknown processor type: {processor_type}")
 
@@ -495,12 +495,12 @@ from singleton import instance
 
 ```python
 # ❌ EVITARE: Mutable default arguments
-def bad_function(items=[]):  # MALE! Lista condivisa tra chiamate
+def badFunction(items=[]):  # MALE! Lista condivisa tra chiamate
     items.append(1)
     return items
 
 # ✅ PREFERIRE:
-def good_function(items=None):
+def goodFunction(items=None):
     if items is None:
         items = []
     items.append(1)
@@ -508,13 +508,13 @@ def good_function(items=None):
 
 # ❌ EVITARE: Bare except
 try:
-    risky_operation()
+    riskyOperation()
 except:  # Cattura anche KeyboardInterrupt, SystemExit!
     pass
 
 # ✅ PREFERIRE:
 try:
-    risky_operation()
+    riskyOperation()
 except Exception as e:
     logger.error(f"Error: {e}")
 
@@ -536,14 +536,14 @@ result = "".join(str(item) for item in items)
 ```python
 # Specifiche exceptions
 try:
-    data = fetch_data()
+    data = fetchData()
     process(data)
 except ConnectionError as e:
     logger.error(f"Connection failed: {e}")
     retry()
 except ValueError as e:
     logger.error(f"Invalid data: {e}")
-    handle_invalid_data()
+    handleInvalidData()
 except Exception as e:
     logger.error(f"Unexpected error: {e}", exc_info=True)
     raise
@@ -565,7 +565,7 @@ class ValidationError(ApplicationError):
 
 # Raise with context
 try:
-    external_operation()
+    externalOperation()
 except ExternalError as e:
     raise ApplicationError("Operation failed") from e
 
@@ -579,7 +579,7 @@ with suppress(FileNotFoundError):
 ### Assertions
 ```python
 # Use for internal checks (disabled with -O)
-def calculate_percentage(value: int, total: int) -> float:
+def calculatePercentage(value: int, total: int) -> float:
     assert total > 0, "Total must be positive"
     assert 0 <= value <= total, "Value out of range"
     return (value / total) * 100
@@ -597,7 +597,7 @@ if total <= 0:
 ### Docstrings (Google Style)
 
 ```python
-def function_with_types_in_docstring(param1: int, param2: str) -> bool:
+def functionWithTypesInDocstring(param1: int, param2: str) -> bool:
     """
     Summary line in one sentence.
 
@@ -616,14 +616,14 @@ def function_with_types_in_docstring(param1: int, param2: str) -> bool:
         TypeError: If param2 is not a string
 
     Examples:
-        >>> function_with_types_in_docstring(10, "test")
+        >>> functionWithTypesInDocstring(10, "test")
         True
 
     Note:
         This function is not thread-safe.
 
     See Also:
-        - other_function(): Related functionality
+        - otherFunction(): Related functionality
     """
     if param1 < 0:
         raise ValueError("param1 must be non-negative")
@@ -670,7 +670,7 @@ TIMEOUT = 60
 TIMEOUT = 60
 
 # Type ignore quando necessario
-result = some_untyped_library_function()  # type: ignore[no-untyped-call]
+result = someUntypedLibraryFunction()  # type: ignore[no-untyped-call]
 ```
 
 ---

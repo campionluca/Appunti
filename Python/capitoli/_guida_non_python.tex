@@ -2,15 +2,17 @@
 \begin{tcolorbox}[title=Guida per programmatori non-Python]
 Questa guida riassume come leggere e capire codice Python se provieni da altri linguaggi.
 
-- Sintassi a indentazione: blocchi definiti da indentazione (4 spazi), niente `{}`.
-- Tipi dinamici: il tipo appartiene all'oggetto; le variabili sono riferimenti.
-- Truthiness: oggetti vuoti e zero sono `False`; altrimenti `True`.
-- Strutture chiave: `list` (array dinamico), `dict` (mappa), `set` (insieme), `tuple` (immutabile).
-- Slice e comprensioni: `seq[a:b:c]` e `[f(x) for x in xs if cond]`.
-- Funzioni: prima classe, closure e default arguments; attenzione ai default mutabili.
-- Errori: eccezioni con `try/except`; EAFP (fallo e gestisci) spesso preferito a LBYL.
-- Moduli e package: import espliciti, nomi in \verb|snake_case|, \verb|__name__ == "__main__"| per entrypoint.
-- Stile: PEP 8 per nomi, lunghezza righe, spazi; scrivere docstring.
+\begin{itemize}
+  \item Sintassi a indentazione: blocchi definiti da indentazione (4 spazi), niente `{}`.
+  \item Tipi dinamici: il tipo appartiene all'oggetto; le variabili sono riferimenti.
+  \item Truthiness: oggetti vuoti e zero sono `False`; altrimenti `True`.
+  \item Strutture chiave: `list` (array dinamico), `dict` (mappa), `set` (insieme), `tuple` (immutabile).
+  \item Slice e comprensioni: `seq[a:b:c]` e `[f(x) for x in xs if cond]`.
+  \item Funzioni: prima classe, closure e default arguments; attenzione ai default mutabili.
+  \item Errori: eccezioni con `try/except`; EAFP (fallo e gestisci) spesso preferito a LBYL.
+  \item Moduli e package: import espliciti, nomi in \verb|snake_case|, \verb|__name__ == "__main__"| per entrypoint.
+  \item Stile: PEP 8 per nomi, lunghezza righe, spazi; scrivere docstring.
+\end{itemize}
 
 Esempio di lettura codice:
 \begin{lstlisting}
@@ -29,7 +31,9 @@ if __name__ == "__main__":
 \end{lstlisting}
 
 Suggerimenti pratici:
-- Separare logica pura (facile da testare) e I/O.
-- Usare ambienti virtuali per dipendenze; evitare globali.
-- Preferire nomi descrittivi e funzioni piccole; aggiungere docstring.
+\begin{itemize}
+  \item Separare logica pura (facile da testare) e I/O.
+  \item Usare ambienti virtuali per dipendenze; evitare globali.
+  \item Preferire nomi descrittivi e funzioni piccole; aggiungere docstring.
+\end{itemize}
 \end{tcolorbox}

@@ -57,7 +57,7 @@ import shutil
 from pathlib import Path
 
 # Backup files
-def backup_directory(source, dest):
+def backupDirectory(source, dest):
     """Copia directory con backup"""
     if Path(dest).exists():
         # Backup esistente
@@ -68,7 +68,7 @@ def backup_directory(source, dest):
     print(f"Backed up {source} to {dest}")
 
 # Cleanup old files
-def cleanup_old_files(directory, days=30):
+def cleanupOldFiles(directory, days=30):
     """Rimuovi file più vecchi di N giorni"""
     import time
 
@@ -81,7 +81,7 @@ def cleanup_old_files(directory, days=30):
             file.unlink()
 
 # Batch rename
-def batch_rename(directory, pattern, replacement):
+def batchRename(directory, pattern, replacement):
     """Rename files con pattern"""
     for file in Path(directory).glob(pattern):
         new_name = file.name.replace(pattern.replace("*", ""), replacement)
@@ -203,7 +203,7 @@ paragraph = h2.find_next_sibling("p")
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_news(url):
+def scrapeNews(url):
     """Scrape news articles"""
     response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
     soup = BeautifulSoup(response.content, "lxml")
@@ -224,7 +224,7 @@ def scrape_news(url):
     return articles
 
 # Uso
-news = scrape_news("https://news.example.com")
+news = scrapeNews("https://news.example.com")
 for article in news:
     print(f"{article['title']}: {article['link']}")
 \end{lstlisting}
@@ -244,12 +244,12 @@ class GitHubAPI:
         if token:
             self.session.headers["Authorization"] = f"token {token}"
 
-    def get_user(self, username):
+    def getUser(self, username):
         response = self.session.get(f"{self.BASE_URL}/users/{username}")
         response.raise_for_status()
         return response.json()
 
-    def get_repos(self, username):
+    def getRepos(self, username):
         response = self.session.get(
             f"{self.BASE_URL}/users/{username}/repos",
             params={"sort": "updated", "per_page": 100}
@@ -259,10 +259,10 @@ class GitHubAPI:
 
 # Uso
 api = GitHubAPI()
-user = api.get_user("python")
+user = api.getUser("python")
 print(f"Python organization has {user['public_repos']} public repos")
 
-repos = api.get_repos("python")
+repos = api.getRepos("python")
 for repo in repos[:5]:
     print(f"- {repo['name']}: {repo['stargazers_count']} stars")
 \end{lstlisting}
@@ -301,8 +301,8 @@ button = driver.find_element(By.ID, "submit-button")
 button.click()
 
 # Input text
-input_field = driver.find_element(By.NAME, "username")
-input_field.send_keys("alice")
+inputField = driver.find_element(By.NAME, "username")
+inputField.send_keys("alice")
 
 # Wait per elemento
 element = WebDriverWait(driver, 10).until(
@@ -324,7 +324,7 @@ driver.quit()
 import requests
 from urllib.robotparser import RobotFileParser
 
-def can_fetch(url, user_agent="*"):
+def canFetch(url, userAgent="*"):
     """Check se posso scrapare URL"""
     robots_url = f"{url.rstrip('/')}/robots.txt"
 
@@ -332,10 +332,10 @@ def can_fetch(url, user_agent="*"):
     rp.set_url(robots_url)
     rp.read()
 
-    return rp.can_fetch(user_agent, url)
+    return rp.can_fetch(userAgent, url)
 
 # Uso
-if can_fetch("https://example.com/page"):
+if canFetch("https://example.com/page"):
     # OK to scrape
     response = requests.get("https://example.com/page")
 else:
@@ -377,7 +377,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-def requests_retry_session(
+def requestsRetrySession(
     retries=3,
     backoff_factor=0.3,
     status_forcelist=(500, 502, 504),
@@ -399,7 +399,7 @@ def requests_retry_session(
     return session
 
 # Uso
-session = requests_retry_session()
+session = requestsRetrySession()
 response = session.get("https://example.com")
 # Automatically retries on connection errors
 \end{lstlisting}
@@ -522,12 +522,12 @@ import time
 from datetime import datetime
 
 class NewsAggregator:
-    def __init__(self, db_path="news.db"):
-        self.db_path = db_path
-        self.setup_database()
+    def __init__(self, dbPath="news.db"):
+        self.dbPath = dbPath
+        self.setupDatabase()
 
-    def setup_database(self):
-        conn = sqlite3.connect(self.db_path)
+    def setupDatabase(self):
+        conn = sqlite3.connect(self.dbPath)
         cursor = conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS articles (
@@ -542,7 +542,7 @@ class NewsAggregator:
         conn.commit()
         conn.close()
 
-    def scrape_source(self, name, url, selector):
+    def scrapeSource(self, name, url, selector):
         """Scrape single source"""
         try:
             response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
@@ -568,9 +568,9 @@ class NewsAggregator:
             print(f"Error scraping {name}: {e}")
             return []
 
-    def save_articles(self, articles):
+    def saveArticles(self, articles):
         """Save to database"""
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.dbPath)
         cursor = conn.cursor()
 
         saved = 0
@@ -598,11 +598,11 @@ class NewsAggregator:
         all_articles = []
         for name, url, selector in sources:
             print(f"Scraping {name}...")
-            articles = self.scrape_source(name, url, selector)
+            articles = self.scrapeSource(name, url, selector)
             all_articles.extend(articles)
             time.sleep(1)  # Rate limiting
 
-        saved = self.save_articles(all_articles)
+        saved = self.saveArticles(all_articles)
         print(f"Saved {saved} new articles out of {len(all_articles)}")
 
 # Usage

@@ -45,10 +45,12 @@ util.say("Ciao")
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- Il modulo \texttt{util.py} definisce una funzione e viene importato in \texttt{app.py}.
-- \texttt{import util} carica il modulo e ne usa il namespace: \texttt{util.say(...)}.
-- Preferire import espliciti (funzioni o nomi) quando la UX lo richiede: \texttt{from util import say}.
-- Evitare side-effect all'import: l'esecuzione dovrebbe avvenire in \texttt{main()} o funzioni dedicate.
+\begin{itemize}
+  \item Il modulo \texttt{util.py} definisce una funzione e viene importato in \texttt{app.py}.
+  \item \texttt{import util} carica il modulo e ne usa il namespace: \texttt{util.say(...)}.
+  \item Preferire import espliciti (funzioni o nomi) quando la UX lo richiede: \texttt{from util import say}.
+  \item Evitare side-effect all'import: l'esecuzione dovrebbe avvenire in \texttt{main()} o funzioni dedicate.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Package}
@@ -64,10 +66,12 @@ print(add(2, 3))
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- Un package è una cartella (\texttt{pkg/}) con moduli; \texttt{\_\_init\_\_.py} può essere vuoto o fare re-export.
-- \texttt{from pkg.tools import add} importa simboli dal modulo \texttt{tools} all'interno del package.
-- Mantenere \texttt{\_\_init\_\_.py} minimale e documentare l'API pubblica con \verb|__all__| se necessario.
-- Preferire import assoluti per chiarezza; usare relativi solo all'interno del package.
+\begin{itemize}
+  \item Un package è una cartella (\texttt{pkg/}) con moduli; \texttt{\_\_init\_\_.py} può essere vuoto o fare re-export.
+  \item \texttt{from pkg.tools import add} importa simboli dal modulo \texttt{tools} all'interno del package.
+  \item Mantenere \texttt{\_\_init\_\_.py} minimale e documentare l'API pubblica con \verb|__all__| se necessario.
+  \item Preferire import assoluti per chiarezza; usare relativi solo all'interno del package.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{sys.path}
@@ -77,9 +81,11 @@ print(sys.path)
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \texttt{sys.path} è la lista di percorsi in cui Python cerca moduli e package.
-- Modificare \texttt{sys.path} a runtime è possibile ma va limitato a script/CLI, non a librerie.
-- Per la distribuzione, usare package installabili invece di aggiungere path manualmente.
+\begin{itemize}
+  \item \texttt{sys.path} è la lista di percorsi in cui Python cerca moduli e package.
+  \item Modificare \texttt{sys.path} a runtime è possibile ma va limitato a script/CLI, non a librerie.
+  \item Per la distribuzione, usare package installabili invece di aggiungere path manualmente.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -106,10 +112,12 @@ Hai organizzato codice con moduli e package in modo pulito.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Organizzare progetti medio-grandi in package coerenti.
-- Definire API pubblica del package con re-export.
-- Isolare plugin/estensioni con moduli dedicati.
-- Preparare distribuzione e riuso interno.
+\begin{itemize}
+  \item Organizzare progetti medio-grandi in package coerenti.
+  \item Definire API pubblica del package con re-export.
+  \item Isolare plugin/estensioni con moduli dedicati.
+  \item Preparare distribuzione e riuso interno.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}

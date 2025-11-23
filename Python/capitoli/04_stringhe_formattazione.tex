@@ -30,9 +30,11 @@ s = "  Python e' fantastico  "
 print(s.strip().replace("fantastico", "potente"))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Immutabilità}: i metodi su `str` ritornano nuove stringhe; `s` resta invariata.  
-- \textbf{Pulizia}: `strip` rimuove spazi ai bordi; `replace` sostituisce occorrenze.  
-- \textbf{Pipeline}: concatenare metodi rende leggibile la trasformazione testuale.
+\begin{itemize}
+  \item \textbf{Immutabilità}: i metodi su `str` ritornano nuove stringhe; `s` resta invariata.
+  \item \textbf{Pulizia}: `strip` rimuove spazi ai bordi; `replace` sostituisce occorrenze.
+  \item \textbf{Pipeline}: concatenare metodi rende leggibile la trasformazione testuale.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Split/Join}
@@ -43,9 +45,11 @@ joined = ";".join(parts)
 print(joined)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Tokenizzazione}: `split` crea lista di parti; gestire separatori coerenti.  
-- \textbf{Ricombinazione}: `";".join(parts)` unisce con separatore scelto; richiede elementi `str`.  
-- \textbf{CSV semplice}: valido per casi basici; preferire `csv` per casi complessi.
+\begin{itemize}
+  \item \textbf{Tokenizzazione}: `split` crea lista di parti; gestire separatori coerenti.
+  \item \textbf{Ricombinazione}: `";".join(parts)` unisce con separatore scelto; richiede elementi `str`.
+  \item \textbf{CSV semplice}: valido per casi basici; preferire `csv` per casi complessi.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Formattazione}
@@ -55,9 +59,11 @@ print(f"{user} ha punteggio {score:.1f}")
 print("{} ha punteggio {}".format(user, score))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{f-string}: interpolazione con specifiche (`:.1f` per decimali).  
-- \textbf{format}: alternativa compatibile; utile con template riciclati.  
-- \textbf{Separazione}: tenere formattazione vicino all'output, logica separata.
+\begin{itemize}
+  \item \textbf{f-string}: interpolazione con specifiche (`:.1f` per decimali).
+  \item \textbf{format}: alternativa compatibile; utile con template riciclati.
+  \item \textbf{Separazione}: tenere formattazione vicino all'output, logica separata.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -82,10 +88,12 @@ Hai visto metodi delle stringhe e tecniche moderne di formattazione.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Pulizia e normalizzazione testi (log, CSV, input utente).
-- Formattazione report e messaggi per CLI/GUI.
-- Localizzazione e formattazione numeri/date.
-- Sanitizzazione input e rendering sicuro.
+\begin{itemize}
+  \item Pulizia e normalizzazione testi (log, CSV, input utente).
+  \item Formattazione report e messaggi per CLI/GUI.
+  \item Localizzazione e formattazione numeri/date.
+  \item Sanitizzazione input e rendering sicuro.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -128,10 +136,12 @@ pat = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 print(bool(pat.match("ada@example.com")))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Normalizzazione}: trim + lower + collapse spazi per confronti affidabili.  
-- \textbf{Formattazione numeri}: specifiche di locale possono cambiare separatori.  
-- \textbf{Stringhe/bytes}: `encode`/`decode` per confine testo $\rightarrow$ binario.
-- \textbf{Regex}: pattern minimo per email; preferire librerie se requisiti complessi.
+\begin{itemize}
+  \item \textbf{Normalizzazione}: trim + lower + collapse spazi per confronti affidabili.
+  \item \textbf{Formattazione numeri}: specifiche di locale possono cambiare separatori.
+  \item \textbf{Stringhe/bytes}: `encode`/`decode` per confine testo $\rightarrow$ binario.
+  \item \textbf{Regex}: pattern minimo per email; preferire librerie se requisiti complessi.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

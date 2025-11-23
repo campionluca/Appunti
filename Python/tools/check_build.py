@@ -24,7 +24,7 @@ WARNING_PATTERNS = [
 ]
 
 
-def run_build() -> int:
+def runBuild() -> int:
     latexmk = shutil.which("latexmk")
     if latexmk:
         cmd = [latexmk, "-pdf", "-interaction=nonstopmode", str(MAIN_TEX)]
@@ -39,7 +39,7 @@ def run_build() -> int:
     return rc1 or rc2
 
 
-def scan_log(log_path: Path):
+def scanLog(log_path: Path):
     if not log_path.exists():
         print(f"[warn] Log non trovato: {log_path}")
         return [], []
@@ -61,8 +61,8 @@ def main() -> int:
 
     code = 0
     if not args.skip_build:
-        code = run_build()
-    errors, warnings = scan_log(MAIN_LOG)
+        code = runBuild()
+    errors, warnings = scanLog(MAIN_LOG)
     print("\n[summary] Compilazione LaTeX")
     print(f"  Exit code: {code}")
     print(f"  Errori: {len(errors)}")

@@ -33,22 +33,24 @@ Un concetto importante in questo contesto è \textbf{backpressure}: il principio
 \section{Esempi Pratici}
 \subsection{Decoratore}
 \begin{lstlisting}
-def log_calls(fn):
+def logCalls(fn):
     def wrapper(*a, **k):
         print("chiamata", fn.__name__)
         return fn(*a, **k)
     return wrapper
 
-@log_calls
+@logCalls
 def hello():
     print("hello")
 hello()
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- Il decoratore \texttt{log\_calls} avvolge la funzione per eseguire codice prima/dopo.
-- Usare \verb|functools.wraps| su \texttt{wrapper} per preservare metadati (nome, docstring).
-- I decoratori sono ottimi per logging, validazione, caching e autorizzazioni.
+\begin{itemize}
+  \item Il decoratore \texttt{logCalls} avvolge la funzione per eseguire codice prima/dopo.
+  \item Usare \verb|functools.wraps| su \texttt{wrapper} per preservare metadati (nome, docstring).
+  \item I decoratori sono ottimi per logging, validazione, caching e autorizzazioni.
+\end{itemize}
 \end{tcolorbox}
 
 \subsubsection{Flusso di esecuzione del decoratore}
@@ -66,12 +68,12 @@ Ecco come funziona un decoratore visivamente:
 ]
     % Definizione
     \node[above, font=\small\bfseries] at (2,6.5) {1. Definizione};
-    \node[deco] (def_deco) at (0,6) {\texttt{def log\_calls(fn):}};
+    \node[deco] (def_deco) at (0,6) {\texttt{def logCalls(fn):}};
     \node[code] (def_wrap) at (0,5) {\texttt{def wrapper(*a, **k):}};
     \node[code] (def_body) at (0,4) {... codice decoratore ...};
     \node[code] (def_ret) at (0,3) {\texttt{return wrapper}};
 
-    \node[func] (def_func) at (4.5,5) {@log\_calls\\def hello():};
+    \node[func] (def_func) at (4.5,5) {@logCalls\\def hello():};
     \node[code] (def_fbody) at (4.5,4) {print("hello")};
 
     \draw[arrow, blue] (def_func) -- (def_deco) node[midway, above, font=\footnotesize] {decorato};
@@ -166,9 +168,11 @@ class Count:
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- Implementa il protocollo iteratore con \verb|__iter__| e \verb|__next__|.
-- Solleva \texttt{StopIteration} per segnalare fine; consuma elemento per chiamata.
-- Preferire iteratori/generatori per flussi potenzialmente grandi o infiniti.
+\begin{itemize}
+  \item Implementa il protocollo iteratore con \verb|__iter__| e \verb|__next__|.
+  \item Solleva \texttt{StopIteration} per segnalare fine; consuma elemento per chiamata.
+  \item Preferire iteratori/generatori per flussi potenzialmente grandi o infiniti.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Generatore}
@@ -180,16 +184,20 @@ print(list(gen(3)))
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- I generatori producono valori lazily con \texttt{yield}; consumati da \texttt{for} o \texttt{list(...)}.
-- Consentono pipeline efficienti e gestione di risorse con \verb|try/finally|.
-- Comporre trasformazioni con generator expression e moduli come \texttt{itertools}.
+\begin{itemize}
+  \item I generatori producono valori lazily con \texttt{yield}; consumati da \texttt{for} o \texttt{list(...)}.
+  \item Consentono pipeline efficienti e gestione di risorse con \verb|try/finally|.
+  \item Comporre trasformazioni con generator expression e moduli come \texttt{itertools}.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
-- Logging/monitoring trasparente con decoratori.
-- Streaming di file/HTTP con trasformazioni lazy.
-- Validazione/autorità dei parametri senza cambiare funzioni originali.
-- Rate limiting e retry come decoratori riutilizzabili.
+\begin{itemize}
+  \item Logging/monitoring trasparente con decoratori.
+  \item Streaming di file/HTTP con trasformazioni lazy.
+  \item Validazione/autorità dei parametri senza cambiare funzioni originali.
+  \item Rate limiting e retry come decoratori riutilizzabili.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Esercizi}
@@ -206,10 +214,12 @@ Hai esplorato decoratori, iteratori e generatori in pratica.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Strumentazione trasparente (logging, timing) con decoratori.
-- Pipeline dati lazy e streaming efficiente.
-- Validazioni, autorizzazioni e caching via decoratori.
-- Generator expression per filtri e trasformazioni.
+\begin{itemize}
+  \item Strumentazione trasparente (logging, timing) con decoratori.
+  \item Pipeline dati lazy e streaming efficiente.
+  \item Validazioni, autorizzazioni e caching via decoratori.
+  \item Generator expression per filtri e trasformazioni.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}

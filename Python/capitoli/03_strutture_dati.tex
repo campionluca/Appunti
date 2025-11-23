@@ -33,9 +33,11 @@ quadrati = [n*n for n in nums]
 print(quadrati)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Lista mutabile}: `append` aggiunge in coda in O(1) amortizzato.  
-- \textbf{Comprensione}: crea una nuova lista trasformando elementi (`n*n`).  
-- \textbf{Separazione}: calcolo e I/O (`print`) sono distinti per chiarezza.
+\begin{itemize}
+  \item \textbf{Lista mutabile}: `append` aggiunge in coda in O(1) amortizzato.
+  \item \textbf{Comprensione}: crea una nuova lista trasformando elementi (`n*n`).
+  \item \textbf{Separazione}: calcolo e I/O (`print`) sono distinti per chiarezza.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Tuple e unpacking}
@@ -45,9 +47,11 @@ x, y = pt
 print(x, y)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Tupla immutabile}: buona per record fissi e chiavi di dizionari.  
-- \textbf{Unpacking}: assegna posizionalmente; solleva `ValueError` se la cardinalità non coincide.  
-- \textbf{Chiarezza}: nomi `x, y` rendono esplicita la struttura dei dati.
+\begin{itemize}
+  \item \textbf{Tupla immutabile}: buona per record fissi e chiavi di dizionari.
+  \item \textbf{Unpacking}: assegna posizionalmente; solleva `ValueError` se la cardinalità non coincide.
+  \item \textbf{Chiarezza}: nomi `x, y` rendono esplicita la struttura dei dati.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Dizionari}
@@ -58,9 +62,11 @@ for k, v in info.items():
     print(k, v)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Insert/Update}: assegnazione su chiave crea/aggiorna coppie chiave $\rightarrow$ valore.
-- \textbf{items}: itera su coppie `(k, v)` evitando lookup ripetuti.  
-- \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento.
+\begin{itemize}
+  \item \textbf{Insert/Update}: assegnazione su chiave crea/aggiorna coppie chiave $\rightarrow$ valore.
+  \item \textbf{items}: itera su coppie `(k, v)` evitando lookup ripetuti.
+  \item \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Insiemi}
@@ -70,9 +76,11 @@ v = {3, 4}
 print(u | v, u & v, u - v)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Unione/intersezione/differenza}: \texttt{|}, \texttt{\&}, \texttt{-} operano su insiemi con semantica matematica.  
-- \textbf{Unicità}: i set eliminano duplicati; elementi devono essere hashable.  
-- \textbf{Prestazioni}: membership e operazioni insiemistiche sono mediamente O(1)/O(n).
+\begin{itemize}
+  \item \textbf{Unione/intersezione/differenza}: \texttt{|}, \texttt{\&}, \texttt{-} operano su insiemi con semantica matematica.
+  \item \textbf{Unicità}: i set eliminano duplicati; elementi devono essere hashable.
+  \item \textbf{Prestazioni}: membership e operazioni insiemistiche sono mediamente O(1)/O(n).
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -97,10 +105,12 @@ Hai esplorato le principali strutture dati e le loro operazioni tipiche.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Modellare dati di dominio (liste, dizionari, set).
-- Cache LRU e code con \texttt{deque}.
-- Rilevare duplicati e membership con \texttt{set}.
-- Mappare configurazioni e lookup con \texttt{dict}.
+\begin{itemize}
+  \item Modellare dati di dominio (liste, dizionari, set).
+  \item Cache LRU e code con \texttt{deque}.
+  \item Rilevare duplicati e membership con \texttt{set}.
+  \item Mappare configurazioni e lookup con \texttt{dict}.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -152,10 +162,12 @@ for p in people:
 print(sorted(people, key=lambda p: (p["age"], p["name"])) )
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Counter}: conteggio frequenze e \texttt{most\_common} per ranking rapido.  
-- \textbf{Comprehension dict}: crea indice per chiave evitando loop manuali.  
-- \textbf{defaultdict}: inizializza accumulatori riducendo boilerplate.  
-- \textbf{sorted key}: ordinamento stabile su tuple di chiavi senza mutare l'input.
+\begin{itemize}
+  \item \textbf{Counter}: conteggio frequenze e \texttt{most\_common} per ranking rapido.
+  \item \textbf{Comprehension dict}: crea indice per chiave evitando loop manuali.
+  \item \textbf{defaultdict}: inizializza accumulatori riducendo boilerplate.
+  \item \textbf{sorted key}: ordinamento stabile su tuple di chiavi senza mutare l'input.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

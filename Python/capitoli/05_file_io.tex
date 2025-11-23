@@ -31,9 +31,11 @@ with open("dati.txt", "r", encoding="utf-8") as f:
         print(line.strip())
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{with open}: garantisce chiusura automatica del file, anche su eccezione.  
-- \textbf{Iterazione}: il file è iterabile per riga; `strip` rimuove newline/spazi ai bordi.  
-- \textbf{Encoding}: esplicitare `utf-8` evita problemi di piattaforma.
+\begin{itemize}
+  \item \textbf{with open}: garantisce chiusura automatica del file, anche su eccezione.
+  \item \textbf{Iterazione}: il file è iterabile per riga; `strip` rimuove newline/spazi ai bordi.
+  \item \textbf{Encoding}: esplicitare `utf-8` evita problemi di piattaforma.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Scrittura file}
@@ -42,9 +44,11 @@ with open("out.txt", "w", encoding="utf-8") as f:
     f.write("Hello\n")
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Modalità}: `"w"` sovrascrive il file (crea se non esiste).  
-- \textbf{Buffer}: `write` aggiunge al buffer; flush/chiusura avvengono alla fine del `with`.  
-- \textbf{Newline}: usa \verb|\n| come separatore universale; LaTeX e Windows gestiscono conversioni.
+\begin{itemize}
+  \item \textbf{Modalità}: `"w"` sovrascrive il file (crea se non esiste).
+  \item \textbf{Buffer}: `write` aggiunge al buffer; flush/chiusura avvengono alla fine del `with`.
+  \item \textbf{Newline}: usa \verb|\n| come separatore universale; LaTeX e Windows gestiscono conversioni.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{CSV}
@@ -56,9 +60,11 @@ with open("people.csv", "w", newline="", encoding="utf-8") as f:
     writer.writerows(rows)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{csv.writer}: gestisce quoting/separatori corretti; evitare `join` per CSV complessi.  
-- \textbf{newline=""}: delega al modulo CSV la gestione dei terminatori di riga.  
-- \textbf{Schema}: definire header coerenti e tipi attesi aumenta robustezza.
+\begin{itemize}
+  \item \textbf{csv.writer}: gestisce quoting/separatori corretti; evitare `join` per CSV complessi.
+  \item \textbf{newline=""}: delega al modulo CSV la gestione dei terminatori di riga.
+  \item \textbf{Schema}: definire header coerenti e tipi attesi aumenta robustezza.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -83,10 +89,12 @@ Hai praticato I/O su file e uso di context manager.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Lettura/scrittura CSV per piccoli ETL locali.
-- Gestione log e rotazione file.
-- Backup e archiviazione di configurazioni.
-- Import/export per strumenti CLI.
+\begin{itemize}
+  \item Lettura/scrittura CSV per piccoli ETL locali.
+  \item Gestione log e rotazione file.
+  \item Backup e archiviazione di configurazioni.
+  \item Import/export per strumenti CLI.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -134,10 +142,12 @@ with (base / "people.csv").open("r", newline="", encoding="utf-8") as f:
     print(rows)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{pathlib}: `Path` compone percorsi portabili e leggibili.  
-- \textbf{json.dump}: scrive JSON con \verb|ensure_ascii=False| per Unicode e \verb|indent| per leggibilità.  
-- \textbf{csv.DictReader}: crea dizionari per riga, facilitando accesso per chiave.  
-- \textbf{mkdir(exist\_ok)}: idempotente; prepara cartella dati senza errori se già esiste.
+\begin{itemize}
+  \item \textbf{pathlib}: `Path` compone percorsi portabili e leggibili.
+  \item \textbf{json.dump}: scrive JSON con \verb|ensure_ascii=False| per Unicode e \verb|indent| per leggibilità.
+  \item \textbf{csv.DictReader}: crea dizionari per riga, facilitando accesso per chiave.
+  \item \textbf{mkdir(exist\_ok)}: idempotente; prepara cartella dati senza errori se già esiste.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

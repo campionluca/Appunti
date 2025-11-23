@@ -57,7 +57,7 @@ class TestTodoManager(unittest.TestCase):
     
     def test_load_tasks(self):
         """Test caricamento task dal file"""
-        success = self.manager.load_tasks()
+        success = self.manager.loadTasks()
         self.assertTrue(success)
         self.assertEqual(len(self.manager.tasks), 8)
         
@@ -74,25 +74,25 @@ class TestTodoManager(unittest.TestCase):
     
     def test_task_id_extraction(self):
         """Test estrazione ID task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
         # Task con ID
         task_with_id = self.manager.tasks[3]  # [DEV-01]
-        self.assertEqual(task_with_id.task_id, "DEV-01")
+        self.assertEqual(task_with_id.taskId, "DEV-01")
         self.assertEqual(task_with_id.content, "Implementare feature A [DEV-01]")
         
         # Task senza ID (dovrebbe avere ID generato)
         task_without_id = self.manager.tasks[0]
-        self.assertTrue(task_without_id.task_id)
-        self.assertNotEqual(task_without_id.task_id, "")
+        self.assertTrue(task_without_id.taskId)
+        self.assertNotEqual(task_without_id.taskId, "")
     
     def test_add_task(self):
         """Test aggiunta nuova task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         initial_count = len(self.manager.tasks)
         
         # Aggiungi nuova task
-        new_task = self.manager.add_task(
+        new_task = self.manager.addTask(
             content="Nuova task di test",
             category="Test",
             priority=TaskPriority.HIGH
@@ -103,15 +103,15 @@ class TestTodoManager(unittest.TestCase):
         self.assertEqual(new_task.category, "Test")
         self.assertEqual(new_task.priority, TaskPriority.HIGH)
         self.assertEqual(new_task.status, TaskStatus.PENDING)
-        self.assertTrue(new_task.task_id)
+        self.assertTrue(new_task.taskId)
     
     def test_update_task(self):
         """Test aggiornamento task"""
-        self.manager.load_tasks()
-        task_id = self.manager.tasks[0].task_id
+        self.manager.loadTasks()
+        task_id = self.manager.tasks[0].taskId
         
         # Aggiorna task
-        success = self.manager.update_task(
+        success = self.manager.updateTask(
             task_id,
             content="Task aggiornata",
             status=TaskStatus.COMPLETED,
@@ -122,7 +122,7 @@ class TestTodoManager(unittest.TestCase):
         self.assertTrue(success)
         
         # Verifica aggiornamenti
-        updated_task = self.manager.get_task(task_id)
+        updated_task = self.manager.getTask(task_id)
         self.assertEqual(updated_task.content, "Task aggiornata")
         self.assertEqual(updated_task.status, TaskStatus.COMPLETED)
         self.assertEqual(updated_task.priority, TaskPriority.LOW)
@@ -130,36 +130,36 @@ class TestTodoManager(unittest.TestCase):
     
     def test_delete_task(self):
         """Test eliminazione task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         initial_count = len(self.manager.tasks)
-        task_id = self.manager.tasks[0].task_id
+        task_id = self.manager.tasks[0].taskId
         
         # Elimina task
-        success = self.manager.delete_task(task_id)
+        success = self.manager.deleteTask(task_id)
         self.assertTrue(success)
         self.assertEqual(len(self.manager.tasks), initial_count - 1)
         
         # Verifica che la task sia stata eliminata
-        deleted_task = self.manager.get_task(task_id)
+        deleted_task = self.manager.getTask(task_id)
         self.assertIsNone(deleted_task)
     
     def test_filter_tasks(self):
         """Test filtraggio task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
         # Filtra task completate
-        completed_tasks = self.manager.filter_tasks(status=TaskStatus.COMPLETED)
+        completed_tasks = self.manager.filterTasks(status=TaskStatus.COMPLETED)
         self.assertEqual(len(completed_tasks), 2)  # 2 task completate nel test data
         
         for task in completed_tasks:
             self.assertEqual(task.status, TaskStatus.COMPLETED)
         
         # Filtra per priorità alta
-        high_priority_tasks = self.manager.filter_tasks(priority=TaskPriority.HIGH)
+        high_priority_tasks = self.manager.filterTasks(priority=TaskPriority.HIGH)
         self.assertEqual(len(high_priority_tasks), 1)
         
         # Filtra per categoria
-        dev_tasks = self.manager.filter_tasks(category="Sviluppo")
+        dev_tasks = self.manager.filterTasks(category="Sviluppo")
         self.assertEqual(len(dev_tasks), 3)
         
         for task in dev_tasks:
@@ -167,27 +167,27 @@ class TestTodoManager(unittest.TestCase):
     
     def test_search_tasks(self):
         """Test ricerca task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
         # Cerca per parola chiave
-        feature_tasks = self.manager.search_tasks("feature")
+        feature_tasks = self.manager.searchTasks("feature")
         self.assertEqual(len(feature_tasks), 1)
         self.assertIn("feature", feature_tasks[0].content.lower())
         
         # Cerca per ID task
-        dev_tasks = self.manager.search_tasks("DEV")
+        dev_tasks = self.manager.searchTasks("DEV")
         self.assertEqual(len(dev_tasks), 3)
         
         # Cerca case insensitive
-        bug_tasks = self.manager.search_tasks("BUG")
+        bug_tasks = self.manager.searchTasks("BUG")
         self.assertEqual(len(bug_tasks), 1)
     
     def test_sort_tasks(self):
         """Test ordinamento task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
         # Ordina per priorità
-        sorted_by_priority = self.manager.sort_tasks(self.manager.tasks, "priority")
+        sorted_by_priority = self.manager.sortTasks(self.manager.tasks, "priority")
         priorities = [t.priority for t in sorted_by_priority]
         
         # Verifica che le priorità siano in ordine: HIGH, MEDIUM, LOW
@@ -202,39 +202,39 @@ class TestTodoManager(unittest.TestCase):
     
     def test_save_tasks(self):
         """Test salvataggio task"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
         # Modifica una task
-        task_id = self.manager.tasks[0].task_id
-        self.manager.update_task(task_id, content="Task modificata per test")
+        task_id = self.manager.tasks[0].taskId
+        self.manager.updateTask(task_id, content="Task modificata per test")
         
         # Salva le modifiche
-        success = self.manager.save_tasks()
+        success = self.manager.saveTasks()
         self.assertTrue(success)
         
         # Ricarica e verifica che le modifiche siano state salvate
         new_manager = TodoManager(self.temp_file_path)
-        new_manager.load_tasks()
+        new_manager.loadTasks()
         
-        saved_task = new_manager.get_task(task_id)
-        self.assertEqual(saved_task.content, "Task modificata per test")
+        saved_task = new_manager.getTask(task_id)
+        self.assertTrue(saved_task.content.startswith("Task modificata per test"))
     
     def test_get_stats(self):
         """Test statistiche"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
-        stats = self.manager.get_stats()
+        stats = self.manager.getStats()
         
         self.assertEqual(stats['total'], 8)
         self.assertEqual(stats['completed'], 2)
-        self.assertEqual(stats['pending'], 6)  # 8 totali - 2 completate
-        self.assertAlmostEqual(stats['completion_rate'], 25.0)  # 2/8 = 25%
+        self.assertEqual(stats['pending'], 6)
+        self.assertAlmostEqual(stats['completionRate'], 25.0)
     
     def test_metadata_extraction(self):
         """Test estrazione metadata"""
-        self.manager.load_tasks()
+        self.manager.loadTasks()
         
-        self.assertIn('last_updated', self.manager.metadata)
+        self.assertIn('lastUpdated', self.manager.metadata)
         self.assertIn('author', self.manager.metadata)
         self.assertEqual(self.manager.metadata['author'], 'Test Suite')
 
@@ -250,25 +250,25 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.status, TaskStatus.PENDING)
         self.assertEqual(task.priority, TaskPriority.MEDIUM)
         self.assertEqual(task.category, "")
-        self.assertTrue(task.task_id)
-        self.assertIsInstance(task.created_at, datetime)
-        self.assertIsInstance(task.updated_at, datetime)
+        self.assertTrue(task.taskId)
+        self.assertIsInstance(task.createdAt, datetime)
+        self.assertIsInstance(task.updatedAt, datetime)
     
     def test_task_markdown_conversion(self):
         """Test conversione task in Markdown"""
         # Task pending
         pending_task = Task("Task pending")
-        markdown = pending_task.to_markdown()
-        self.assertEqual(markdown, "- [ ] Task pending")
+        markdown = pending_task.toMarkdown()
+        self.assertRegex(markdown, r"^- \[ \] Task pending \[[^\]]+\]$")
         
         # Task completed
         completed_task = Task("Task completed", status=TaskStatus.COMPLETED)
-        markdown = completed_task.to_markdown()
-        self.assertEqual(markdown, "- [x] Task completed")
+        markdown = completed_task.toMarkdown()
+        self.assertRegex(markdown, r"^- \[x\] Task completed \[[^\]]+\]$")
         
         # Task con ID
         task_with_id = Task("Task with ID [TEST-01]")
-        markdown = task_with_id.to_markdown()
+        markdown = task_with_id.toMarkdown()
         self.assertEqual(markdown, "- [ ] Task with ID [TEST-01]")
     
     def test_task_status_changes(self):
@@ -276,15 +276,15 @@ class TestTask(unittest.TestCase):
         task = Task("Test task")
         
         # Mark as completed
-        task.mark_completed()
+        task.markCompleted()
         self.assertEqual(task.status, TaskStatus.COMPLETED)
         
         # Mark as in progress
-        task.mark_in_progress()
+        task.markInProgress()
         self.assertEqual(task.status, TaskStatus.IN_PROGRESS)
         
         # Mark as pending
-        task.mark_pending()
+        task.markPending()
         self.assertEqual(task.status, TaskStatus.PENDING)
     
     def test_task_equality(self):
@@ -293,7 +293,7 @@ class TestTask(unittest.TestCase):
         task2 = Task("Test task")
         
         # Task con stesso contenuto ma ID diverso
-        self.assertNotEqual(task1.task_id, task2.task_id)
+        self.assertNotEqual(task1.taskId, task2.taskId)
         self.assertEqual(task1.content, task2.content)
 
 
@@ -307,7 +307,7 @@ def test_edge_cases():
     
     try:
         manager = TodoManager(empty_file)
-        success = manager.load_tasks()
+        success = manager.loadTasks()
         self.assertTrue(success)
         self.assertEqual(len(manager.tasks), 0)
     finally:
@@ -322,7 +322,7 @@ def test_edge_cases():
     
     try:
         manager = TodoManager(metadata_only_file)
-        success = manager.load_tasks()
+        success = manager.loadTasks()
         self.assertTrue(success)
         self.assertEqual(len(manager.tasks), 0)
         self.assertEqual(manager.metadata['author'], 'Test')

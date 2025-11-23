@@ -43,9 +43,11 @@ class Punto:
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \texttt{\_\_init\_\_} inizializza lo stato; \texttt{\_\_repr\_\_} fornisce una rappresentazione utile al debug.
-- Evitare di mescolare responsabilità: la classe modella un punto, non gestisce I/O.
-- Per oggetti-dato, considerare \texttt{dataclasses} per ridurre boilerplate.
+\begin{itemize}
+  \item \texttt{\_\_init\_\_} inizializza lo stato; \texttt{\_\_repr\_\_} fornisce una rappresentazione utile al debug.
+  \item Evitare di mescolare responsabilità: la classe modella un punto, non gestisce I/O.
+  \item Per oggetti-dato, considerare \texttt{dataclasses} per ridurre boilerplate.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Ereditarietà}
@@ -60,9 +62,11 @@ class Auto(Veicolo):
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \texttt{Auto} eredita da \texttt{Veicolo} e fa override di \texttt{muovi}.
-- Applicare LSP: la sottoclasse deve rispettare l'interfaccia/contratto della base.
-- Preferire composizione quando l'ereditarietà non rappresenta una relazione "è un".
+\begin{itemize}
+  \item \texttt{Auto} eredita da \texttt{Veicolo} e fa override di \texttt{muovi}.
+  \item Applicare LSP: la sottoclasse deve rispettare l'interfaccia/contratto della base.
+  \item Preferire composizione quando l'ereditarietà non rappresenta una relazione "è un".
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Proprietà}
@@ -76,9 +80,11 @@ class User:
 \end{lstlisting}
 
 \begin{tcolorbox}[title=Spiegazione]
-- \verb|@property| espone un attributo calcolato/validato mantenendo un'interfaccia pulita.
-- L'underscore (\texttt{\_name}) indica convenzione di attributo "interno"; non è enforced.
-- Aggiungere setter solo se necessario per invarianti; altrimenti mantenere immutabilità.
+\begin{itemize}
+  \item \verb|@property| espone un attributo calcolato/validato mantenendo un'interfaccia pulita.
+  \item L'underscore (\texttt{\_name}) indica convenzione di attributo "interno"; non è enforced.
+  \item Aggiungere setter solo se necessario per invarianti; altrimenti mantenere immutabilità.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]

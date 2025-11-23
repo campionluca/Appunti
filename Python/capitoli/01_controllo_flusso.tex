@@ -36,9 +36,11 @@ else:
     print("Maggiorenne")
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Branching}: catene `if/elif/else` gestiscono casi esclusivi.  
-- \textbf{Confronto}: `==` vs `<`; preferire condizioni semplici e nomi espliciti.  
-- \textbf{I/O}: la stampa è l'effetto; separare logica dal lato utente quando possibile.
+\begin{itemize}
+  \item \textbf{Branching}: catene `if/elif/else` gestiscono casi esclusivi.
+  \item \textbf{Confronto}: `==` vs `<`; preferire condizioni semplici e nomi espliciti.
+  \item \textbf{I/O}: la stampa è l'effetto; separare logica dal lato utente quando possibile.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Cicli for e while}
@@ -54,9 +56,11 @@ while count < 3:
     count += 1
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{range}: genera 0..2; preferire `enumerate(seq)` quando si itera su collezioni.  
-- \textbf{while}: usa condizione booleana e aggiorna stato (`count += 1`).  
-- \textbf{Chiarezza}: evitare `while True` con break se un range o un iterabile è sufficiente.
+\begin{itemize}
+  \item \textbf{range}: genera 0..2; preferire `enumerate(seq)` quando si itera su collezioni.
+  \item \textbf{while}: usa condizione booleana e aggiorna stato (`count += 1`).
+  \item \textbf{Chiarezza}: evitare `while True` con break se un range o un iterabile è sufficiente.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{break e continue}
@@ -69,9 +73,11 @@ for n in range(10):
     print(n)  # stampa solo dispari prima del 5
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{break}: interrompe il ciclo quando `n == 5`; utile per early exit.  
-- \textbf{continue}: salta iterazioni per numeri pari; riduce annidamento.  
-- \textbf{Intento}: il commento esplicita comportamento; preferire condizioni leggibili a logica implicita.
+\begin{itemize}
+  \item \textbf{break}: interrompe il ciclo quando `n == 5`; utile per early exit.
+  \item \textbf{continue}: salta iterazioni per numeri pari; riduce annidamento.
+  \item \textbf{Intento}: il commento esplicita comportamento; preferire condizioni leggibili a logica implicita.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -96,10 +102,12 @@ Hai visto le strutture di controllo principali per governare il flusso del progr
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Orchestrare logiche di business e validazioni.
-- Implementare state machine e menu interattivi.
-- Gestire retry/backoff e circuit breaker semplificati.
-- Costruire pipeline di elaborazione condizionale.
+\begin{itemize}
+  \item Orchestrare logiche di business e validazioni.
+  \item Implementare state machine e menu interattivi.
+  \item Gestire retry/backoff e circuit breaker semplificati.
+  \item Costruire pipeline di elaborazione condizionale.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -152,10 +160,12 @@ else:
     print("non trovato")
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Indice vs elemento}: il primo snippet mostra stile basato su indice; in Python si preferisce iterare su elementi (`for x in arr`).  
-- \textbf{Filtri}: usare `continue` per saltare i pari; l'alternativa compatta usa generator expression in `sum(...)`.  
-- \textbf{for-else}: il blocco `else` si esegue solo se il ciclo non ha usato `break` (elemento non trovato); utile per ricerca con fallback.  
-- \textbf{Stato}: `total` accumula; separare accumulo dalla logica di decisione semplifica i test.
+\begin{itemize}
+  \item \textbf{Indice vs elemento}: il primo snippet mostra stile basato su indice; in Python si preferisce iterare su elementi (`for x in arr`).
+  \item \textbf{Filtri}: usare `continue` per saltare i pari; l'alternativa compatta usa generator expression in `sum(...)`.
+  \item \textbf{for-else}: il blocco `else` si esegue solo se il ciclo non ha usato `break` (elemento non trovato); utile per ricerca con fallback.
+  \item \textbf{Stato}: `total` accumula; separare accumulo dalla logica di decisione semplifica i test.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

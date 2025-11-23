@@ -35,9 +35,11 @@ def add(a, b):
 print(add(2, 3))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Definizione}: `def add(a, b)` crea una funzione; il docstring descrive contratto.  
-- \textbf{Return}: restituisce somma di due argomenti; pura, senza I/O.  
-- \textbf{Invocazione}: `print(add(...))` compone I/O con logica; separare in pratica.
+\begin{itemize}
+  \item \textbf{Definizione}: `def add(a, b)` crea una funzione; il docstring descrive contratto.
+  \item \textbf{Return}: restituisce somma di due argomenti; pura, senza I/O.
+  \item \textbf{Invocazione}: `print(add(...))` compone I/O con logica; separare in pratica.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Default, *args e **kwargs}
@@ -57,9 +59,11 @@ print(total(1, 2, 3))
 print(describe(lang="Python", version=3.11))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Default}: `upper=False` definisce parametro opzionale; evita default mutabili.  
-- \textbf{*args}: raccoglie posizione variabile di argomenti in una tupla.  
-- \textbf{**kwargs}: raccoglie coppie chiave/valore in un dizionario; utile per parametri nominati flessibili.
+\begin{itemize}
+  \item \textbf{Default}: `upper=False` definisce parametro opzionale; evita default mutabili.
+  \item \textbf{*args}: raccoglie posizione variabile di argomenti in una tupla.
+  \item \textbf{**kwargs}: raccoglie coppie chiave/valore in un dizionario; utile per parametri nominati flessibili.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Scope e lambda}
@@ -72,9 +76,11 @@ double = lambda x: x * 2
 print(mul(5), double(5))
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Scope}: `mul` legge `factor` dallo scope esterno (E nel LEGB).  
-- \textbf{Lambda}: funzioni anonime per espressioni semplici; preferire `def` per logiche complesse.  
-- \textbf{Effetti}: nessun I/O dentro `mul`; la stampa è separata.
+\begin{itemize}
+  \item \textbf{Scope}: `mul` legge `factor` dallo scope esterno (E nel LEGB).
+  \item \textbf{Lambda}: funzioni anonime per espressioni semplici; preferire `def` per logiche complesse.
+  \item \textbf{Effetti}: nessun I/O dentro `mul`; la stampa è separata.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -88,7 +94,7 @@ print(mul(5), double(5))
 \section{Esercizi}
 \begin{enumerate}
   \item Scrivi una funzione che calcola il fattoriale di un numero (iterativa e ricorsiva).
-  \item Crea una funzione \texttt{safe\_div(a, b)} che gestisce divisione per zero.
+  \item Crea una funzione \texttt{safeDiv(a, b)} che gestisce divisione per zero.
   \item Implementa una funzione che normalizza una lista di numeri tra 0 e 1.
   \item Usa \texttt{*args} per sommare un numero variabile di valori.
   \item Scrivi una funzione che formatta una stringa con parametri via \texttt{**kwargs}.
@@ -99,10 +105,12 @@ Hai imparato a definire funzioni, gestire parametri flessibili e comprendere sco
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Progettare API di modulo e funzioni riutilizzabili.
-- Funzioni pure per testabilità e caching.
-- Higher-order functions per composizione.
-- Validazione e parsing input incapsulati.
+\begin{itemize}
+  \item Progettare API di modulo e funzioni riutilizzabili.
+  \item Funzioni pure per testabilità e caching.
+  \item Higher-order functions per composizione.
+  \item Validazione e parsing input incapsulati.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -128,12 +136,12 @@ Concetti avanzati come \textbf{closure e currying} permettono di chiudere valori
 Esempi commentati:
 \begin{lstlisting}
 # Default mutabile: anti-pattern
-def append_item_bad(item, bucket=[]):
+def appendItemBad(item, bucket=[]):
     bucket.append(item)
     return bucket
 
 # Uso corretto
-def append_item(item, bucket=None):
+def appendItem(item, bucket=None):
     if bucket is None:
         bucket = []
     bucket.append(item)
@@ -149,10 +157,12 @@ data = [1, 2, 3]
 res = transform(xs=data, fn=lambda x: x * 2)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Default mutabile}: `bucket=[]` condivide lista tra chiamate; bug classico.  
-- \textbf{Pattern corretto}: usa `None` e inizializza all'interno per isolare stato.
-- \textbf{Type hints}: `Iterable[int]` e `Callable` comunicano contratto; non impongono a runtime.  
-- \textbf{Keyword args}: chiamata `transform(xs=data, fn=...)` aumenta chiarezza dei parametri.
+\begin{itemize}
+  \item \textbf{Default mutabile}: `bucket=[]` condivide lista tra chiamate; bug classico.
+  \item \textbf{Pattern corretto}: usa `None` e inizializza all'interno per isolare stato.
+  \item \textbf{Type hints}: `Iterable[int]` e `Callable` comunicano contratto; non impongono a runtime.
+  \item \textbf{Keyword args}: chiamata `transform(xs=data, fn=...)` aumenta chiarezza dei parametri.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 
@@ -175,9 +185,11 @@ def pipeline(xs):
 print(pipeline([-2, 3, 6]))  # [0.5, 1.0]
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Docstring}: descrive contratto e output atteso.  
-- \textbf{max or 1}: fallback per evitare divisione per zero su lista vuota.  
-- \textbf{Comprensione}: crea nuova lista normalizzata; `pipeline` mostra composizione filtrando positivi.
+\begin{itemize}
+  \item \textbf{Docstring}: descrive contratto e output atteso.
+  \item \textbf{max or 1}: fallback per evitare divisione per zero su lista vuota.
+  \item \textbf{Comprensione}: crea nuova lista normalizzata; `pipeline` mostra composizione filtrando positivi.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

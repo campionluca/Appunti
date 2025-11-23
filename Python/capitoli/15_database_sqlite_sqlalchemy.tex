@@ -695,13 +695,13 @@ class UserRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_id(self, user_id: int) -> Optional[User]:
-        return self.session.query(User).filter_by(id=user_id).first()
+    def getById(self, userId: int) -> Optional[User]:
+        return self.session.query(User).filter_by(id=userId).first()
 
-    def get_by_username(self, username: str) -> Optional[User]:
+    def getByUsername(self, username: str) -> Optional[User]:
         return self.session.query(User).filter_by(username=username).first()
 
-    def get_all(self, limit: int = 100, offset: int = 0) -> List[User]:
+    def getAll(self, limit: int = 100, offset: int = 0) -> List[User]:
         return self.session.query(User).limit(limit).offset(offset).all()
 
     def create(self, username: str, email: str, password_hash: str) -> User:
@@ -725,14 +725,14 @@ with Session() as session:
     user = repo.create("henry", "henry@example.com", "hash")
     print(f"Created: {user.id}")
 
-    found = repo.get_by_username("henry")
+    found = repo.getByUsername("henry")
     print(f"Found: {found.email}")
 \end{lstlisting}
 
 \subsection{Database seeding}
 
 \begin{lstlisting}
-def seed_database():
+def seedDatabase():
     """Popola database con dati iniziali"""
     with Session() as session:
         # Verifica se già popolato
@@ -773,7 +773,7 @@ def seed_database():
         print("Database seeded successfully")
 
 if __name__ == "__main__":
-    seed_database()
+    seedDatabase()
 \end{lstlisting}
 
 \section{Troubleshooting}

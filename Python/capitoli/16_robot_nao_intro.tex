@@ -3,10 +3,12 @@
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Didattica STEM e laboratori universitari.
-- Social robotics, interazione uomo-robot (HRI).
-- Demo e prototipi per mostre ed eventi.
-- Sperimentazione di visione, linguaggio e movimento.
+\begin{itemize}
+  \item Didattica STEM e laboratori universitari.
+  \item Social robotics, interazione uomo-robot (HRI).
+  \item Demo e prototipi per mostre ed eventi.
+  \item Sperimentazione di visione, linguaggio e movimento.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -35,13 +37,17 @@ posture.goToPosture("StandInit", 0.5)
 \begin{tcolorbox}[title=Guida rapida per programmatori non-Python]
 Python è tipizzato dinamicamente e l'indentazione fa parte della sintassi (blocchi). Le eccezioni sono il meccanismo standard di errore; non si usano codici di ritorno come in C. Le liste (array dinamici) e i dizionari (mappe chiave->valore) sono strutture fondamentali.
 
-- Import: \texttt{import qi} carica il modulo del SDK NAOqi.  
-- Sessione: \texttt{qi.Session()} crea un oggetto che gestisce la connessione TCP verso il robot.  
-- Servizi: \texttt{session.service("ALMotion")} risolve il servizio remoto e ritorna un proxy su cui invocare metodi.
+\begin{itemize}
+  \item Import: \texttt{import qi} carica il modulo del SDK NAOqi.
+  \item Sessione: \texttt{qi.Session()} crea un oggetto che gestisce la connessione TCP verso il robot.
+  \item Servizi: \texttt{session.service("ALMotion")} risolve il servizio remoto e ritorna un proxy su cui invocare metodi.
+\end{itemize}
 
-\textbf{Gestione errori}: usare \texttt{try/except} per catturare \texttt{RuntimeError} quando la connessione fallisce.  
-\textbf{Stringhe}: sono Unicode; passare testo direttamente a \texttt{tts.say}.  
-\textbf{Convenzione}: nomi come \texttt{goToPosture} sono in stile CamelCase perché ereditati dalle API NAOqi.
+\begin{itemize}
+  \item \textbf{Gestione errori}: usare \texttt{try/except} per catturare \texttt{RuntimeError} quando la connessione fallisce.
+  \item \textbf{Stringhe}: sono Unicode; passare testo direttamente a \texttt{tts.say}.
+  \item \textbf{Convenzione}: nomi come \texttt{goToPosture} sono in stile CamelCase perché ereditati dalle API NAOqi.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Connessione commentata passo-passo]

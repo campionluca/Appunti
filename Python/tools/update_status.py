@@ -7,15 +7,14 @@ MAIN_TEX = ROOT / "main.tex"
 README = ROOT / "README.md"
 
 
-def count_included_modules() -> int:
+def countIncludedModules() -> int:
     text = MAIN_TEX.read_text(encoding="utf-8")
-includes = re.findall(r"\\include\{capitoli/([\w_\-]+)\}", text)
-    # Escludi appendice
+    includes = re.findall(r"\\include\{capitoli/([\w_\-]+)\}", text)
     includes = [inc for inc in includes if inc != "appendice_soluzioni"]
     return len(includes)
 
 
-def update_readme(count: int) -> None:
+def updateReadme(count: int) -> None:
     md = README.read_text(encoding="utf-8")
     marker_re = r"(<!--MODULE_COUNT-->)(\d+)(<!--/MODULE_COUNT-->)"
     if re.search(marker_re, md):
@@ -28,8 +27,8 @@ def update_readme(count: int) -> None:
 
 
 def main():
-    cnt = count_included_modules()
-    update_readme(cnt)
+    cnt = countIncludedModules()
+    updateReadme(cnt)
     print(f"[status] Moduli inclusi aggiornati a: {cnt}")
 
 

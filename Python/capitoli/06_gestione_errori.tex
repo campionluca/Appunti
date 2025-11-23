@@ -32,9 +32,11 @@ except ValueError:
     print("Input non valido")
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Eccezione specifica}: `ValueError` per conversione fallita; evita `except:` generici.  
-- \textbf{Messaggio}: fornisce feedback chiaro; separare validazione da logica di parsing.  
- - \textbf{Propagazione}: se l'errore non è atteso, lasciare propagare.
+\begin{itemize}
+  \item \textbf{Eccezione specifica}: `ValueError` per conversione fallita; evita `except:` generici.
+  \item \textbf{Messaggio}: fornisce feedback chiaro; separare validazione da logica di parsing.
+  \item \textbf{Propagazione}: se l'errore non è atteso, lasciare propagare.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Finally}
@@ -48,9 +50,11 @@ finally:
         f.close()
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Cleanup garantito}: `finally` esegue sempre; evita leak di risorse.  
-- \textbf{Preferenza}: usare `with open(...)` al posto del `try/finally` manuale.  
- - \textbf{Stato}: inizializzare `f=None` evita `UnboundLocalError` se l'apertura fallisce.
+\begin{itemize}
+  \item \textbf{Cleanup garantito}: `finally` esegue sempre; evita leak di risorse.
+  \item \textbf{Preferenza}: usare `with open(...)` al posto del `try/finally` manuale.
+  \item \textbf{Stato}: inizializzare `f=None` evita `UnboundLocalError` se l'apertura fallisce.
+\end{itemize}
 \end{tcolorbox}
 
 \subsection{Custom Exception}
@@ -64,9 +68,11 @@ def sqrt(x):
     return x ** 0.5
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Gerarchia}: eredita da `Exception`; personalizza il significato di dominio.  
-- \textbf{Contratto}: precondizione `x >= 0`; documentarla nel docstring e nelle annotazioni.  
-- \textbf{Segnalazione}: usare messaggi informativi per diagnosi e UX.
+\begin{itemize}
+  \item \textbf{Gerarchia}: eredita da `Exception`; personalizza il significato di dominio.
+  \item \textbf{Contratto}: precondizione `x >= 0`; documentarla nel docstring e nelle annotazioni.
+  \item \textbf{Segnalazione}: usare messaggi informativi per diagnosi e UX.
+\end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -91,10 +97,12 @@ Hai imparato a gestire e sollevare eccezioni correttamente.
 
 \section{Contesto e Applicazioni}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
-- Resilienza di script (retry, gestione eccezioni prevedibili).
- - Validazione input e messaggi d'errore chiari.
-- Gestione risorse con context manager.
-- Strategie di fallback e logging di anomalie.
+\begin{itemize}
+  \item Resilienza di script (retry, gestione eccezioni prevedibili).
+  \item Validazione input e messaggi d'errore chiari.
+  \item Gestione risorse con context manager.
+  \item Strategie di fallback e logging di anomalie.
+\end{itemize}
 \end{tcolorbox}
 
 \section{Approfondimenti}
@@ -121,14 +129,14 @@ Esempi commentati:
 import logging, time
 log = logging.getLogger(__name__)
 
-def parse_int(s):
+def parseInt(s):
     try:
         return int(s)
     except ValueError:
         log.warning("input non numerico: %s", s)
         return None
 
-def fetch_with_retry(fn, attempts=3, delay=0.5):
+def fetchWithRetry(fn, attempts=3, delay=0.5):
     for i in range(attempts):
         try:
             return fn()
@@ -138,10 +146,12 @@ def fetch_with_retry(fn, attempts=3, delay=0.5):
     raise RuntimeError("fallimento dopo retry")
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
-- \textbf{Logging}: usa \verb|getLogger(__name__)|; preferisci livelli (`warning`, `info`) a `print`.  
-- \textbf{Retry}: intercetta eccezioni attese (`TimeoutError`) e applica backoff con `sleep`.  
-- \textbf{Fallback}: dopo tentativi, solleva errore aggregato chiaro; non nascondere failure.  
-- \textbf{Parse}: ritorna `None` su input non numerico; scegliere `Optional[int]` nel contratto.
+\begin{itemize}
+  \item \textbf{Logging}: usa \verb|getLogger(__name__)|; preferisci livelli (`warning`, `info`) a `print`.
+  \item \textbf{Retry}: intercetta eccezioni attese (`TimeoutError`) e applica backoff con `sleep`.
+  \item \textbf{Fallback}: dopo tentativi, solleva errore aggregato chiaro; non nascondere failure.
+  \item \textbf{Parse}: ritorna `None` su input non numerico; scegliere `Optional[int]` nel contratto.
+\end{itemize}
 \end{tcolorbox}
 \end{tcolorbox}
 

@@ -137,10 +137,10 @@ print(p1[0], p1[1])  # 10 20
 x, y = p1  # Unpacking works
 
 # Use case: function returns
-def get_coordinates():
+def getCoordinates():
     return Point(100, 200)
 
-coord = get_coordinates()
+coord = getCoordinates()
 print(f"X: {coord.x}, Y: {coord.y}")
 \end{lstlisting}
 
@@ -236,26 +236,26 @@ print(list(itertools.accumulate(numbers, operator.mul)))  # [1, 2, 6, 24, 120]
 from functools import lru_cache
 
 # Without cache: slow (exponential time)
-def fibonacci_slow(n):
+def fibonacciSlow(n):
     if n < 2:
         return n
-    return fibonacci_slow(n-1) + fibonacci_slow(n-2)
+    return fibonacciSlow(n-1) + fibonacciSlow(n-2)
 
 # With cache: fast! (linear time)
 @lru_cache(maxsize=128)
-def fibonacci_fast(n):
+def fibonacciFast(n):
     if n < 2:
         return n
-    return fibonacci_fast(n-1) + fibonacci_fast(n-2)
+    return fibonacciFast(n-1) + fibonacciFast(n-2)
 
-print(fibonacci_fast(100))  # Instant!
+print(fibonacciFast(100))  # Instant!
 
 # Check cache stats
-print(fibonacci_fast.cache_info())
+print(fibonacciFast.cache_info())
 # CacheInfo(hits=98, misses=101, maxsize=128, currsize=101)
 
 # Clear cache
-fibonacci_fast.cache_clear()
+fibonacciFast.cache_clear()
 \end{lstlisting}
 
 \subsection{partial (Partial Application)}
@@ -276,7 +276,7 @@ print(cube(5))    # 125
 # Use case: callback with fixed arguments
 import tkinter as tk
 
-def on_button_click(button_id, event):
+def onButtonClick(buttonId, event):
     print(f"Button {button_id} clicked")
 
 root = tk.Tk()
@@ -590,7 +590,7 @@ print(loaded)
 # Custom objects (use default function)
 from datetime import datetime
 
-def serialize_datetime(obj):
+def serializeDatetime(obj):
     if isinstance(obj, datetime):
         return obj.isoformat()
     raise TypeError(f"Type {type(obj)} not serializable")
@@ -600,7 +600,7 @@ data_with_date = {
     "timestamp": datetime.now()
 }
 
-json_str = json.dumps(data_with_date, default=serialize_datetime)
+json_str = json.dumps(data_with_date, default=serializeDatetime)
 print(json_str)
 \end{lstlisting}
 
@@ -642,42 +642,42 @@ def greet(name: str) -> str:
     return f"Hello, {name}"
 
 # Lists and dicts
-def process_scores(scores: List[int]) -> Dict[str, float]:
+def processScores(scores: List[int]) -> Dict[str, float]:
     return {
         "average": sum(scores) / len(scores),
         "max": max(scores)
     }
 
 # Optional (can be None)
-def find_user(user_id: int) -> Optional[Dict[str, str]]:
+def findUser(userId: int) -> Optional[Dict[str, str]]:
     # ... search logic ...
-    if user_id == 1:
+    if userId == 1:
         return {"name": "Alice", "email": "alice@test.com"}
     return None
 
 # Union (multiple types)
-def format_id(id_value: Union[int, str]) -> str:
-    return str(id_value).zfill(5)
+def formatId(idValue: Union[int, str]) -> str:
+    return str(idValue).zfill(5)
 
 # Tuple (fixed size)
-def get_coordinates() -> Tuple[float, float]:
+def getCoordinates() -> Tuple[float, float]:
     return (10.5, 20.3)
 
 # Callable (function type)
-def apply_operation(
+def applyOperation(
     numbers: List[int],
     operation: Callable[[int], int]
 ) -> List[int]:
     return [operation(n) for n in numbers]
 
-result = apply_operation([1, 2, 3], lambda x: x * 2)
+result = applyOperation([1, 2, 3], lambda x: x * 2)
 print(result)  # [2, 4, 6]
 
 # Type aliases
 Vector = List[float]
 Matrix = List[Vector]
 
-def multiply_matrix(m: Matrix) -> Matrix:
+def multiplyMatrix(m: Matrix) -> Matrix:
     # ... matrix multiplication ...
     pass
 \end{lstlisting}
@@ -697,7 +697,7 @@ class LogAnalyzer:
         self.log_file = log_file
         self.entries = []
 
-    def parse_log(self):
+    def parseLog(self):
         """Parse log entries"""
         # Pattern: 2024-01-15 14:30:45 [INFO] Message here
         pattern = r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[(\w+)\] (.+)"
@@ -737,7 +737,7 @@ class LogAnalyzer:
             "errors": errors[:10]  # First 10 errors
         }
 
-    def save_report(self, output: Path):
+    def saveReport(self, output: Path):
         """Save analysis report as JSON"""
         analysis = self.analyze()
 
@@ -768,8 +768,8 @@ def main():
         return
 
     analyzer = LogAnalyzer(args.logfile)
-    analyzer.parse_log()
-    analyzer.save_report(args.output)
+    analyzer.parseLog()
+    analyzer.saveReport(args.output)
 
     print(f"Analysis complete. Report saved to {args.output}")
 

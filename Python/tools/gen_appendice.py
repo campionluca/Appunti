@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 
-def find_solution_files(root: Path):
+def findSolutionFiles(root: Path):
     candidates = []
     # Prefer dedicated directory if exists
     sol_dir = root / "appendice_soluzioni"
@@ -14,7 +14,7 @@ def find_solution_files(root: Path):
     return candidates
 
 
-def generate_appendix(root: Path, files):
+def generateAppendix(root: Path, files):
     out_dir = root / "appendice_soluzioni"
     out_dir.mkdir(exist_ok=True)
     out_tex = out_dir / "generated_appendice.tex"
@@ -37,8 +37,8 @@ def generate_appendix(root: Path, files):
 
 def main():
     root = Path(__file__).resolve().parents[1]
-    files = find_solution_files(root)
-    out = generate_appendix(root, files)
+    files = findSolutionFiles(root)
+    out = generateAppendix(root, files)
     print(f"[appendice] Generato: {out} (files: {len(files)})")
     print("Aggiungi a main.tex: \n  \\input{appendice_soluzioni/generated_appendice.tex}")
     return 0

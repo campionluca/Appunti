@@ -89,7 +89,7 @@ root.mainloop()
 \begin{lstlisting}
 import tkinter as tk
 
-def on_click():
+def onClick():
     print("Button clicked!")
     label.config(text="Button was clicked")
 
@@ -151,7 +151,7 @@ text.insert(tk.END, "Line 1\n")
 text.insert(tk.END, "Line 2\n")
 
 # Get text
-def get_text():
+def getText():
     content = text.get("1.0", tk.END)  # From start to end
     print(content)
 
@@ -211,10 +211,10 @@ root.mainloop()
 \begin{lstlisting}
 import tkinter as tk
 
-def on_key(event):
+def onKey(event):
     print(f"Key pressed: {event.char}")
 
-def on_mouse_click(event):
+def onMouseClick(event):
     print(f"Mouse clicked at ({event.x}, {event.y})")
 
 root = tk.Tk()
@@ -258,7 +258,7 @@ spinbox.pack()
 scale = tk.Scale(root, from_=0, to=100, orient=tk.HORIZONTAL)
 scale.pack()
 
-def show_value():
+def showValue():
     print(f"Scale value: {scale.get()}")
 
 tk.Button(root, text="Show Value", command=show_value).pack()
@@ -272,13 +272,13 @@ root.mainloop()
 import tkinter as tk
 from tkinter import messagebox
 
-def new_file():
+def newFile():
     messagebox.showinfo("New", "New file created")
 
-def open_file():
+def openFile():
     messagebox.showinfo("Open", "Open file dialog")
 
-def exit_app():
+def exitApp():
     root.quit()
 
 root = tk.Tk()
@@ -290,10 +290,10 @@ root.config(menu=menubar)
 # File menu
 file_menu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=file_menu)
-file_menu.add_command(label="New", command=new_file)
-file_menu.add_command(label="Open", command=open_file)
+file_menu.add_command(label="New", command=newFile)
+file_menu.add_command(label="Open", command=openFile)
 file_menu.add_separator()
-file_menu.add_command(label="Exit", command=exit_app)
+file_menu.add_command(label="Exit", command=exitApp)
 
 # Edit menu
 edit_menu = tk.Menu(menubar, tearoff=0)
@@ -312,27 +312,27 @@ from tkinter import messagebox, filedialog, simpledialog
 
 root = tk.Tk()
 
-def show_info():
+def showInfo():
     messagebox.showinfo("Info", "This is info")
 
-def show_warning():
+def showWarning():
     messagebox.showwarning("Warning", "This is warning")
 
-def show_error():
+def showError():
     messagebox.showerror("Error", "This is error")
 
-def ask_question():
+def askQuestion():
     result = messagebox.askyesno("Question", "Do you like Python?")
     print(f"Answer: {result}")
 
-def open_file():
+def openFile():
     filename = filedialog.askopenfilename(
         title="Select file",
         filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
     )
     print(f"Selected: {filename}")
 
-def ask_name():
+def askName():
     name = simpledialog.askstring("Input", "Enter your name:")
     print(f"Name: {name}")
 
@@ -375,7 +375,7 @@ import tkinter as tk
 import threading
 import time
 
-def long_task():
+def longTask():
     """Simula operazione lunga"""
     button.config(state=tk.DISABLED, text="Working...")
 
@@ -387,7 +387,7 @@ def long_task():
     thread = threading.Thread(target=worker)
     thread.start()
 
-def task_completed():
+def taskCompleted():
     button.config(state=tk.NORMAL, text="Start Task")
     label.config(text="Task completed!")
 
@@ -431,7 +431,7 @@ class Calculator:
                 root,
                 text=text,
                 font=("Arial", 16),
-                command=lambda t=text: self.on_button_click(t)
+                command=lambda t=text: self.onButtonClick(t)
             )
             button.grid(row=row, column=col, sticky="nsew", padx=2, pady=2)
 
@@ -449,7 +449,7 @@ class Calculator:
         for i in range(4):
             root.grid_columnconfigure(i, weight=1)
 
-    def on_button_click(self, char):
+    def onButtonClick(self, char):
         if char == '=':
             try:
                 result = eval(self.expression)
