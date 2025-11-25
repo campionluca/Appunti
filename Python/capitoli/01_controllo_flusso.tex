@@ -1,7 +1,9 @@
 % Modulo 01 — Controllo del Flusso
 \chapter{Controllo del Flusso}
+\label{chap:controllo-flusso}
 
 \section{Introduzione}
+\label{sec:cf-introduzione}
 Questo modulo copre le strutture di controllo fondamentali in Python: condizioni, cicli e controllo del flusso dell'esecuzione.
 
 La descrizione mette in evidenza quando preferire costrutti semplici e leggibili, come ridurre la complessità dei rami condizionali e come evitare loop inefficienti. Vedremo pattern comuni (guard clauses, early return) e insidie tipiche (condizioni annidate, off-by-one).
@@ -9,6 +11,7 @@ La descrizione mette in evidenza quando preferire costrutti semplici e leggibili
 Capire bene il controllo del flusso è essenziale per scrivere codice chiaro, testabile e performante in scenari come elaborazione di liste, validazione di input e automazione di compiti ripetitivi.
 
 \section{Obiettivi di Apprendimento}
+\label{sec:cf-obiettivi}
 \begin{itemize}
   \item Utilizzare \texttt{if}, \texttt{elif}, \texttt{else} con operatori di confronto e logici.
   \item Scrivere cicli \texttt{for} e \texttt{while}, usare \texttt{break}, \texttt{continue}, \texttt{pass}.
@@ -16,16 +19,89 @@ Capire bene il controllo del flusso è essenziale per scrivere codice chiaro, te
 \end{itemize}
 
 \section{Concetti Fondamentali}
+\label{sec:cf-concetti}
 \begin{tcolorbox}[title=Operatori]
 Confronto: \texttt{==}, \texttt{!=}, \texttt{<}, \texttt{>}, \texttt{<=}, \texttt{>=}. Logici: \texttt{and}, \texttt{or}, \texttt{not}. Appartenenza: \texttt{in}, \texttt{not in}.
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Precedenza e short-circuit]
-Gli operatori logici valutano da sinistra a destra e possono interrompere la valutazione (\emph{short-circuit}). Usa parentesi per evitare ambiguità e preferisci condizioni semplici con guard clauses ed \emph{early return} per migliorare leggibilità.
+Gli operatori logici valutano da sinistra a destra e possono interrompere la valutazione (\emph{short-circuit}).
+Usa parentesi per evitare ambiguità e preferisci condizioni semplici con guard clauses ed \emph{early return} per migliorare leggibilità.
 \end{tcolorbox}
 
+\begin{tcolorbox}[
+    title=Confronto: Short-circuit in azione,
+    colback=gray!5,
+    colframe=gray!60,
+    fonttitle=\bfseries,
+    boxrule=0.8pt,
+    arc=2pt,
+    breakable=false
+]
+
+\begin{minipage}[t]{0.48\textwidth}
+\begin{tcolorbox}[
+    title=\textbf{Caso 1: Valuta entrambe},
+    colback=orange!10,
+    colframe=orange!80!black,
+    fonttitle=\bfseries,
+    boxrule=1.5pt,
+    arc=2mm
+]
+\begin{lstlisting}
+def check(x):
+    print(f"Check {x}")
+    return x > 5
+
+a = 10
+if check(a) and check(a+1):
+    print("OK")
+
+# Output:
+# Check 10   -> True
+# Check 11   -> True
+# OK
+\end{lstlisting}
+\vspace{1mm}
+\scriptsize\textbf{Risultato:} Prima \texttt{True} $\rightarrow$ valuta anche la seconda.
+\end{tcolorbox}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+\begin{tcolorbox}[
+    title=\textbf{Caso 2: Short-circuit!},
+    colback=green!10,
+    colframe=green!70!black,
+    fonttitle=\bfseries,
+    boxrule=1.5pt,
+    arc=2mm
+]
+\begin{lstlisting}
+def check(x):
+    print(f"Check {x}")
+    return x > 5
+
+a = 3
+if check(a) and check(a+1):
+    print("OK")
+
+# Output:
+# Check 3    -> False
+# (check(4) NON eseguito!)
+\end{lstlisting}
+\vspace{1mm}
+\scriptsize\textbf{Risultato:} Prima \texttt{False} $\rightarrow$ interrompe!
+\end{tcolorbox}
+\end{minipage}
+
+\end{tcolorbox}
+
+\vspace{0.3cm}
+
 \section{Esempi Pratici}
+\label{sec:cf-esempi}
 \subsection{Condizioni}
+\label{subsec:cf-condizioni}
 \begin{lstlisting}
 eta = 18
 if eta < 18:
@@ -37,33 +113,190 @@ else:
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
-  \item \textbf{Branching}: catene `if/elif/else` gestiscono casi esclusivi.
-  \item \textbf{Confronto}: `==` vs `<`; preferire condizioni semplici e nomi espliciti.
-  \item \textbf{I/O}: la stampa è l'effetto; separare logica dal lato utente quando possibile.
+  \item \textbf{Branching (ramificazione)}: Le catene \texttt{if/elif/else} gestiscono casi mutuamente esclusivi. Quando una condizione è vera, Python esegue quel blocco e salta tutti gli altri. Nel nostro esempio, se \texttt{eta < 18}, Python stampa "Minorenne" e ignora \texttt{elif} ed \texttt{else}.
+  \item \textbf{Separare logica da output}: Nell'esempio sopra, la stampa è l'effetto collaterale. È meglio separare la decisione (logica) dalla presentazione (I/O). Esempio migliorato:
 \end{itemize}
 \end{tcolorbox}
 
-\subsection{Cicli for e while}
 \begin{lstlisting}
-# for su range
-for i in range(3):
-    print(i)
+# Migliore: logica separata dall'output
+def classificaEta(eta):
+    if eta < 18:
+        return "minorenne"
+    elif eta == 18:
+        return "appenaMaggiorenne"
+    else:
+        return "maggiorenne"
 
+# La funzione restituisce dati, non stampa
+categoria = classificaEta(18)
+print(f"Categoria: {categoria}")  # Output gestito separatamente
+\end{lstlisting}
+\begin{tcolorbox}[title=Perché separare logica da I/O?]
+\begin{itemize}
+  \item \textbf{Testabilità}: Puoi testare \texttt{classificaEta()} senza dover catturare l'output della console
+  \item \textbf{Riusabilità}: La funzione può essere usata sia in un programma console che in un'interfaccia grafica
+  \item \textbf{Flessibilità}: Puoi cambiare il formato dell'output senza modificare la logica
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Early Return}
+\label{subsec:cf-early-return}
+
+\begin{tcolorbox}[
+    title=\textbf{Senza early return - Annidamento profondo},
+    colback=red!10,
+    colframe=red!80!black,
+    fonttitle=\bfseries,
+    boxrule=1.5pt,
+    arc=2mm
+]
+\begin{lstlisting}
+def calcolaSconto(eta, eMembro, importo):
+    if eta >= 18:
+        if eMembro:
+            if importo > 100:
+                return importo * 0.2
+            else:
+                return importo * 0.1
+        else:
+            return 0
+    else:
+        return 0
+
+# Utilizzo
+print(calcolaSconto(25, True, 150))
+# Output: 30.0
+\end{lstlisting}
+\textbf{Problema:} 3 livelli di annidamento rendono difficile seguire la logica. Devi leggere tutto il codice per capire quando ritorna 0.
+\end{tcolorbox}
+
+\vspace{0.3cm}
+
+\begin{tcolorbox}[
+    title=\textbf{Con early return (guard clauses)},
+    colback=green!10,
+    colframe=green!70!black,
+    fonttitle=\bfseries,
+    boxrule=1.5pt,
+    arc=2mm
+]
+\begin{lstlisting}
+def calcolaScontoV2(eta, eMembro, importo):
+    if eta < 18:
+        return 0
+    if not eMembro:
+        return 0
+    if importo > 100:
+        return importo * 0.2
+    return importo * 0.1
+
+# Utilizzo
+print(calcolaScontoV2(25, True, 150))
+# Output: 30.0
+\end{lstlisting}
+\textbf{Vantaggio:} Logica lineare e chiara. I casi speciali (minorenne, non membro) sono gestiti subito all'inizio con un return immediato. Il codice è più facile da leggere dall'alto verso il basso.
+\end{tcolorbox}
+
+\begin{tcolorbox}[title=Guard Clauses]
+Le \textbf{guard clauses} sono controlli che escludono subito i casi non validi o speciali, permettendo al codice principale di procedere senza annidamenti. Questo pattern:
+\begin{itemize}
+  \item Riduce la complessità cognitiva
+  \item Rende il codice più manutenibile
+  \item Separa chiaramente i casi speciali dalla logica principale
+\end{itemize}
+\end{tcolorbox}
+
+\vspace{0.3cm}
+
+\subsection{Cicli for e while}
+\label{subsec:cf-cicli}
+
+\subsubsection{La funzione range()}
+\label{subsubsec:cf-range}
+\begin{lstlisting}
+# range(stop): genera numeri da 0 a stop-1
+for i in range(5):
+    print(i)
+# Output: 0, 1, 2, 3, 4
+
+# range(start, stop): genera numeri da start a stop-1
+for i in range(2, 6):
+    print(i)
+# Output: 2, 3, 4, 5
+
+# range(start, stop, step): genera numeri con incremento personalizzato
+for i in range(0, 10, 2):
+    print(i)
+# Output: 0, 2, 4, 6, 8
+
+# range con step negativo: contare all'indietro
+for i in range(5, 0, -1):
+    print(i)
+# Output: 5, 4, 3, 2, 1
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Come funziona range()]
+\texttt{range()} genera una sequenza di numeri interi. Accetta 1, 2 o 3 argomenti:
+\begin{itemize}
+  \item \texttt{range(stop)}: genera da 0 a stop-1
+  \item \texttt{range(start, stop)}: genera da start a stop-1
+  \item \texttt{range(start, stop, step)}: genera da start a stop-1, incrementando di step
+\end{itemize}
+\textbf{Importante}: Il valore \texttt{stop} è sempre escluso dalla sequenza.
+\end{tcolorbox}
+
+\subsubsection{enumerate() per collezioni}
+\label{subsubsec:cf-enumerate}
+\begin{lstlisting}
+# Modo sbagliato: usare range() e accedere per indice
+nomi = ["Alice", "Bob", "Charlie"]
+for i in range(len(nomi)):
+    print(f"{i}: {nomi[i]}")
+
+# Modo migliore: usare enumerate()
+nomi = ["Alice", "Bob", "Charlie"]
+for indice, nome in enumerate(nomi):
+    print(f"{indice}: {nome}")
+
+# enumerate() con indice iniziale personalizzato
+for num, nome in enumerate(nomi, start=1):
+    print(f"{num}. {nome}")
+# Output:
+# 1. Alice
+# 2. Bob
+# 3. Charlie
+\end{lstlisting}
+
+\begin{tcolorbox}[title=Perché usare enumerate()]
+\texttt{enumerate()} è preferibile a \texttt{range(len(...))} perché:
+\begin{itemize}
+  \item Più leggibile: ottieni direttamente indice e valore
+  \item Più sicuro: eviti errori di accesso fuori range
+  \item Più Pythonic: segue le convenzioni del linguaggio
+\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Ciclo while}
+\label{subsubsec:cf-while}
+\begin{lstlisting}
 # while con condizione
 count = 0
 while count < 3:
     print(count)
     count += 1
+# Output: 0, 1, 2
 \end{lstlisting}
-\begin{tcolorbox}[title=Spiegazione del codice]
+\begin{tcolorbox}[title=Quando usare while vs for]
 \begin{itemize}
-  \item \textbf{range}: genera 0..2; preferire `enumerate(seq)` quando si itera su collezioni.
-  \item \textbf{while}: usa condizione booleana e aggiorna stato (`count += 1`).
-  \item \textbf{Chiarezza}: evitare `while True` con break se un range o un iterabile è sufficiente.
+  \item \textbf{for}: quando sai quante iterazioni fare o stai iterando su una collezione
+  \item \textbf{while}: quando non sai in anticipo quante iterazioni servono (es: input utente, condizioni complesse)
+  \item \textbf{Evita}: \texttt{while True} con break se puoi usare una condizione esplicita
 \end{itemize}
 \end{tcolorbox}
 
 \subsection{break e continue}
+\label{subsec:cf-break-continue}
 \begin{lstlisting}
 for n in range(10):
     if n == 5:
@@ -87,97 +320,3 @@ for n in range(10):
   \item Workflow di automazione con controlli su stati e errori.
 \end{itemize}
 \end{tcolorbox}
-
-\section{Esercizi}
-\begin{enumerate}
-  \item Data una temperatura, stampa "Freddo", "Tiepido" o "Caldo" usando \texttt{if/elif/else}.
-  \item Stampa i numeri da 1 a 100, sostituisci multipli di 3 con "Fizz" e di 5 con "Buzz".
-  \item Calcola la somma dei numeri pari da 1 a 50.
-  \item Chiedi numeri all'utente finché digita 0, poi stampa il totale.
-  \item Itera su una lista di stringhe e stampa solo quelle con lunghezza \(> 3\).
-\end{enumerate}
-
-\section{Riepilogo}
-Hai visto le strutture di controllo principali per governare il flusso del programma.
-
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-\begin{itemize}
-  \item Orchestrare logiche di business e validazioni.
-  \item Implementare state machine e menu interattivi.
-  \item Gestire retry/backoff e circuit breaker semplificati.
-  \item Costruire pipeline di elaborazione condizionale.
-\end{itemize}
-\end{tcolorbox}
-
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
-I \textbf{condizionali} sono la base del controllo del flusso. È fondamentale usare \verb|if/elif/else| con condizioni semplici e leggibili; quando una condizione diventa complessa, è consigliabile scomporla in variabili intermedie che documentino l'intenzione del codice.
-
-Un concetto importante riguarda lo \textbf{short-circuit} degli operatori logici. Gli operatori \verb|and| e \verb|or| interrompono la valutazione non appena l'esito è determinato, il che ha implicazioni sia per le prestazioni sia per la semantica del codice. Questo meccanismo può essere sfruttato intenzionalmente, ma deve essere fatto con consapevolezza per evitare comportamenti inattesi.
-
-Quando si scrive codice iterativo, la scelta tra \textbf{cicli} \verb|for| e \verb|while| dipende dalla natura del problema: \verb|for| è preferito quando si itera su sequenze o iterabili definiti, mentre \verb|while| è più adatto per condizioni generali. Gli statement \verb|break| e \verb|continue| permettono di controllare il flusso, ma dovrebbero essere usati con parsimonia per evitare di rendere il codice difficile da seguire.
-
-Una caratteristica spesso trascurata è la \textbf{clausola else su for/while}, che viene eseguita se il ciclo termina senza incontrare un \verb|break|. Questo è particolarmente utile per rilevare quando una condizione di ricerca non è stata soddisfatta, eliminando la necessità di flag booleani.
-
-Lavorando con \verb|range|, è importante ricordare che \verb|range(n)| esclude \verb|n|, il che può causare errori off-by-one se non si fa attenzione. Inoltre, è preferibile usare l'enumerazione con \verb|enumerate| piuttosto che mantenere contatori manuali.
-
-L'\textbf{operatore walrus (:=)}, introdotto in Python 3.8, consente di assegnare e usare un valore nella stessa espressione. Può rendere più espressivi alcuni pattern di lettura e validazione, ma il suo abuso riduce la chiarezza del codice; deve essere usato con discernimento.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Per chi viene da C/Java/JS: tradurre i pattern]
-\textbf{for}: in Python itera su elementi, non sugli indici; usa `enumerate(xs)` per avere coppie `(i, x)`.  
-\textbf{break/continue}: come in C/Java; la clausola `else` su `for/while` è eseguita se non avviene `break`.  
-\textbf{switch}: usa `if/elif` o `dict` di funzioni per dispatch.  
-\textbf{Comprehension}: preferire `[f(x) for x in xs if cond]` a loop con accumulatore quando leggibile.
-
-Esempi commentati:
-\begin{lstlisting}
-# C/Java style (concettuale)
-sum = 0
-for (int i = 0; i < n; i++) {
-    if (arr[i] % 2 == 0) continue;
-    sum += arr[i];
-}
-
-# Python idiomatico
-total = 0
-for x in arr:
-    if x % 2 == 0:
-        continue
-    total += x
-
-# Python compatto: solo dispari
-total = sum(x for x in arr if x % 2 == 1)
-
-# for-else: cerca elemento; se non trovato, esegui fallback
-target = 42
-for x in arr:
-    if x == target:
-        print("trovato")
-        break
-else:
-    print("non trovato")
-\end{lstlisting}
-\begin{tcolorbox}[title=Spiegazione del codice]
-\begin{itemize}
-  \item \textbf{Indice vs elemento}: il primo snippet mostra stile basato su indice; in Python si preferisce iterare su elementi (`for x in arr`).
-  \item \textbf{Filtri}: usare `continue` per saltare i pari; l'alternativa compatta usa generator expression in `sum(...)`.
-  \item \textbf{for-else}: il blocco `else` si esegue solo se il ciclo non ha usato `break` (elemento non trovato); utile per ricerca con fallback.
-  \item \textbf{Stato}: `total` accumula; separare accumulo dalla logica di decisione semplifica i test.
-\end{itemize}
-\end{tcolorbox}
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Idiomi utili e anti-pattern]
-Le \textbf{guard clauses} sono un pattern elegante per ridurre l'annidamento dei condizionali. Invece di nidificare blocchi if/else profondamente, è possibile controllare le precondizioni in anticipo e tornare o sollevare eccezioni subito se non sono soddisfatte. Questo rende il codice più leggibile e facile da seguire.
-
-Quando si implementano \textbf{validazioni}, è importante definire predicati chiari e leggibili. Evitare condizioni composte troppo complicate; se necessario, estrarre la logica in funzioni ausiliarie con nomi espliciti che comunichino l'intento.
-
-Per le operazioni di \textbf{accumulazione}, Python offre funzioni built-in come `sum`, `any` e `all`, nonché il modulo `itertools` che forniscono soluzioni ottimizzate ed espressive. Usare queste al posto di loop manuali non solo è più idiomatico, ma spesso più efficiente.
-
-Infine, è importante essere consapevoli degli \textbf{anti-pattern}: usare loop con indice+lookup quando si potrebbe iterare direttamente su elementi, o permettere che l'annidamento dei condizionali diventi troppo profondo senza fattorizzare funzioni ausiliarie, rende il codice difficile da mantenere. Queste pratiche dovrebbero essere evitate attivamente durante lo sviluppo.
-\end{tcolorbox}
-
-\paragraph{Pattern raccomandati} Sostituire annidamenti profondi con return anticipati o funzioni ausiliarie. Separare la costruzione dei dati dalla loro validazione, riducendo la complessità cognitiva.
-Consulta: \url{https://docs.python.org/3/tutorial/controlflow.html}.

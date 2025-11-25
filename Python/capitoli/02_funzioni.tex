@@ -1,7 +1,9 @@
 % Modulo 02 — Funzioni
 \chapter{Funzioni}
+\label{chap:funzioni}
 
 \section{Introduzione}
+\label{sec:fun-introduzione}
 Le funzioni sono blocchi riutilizzabili di codice. In Python si definiscono con \texttt{def}, possono avere parametri, valori di default, \texttt{*args} e \texttt{**kwargs}, e restituiscono valori con \texttt{return}.
 
 Questa descrizione illustra come strutturare funzioni piccole e focalizzate, come documentarle con docstring e come scegliere le firme per rendere il codice facile da testare e riutilizzare. Discuteremo anche gli effetti dello scope e delle chiusure per evitare comportamenti inattesi.
@@ -9,6 +11,7 @@ Questa descrizione illustra come strutturare funzioni piccole e focalizzate, com
 Padroneggiare le funzioni consente di organizzare il progetto in unità logiche, ridurre duplicazioni e migliorare la leggibilità, con impatto diretto su manutenzione e qualità.
 
 \section{Obiettivi di Apprendimento}
+\label{sec:fun-obiettivi}
 \begin{itemize}
   \item Definire funzioni con parametri e valori di default.
   \item Usare \texttt{*args} e \texttt{**kwargs} per flessibilità negli argomenti.
@@ -16,6 +19,7 @@ Padroneggiare le funzioni consente di organizzare il progetto in unità logiche,
 \end{itemize}
 
 \section{Concetti Fondamentali}
+\label{sec:fun-concetti}
 \begin{tcolorbox}[title=Firma delle Funzioni]
 Esempio: \texttt{def greet(name: str, upper: bool = False) -> str: ...}
 Docstring: descrive comportamento, parametri e return.
@@ -26,7 +30,9 @@ Preferisci funzioni pure (stessa input $\rightarrow$ stessa output, senza effett
 \end{tcolorbox}
 
 \section{Esempi Pratici}
+\label{sec:fun-esempi}
 \subsection{Funzione semplice}
+\label{subsec:fun-semplice}
 \begin{lstlisting}
 def add(a, b):
     """Ritorna la somma di a e b."""
@@ -43,6 +49,7 @@ print(add(2, 3))
 \end{tcolorbox}
 
 \subsection{Default, *args e **kwargs}
+\label{subsec:fun-args-kwargs}
 \begin{lstlisting}
 def greet(name, upper=False):
     msg = f"Ciao, {name}!"
@@ -67,6 +74,7 @@ print(describe(lang="Python", version=3.11))
 \end{tcolorbox}
 
 \subsection{Scope e lambda}
+\label{subsec:fun-scope-lambda}
 \begin{lstlisting}
 factor = 2
 def mul(x):
@@ -92,6 +100,7 @@ print(mul(5), double(5))
 \end{tcolorbox}
 
 \section{Esercizi}
+\label{sec:fun-esercizi}
 \begin{enumerate}
   \item Scrivi una funzione che calcola il fattoriale di un numero (iterativa e ricorsiva).
   \item Crea una funzione \texttt{safeDiv(a, b)} che gestisce divisione per zero.
@@ -101,9 +110,11 @@ print(mul(5), double(5))
 \end{enumerate}
 
 \section{Riepilogo}
+\label{sec:fun-riepilogo}
 Hai imparato a definire funzioni, gestire parametri flessibili e comprendere scope e lambda.
 
 \section{Contesto e Applicazioni}
+\label{sec:fun-contesto}
 \begin{tcolorbox}[title=Contesto e Applicazioni]
 \begin{itemize}
   \item Progettare API di modulo e funzioni riutilizzabili.
@@ -114,6 +125,7 @@ Hai imparato a definire funzioni, gestire parametri flessibili e comprendere sco
 \end{tcolorbox}
 
 \section{Approfondimenti}
+\label{sec:fun-approfondimenti}
 \begin{tcolorbox}[title=Spiegazioni dettagliate]
 Nella progettazione delle \textbf{firme delle funzioni}, è opportuno preferire parametri nominali (keyword) per migliorare la chiarezza delle chiamate. Usare argomenti obbligatori per gli input essenziali e parametri opzionali con valori di default per quelli meno critici rende l'API più intuitiva.
 

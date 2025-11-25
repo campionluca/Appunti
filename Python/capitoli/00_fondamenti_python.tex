@@ -1,7 +1,9 @@
 % Modulo 00 — Fondamenti Python
 \chapter{Fondamenti Python}
+\label{chap:fondamenti}
 
 \section{Introduzione}
+\label{sec:fond-introduzione}
 Questo modulo introduce i concetti fondamentali del linguaggio Python: esecuzione di script, tipi di dato di base, variabili, input/output, e buone pratiche di stile.
 
 Inquadreremo quando usare l'interprete rispetto agli script, come scegliere i tipi corretti per rappresentare dati reali e come applicare un primo livello di ordine e leggibilità al codice.
@@ -10,6 +12,7 @@ La descrizione è pensata per chi parte da zero o proviene da un altro linguaggi
 Al termine sarai in grado di impostare un ambiente funzionante, comprendere la sintassi di base e produrre piccoli programmi che leggono input, elaborano dati e presentano un output chiaro.
 
 \section{Obiettivi di Apprendimento}
+\label{sec:fond-obiettivi}
 Al termine del modulo lo studente sarà in grado di:
 \begin{itemize}
 	\item Eseguire script Python da riga di comando e in ambienti interattivi.
@@ -19,6 +22,7 @@ Al termine del modulo lo studente sarà in grado di:
 \end{itemize}
 
 \section{Concetti Fondamentali}
+\label{sec:fond-concetti}
 \begin{tcolorbox}[title=Setup Ambiente]
 	Installa Python (3.10+) e verifica con \texttt{python --version}. Usa un IDE (VS Code, PyCharm) o un editor leggero. Avvia l'interprete con \texttt{python} o esegui file con \texttt{python main.py}.
 \end{tcolorbox}
@@ -32,8 +36,10 @@ Al termine del modulo lo studente sarà in grado di:
 \end{tcolorbox}
 
 \section{Esempi Pratici}
+\label{sec:fond-esempi}
 
 \subsection{Hello, World}
+\label{subsec:fond-hello}
 \begin{lstlisting}
 print("Hello, World!")
 \end{lstlisting}
@@ -46,6 +52,7 @@ print("Hello, World!")
 \end{tcolorbox}
 
 \subsection{Variabili e Tipi}
+\label{subsec:fond-variabili-tipi}
 \begin{lstlisting}
 nome = "Ada"
 anni = 27
@@ -63,6 +70,7 @@ print(type(nome), type(anni), type(altezza), type(studente))
 \end{tcolorbox}
 
 \subsection{Input e Output Formattato}
+\label{subsec:fond-input-output}
 \begin{lstlisting}
 eta = int(input("Quanti anni hai? "))
 print(f"Tra 5 anni avrai {eta + 5} anni.")
