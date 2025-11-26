@@ -251,8 +251,7 @@ def fibonacciFast(n):
 print(fibonacciFast(100))  # Instant!
 
 # Check cache stats
-print(fibonacciFast.cache_info())
-# CacheInfo(hits=98, misses=101, maxsize=128, currsize=101)
+print(fibonacciFast.cache_info())  # Output: CacheInfo(hits=98, misses=101, maxsize=128, currsize=101)
 
 # Clear cache
 fibonacciFast.cache_clear()

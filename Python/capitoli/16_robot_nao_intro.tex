@@ -65,7 +65,7 @@ def connect(host="nao.local", port=9559):
         session.connect(f"tcp://{host}:{port}")
     except RuntimeError as e:
         # In Python le eccezioni si catturano per tipo; qui gestiamo problemi di rete
-        print("Connessione fallita:", e)
+        print("Connessione fallita:", e)  # Output (in caso di errore): Connessione fallita: [messaggio errore]
         raise
     return session
 

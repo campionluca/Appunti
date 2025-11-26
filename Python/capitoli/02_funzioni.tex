@@ -22,11 +22,21 @@ Padroneggiare le funzioni consente di organizzare il progetto in unità logiche,
 \label{sec:fun-concetti}
 \begin{tcolorbox}[title=Firma delle Funzioni]
 Esempio: \texttt{def greet(name: str, upper: bool = False) -> str: ...}
+
+\textbf{Elementi della firma}:
+\begin{itemize}
+  \item \texttt{def greet}: nome della funzione
+  \item \texttt{name: str}: parametro obbligatorio con \textbf{type hint} (annotazione di tipo); indica che `name` dovrebbe essere una stringa
+  \item \texttt{upper: bool = False}: parametro opzionale con valore di default e type hint; se non passato, usa `False`
+  \item \texttt{-> str}: annotazione del tipo di ritorno; indica che la funzione restituisce una stringa
+  \item Type hints sono \textbf{opzionali} e non vincolanti a runtime; servono per documentazione e strumenti di analisi statica (mypy, IDE)
+\end{itemize}
+
 Docstring: descrive comportamento, parametri e return.
 \end{tcolorbox}
 
-\begin{tcolorbox}[title=Purezza ed effetti collaterali]
-Preferisci funzioni pure (stessa input $\rightarrow$ stessa output, senza effetti esterni) quando possibile. Riduci dipendenze globali e I/O nella logica, isolandole in layer dedicati per facilitare test e riuso.
+\begin{tcolorbox}[title=Purezza delle Funzioni]
+Preferisci funzioni pure (senza I/O al loro interno) quando possibile. Riduci dipendenze globali e I/O nella logica, isolandole in layer dedicati per facilitare test e riuso.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -38,7 +48,7 @@ def add(a, b):
     """Ritorna la somma di a e b."""
     return a + b
 
-print(add(2, 3))
+print(add(2, 3))  # Output: 5
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
@@ -61,15 +71,51 @@ def total(*args):
 def describe(**kwargs):
     return ", ".join(f"{k}={v}" for k, v in kwargs.items())
 
-print(greet("Ada", upper=True))
-print(total(1, 2, 3))
-print(describe(lang="Python", version=3.11))
+print(greet("Ada", upper=True))  # Output: CIAO, ADA!
+print(total(1, 2, 3))  # Output: 6
+print(describe(lang="Python", version=3.11))  # Output: lang=Python, version=3.11
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
+  \item \textbf{Metodo join}: `", ".join(sequenza)` è un metodo delle stringhe che concatena gli elementi di una sequenza (lista, tupla) usando la stringa come separatore. Esempio: `", ".join(["a", "b", "c"])` produce `"a, b, c"`. Più efficiente di concatenare con `+` in un loop.
   \item \textbf{Default}: `upper=False` definisce parametro opzionale; evita default mutabili.
-  \item \textbf{*args}: raccoglie posizione variabile di argomenti in una tupla.
-  \item \textbf{**kwargs}: raccoglie coppie chiave/valore in un dizionario; utile per parametri nominati flessibili.
+  \item \textbf{*args} (arguments): il simbolo `*` indica un numero variabile di \textbf{argomenti posizionali} in una tupla. Il nome `args` è solo una convenzione; potresti usare `*numeri` o `*valori`, ma `*args` è lo standard. Permette di passare quanti argomenti vuoi alla funzione.
+  \item \textbf{**kwargs} (keyword arguments): il simbolo `**` indica un numero variabile di \textbf{argomenti nominativi} (chiave=valore) in un dizionario. Anche qui `kwargs` è convenzione; `**opzioni` funzionerebbe, ma si usa `**kwargs`. Utile per parametri flessibili con nome.
+  \item \textbf{Ordine dei parametri}: quando combinati, l'ordine deve essere: parametri normali $\rightarrow$ `*args` $\rightarrow$ `**kwargs`.
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Combinare parametri, *args e **kwargs}
+\label{subsec:fun-combinazione}
+\begin{lstlisting}
+def funzione_completa(a, b, *args, **kwargs):
+    """Dimostra l'uso combinato di tutti i tipi di parametri."""
+    print(f"Parametri obbligatori: a={a}, b={b}")  # Stampa i valori di a e b
+    print(f"Argomenti aggiuntivi (*args): {args}")  # Stampa la tupla args
+    print(f"Argomenti nominati (**kwargs): {kwargs}")  # Stampa il dizionario kwargs
+    return a + b + sum(args)
+
+# Esempi di chiamata
+risultato = funzione_completa(1, 2)
+# Output: Parametri obbligatori: a=1, b=2
+#         Argomenti aggiuntivi (*args): ()
+#         Argomenti nominati (**kwargs): {}
+
+risultato = funzione_completa(1, 2, 3, 4, 5)
+# Output: Parametri obbligatori: a=1, b=2
+#         Argomenti aggiuntivi (*args): (3, 4, 5)
+#         Argomenti nominati (**kwargs): {}
+
+risultato = funzione_completa(1, 2, 3, 4, nome="Test", valore=100)
+# Output: Parametri obbligatori: a=1, b=2
+#         Argomenti aggiuntivi (*args): (3, 4)
+#         Argomenti nominati (**kwargs): {'nome': 'Test', 'valore': 100}
+\end{lstlisting}
+\begin{tcolorbox}[title=Spiegazione del codice]
+\begin{itemize}
+  \item \textbf{Ordine rigido}: prima i parametri obbligatori (`a, b`), poi `*args` che cattura tutti gli argomenti posizionali rimanenti, infine `**kwargs` per quelli nominati.
+  \item \textbf{*args è una tupla}: puoi iterarla, indicizzarla, usare `sum(args)`, ecc.
+  \item \textbf{**kwargs è un dict}: accedi ai valori con `kwargs['chiave']` o `kwargs.get('chiave')`.
 \end{itemize}
 \end{tcolorbox}
 
@@ -81,129 +127,19 @@ def mul(x):
     return x * factor  # legge dalla closure globale
 
 double = lambda x: x * 2
-print(mul(5), double(5))
+print(mul(5), double(5))  # Output: 10 10
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
-  \item \textbf{Scope}: `mul` legge `factor` dallo scope esterno (E nel LEGB).
+  \item \textbf{Scope LEGB}: Python risolve i nomi delle variabili seguendo l'ordine LEGB:
+  \begin{itemize}
+    \item \textbf{L}ocal: scope locale della funzione corrente
+    \item \textbf{E}nclosing: scope delle funzioni esterne (closure)
+    \item \textbf{G}lobal: scope globale del modulo
+    \item \textbf{B}uilt-in: nomi predefiniti di Python (es. `print`, `len`)
+  \end{itemize}
+  In `mul`, `factor` viene cercato prima in Local (non trovato), poi in Enclosing (non trovato), infine in Global (trovato). Evita dipendenze da variabili globali quando possibile.
   \item \textbf{Lambda}: funzioni anonime per espressioni semplici; preferire `def` per logiche complesse.
   \item \textbf{Effetti}: nessun I/O dentro `mul`; la stampa è separata.
 \end{itemize}
 \end{tcolorbox}
-
-\begin{tcolorbox}[title=Casi d'uso]
-\begin{itemize}
-  \item Librerie di utilità con funzioni riusabili e ben documentate.
-\item Calcoli e trasformazioni di dati separati dall'I/O.
-  \item API interne con firme stabili e test unitari.
-\end{itemize}
-\end{tcolorbox}
-
-\section{Esercizi}
-\label{sec:fun-esercizi}
-\begin{enumerate}
-  \item Scrivi una funzione che calcola il fattoriale di un numero (iterativa e ricorsiva).
-  \item Crea una funzione \texttt{safeDiv(a, b)} che gestisce divisione per zero.
-  \item Implementa una funzione che normalizza una lista di numeri tra 0 e 1.
-  \item Usa \texttt{*args} per sommare un numero variabile di valori.
-  \item Scrivi una funzione che formatta una stringa con parametri via \texttt{**kwargs}.
-\end{enumerate}
-
-\section{Riepilogo}
-\label{sec:fun-riepilogo}
-Hai imparato a definire funzioni, gestire parametri flessibili e comprendere scope e lambda.
-
-\section{Contesto e Applicazioni}
-\label{sec:fun-contesto}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-\begin{itemize}
-  \item Progettare API di modulo e funzioni riutilizzabili.
-  \item Funzioni pure per testabilità e caching.
-  \item Higher-order functions per composizione.
-  \item Validazione e parsing input incapsulati.
-\end{itemize}
-\end{tcolorbox}
-
-\section{Approfondimenti}
-\label{sec:fun-approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
-Nella progettazione delle \textbf{firme delle funzioni}, è opportuno preferire parametri nominali (keyword) per migliorare la chiarezza delle chiamate. Usare argomenti obbligatori per gli input essenziali e parametri opzionali con valori di default per quelli meno critici rende l'API più intuitiva.
-
-Un errore comune riguarda l'uso di \textbf{default mutabili}. Assegnare una lista o un dizionario come valore di default (ad esempio, \verb|def f(x=[])|) è un anti-pattern pericoloso perché il valore di default viene creato una sola volta all'atto della definizione della funzione, causando sharing indesiderato tra chiamate. La soluzione è usare \verb|None| come default e inizializzare l'oggetto mutabile all'interno della funzione.
-
-I parametri \textbf{\*args e \*\*kwargs} sono utili per accettare un numero variabile di argomenti, permettendo grande flessibilità nella firma della funzione. Tuttavia, è essenziale documentare chiaramente cosa viene accettato e, nel caso di \*\*kwargs, quali chiavi sono supportate.
-
-La documentazione mediante \textbf{docstring e annotazioni di tipo} è fondamentale per comunicare il contratto di una funzione. Docstring dovrebbero spiegare comportamento, parametri, valore di ritorno e possibili eccezioni; le annotazioni di tipo facilitano l'inferenza e comunicano le aspettative ai lettori e agli strumenti di analisi statica.
-
-Un principio importante è la distinzione tra \textbf{purezza e effetti collaterali}. Preferire funzioni pure (quelle che non modificano stato esterno e non dipendono da esso) quando possibile rende il codice testabile e prevedibile. Gli effetti collaterali come I/O e mutazioni dovrebbero essere isolati ai confini del sistema.
-
-Concetti avanzati come \textbf{closure e currying} permettono di chiudere valori nell'ambiente per creare funzioni specializzate. Tuttavia, è necessario prestare attenzione alla cattura di variabili mutevoli, poiché il comportamento può diventare sorprendente se le variabili cambiano valore dopo la definizione della closure.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title=Per chi viene da C/Java/JS: firme e scope]
-\textbf{Annotazioni di tipo}: sono opzionali e non vincolanti a runtime; servono a lettori e strumenti.  
-\textbf{Keyword arguments}: chiamate come `func(x=1, y=2)` aumentano la chiarezza rispetto agli argomenti posizionali.  
-\textbf{LEGB scope}: Local, Enclosing, Global, Built-in: risoluzione dei nomi dall'interno verso l'esterno; evita dipendenze da globali.
-
-Esempi commentati:
-\begin{lstlisting}
-# Default mutabile: anti-pattern
-def appendItemBad(item, bucket=[]):
-    bucket.append(item)
-    return bucket
-
-# Uso corretto
-def appendItem(item, bucket=None):
-    if bucket is None:
-        bucket = []
-    bucket.append(item)
-    return bucket
-
-# Keyword arguments e type hint
-from typing import Iterable, Callable
-
-def transform(xs: Iterable[int], fn: Callable[[int], int]) -> list[int]:
-    return [fn(x) for x in xs]
-
-data = [1, 2, 3]
-res = transform(xs=data, fn=lambda x: x * 2)
-\end{lstlisting}
-\begin{tcolorbox}[title=Spiegazione del codice]
-\begin{itemize}
-  \item \textbf{Default mutabile}: `bucket=[]` condivide lista tra chiamate; bug classico.
-  \item \textbf{Pattern corretto}: usa `None` e inizializza all'interno per isolare stato.
-  \item \textbf{Type hints}: `Iterable[int]` e `Callable` comunicano contratto; non impongono a runtime.
-  \item \textbf{Keyword args}: chiamata `transform(xs=data, fn=...)` aumenta chiarezza dei parametri.
-\end{itemize}
-\end{tcolorbox}
-\end{tcolorbox}
-
-\begin{tcolorbox}[title={Idiomi: funzioni piccole, composizione, map/filter}]
-La \textbf{composizione} di funzioni piccole e pure è uno dei principi cardine della programmazione funzionale e di un buon design software. Costruire pipeline componibili consente di combinare operazioni semplici per risolvere problemi complessi, migliorando la testabilità e la riusabilità.
-
-Le funzioni \textbf{map e filter} rappresentano operazioni fondamentali su collezioni. È possibile usarle direttamente (`map(f, xs)` e `filter(pred, xs)`) oppure preferire le list comprehension `[f(x) for x in xs]` e `[x for x in xs if pred(x)]` che spesso risultano più leggibili e Pythonici.
-
-La \textbf{documentazione mediante docstring} dovrebbe includere esempi d'uso chiari e descrivere i contratti della funzione. I commenti all'interno della funzione dovrebbero spiegare il "perché" piuttosto che il "cosa", evitando commenti superflui che semplicemente ripetono il codice.
-
-\begin{lstlisting}
-def normalize(xs):
-    """Riporta i valori in [0, 1]."""
-    m = max(xs) or 1
-    return [x / m for x in xs]
-
-def pipeline(xs):
-    return normalize([x for x in xs if x > 0])
-
-print(pipeline([-2, 3, 6]))  # [0.5, 1.0]
-\end{lstlisting}
-\begin{tcolorbox}[title=Spiegazione del codice]
-\begin{itemize}
-  \item \textbf{Docstring}: descrive contratto e output atteso.
-  \item \textbf{max or 1}: fallback per evitare divisione per zero su lista vuota.
-  \item \textbf{Comprensione}: crea nuova lista normalizzata; `pipeline` mostra composizione filtrando positivi.
-\end{itemize}
-\end{tcolorbox}
-\end{tcolorbox}
-
-\paragraph{Composizione} Creare pipeline di funzioni piccole e testabili; separare parsing, validazione e trasformazione, restituendo strutture dati chiare.
-Consulta: \url{https://docs.python.org/3/tutorial/controlflow.html#defining-functions} e PEP 8 per docstring.

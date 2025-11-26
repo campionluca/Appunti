@@ -41,7 +41,7 @@ Al termine del modulo lo studente sarà in grado di:
 \subsection{Hello, World}
 \label{subsec:fond-hello}
 \begin{lstlisting}
-print("Hello, World!")
+print("Hello, World!")  # Output: Hello, World!
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
@@ -59,7 +59,7 @@ anni = 27
 altezza = 1.68
 studente = True
 
-print(type(nome), type(anni), type(altezza), type(studente))
+print(type(nome), type(anni), type(altezza), type(studente))  # Output: <class 'str'> <class 'int'> <class 'float'> <class 'bool'>
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
@@ -73,7 +73,7 @@ print(type(nome), type(anni), type(altezza), type(studente))
 \label{subsec:fond-input-output}
 \begin{lstlisting}
 eta = int(input("Quanti anni hai? "))
-print(f"Tra 5 anni avrai {eta + 5} anni.")
+print(f"Tra 5 anni avrai {eta + 5} anni.")  # Output (esempio con eta=20): Tra 5 anni avrai 25 anni.
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
@@ -218,7 +218,7 @@ meta = {"k": 1}     # dict
 
 # Condizioni basate su truthiness
 if values:           # True se non vuota
-    print("ha elementi")
+    print("ha elementi")  # Output: ha elementi
 
 # Funzione e slicing
 def head(seq):

@@ -298,8 +298,8 @@ file_menu.add_command(label="Exit", command=exitApp)
 # Edit menu
 edit_menu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Edit", menu=edit_menu)
-edit_menu.add_command(label="Cut", command=lambda: print("Cut"))
-edit_menu.add_command(label="Copy", command=lambda: print("Copy"))
+edit_menu.add_command(label="Cut", command=lambda: print("Cut"))  # Output (al click): Cut
+edit_menu.add_command(label="Copy", command=lambda: print("Copy"))  # Output (al click): Copy
 
 root.mainloop()
 \end{lstlisting}

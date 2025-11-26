@@ -21,7 +21,8 @@ Lista (mutabile), Tupla (immutabile), Dizionario (mappa chiave $\rightarrow$ val
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Complessità e prestazioni]
-Liste: append/iterazione veloci; Dizionari/insiemi: lookup/inserimento mediamente O(1); Tuple: immutabili e leggere. Scegli in base a mutabilità, necessità di ordine e costi operativi.
+  %TODO spiega cosa si intende con lookup
+Liste: append/iterazione veloci; Dizionari/insiemi: lookup/inserimento mediamente accesso casuale; Tuple: immutabili e leggere. Scegli in base a mutabilità, necessità di ordine e costi operativi.
 \end{tcolorbox}
 
 \section{Esempi Pratici}
@@ -36,7 +37,6 @@ print(quadrati)
 \begin{itemize}
   \item \textbf{Lista mutabile}: `append` aggiunge in coda in O(1) amortizzato.
   \item \textbf{Comprensione}: crea una nuova lista trasformando elementi (`n*n`).
-  \item \textbf{Separazione}: calcolo e I/O (`print`) sono distinti per chiarezza.
 \end{itemize}
 \end{tcolorbox}
 
@@ -65,7 +65,7 @@ for k, v in info.items():
 \begin{itemize}
   \item \textbf{Insert/Update}: assegnazione su chiave crea/aggiorna coppie chiave $\rightarrow$ valore.
   \item \textbf{items}: itera su coppie `(k, v)` evitando lookup ripetuti.
-  \item \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento.
+  \item \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento. %TODO non si capisce chi è 3.7, e cosa intendi con questa frase
 \end{itemize}
 \end{tcolorbox}
 
@@ -77,107 +77,7 @@ print(u | v, u & v, u - v)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
-  \item \textbf{Unione/intersezione/differenza}: \texttt{|}, \texttt{\&}, \texttt{-} operano su insiemi con semantica matematica.
-  \item \textbf{Unicità}: i set eliminano duplicati; elementi devono essere hashable.
-  \item \textbf{Prestazioni}: membership e operazioni insiemistiche sono mediamente O(1)/O(n).
+  \item \textbf{Unione\texttt{|}/intersezione\texttt{\&}/differenza\texttt{-}}: operano su insiemi con semantica matematica.
+  \item \textbf{Unicità}: i set eliminano duplicati;
 \end{itemize}
 \end{tcolorbox}
-
-\begin{tcolorbox}[title=Casi d'uso]
-\begin{itemize}
-  \item Rimozione di duplicati e membership veloce con set.
-  \item Indici e lookup rapidi con dizionari.
-  \item Rappresentazione compatta e immutabile con tuple.
-\end{itemize}
-\end{tcolorbox}
-
-\section{Esercizi}
-\begin{enumerate}
-  \item Dato un elenco di parole, rimuovi duplicati mantenendo l'ordine.
-  \item Conta la frequenza dei caratteri in una stringa con un dizionario.
-  \item Data una lista di tuple (nome, punteggio), stampa il top 3.
-  \item Usa un set per trovare l'intersezione tra due liste.
-  \item Trasforma una lista di dizionari in un dizionario indicizzato per una chiave.
-\end{enumerate}
-
-\section{Riepilogo}
-Hai esplorato le principali strutture dati e le loro operazioni tipiche.
-
-\section{Contesto e Applicazioni}
-\begin{tcolorbox}[title=Contesto e Applicazioni]
-\begin{itemize}
-  \item Modellare dati di dominio (liste, dizionari, set).
-  \item Cache LRU e code con \texttt{deque}.
-  \item Rilevare duplicati e membership con \texttt{set}.
-  \item Mappare configurazioni e lookup con \texttt{dict}.
-\end{itemize}
-\end{tcolorbox}
-
-\section{Approfondimenti}
-\begin{tcolorbox}[title=Spiegazioni dettagliate]
-La scelta tra \textbf{liste e tuple} dipende dai requisiti di mutabilità e uso. Liste sono adatte per collezioni che cambiano nel tempo, mentre tuple sono ideali per record immutabili e quando è necessario usarle come chiavi di dizionari, grazie alla loro immutabilità.
-
-Gli \textbf{insiemi} sono particolarmente utili per eliminare duplicati e per eseguire test di appartenenza rapidi grazie alla loro implementazione hash-based. Tuttavia, è importante ricordare che solo oggetti hashable possono essere inseriti in un set.
-
-I \textbf{dizionari} forniscono un mapping flessibile tra chiavi e valori. Oltre alle operazioni di base, è opportuno sfruttare metodi come \verb|dict.get| per accesso sicuro, \verb|defaultdict| per evitare controlli di chiave, e \verb|Counter| per conteggi di frequenza, che sono costruiti su dizionari e risolvono pattern comuni in modo elegante.
-
-Le \textbf{comprensioni} (list/dict/set comprehension) sono un idioma fondamentale di Python che dovrebbe essere preferito ai cicli espliciti per trasformazioni dati. Tuttavia, è importante mantenere le espressioni leggibili; comprensioni molto complesse dovrebbero essere sostituite da funzioni esplicite.
-
-La distinzione tra \textbf{copia superficiale e profonda} è cruciale quando si lavora con strutture dati nidificate. La copia superficiale copia solo il contenitore, mantenendo riferimenti agli oggetti interni; la copia profonda, al contrario, copia ricorsivamente tutti gli oggetti. È necessario usare \verb|copy.copy| e \verb|copy.deepcopy| consapevolmente a seconda dei requisiti.
-
-Infine, conoscere la \textbf{complessità computazionale} delle operazioni chiave (append, pop, membership test) su diverse strutture dati è essenziale per evitare colli di bottiglia in applicazioni critiche per le prestazioni.
-\end{tcolorbox}
-
-\begin{tcolorbox}[title={Per chi viene da C/Java/JS: mapping, set e ordinamenti}]
-\textbf{dict}: come una HashMap/oggetto JS ma con metodi ricchi (`items`, `keys`, `values`); le chiavi devono essere hashable (immutabili).  
-\textbf{set}: come HashSet, elimina duplicati e offre operazioni insiemistiche (\texttt{|}, \texttt{\&}, \texttt{-}).  
-\textbf{ordinamenti}: `sorted(xs, key=...)` ordina senza mutare; `list.sort()` ordina in-place.
-
-Esempi commentati:
-\begin{lstlisting}
-from collections import defaultdict, Counter
-
-# Conteggi frequenze
-c = Counter("abracadabra")
-print(c.most_common(2))  # [('a', 5), ('b', 2)]
-
-# Indice per chiave
-people = [
-    {"name": "Ada", "age": 27},
-    {"name": "Bob", "age": 33},
-]
-by_name = {p["name"]: p for p in people}
-
-# set per unione/intersezione
-a = {1, 2, 3}
-b = {3, 4}
-print(a | b, a & b, a - b)
-
-# defaultdict per accumuli
-acc = defaultdict(list)
-for p in people:
-    acc[p["age"]].append(p["name"])
-
-# ordinare per chiave
-print(sorted(people, key=lambda p: (p["age"], p["name"])) )
-\end{lstlisting}
-\begin{tcolorbox}[title=Spiegazione del codice]
-\begin{itemize}
-  \item \textbf{Counter}: conteggio frequenze e \texttt{most\_common} per ranking rapido.
-  \item \textbf{Comprehension dict}: crea indice per chiave evitando loop manuali.
-  \item \textbf{defaultdict}: inizializza accumulatori riducendo boilerplate.
-  \item \textbf{sorted key}: ordinamento stabile su tuple di chiavi senza mutare l'input.
-\end{itemize}
-\end{tcolorbox}
-\end{tcolorbox}
-
-\begin{tcolorbox}[title={Idiomi: comprensioni, unpacking, generatori}]
-Le \textbf{comprensioni} come `[f(x) for x in xs if cond]` sono il modo idiomatico di Python per eseguire trasformazioni rapide su collezioni. Sono sia più efficienti che più leggibili rispetto a cicli for con accumulator.
-
-L'\textbf{unpacking} di sequenze consente di scomporre dati in modo elegante e dichiarativo. L'assegnazione semplice `a, b = pair` funziona per coppie, mentre l'operatore `*rest` consente di raccogliere elementi rimanenti in una lista: `first, *rest = xs`. Questo meccanismo è particolarmente utile per pattern matching su strutture dati.
-
-I \textbf{generatori} sono funzioni che usano `yield` per produrre valori uno alla volta, permettendo elaborazioni lazy che riducono significativamente l'uso di memoria. Le generator expression, scritte come `(... for x in xs)`, funzionano come list comprehension ma non allocano l'intera lista in memoria. Quando si processano generatori, funzioni come `sum`, `any` e `all` lavorano naturalmente e in modo efficiente.
-\end{tcolorbox}
-
-\paragraph{Idiomi utili} Sfruttare \verb|zip|, \verb|sorted(key=...)| e generatori per elaborare sequenze in modo espressivo e efficiente.
-Consulta: \url{https://docs.python.org/3/tutorial/datastructures.html}.
