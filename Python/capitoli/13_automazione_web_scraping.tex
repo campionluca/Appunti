@@ -49,6 +49,34 @@ result = subprocess.run(
 print(result.stdout)  # python is great
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Esempio Esecuzione Subprocess}
+
+\begin{center}
+\begin{tcolorbox}[title=Terminal Output: subprocess.run(), colback=black!5, coltitle=white, colbacktitle=blue!50!black, width=0.95\textwidth, fonttitle=\bfseries\ttfamily, fontupper=\small\ttfamily]
+\$ python3 subprocess\_example.py\\
+\\
+\textcolor{blue}{Running: ls -la}\\
+total 48\\
+drwxr-xr-x  12 user  staff   384 Nov 26 10:30 .\\
+drwxr-xr-x   5 user  staff   160 Nov 25 09:15 ..\\
+-rw-r--r--   1 user  staff  1234 Nov 26 10:28 main.py\\
+-rw-r--r--   1 user  staff   567 Nov 25 14:20 scraper.py\\
+\\
+\textcolor{green}{Exit code: 0}\\
+\\
+\textcolor{blue}{Running: git status}\\
+On branch main\\
+Your branch is up to date with 'origin/main'.\\
+\\
+nothing to commit, working tree clean\\
+\textcolor{green}{Exit code: 0}\\
+\\
+\textcolor{blue}{Running: grep python}\\
+python is great\\
+\textcolor{green}{Exit code: 0}
+\end{tcolorbox}
+\end{center}
+
 \subsection{Automazione file system}
 
 \begin{lstlisting}
@@ -91,6 +119,70 @@ def batchRename(directory, pattern, replacement):
 
 \section{Web Scraping con requests}
 
+\subsubsection{Visualizzazione: Web Scraping Workflow}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, rounded corners, draw=blue!50, fill=blue!10, thick, minimum width=3cm, minimum height=1cm, text width=2.8cm, align=center},
+    decision/.style={diamond, draw=orange!50, fill=orange!10, thick, minimum width=2.5cm, minimum height=1.5cm, text width=2.3cm, align=center, aspect=2},
+    arrow/.style={->, >=stealth, thick}
+]
+
+\node[box] (start) {1. Identificare Target};
+\node[box, below of=start] (robots) {2. Verificare robots.txt};
+\node[decision, below of=robots, node distance=2cm] (allowed) {Scraping Permesso?};
+\node[box, below of=allowed, node distance=2.5cm] (request) {3. HTTP Request};
+\node[box, below of=request] (parse) {4. Parse HTML (BeautifulSoup)};
+\node[box, below of=parse] (extract) {5. Estrai Dati};
+\node[box, below of=extract] (save) {6. Salva (CSV/JSON/DB)};
+\node[box, right of=allowed, node distance=5cm] (stop) {STOP: Rispettare Policy};
+
+\draw[arrow] (start) -- (robots);
+\draw[arrow] (robots) -- (allowed);
+\draw[arrow] (allowed) -- node[right] {Sì} (request);
+\draw[arrow] (allowed) -- node[above] {No} (stop);
+\draw[arrow] (request) -- (parse);
+\draw[arrow] (parse) -- (extract);
+\draw[arrow] (extract) -- (save);
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: HTTP Request/Response Cycle}
+
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={rectangle, draw=blue!50, fill=blue!10, thick, minimum width=4cm, minimum height=1.2cm},
+    server/.style={rectangle, draw=green!50, fill=green!10, thick, minimum width=4cm, minimum height=1.2cm},
+    arrow/.style={->, >=stealth, thick}
+]
+
+\node[box] (client) at (0,0) {\textbf{Client (Python Script)}};
+\node[server] (server) at (8,0) {\textbf{Web Server}};
+
+% Request arrow
+\draw[arrow, blue!70] (client.north) to[bend left=30] node[above, text width=3.5cm, align=center] {\small \textbf{HTTP REQUEST}\\GET /api/data\\Headers: User-Agent\\Params: ?page=1} (server.north);
+
+% Response arrow
+\draw[arrow, green!70] (server.south) to[bend left=30] node[below, text width=3.5cm, align=center] {\small \textbf{HTTP RESPONSE}\\Status: 200 OK\\Content-Type: text/html\\Body: HTML/JSON data} (client.south);
+
+% Components
+\node[below of=client, node distance=2cm, align=left, text width=4cm] {
+    \texttt{requests.get()}\\
+    \texttt{requests.post()}\\
+    \texttt{Session()}
+};
+
+\node[below of=server, node distance=2cm, align=left, text width=4cm] {
+    \small Nginx/Apache\\
+    \small Application Server\\
+    \small Database
+};
+
+\end{tikzpicture}
+\end{center}
+
 \subsection{Installazione}
 
 \begin{lstlisting}[language=bash]
@@ -127,6 +219,35 @@ try:
 except requests.Timeout:
     print("Request timed out")
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Esempio requests.get() Output}
+
+\begin{center}
+\begin{tcolorbox}[title=Terminal Output: requests.get(), colback=black!5, coltitle=white, colbacktitle=green!50!black, width=0.95\textwidth, fonttitle=\bfseries\ttfamily, fontupper=\small\ttfamily]
+>>> import requests\\
+>>> response = requests.get("https://api.github.com/users/python")\\
+>>> response\\
+<Response [200]>\\
+\\
+>>> response.status\_code\\
+200\\
+\\
+>>> response.headers['content-type']\\
+'application/json; charset=utf-8'\\
+\\
+>>> data = response.json()\\
+>>> data['name']\\
+'Python'\\
+\\
+>>> data['public\_repos']\\
+47\\
+\\
+>>> data['followers']\\
+12543\\
+\\
+\textcolor{green}{GET request completata con successo!}
+\end{tcolorbox}
+\end{center}
 
 \subsection{POST requests}
 
@@ -168,6 +289,56 @@ response = session.get("https://example.com/api")
 
 \section{BeautifulSoup: Parsing HTML}
 
+\subsubsection{Visualizzazione: HTML DOM Tree Example}
+
+\begin{center}
+\begin{tikzpicture}[
+    level distance=1.5cm,
+    level 1/.style={sibling distance=6cm},
+    level 2/.style={sibling distance=3cm},
+    level 3/.style={sibling distance=2cm},
+    every node/.style={rectangle, draw=blue!50, fill=blue!10, thick, rounded corners, minimum width=1.5cm, minimum height=0.8cm, font=\small\ttfamily}
+]
+
+\node {html}
+    child {node {head}
+        child {node {title}}
+        child {node {meta}}
+    }
+    child {node {body}
+        child {node {div.container}
+            child {node {h1}}
+            child {node {p.text}}
+        }
+        child {node {div.footer}
+            child {node {a}}
+        }
+    };
+
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\textbf{HTML Corrispondente:}
+\begin{lstlisting}[language=html, frame=single, basicstyle=\tiny\ttfamily]
+<html>
+  <head>
+    <title>Esempio</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Titolo</h1>
+      <p class="text">Paragrafo</p>
+    </div>
+    <div class="footer">
+      <a href="/link">Link</a>
+    </div>
+  </body>
+</html>
+\end{lstlisting}
+\end{center}
+
 \subsection{Basics}
 
 \begin{lstlisting}
@@ -196,6 +367,46 @@ div = soup.find("div", class_="container")
 h2 = div.find("h2")
 paragraph = h2.find_next_sibling("p")
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: BeautifulSoup Selectors Reference}
+
+\begin{center}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Metodo} & \textbf{Sintassi} & \textbf{Descrizione} \\
+\hline\hline
+\texttt{find()} & \texttt{soup.find("div")} & Trova il primo elemento \\
+\hline
+\texttt{find\_all()} & \texttt{soup.find\_all("a")} & Trova tutti gli elementi \\
+\hline
+\texttt{select()} & \texttt{soup.select(".class")} & CSS selector (tutti) \\
+\hline
+\texttt{select\_one()} & \texttt{soup.select\_one("\#id")} & CSS selector (primo) \\
+\hline
+By class & \texttt{find("div", class\_="box")} & Trova per classe \\
+\hline
+By id & \texttt{find("div", id="main")} & Trova per ID \\
+\hline
+By attribute & \texttt{find("a", href=True)} & Trova con attributo \\
+\hline
+CSS class & \texttt{select(".article")} & Selettore classe CSS \\
+\hline
+CSS id & \texttt{select("\#header")} & Selettore ID CSS \\
+\hline
+Nested & \texttt{select("div.box p")} & Selettore discendente \\
+\hline
+Child & \texttt{select("div > p")} & Selettore figlio diretto \\
+\hline
+Multiple & \texttt{select("h1, h2, h3")} & Selettori multipli \\
+\hline
+Attribute & \texttt{select("[data-id]")} & Con attributo specifico \\
+\hline
+Text content & \texttt{element.text} & Estrai testo \\
+\hline
+Attribute value & \texttt{element.get("href")} & Estrai attributo \\
+\hline
+\end{tabular}
+\end{center}
 
 \subsection{Esempio: Scraping news}
 
@@ -228,6 +439,31 @@ news = scrapeNews("https://news.example.com")
 for article in news:
     print(f"{article['title']}: {article['link']}")
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: BeautifulSoup Parsing Output}
+
+\begin{center}
+\begin{tcolorbox}[title=Terminal Output: BeautifulSoup parsing, colback=black!5, coltitle=white, colbacktitle=purple!50!black, width=0.95\textwidth, fonttitle=\bfseries\ttfamily, fontupper=\small\ttfamily]
+>>> from bs4 import BeautifulSoup\\
+>>> html = "<div class='article'><h2>Title</h2><p>Text</p></div>"\\
+>>> soup = BeautifulSoup(html, "lxml")\\
+\\
+>>> soup.find("h2")\\
+<h2>Title</h2>\\
+\\
+>>> soup.find("h2").text\\
+'Title'\\
+\\
+>>> soup.select(".article")\\
+[<div class="article"><h2>Title</h2><p>Text</p></div>]\\
+\\
+>>> article = soup.select\_one(".article")\\
+>>> article.find("p").text\\
+'Text'\\
+\\
+\textcolor{green}{Parsing HTML completato con successo!}
+\end{tcolorbox}
+\end{center}
 
 \section{API REST}
 
@@ -316,6 +552,33 @@ driver.save_screenshot("screenshot.png")
 driver.quit()
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Selenium Automation Example}
+
+\begin{center}
+\begin{tcolorbox}[title=Terminal Output: Selenium automation, colback=black!5, coltitle=white, colbacktitle=orange!50!black, width=0.95\textwidth, fonttitle=\bfseries\ttfamily, fontupper=\small\ttfamily]
+\$ python3 selenium\_example.py\\
+\\
+\textcolor{blue}{Inizializzazione ChromeDriver...}\\
+[WDM] - Downloading chromedriver 119.0.6045.105\\
+[WDM] - Driver downloaded to: /Users/user/.wdm/drivers/\\
+\\
+\textcolor{blue}{Navigazione a https://example.com...}\\
+\textcolor{green}{Pagina caricata: Example Domain}\\
+\\
+\textcolor{blue}{Ricerca elemento h1...}\\
+\textcolor{green}{Trovato: Example Domain}\\
+\\
+\textcolor{blue}{Click su pulsante submit...}\\
+\textcolor{green}{Pulsante cliccato}\\
+\\
+\textcolor{blue}{Attesa elemento .result...}\\
+\textcolor{green}{Elemento apparso dopo 2.3s}\\
+\\
+\textcolor{blue}{Screenshot salvato: screenshot.png}\\
+\textcolor{green}{Automazione completata con successo!}
+\end{tcolorbox}
+\end{center}
+
 \section{Etica e Best Practices}
 
 \subsection{robots.txt}
@@ -344,6 +607,33 @@ else:
 
 \subsection{Rate Limiting}
 
+\subsubsection{Visualizzazione: Rate Limiting Algorithm}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.3cm,
+    box/.style={rectangle, rounded corners, draw=blue!50, fill=blue!10, thick, minimum width=3.5cm, minimum height=0.9cm, text width=3.3cm, align=center, font=\small},
+    decision/.style={diamond, draw=orange!50, fill=orange!10, thick, minimum width=2.5cm, minimum height=1.3cm, text width=2.2cm, align=center, aspect=2, font=\small},
+    arrow/.style={->, >=stealth, thick}
+]
+
+\node[box] (start) {Request arriva};
+\node[box, below of=start] (calc) {Calcola tempo trascorso};
+\node[decision, below of=calc, node distance=2cm] (check) {elapsed < delay?};
+\node[box, below of=check, node distance=2.3cm] (send) {Invia request};
+\node[box, below of=send] (update) {Aggiorna timestamp};
+\node[box, left of=check, node distance=4.5cm] (sleep) {Sleep per (delay - elapsed)};
+
+\draw[arrow] (start) -- (calc);
+\draw[arrow] (calc) -- (check);
+\draw[arrow] (check) -- node[right, font=\tiny] {No} (send);
+\draw[arrow] (check) -- node[above, font=\tiny] {Sì} (sleep);
+\draw[arrow] (sleep) |- (send);
+\draw[arrow] (send) -- (update);
+
+\end{tikzpicture}
+\end{center}
+
 \begin{lstlisting}
 import time
 import requests
@@ -370,7 +660,74 @@ for url in urls:
     # Process...
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Rate Limiting in Azione}
+
+\begin{center}
+\begin{tcolorbox}[title=Terminal Output: Rate limiting (1 req/s), colback=black!5, coltitle=white, colbacktitle=red!50!black, width=0.95\textwidth, fonttitle=\bfseries\ttfamily, fontupper=\small\ttfamily]
+\$ python3 rate\_limited\_scraper.py\\
+\\
+\textcolor{blue}{[10:30:00.000]} Request 1 → https://example.com/page1\\
+\textcolor{green}{[10:30:00.234]} Response 200 OK\\
+\\
+\textcolor{yellow}{[10:30:00.234]} Waiting 0.766s (rate limit)...\\
+\\
+\textcolor{blue}{[10:30:01.000]} Request 2 → https://example.com/page2\\
+\textcolor{green}{[10:30:01.187]} Response 200 OK\\
+\\
+\textcolor{yellow}{[10:30:01.187]} Waiting 0.813s (rate limit)...\\
+\\
+\textcolor{blue}{[10:30:02.000]} Request 3 → https://example.com/page3\\
+\textcolor{green}{[10:30:02.145]} Response 200 OK\\
+\\
+\textcolor{green}{Completato: 3 requests in 2.1 secondi (1.0 req/s)}
+\end{tcolorbox}
+\end{center}
+
 \subsection{Retry con backoff}
+
+\subsubsection{Visualizzazione: Exponential Backoff}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Timeline
+    \draw[->, >=stealth, thick] (0,0) -- (12,0) node[right] {Tempo (secondi)};
+
+    % Attempts
+    \node[circle, draw=red!50, fill=red!20, thick, minimum size=0.8cm] at (0,0.5) {\small 1};
+    \node[above=0.3cm] at (0,0.5) {\small Attempt 1};
+    \node[below] at (0,0) {\small 0s};
+
+    \draw[->, red, thick] (0.4,0.5) -- (1.6,0.5);
+    \node[above, font=\tiny] at (1,0.5) {fail};
+
+    \node[circle, draw=orange!50, fill=orange!20, thick, minimum size=0.8cm] at (2,0.5) {\small 2};
+    \node[above=0.3cm] at (2,0.5) {\small Attempt 2};
+    \node[below] at (2,0) {\small 0.3s};
+
+    \draw[->, orange, thick] (2.4,0.5) -- (4.6,0.5);
+    \node[above, font=\tiny] at (3.5,0.5) {fail};
+
+    \node[circle, draw=yellow!70!black, fill=yellow!20, thick, minimum size=0.8cm] at (5,0.5) {\small 3};
+    \node[above=0.3cm] at (5,0.5) {\small Attempt 3};
+    \node[below] at (5,0) {\small 0.9s};
+
+    \draw[->, yellow!70!black, thick] (5.4,0.5) -- (9.6,0.5);
+    \node[above, font=\tiny] at (7.5,0.5) {fail};
+
+    \node[circle, draw=green!50, fill=green!20, thick, minimum size=0.8cm] at (10,0.5) {\small 4};
+    \node[above=0.3cm] at (10,0.5) {\small Attempt 4};
+    \node[below] at (10,0) {\small 2.7s};
+
+    \draw[->, green, thick] (10.4,0.5) -- (11.6,0.5);
+    \node[above, font=\tiny, color=green!70!black] at (11,0.7) {success!};
+
+    % Formula
+    \node[below=1.5cm, align=center] at (6,0) {
+        \textbf{Backoff Formula:} wait = backoff\_factor * (2 \^{} attempt)\\
+        \small Esempio: 0.3 * (2\^{}0) = 0.3s, 0.3 * (2\^{}1) = 0.6s, 0.3 * (2\^{}2) = 1.2s
+    };
+\end{tikzpicture}
+\end{center}
 
 \begin{lstlisting}
 import requests
@@ -512,6 +869,51 @@ crontab -e
 \end{lstlisting}
 
 \section{Progetto Completo: News Aggregator}
+
+\subsubsection{Visualizzazione: News Aggregator Architecture}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    component/.style={rectangle, draw=blue!50, fill=blue!10, thick, minimum width=3cm, minimum height=1cm, rounded corners, align=center},
+    storage/.style={cylinder, draw=green!50, fill=green!10, thick, minimum width=2.5cm, minimum height=1cm, aspect=0.3, shape border rotate=90, align=center},
+    external/.style={rectangle, draw=orange!50, fill=orange!10, thick, minimum width=2.5cm, minimum height=0.8cm, align=center},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% External sources
+\node[external] (source1) at (0,4) {TechNews};
+\node[external] (source2) at (3,4) {ScienceDaily};
+\node[external] (source3) at (6,4) {BlogSite};
+
+% Main components
+\node[component] (scraper) at (3,2) {Scraper\\Module};
+\node[component] (parser) at (3,0) {BeautifulSoup\\Parser};
+\node[component] (saver) at (3,-2) {Data Saver};
+
+% Storage
+\node[storage] (db) at (8,-2) {SQLite\\Database};
+
+% Scheduler
+\node[component, minimum width=2cm] (scheduler) at (8,2) {Scheduler\\(cron/schedule)};
+
+% Connections
+\draw[arrow, blue] (source1) -- (scraper);
+\draw[arrow, blue] (source2) -- (scraper);
+\draw[arrow, blue] (source3) -- (scraper);
+
+\draw[arrow] (scraper) -- node[right, font=\tiny] {HTML} (parser);
+\draw[arrow] (parser) -- node[right, font=\tiny] {Extracted data} (saver);
+\draw[arrow] (saver) -- node[above, font=\tiny] {INSERT} (db);
+
+\draw[arrow, dashed, red] (scheduler) -- node[above, font=\tiny] {trigger ogni ora} (scraper);
+
+% Rate limiter
+\node[draw=red!50, fill=red!10, thick, rounded corners, minimum width=2cm, minimum height=0.6cm, font=\small] at (0,2) {Rate Limiter};
+\draw[arrow, red, dashed] (0,1.7) -- (scraper);
+
+\end{tikzpicture}
+\end{center}
 
 \begin{lstlisting}
 import requests

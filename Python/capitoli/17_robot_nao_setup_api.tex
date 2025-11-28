@@ -13,6 +13,42 @@
 \section{Approfondimenti}
 Per NAOqi 2.x in Python si usa tipicamente il pacchetto \texttt{qi} per la sessione e i servizi. Organizzare un piccolo progetto con virtualenv e file di configurazione (host/IP, porte, credenziali se presenti).
 
+\subsubsection{Visualizzazione: Sequenza di Connessione}
+Il diagramma seguente illustra la sequenza di operazioni per stabilire una sessione con NAO e ottenere i servizi.
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw=black, thick, minimum width=3cm, minimum height=0.8cm, align=center},
+    decision/.style={diamond, draw=black, thick, minimum width=2.5cm, minimum height=1.5cm, align=center, aspect=2},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% Nodes
+\node[box, fill=blue!20] (start) {Inizio\\Client Python};
+\node[box, fill=green!20, below of=start] (create) {Crea qi.Session()};
+\node[box, fill=yellow!20, below of=create] (connect) {session.connect()\\tcp://host:9559};
+\node[decision, fill=orange!20, below of=connect, node distance=2cm] (check) {Connessione\\OK?};
+\node[box, fill=red!20, right of=check, node distance=4cm] (error) {RuntimeError\\Gestire eccezione};
+\node[box, fill=green!20, below of=check, node distance=2.5cm] (service1) {session.service()\\Richiedi servizi};
+\node[box, fill=green!20, below of=service1] (service2) {ALMotion, ALTextToSpeech\\ALVideoDevice, etc.};
+\node[box, fill=blue!20, below of=service2] (end) {Invoca metodi\\su proxy};
+
+% Arrows
+\draw[arrow] (start) -- (create);
+\draw[arrow] (create) -- (connect);
+\draw[arrow] (connect) -- (check);
+\draw[arrow] (check) -- node[above] {No} (error);
+\draw[arrow] (check) -- node[right] {Si} (service1);
+\draw[arrow] (service1) -- (service2);
+\draw[arrow] (service2) -- (end);
+\draw[arrow] (error) |- (connect);
+
+\end{tikzpicture}
+\end{center}
+
+In caso di fallimento, il client deve gestire l'eccezione e tentare nuovamente la connessione o segnalare l'errore all'utente.
+
 \begin{tcolorbox}[title=Sessione e servizi]
 \begin{lstlisting}
 import qi

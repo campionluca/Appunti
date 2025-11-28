@@ -19,6 +19,58 @@ Dopo questo capitolo saprai:
 
 \section{Introduzione}
 
+\subsubsection{Visualizzazione: Workflow Testing Completo}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    phase/.style={rectangle, rounded corners, draw, thick, minimum width=4cm, minimum height=1cm, align=center, font=\small},
+    arrow/.style={->, >=stealth, thick}
+]
+    % Phases
+    \node[phase, fill=blue!10, draw=blue!60] (write) {
+        \textbf{1. Scrivi Test}\\
+        \footnotesize{unittest/pytest}
+    };
+
+    \node[phase, fill=green!10, draw=green!60, below of=write] (run) {
+        \textbf{2. Esegui Test}\\
+        \footnotesize{pytest -v}
+    };
+
+    \node[phase, fill=orange!10, draw=orange!60, below of=run] (coverage) {
+        \textbf{3. Misura Coverage}\\
+        \footnotesize{pytest --cov}
+    };
+
+    \node[phase, fill=purple!10, draw=purple!60, below of=coverage] (debug) {
+        \textbf{4. Debug Failures}\\
+        \footnotesize{pdb/breakpoint()}
+    };
+
+    \node[phase, fill=red!10, draw=red!60, below of=debug] (ci) {
+        \textbf{5. CI/CD}\\
+        \footnotesize{GitHub Actions}
+    };
+
+    % Arrows
+    \draw[arrow, blue!60] (write) -- (run);
+    \draw[arrow, green!60] (run) -- (coverage);
+    \draw[arrow, orange!60] (coverage) -- (debug);
+    \draw[arrow, purple!60] (debug) -- (ci);
+
+    % Feedback loop
+    \draw[arrow, red!60, dashed, bend right=50] (ci.west) to node[left, font=\tiny] {Feedback} (write.west);
+
+    % Tools annotations
+    \node[anchor=west, font=\tiny, text=gray] at (5, 0) {Mock, fixtures, parametrize};
+    \node[anchor=west, font=\tiny, text=gray] at (5, -1.5) {Assertions, markers};
+    \node[anchor=west, font=\tiny, text=gray] at (5, -3) {Report HTML, missing lines};
+    \node[anchor=west, font=\tiny, text=gray] at (5, -4.5) {Step, inspect, post-mortem};
+    \node[anchor=west, font=\tiny, text=gray] at (5, -6) {Automated testing};
+\end{tikzpicture}
+\end{center}
+
 \subsection{Perché testare?}
 
 I test sono una componente fondamentale dello sviluppo software moderno per molteplici ragioni. Dal punto di vista della \textbf{qualità}, i test permettono di catturare bug prima che raggiungano la produzione, riducendo significativamente i costi di correzione e i rischi di downtime.
@@ -33,15 +85,42 @@ Infine, i test sono essenziali per \textbf{prevenire regressioni}, cioè la re-i
 
 \subsection{Piramide dei test}
 
-\begin{verbatim}
-        /\
-       /E2E\        End-to-End (pochi, lenti, fragili)
-      /------\
-     /  Inte  \     Integration (moderati)
-    /----------\
-   /    Unit    \   Unit (molti, veloci, stabili)
-  /--------------\
-\end{verbatim}
+\subsubsection{Visualizzazione: Piramide dei Test}
+
+\begin{center}
+\begin{tikzpicture}[scale=1.2]
+    % E2E layer (top)
+    \fill[blue!20] (0,4) -- (-1.5,3) -- (1.5,3) -- cycle;
+    \draw[thick] (0,4) -- (-1.5,3) -- (1.5,3) -- cycle;
+    \node at (0,3.5) {\textbf{E2E}};
+    \node[align=center, font=\footnotesize] at (0,2.6) {10\%};
+
+    % Integration layer (middle)
+    \fill[green!20] (-1.5,3) -- (1.5,3) -- (2.8,1.8) -- (-2.8,1.8) -- cycle;
+    \draw[thick] (-1.5,3) -- (1.5,3) -- (2.8,1.8) -- (-2.8,1.8) -- cycle;
+    \node at (0,2.4) {\textbf{Integration}};
+    \node[align=center, font=\footnotesize] at (0,1.5) {20\%};
+
+    % Unit tests layer (bottom)
+    \fill[orange!20] (-2.8,1.8) -- (2.8,1.8) -- (4,0) -- (-4,0) -- cycle;
+    \draw[thick] (-2.8,1.8) -- (2.8,1.8) -- (4,0) -- (-4,0) -- cycle;
+    \node at (0,0.9) {\textbf{Unit Tests}};
+    \node[align=center, font=\footnotesize] at (0,0.3) {70\%};
+
+    % Annotations
+    \node[align=left, font=\tiny, anchor=west] at (4.5,3.5) {Pochi, lenti, fragili\\UI + API + DB};
+    \node[align=left, font=\tiny, anchor=west] at (4.5,2.4) {Moderati\\Componenti reali};
+    \node[align=left, font=\tiny, anchor=west] at (4.5,0.9) {Molti, veloci, stabili\\Funzioni isolate};
+
+    % Speed arrow
+    \draw[->, thick, red!70] (5.5,0.3) -- (5.5,3.5);
+    \node[rotate=90, font=\tiny] at (6,1.9) {Velocità};
+
+    % Cost arrow
+    \draw[->, thick, blue!70] (-5.5,3.5) -- (-5.5,0.3);
+    \node[rotate=90, font=\tiny] at (-6,1.9) {Costo/Complessità};
+\end{tikzpicture}
+\end{center}
 
 \textbf{Unit Tests} (70\%): Questi test costituiscono la base della piramide e dovrebbero rappresentare la maggioranza della suite. Testano singole funzioni o classi in completo isolamento, usando mock per le dipendenze esterne. Sono estremamente veloci (millisecondi), stabili e facili da debuggare poiché ogni fallimento indica precisamente quale unità ha un problema.
 
@@ -84,6 +163,50 @@ class TestMathFunctions(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Esempio Output unittest}
+
+\begin{tcolorbox}[colback=black!90, coltext=white, fontupper=\ttfamily\footnotesize, title=Terminal: unittest output]
+\textcolor{green!80}{\$ python test\_math.py}\\
+\textcolor{white}{....}\\
+\textcolor{green!60}{----------------------------------------------------------------------}\\
+\textcolor{green!60}{Ran 4 tests in 0.001s}\\
+\\
+\textcolor{green!80}{OK}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Flusso Esecuzione Test}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    box/.style={rectangle, rounded corners, draw=blue!60, fill=blue!10, thick, minimum width=3cm, minimum height=0.8cm, align=center},
+    setup/.style={rectangle, rounded corners, draw=green!60, fill=green!10, thick, minimum width=3cm, minimum height=0.8cm, align=center},
+    test/.style={rectangle, rounded corners, draw=orange!60, fill=orange!10, thick, minimum width=3cm, minimum height=0.8cm, align=center},
+    arrow/.style={->, >=stealth, thick}
+]
+    \node[setup] (class_setup) {setUpClass()\\(una volta)};
+    \node[setup, below of=class_setup] (setup1) {setUp()};
+    \node[test, below of=setup1] (test1) {test\_method\_1()};
+    \node[setup, below of=test1] (teardown1) {tearDown()};
+    \node[setup, below of=teardown1] (setup2) {setUp()};
+    \node[test, below of=setup2] (test2) {test\_method\_2()};
+    \node[setup, below of=test2] (teardown2) {tearDown()};
+    \node[setup, below of=teardown2] (class_teardown) {tearDownClass()\\(una volta)};
+
+    \draw[arrow] (class_setup) -- (setup1);
+    \draw[arrow] (setup1) -- (test1);
+    \draw[arrow] (test1) -- (teardown1);
+    \draw[arrow] (teardown1) -- (setup2);
+    \draw[arrow] (setup2) -- (test2);
+    \draw[arrow] (test2) -- (teardown2);
+    \draw[arrow] (teardown2) -- (class_teardown);
+
+    % Annotation
+    \node[anchor=west, font=\footnotesize, text=gray] at (4, -3) {setUp/tearDown per ogni test};
+    \node[anchor=west, font=\footnotesize, text=gray] at (4, -4.2) {setUpClass una sola volta};
+\end{tikzpicture}
+\end{center}
 
 \subsection{Assertions comuni}
 
@@ -189,6 +312,22 @@ pytest -k "test_add"      # Solo test con "add" nel nome
 pytest -x                 # Stop alla prima failure
 pytest --maxfail=2        # Stop dopo 2 failures
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Esempio Output pytest}
+
+\begin{tcolorbox}[colback=black!90, coltext=white, fontupper=\ttfamily\footnotesize, title=Terminal: pytest output]
+\textcolor{green!80}{\$ pytest -v test\_math.py}\\
+\textcolor{cyan!70}{============================= test session starts ==============================}\\
+\textcolor{white}{platform darwin -- Python 3.11.0, pytest-7.4.0, pluggy-1.3.0}\\
+\textcolor{white}{rootdir: /home/user/project}\\
+\textcolor{white}{collected 3 items}\\
+\\
+\textcolor{white}{test\_math.py::test\_add\_positive \textcolor{green!70}{PASSED}                              [ 33\%]}\\
+\textcolor{white}{test\_math.py::test\_add\_negative \textcolor{green!70}{PASSED}                              [ 66\%]}\\
+\textcolor{white}{test\_math.py::test\_add\_zero \textcolor{green!70}{PASSED}                                  [100\%]}\\
+\\
+\textcolor{green!70}{============================== 3 passed in 0.02s ===============================}
+\end{tcolorbox}
 
 \begin{lstlisting}
 # test_math.py
@@ -319,6 +458,50 @@ def test_known_failing():
 
 \section{Mocking}
 
+\subsubsection{Visualizzazione: Mock vs Oggetto Reale}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2.5cm,
+    box/.style={rectangle, rounded corners, draw, thick, minimum width=3.5cm, minimum height=2.5cm, align=center},
+    arrow/.style={->, >=stealth, thick}
+]
+    % Test function
+    \node[box, fill=blue!10, draw=blue!60] (test) {
+        \textbf{Test Function}\\[0.3cm]
+        \texttt{test\_get\_user()}
+    };
+
+    % Real object path
+    \node[box, fill=red!10, draw=red!60, right of=test, xshift=2cm] (real) {
+        \textbf{Oggetto Reale}\\[0.1cm]
+        \texttt{requests.get()}\\[0.2cm]
+        \footnotesize{$\times$ Lento}\\
+        \footnotesize{$\times$ Richiede rete}\\
+        \footnotesize{$\times$ Instabile}\\
+        \footnotesize{$\times$ Costi API}
+    };
+
+    % Mock object path
+    \node[box, fill=green!10, draw=green!60, below of=real] (mock) {
+        \textbf{Mock Object}\\[0.1cm]
+        \texttt{Mock()}\\[0.2cm]
+        \footnotesize{\checkmark Veloce}\\
+        \footnotesize{\checkmark Offline}\\
+        \footnotesize{\checkmark Deterministico}\\
+        \footnotesize{\checkmark Gratuito}
+    };
+
+    % Arrows
+    \draw[arrow, red!60, dashed] (test) -- node[above, font=\tiny] {EVITARE} (real);
+    \draw[arrow, green!60] (test) -- node[left, font=\tiny] {USARE} (mock);
+
+    % Labels
+    \node[font=\scriptsize, text=red!70] at (3, 1.8) {Dipendenza esterna};
+    \node[font=\scriptsize, text=green!70] at (3, -1.8) {Simulazione controllata};
+\end{tikzpicture}
+\end{center}
+
 \subsection{unittest.mock}
 
 \begin{lstlisting}
@@ -414,6 +597,24 @@ pytest --cov=mymodule --cov-report=html
 pytest --cov=mymodule --cov-report=term-missing  # Mostra righe non coperte
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Esempio Report Coverage}
+
+\begin{tcolorbox}[colback=black!90, coltext=white, fontupper=\ttfamily\footnotesize, title=Terminal: pytest coverage report]
+\textcolor{green!80}{\$ pytest --cov=myapp --cov-report=term-missing}\\
+\\
+\textcolor{cyan!70}{----------- coverage: platform darwin, python 3.11.0 -----------}\\
+\textcolor{white}{Name                    Stmts   Miss  Cover   Missing}\\
+\textcolor{white}{---------------------------------------------------------}\\
+\textcolor{white}{myapp/\_\_init\_\_.py          4      0   \textcolor{green!70}{100\%}}\\
+\textcolor{white}{myapp/auth.py            45      8   \textcolor{yellow!70}{82\%}   \textcolor{red!70}{23-25, 67-71}}\\
+\textcolor{white}{myapp/models.py          78     12   \textcolor{yellow!70}{85\%}   \textcolor{red!70}{34, 89-99}}\\
+\textcolor{white}{myapp/utils.py           23      0   \textcolor{green!70}{100\%}}\\
+\textcolor{white}{---------------------------------------------------------}\\
+\textcolor{white}{TOTAL                   150     20   \textcolor{green!70}{87\%}}\\
+\\
+\textcolor{green!70}{============================== 42 passed in 1.23s ===============================}
+\end{tcolorbox}
+
 \begin{tcolorbox}[title=Coverage Best Practices]
 \begin{itemize}
   \item \textbf{Non puntare a 100\%}: Focus su codice critico, non su getters/setters
@@ -428,11 +629,55 @@ pytest --cov=mymodule --cov-report=term-missing  # Mostra righe non coperte
 
 \subsection{Red-Green-Refactor Cycle}
 
-\begin{verbatim}
-1. RED:     Scrivi test che fallisce
-2. GREEN:   Scrivi codice minimo per passare test
-3. REFACTOR: Migliora codice mantenendo test verdi
-\end{verbatim}
+\subsubsection{Visualizzazione: Ciclo TDD}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=3.5cm,
+    state/.style={circle, draw, thick, minimum size=2.5cm, align=center, font=\small},
+    arrow/.style={->, >=stealth, thick, bend left=20}
+]
+    % States
+    \node[state, fill=red!20, draw=red!60] (red) at (0,0) {
+        \textbf{RED}\\[0.2cm]
+        Test\\
+        fallisce\\[0.1cm]
+        \textcolor{red!70}{$\times$}
+    };
+
+    \node[state, fill=green!20, draw=green!60] (green) at (4,0) {
+        \textbf{GREEN}\\[0.2cm]
+        Test\\
+        passa\\[0.1cm]
+        \textcolor{green!70}{\checkmark}
+    };
+
+    \node[state, fill=blue!20, draw=blue!60] (refactor) at (2,-3.5) {
+        \textbf{REFACTOR}\\[0.2cm]
+        Migliora\\
+        codice
+    };
+
+    % Arrows with labels
+    \draw[arrow, green!60] (red) to node[above, font=\footnotesize] {Scrivi codice minimo} (green);
+    \draw[arrow, blue!60] (green) to node[right, font=\footnotesize, align=left] {Ottimizza\\mantenendo\\test verdi} (refactor);
+    \draw[arrow, red!60] (refactor) to node[left, font=\footnotesize, align=right] {Aggiungi\\nuovo\\test} (red);
+
+    % Step numbers
+    \node[circle, fill=white, draw=red!60, font=\footnotesize\bfseries] at (-0.5, 1) {1};
+    \node[circle, fill=white, draw=green!60, font=\footnotesize\bfseries] at (2, 0.7) {2};
+    \node[circle, fill=white, draw=blue!60, font=\footnotesize\bfseries] at (3.5, -2) {3};
+
+    % Center note
+    \node[font=\tiny, text=gray, align=center] at (2, -1.5) {Ripeti il ciclo\\per ogni feature};
+\end{tikzpicture}
+\end{center}
+
+\textbf{Step 1 - RED}: Scrivi un test per una funzionalità non ancora implementata. Il test deve fallire perché la funzionalità non esiste ancora.
+
+\textbf{Step 2 - GREEN}: Scrivi il codice minimo necessario per far passare il test. Non importa se il codice non è perfetto, l'obiettivo è solo far passare il test.
+
+\textbf{Step 3 - REFACTOR}: Migliora il codice mantenendo tutti i test verdi. Ottimizza, elimina duplicazioni, migliora leggibilità.
 
 \subsection{Esempio TDD: Funzione is\_prime()}
 
@@ -476,6 +721,44 @@ def isPrime(n):
 
 \section{Debugging con pdb}
 
+\subsubsection{Visualizzazione: Tabella Comandi pdb}
+
+\begin{center}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Comando} & \textbf{Alias} & \textbf{Descrizione} \\
+\hline
+\texttt{help} & \texttt{h} & Mostra help \\
+\hline
+\texttt{next} & \texttt{n} & Esegui prossima riga (non entra in funzioni) \\
+\hline
+\texttt{step} & \texttt{s} & Esegui prossima riga (entra in funzioni) \\
+\hline
+\texttt{continue} & \texttt{c} & Continua esecuzione fino a prossimo breakpoint \\
+\hline
+\texttt{list} & \texttt{l} & Mostra codice circostante (11 righe) \\
+\hline
+\texttt{where} & \texttt{w} & Mostra stack trace completo \\
+\hline
+\texttt{up} & \texttt{u} & Sali di un livello nello stack \\
+\hline
+\texttt{down} & \texttt{d} & Scendi di un livello nello stack \\
+\hline
+\texttt{print expr} & \texttt{p expr} & Stampa espressione \\
+\hline
+\texttt{pp expr} & & Pretty-print espressione \\
+\hline
+\texttt{args} & \texttt{a} & Mostra argomenti funzione corrente \\
+\hline
+\texttt{break} & \texttt{b} & Imposta breakpoint \\
+\hline
+\texttt{clear} & \texttt{cl} & Rimuovi breakpoint \\
+\hline
+\texttt{quit} & \texttt{q} & Esci dal debugger \\
+\hline
+\end{tabular}
+\end{center}
+
 \subsection{Breakpoint manuale}
 
 \begin{lstlisting}
@@ -487,17 +770,33 @@ def buggyFunction(numbers):
     return total
 
 result = buggyFunction([1, 2, 3])
-
-# Comandi pdb:
-# n (next): esegui prossima riga
-# s (step): entra in funzione
-# c (continue): continua fino a prossimo breakpoint
-# l (list): mostra codice circostante
-# p variable: stampa variabile
-# pp variable: pretty print
-# w (where): mostra stack trace
-# q (quit): esci
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Sessione pdb Interattiva}
+
+\begin{tcolorbox}[colback=black!90, coltext=white, fontupper=\ttfamily\footnotesize, title=Terminal: pdb debugging session]
+\textcolor{green!80}{\$ python debug\_example.py}\\
+\textcolor{cyan!70}{> /home/user/debug\_example.py(5)buggyFunction()}\\
+\textcolor{white}{-> total += num}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{l}\\
+\textcolor{white}{  1  \quad def buggyFunction(numbers):}\\
+\textcolor{white}{  2  \quad     total = 0}\\
+\textcolor{white}{  3  \quad     for num in numbers:}\\
+\textcolor{white}{  4  \quad         import pdb; pdb.set\_trace()}\\
+\textcolor{cyan!70}{  5  ->}\textcolor{white}{         total += num}\\
+\textcolor{white}{  6  \quad     return total}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{p num}\\
+\textcolor{green!70}{1}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{p total}\\
+\textcolor{green!70}{0}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{n}\\
+\textcolor{cyan!70}{> /home/user/debug\_example.py(3)buggyFunction()}\\
+\textcolor{white}{-> for num in numbers:}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{p total}\\
+\textcolor{green!70}{1}\\
+\textcolor{yellow!70}{(Pdb)} \textcolor{white}{c}\\
+\textcolor{white}{6}
+\end{tcolorbox}
 
 \subsection{breakpoint() - Python 3.7+}
 
@@ -668,7 +967,7 @@ stats.print_stats(10)  # Top 10 funzioni più lente
 
 \subsection{GitHub Actions esempio}
 
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[language=bash]
 # .github/workflows/test.yml
 name: Tests
 

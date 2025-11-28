@@ -16,6 +16,12 @@ Padroneggiare le funzioni consente di organizzare il progetto in unità logiche,
   \item Definire funzioni con parametri e valori di default.
   \item Usare \texttt{*args} e \texttt{**kwargs} per flessibilità negli argomenti.
   \item Comprendere la visibilità delle variabili (LEGB) e le docstring.
+  \begin{itemize}
+    \item \textbf{L}ocal: scope locale della funzione corrente
+    \item \textbf{E}nclosing: scope delle funzioni esterne (closure)
+    \item \textbf{G}lobal: scope globale del modulo
+    \item \textbf{B}uilt-in: nomi predefiniti di Python (es. `print`, `len`)
+  \end{itemize}
 \end{itemize}
 
 \section{Concetti Fondamentali}
@@ -34,6 +40,35 @@ Esempio: \texttt{def greet(name: str, upper: bool = False) -> str: ...}
 
 Docstring: descrive comportamento, parametri e return.
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Anatomia della Firma di una Funzione}
+\label{subsubsec:fun-firma-anatomia}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.3cm,
+    box/.style={rectangle, draw, thick, minimum height=0.8cm, align=center},
+    label/.style={font=\small\itshape, align=center}
+]
+    % Function signature
+    \node[font=\ttfamily\normalsize] (sig) {def greet(name: str, upper: bool = False) -> str:};
+
+    % Arrows and labels
+    \node[label, below=1.2cm of sig.south, anchor=north, xshift=-7cm] (def_label) {Keyword\\della funzione};
+    \draw[->, thick, blue] (def_label.north) -- ([yshift=-0.1cm]sig.south west);
+
+    \node[label, below=1.2cm of sig.south, anchor=north, xshift=-4.5cm] (name_label) {Nome\\funzione};
+    \draw[->, thick, blue] (name_label.north) -- ([yshift=-0.1cm, xshift=0.8cm]sig.south west);
+
+    \node[label, below=1.2cm of sig.south, anchor=north, xshift=-1.5cm] (param1_label) {Parametro\\obbligatorio\\+ type hint};
+    \draw[->, thick, green!60!black] (param1_label.north) -- ([yshift=-0.1cm, xshift=2.5cm]sig.south west);
+
+    \node[label, below=2.8cm of sig.south, anchor=north, xshift=1.8cm] (param2_label) {Parametro opzionale\\+ default\\+ type hint};
+    \draw[->, thick, orange!80!black] (param2_label.north) -- ([yshift=-0.1cm, xshift=5.2cm]sig.south west);
+
+    \node[label, below=1.2cm of sig.south, anchor=north, xshift=5.5cm] (return_label) {Tipo\\di ritorno};
+    \draw[->, thick, purple] (return_label.north) -- ([yshift=-0.1cm, xshift=8.5cm]sig.south west);
+\end{tikzpicture}
+\end{center}
 
 \begin{tcolorbox}[title=Purezza delle Funzioni]
 Preferisci funzioni pure (senza I/O al loro interno) quando possibile. Riduci dipendenze globali e I/O nella logica, isolandole in layer dedicati per facilitare test e riuso.
@@ -56,6 +91,25 @@ print(add(2, 3))  # Output: 5
   \item \textbf{Return}: restituisce somma di due argomenti; pura, senza I/O.
   \item \textbf{Invocazione}: `print(add(...))` compone I/O con logica; separare in pratica.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Output Terminale}
+\label{subsubsec:fun-semplice-terminal}
+\begin{tcolorbox}[title=Esempio di Esecuzione nel Terminale, colback=black!5, colframe=blue!50!black]
+\begin{verbatim}
+$ python3
+>>> def add(a, b):
+...     """Ritorna la somma di a e b."""
+...     return a + b
+...
+>>> print(add(2, 3))
+5
+>>> print(add(10, -3))
+7
+>>> result = add(100, 200)
+>>> print(f"Il risultato è: {result}")
+Il risultato è: 300
+\end{verbatim}
 \end{tcolorbox}
 
 \subsection{Default, *args e **kwargs}
@@ -83,6 +137,35 @@ print(describe(lang="Python", version=3.11))  # Output: lang=Python, version=3.1
   \item \textbf{**kwargs} (keyword arguments): il simbolo `**` indica un numero variabile di \textbf{argomenti nominativi} (chiave=valore) in un dizionario. Anche qui `kwargs` è convenzione; `**opzioni` funzionerebbe, ma si usa `**kwargs`. Utile per parametri flessibili con nome.
   \item \textbf{Ordine dei parametri}: quando combinati, l'ordine deve essere: parametri normali $\rightarrow$ `*args` $\rightarrow$ `**kwargs`.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Output Terminale *args e **kwargs}
+\label{subsubsec:fun-args-kwargs-terminal}
+\begin{tcolorbox}[title=Dimostrazione *args e **kwargs nel Terminale, colback=black!5, colframe=blue!50!black]
+\begin{verbatim}
+$ python3
+>>> def total(*args):
+...     print(f"args è di tipo: {type(args)}")
+...     print(f"Contenuto di args: {args}")
+...     return sum(args)
+...
+>>> result = total(1, 2, 3, 4, 5)
+args è di tipo: <class 'tuple'>
+Contenuto di args: (1, 2, 3, 4, 5)
+>>> print(result)
+15
+
+>>> def describe(**kwargs):
+...     print(f"kwargs è di tipo: {type(kwargs)}")
+...     print(f"Contenuto di kwargs: {kwargs}")
+...     return ", ".join(f"{k}={v}" for k, v in kwargs.items())
+...
+>>> result = describe(lang="Python", version=3.11, year=2024)
+kwargs è di tipo: <class 'dict'>
+Contenuto di kwargs: {'lang': 'Python', 'version': 3.11, 'year': 2024}
+>>> print(result)
+lang=Python, version=3.11, year=2024
+\end{verbatim}
 \end{tcolorbox}
 
 \subsection{Combinare parametri, *args e **kwargs}
@@ -119,6 +202,73 @@ risultato = funzione_completa(1, 2, 3, 4, nome="Test", valore=100)
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Diagramma Ordine dei Parametri}
+\label{subsubsec:fun-ordine-parametri}
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={rectangle, draw, thick, minimum width=3cm, minimum height=1.2cm, align=center, font=\small\ttfamily},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Boxes for parameter order
+    \node[box, fill=blue!20] (pos) {a, b};
+    \node[box, fill=green!20, right=0.5cm of pos] (args) {*args};
+    \node[box, fill=orange!20, right=0.5cm of args] (kwargs) {**kwargs};
+
+    % Labels below
+    \node[below=0.3cm of pos, font=\small, align=center] (pos_label) {Parametri\\posizionali\\obbligatori};
+    \node[below=0.3cm of args, font=\small, align=center] (args_label) {Argomenti\\posizionali\\variabili\\(tupla)};
+    \node[below=0.3cm of kwargs, font=\small, align=center] (kwargs_label) {Argomenti\\nominati\\variabili\\(dizionario)};
+
+    % Arrow showing order
+    \draw[arrow, red, thick] ([yshift=0.8cm]pos.north west) -- node[above, font=\small\bfseries] {ORDINE OBBLIGATORIO} ([yshift=0.8cm]kwargs.north east);
+
+    % Example call below
+    \node[below=2.5cm of args, font=\ttfamily] (call) {funzione\_completa(1, 2, 3, 4, nome="Test", valore=100)};
+
+    % Arrows from call to boxes
+    \draw[arrow, blue!60] ([xshift=1cm]call.north) -- node[left, font=\tiny, align=right] {a=1\\b=2} (pos.south);
+    \draw[arrow, green!60!black] ([xshift=2.5cm]call.north) -- node[left, font=\tiny] {(3, 4)} (args.south);
+    \draw[arrow, orange!80!black] ([xshift=5cm]call.north) -- node[right, font=\tiny, align=left] {\{'nome': 'Test',\\'valore': 100\}} (kwargs.south);
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Output Terminale Parametri Combinati}
+\label{subsubsec:fun-combinazione-terminal}
+\begin{tcolorbox}[title=Esecuzione con Parametri Combinati, colback=black!5, colframe=blue!50!black]
+\begin{verbatim}
+$ python3
+>>> def funzione_completa(a, b, *args, **kwargs):
+...     print(f"Parametri obbligatori: a={a}, b={b}")
+...     print(f"Argomenti aggiuntivi (*args): {args}")
+...     print(f"Argomenti nominati (**kwargs): {kwargs}")
+...     return a + b + sum(args)
+...
+>>> # Caso 1: solo parametri obbligatori
+>>> risultato = funzione_completa(1, 2)
+Parametri obbligatori: a=1, b=2
+Argomenti aggiuntivi (*args): ()
+Argomenti nominati (**kwargs): {}
+>>> print(f"Risultato: {risultato}")
+Risultato: 3
+
+>>> # Caso 2: con *args
+>>> risultato = funzione_completa(1, 2, 3, 4, 5)
+Parametri obbligatori: a=1, b=2
+Argomenti aggiuntivi (*args): (3, 4, 5)
+Argomenti nominati (**kwargs): {}
+>>> print(f"Risultato: {risultato}")
+Risultato: 15
+
+>>> # Caso 3: con *args e **kwargs
+>>> risultato = funzione_completa(1, 2, 3, 4, nome="Test", valore=100)
+Parametri obbligatori: a=1, b=2
+Argomenti aggiuntivi (*args): (3, 4)
+Argomenti nominati (**kwargs): {'nome': 'Test', 'valore': 100}
+>>> print(f"Risultato: {risultato}")
+Risultato: 10
+\end{verbatim}
+\end{tcolorbox}
+
 \subsection{Scope e lambda}
 \label{subsec:fun-scope-lambda}
 \begin{lstlisting}
@@ -131,15 +281,93 @@ print(mul(5), double(5))  # Output: 10 10
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
-  \item \textbf{Scope LEGB}: Python risolve i nomi delle variabili seguendo l'ordine LEGB:
-  \begin{itemize}
-    \item \textbf{L}ocal: scope locale della funzione corrente
-    \item \textbf{E}nclosing: scope delle funzioni esterne (closure)
-    \item \textbf{G}lobal: scope globale del modulo
-    \item \textbf{B}uilt-in: nomi predefiniti di Python (es. `print`, `len`)
-  \end{itemize}
+  \item \textbf{Scope LEGB}: Python risolve i nomi delle variabili seguendo l'ordine LEGB
   In `mul`, `factor` viene cercato prima in Local (non trovato), poi in Enclosing (non trovato), infine in Global (trovato). Evita dipendenze da variabili globali quando possibile.
   \item \textbf{Lambda}: funzioni anonime per espressioni semplici; preferire `def` per logiche complesse.
   \item \textbf{Effetti}: nessun I/O dentro `mul`; la stampa è separata.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Diagramma LEGB Scope Resolution}
+\label{subsubsec:fun-legb-diagram}
+\begin{center}
+\begin{tikzpicture}[
+    scope/.style={rectangle, draw, thick, minimum width=8cm, minimum height=1.8cm, align=left, font=\small},
+    arrow/.style={->, thick, >=stealth}
+]
+    % Built-in scope (outermost)
+    \node[scope, fill=purple!10] (builtin) at (0,0) {
+        \textbf{B - Built-in Scope}\\
+        Funzioni predefinite di Python: \texttt{print()}, \texttt{len()}, \texttt{sum()}, \texttt{range()}, etc.
+    };
+
+    % Global scope
+    \node[scope, fill=orange!15, below=0.3cm of builtin] (global) {
+        \textbf{G - Global Scope}\\
+        Variabili definite a livello modulo: \texttt{factor = 2}, funzioni globali
+    };
+
+    % Enclosing scope
+    \node[scope, fill=green!15, below=0.3cm of global] (enclosing) {
+        \textbf{E - Enclosing Scope}\\
+        Variabili nelle funzioni esterne (closure): \texttt{def outer(): x = 10; def inner(): ...}
+    };
+
+    % Local scope (innermost)
+    \node[scope, fill=blue!15, below=0.3cm of enclosing] (local) {
+        \textbf{L - Local Scope}\\
+        Variabili locali della funzione corrente: parametri e variabili definite nella funzione
+    };
+
+    % Search order arrows
+    \draw[arrow, red, very thick] ([xshift=-4.5cm]local.west) -- node[left, font=\small\bfseries, align=right] {ORDINE\\DI\\RICERCA\\$\uparrow$} ([xshift=-4.5cm]builtin.west);
+
+    % Labels on the right
+    \node[right=0.3cm of local.east, font=\footnotesize, align=left] {$\leftarrow$ Inizia qui};
+    \node[right=0.3cm of builtin.east, font=\footnotesize, align=left] {$\leftarrow$ Termina qui};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Output Terminale Scope LEGB}
+\label{subsubsec:fun-scope-terminal}
+\begin{tcolorbox}[title=Dimostrazione Scope LEGB nel Terminale, colback=black!5, colframe=blue!50!black]
+\begin{verbatim}
+$ python3
+>>> # Global scope
+>>> factor = 2
+>>> nome_globale = "Python"
+>>>
+>>> def outer():
+...     # Enclosing scope
+...     x = 10
+...     print(f"Enclosing: x = {x}")
+...
+...     def inner():
+...         # Local scope
+...         y = 5
+...         print(f"Local: y = {y}")
+...         print(f"Accesso a Enclosing: x = {x}")
+...         print(f"Accesso a Global: factor = {factor}")
+...         print(f"Accesso a Built-in: len('{nome_globale}') = {len(nome_globale)}")
+...
+...     inner()
+...
+>>> outer()
+Enclosing: x = 10
+Local: y = 5
+Accesso a Enclosing: x = 10
+Accesso a Global: factor = 2
+Accesso a Built-in: len('Python') = 6
+
+>>> # Dimostrare l'ordine di risoluzione
+>>> x = "globale"
+>>> def test_scope():
+...     x = "locale"  # Nasconde la x globale
+...     print(f"Dentro la funzione: x = {x}")
+...
+>>> test_scope()
+Dentro la funzione: x = locale
+>>> print(f"Fuori dalla funzione: x = {x}")
+Fuori dalla funzione: x = globale
+\end{verbatim}
 \end{tcolorbox}

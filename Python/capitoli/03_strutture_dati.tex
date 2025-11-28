@@ -21,9 +21,67 @@ Lista (mutabile), Tupla (immutabile), Dizionario (mappa chiave $\rightarrow$ val
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Complessità e prestazioni]
-  %TODO spiega cosa si intende con lookup
-Liste: append/iterazione veloci; Dizionari/insiemi: lookup/inserimento mediamente accesso casuale; Tuple: immutabili e leggere. Scegli in base a mutabilità, necessità di ordine e costi operativi.
+Liste: append/iterazione veloci; Dizionari/insiemi: lookup (ricerca di un elemento per chiave) e inserimento ad accesso casuale; Tuple: immutabili e leggere. Scegli in base a mutabilità, necessità di ordine e costi operativi.
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Confronto tra Strutture Dati}
+\begin{center}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Caratteristica} & \textbf{List} & \textbf{Tuple} & \textbf{Dict} & \textbf{Set} \\
+\hline
+Mutabile & \checkmark & $\times$ & \checkmark & \checkmark \\
+\hline
+Ordinata & \checkmark & \checkmark & \checkmark* & $\times$ \\
+\hline
+Indicizzabile & \checkmark & \checkmark & per chiave & $\times$ \\
+\hline
+Duplicati & \checkmark & \checkmark & chiavi uniche & $\times$ \\
+\hline
+Sintassi & \texttt{[1,2,3]} & \texttt{(1,2,3)} & \texttt{\{k:v\}} & \texttt{\{1,2,3\}} \\
+\hline
+Caso d'uso & Sequenze & Record fissi & Lookup & Unicità \\
+\hline
+\end{tabular}
+
+\vspace{0.3cm}
+\small{*Python 3.7+ mantiene l'ordine di inserimento}
+\end{center}
+
+\subsubsection{Visualizzazione: Mutabilità vs Immutabilità}
+\begin{center}
+\begin{tikzpicture}[
+  box/.style={rectangle, draw, minimum width=3cm, minimum height=1cm, text centered},
+  mut/.style={box, fill=red!20},
+  immut/.style={box, fill=green!20}
+]
+
+% Mutable structures
+\node[mut] (list) at (0, 2) {\textbf{List}};
+\node[mut] (dict) at (0, 0.5) {\textbf{Dict}};
+\node[mut] (set) at (0, -1) {\textbf{Set}};
+
+% Immutable structures
+\node[immut] (tuple) at (5, 2) {\textbf{Tuple}};
+\node[immut] (str) at (5, 0.5) {\textbf{String}};
+\node[immut] (frozenset) at (5, -1) {\textbf{Frozenset}};
+
+% Labels
+\node[above=0.5cm of list] {\Large\textbf{MUTABILI}};
+\node[above=0.5cm of tuple] {\Large\textbf{IMMUTABILI}};
+
+% Annotations
+\node[below=0.3cm of set, align=center, text width=3cm] {
+  \small Possono essere\\
+  \small modificati in-place
+};
+\node[below=0.3cm of frozenset, align=center, text width=3cm] {
+  \small Non possono essere\\
+  \small modificati dopo creazione
+};
+
+\end{tikzpicture}
+\end{center}
 
 \section{Esempi Pratici}
 \subsection{Liste e comprensioni}
@@ -35,9 +93,70 @@ print(quadrati)
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
-  \item \textbf{Lista mutabile}: `append` aggiunge in coda in O(1) amortizzato.
+  \item \textbf{Lista mutabile}: `append` aggiunge in coda.
   \item \textbf{Comprensione}: crea una nuova lista trasformando elementi (`n*n`).
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Sintassi List Comprehension}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.2cm,
+  every node/.style={font=\ttfamily}
+]
+
+% Main comprehension parts
+\node (open) {\Large [};
+\node[right=0.1cm of open, fill=blue!20, rounded corners] (expr) {n*n};
+\node[right=0.1cm of expr, fill=yellow!20, rounded corners] (for) {for};
+\node[right=0.1cm of for, fill=green!20, rounded corners] (var) {n};
+\node[right=0.1cm of var, fill=yellow!20, rounded corners] (in) {in};
+\node[right=0.1cm of in, fill=orange!20, rounded corners] (iter) {nums};
+\node[right=0.1cm of iter, fill=purple!20, rounded corners] (cond) {if n > 0};
+\node[right=0.1cm of cond] (close) {\Large ]};
+
+% Labels below
+\node[below=0.5cm of expr, text width=1.5cm, align=center, font=\small\sffamily] {Espressione};
+\node[below=0.5cm of var, text width=1.5cm, align=center, font=\small\sffamily] {Variabile};
+\node[below=0.5cm of iter, text width=1.5cm, align=center, font=\small\sffamily] {Iterabile};
+\node[below=0.5cm of cond, text width=1.8cm, align=center, font=\small\sffamily] {Condizione (opzionale)};
+
+% Arrows
+\draw[->, thick] (expr.south) -- ++(0,-0.3);
+\draw[->, thick] (var.south) -- ++(0,-0.3);
+\draw[->, thick] (iter.south) -- ++(0,-0.3);
+\draw[->, thick] (cond.south) -- ++(0,-0.3);
+
+\end{tikzpicture}
+
+\vspace{0.5cm}
+\textbf{Esempi:}
+\begin{itemize}
+  \item \texttt{[x*2 for x in range(5)]} $\rightarrow$ \texttt{[0, 2, 4, 6, 8]}
+  \item \texttt{[x for x in range(10) if x \% 2 == 0]} $\rightarrow$ \texttt{[0, 2, 4, 6, 8]}
+  \item \texttt{[x.upper() for x in ['a', 'b', 'c']]} $\rightarrow$ \texttt{['A', 'B', 'C']}
+\end{itemize}
+\end{center}
+
+\subsubsection{Visualizzazione: Operazioni su Liste}
+\begin{tcolorbox}[title=Output Terminale, colback=black, coltext=green!80!white, fontupper=\ttfamily\small]
+\begin{verbatim}
+>>> nums = [1, 2, 3]
+>>> nums.append(4)
+>>> nums
+[1, 2, 3, 4]
+>>> nums.extend([5, 6])
+>>> nums
+[1, 2, 3, 4, 5, 6]
+>>> nums.pop()
+6
+>>> nums
+[1, 2, 3, 4, 5]
+>>> nums[1:3]
+[2, 3]
+>>> len(nums)
+5
+\end{verbatim}
 \end{tcolorbox}
 
 \subsection{Tuple e unpacking}
@@ -65,8 +184,28 @@ for k, v in info.items():
 \begin{itemize}
   \item \textbf{Insert/Update}: assegnazione su chiave crea/aggiorna coppie chiave $\rightarrow$ valore.
   \item \textbf{items}: itera su coppie `(k, v)` evitando lookup ripetuti.
-  \item \textbf{Ordine}: dal 3.7 l'ordine d'inserimento è preservato; non confonderlo con ordinamento. %TODO non si capisce chi è 3.7, e cosa intendi con questa frase
+  \item \textbf{Ordine}: a partire da Python 3.7+, i dizionari conservano l'ordine d'inserimento delle chiavi; questo non significa che le chiavi siano ordinate alfabeticamente o numericamente, solo che iterando le otterrete nell'ordine in cui le avete inserite.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Iterazione su Dizionari}
+\begin{tcolorbox}[title=Output Terminale, colback=black, coltext=green!80!white, fontupper=\ttfamily\small]
+>>> info = \{"nome": "Ada", "eta": 27\}\\
+>>> info["lingua"] = "Python"\\
+>>> info.keys()\\
+dict\_keys(['nome', 'eta', 'lingua'])\\
+>>> info.values()\\
+dict\_values(['Ada', 27, 'Python'])\\
+>>> info.items()\\
+dict\_items([('nome', 'Ada'), ('eta', 27), ('lingua', 'Python')])\\
+>>> for k, v in info.items():\\
+...\ \ \ \ print(f"\{k\}: \{v\}")\\
+...\\
+nome: Ada\\
+eta: 27\\
+lingua: Python\\
+>>> info.get("indirizzo", "N/A")\\
+'N/A'
 \end{tcolorbox}
 
 \subsection{Insiemi}
@@ -80,4 +219,90 @@ print(u | v, u & v, u - v)
   \item \textbf{Unione\texttt{|}/intersezione\texttt{\&}/differenza\texttt{-}}: operano su insiemi con semantica matematica.
   \item \textbf{Unicità}: i set eliminano duplicati;
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Operazioni su Insiemi (Venn Diagrams)}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+  % Union
+  \begin{scope}[shift={(0,0)}]
+    \draw[fill=blue!30, draw=black, thick] (0,0) circle (1cm);
+    \draw[fill=blue!30, draw=black, thick] (1.5,0) circle (1cm);
+    \node at (0.75, -2) {\textbf{Unione: } \texttt{A | B}};
+    \node at (-0.5, 0) {\small A};
+    \node at (2, 0) {\small B};
+    \node at (0.75, -2.5) {\small Tutti gli elementi di A e B};
+  \end{scope}
+
+  % Intersection
+  \begin{scope}[shift={(5,0)}]
+    \begin{scope}
+      \clip (0,0) circle (1cm);
+      \fill[blue!50] (1.5,0) circle (1cm);
+    \end{scope}
+    \draw[draw=black, thick] (0,0) circle (1cm);
+    \draw[draw=black, thick] (1.5,0) circle (1cm);
+    \node at (0.75, -2) {\textbf{Intersezione: } \texttt{A \& B}};
+    \node at (-0.5, 0) {\small A};
+    \node at (2, 0) {\small B};
+    \node at (0.75, -2.5) {\small Elementi comuni};
+  \end{scope}
+
+  % Difference
+  \begin{scope}[shift={(10,0)}]
+    \begin{scope}
+      \clip (1.5,0) circle (1cm);
+      \fill[white] (0,0) circle (1cm);
+    \end{scope}
+    \fill[blue!30] (0,0) circle (1cm);
+    \draw[draw=black, thick] (0,0) circle (1cm);
+    \draw[draw=black, thick] (1.5,0) circle (1cm);
+    \node at (0.75, -2) {\textbf{Differenza: } \texttt{A - B}};
+    \node at (-0.5, 0) {\small A};
+    \node at (2, 0) {\small B};
+    \node at (0.75, -2.5) {\small In A ma non in B};
+  \end{scope}
+
+  % Symmetric Difference
+  \begin{scope}[shift={(5,-5)}]
+    \begin{scope}
+      \clip (0,0) circle (1cm);
+      \fill[white] (1.5,0) circle (1cm);
+    \end{scope}
+    \fill[blue!30] (0,0) circle (1cm);
+    \begin{scope}
+      \clip (1.5,0) circle (1cm);
+      \fill[white] (0,0) circle (1cm);
+    \end{scope}
+    \fill[blue!30] (1.5,0) circle (1cm);
+    \draw[draw=black, thick] (0,0) circle (1cm);
+    \draw[draw=black, thick] (1.5,0) circle (1cm);
+    \node at (0.75, -2) {\textbf{Diff. Simmetrica: } \texttt{A \^{} B}};
+    \node at (-0.5, 0) {\small A};
+    \node at (2, 0) {\small B};
+    \node at (0.75, -2.5) {\small In A o B, ma non in entrambi};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Operazioni su Set}
+\begin{tcolorbox}[title=Output Terminale, colback=black, coltext=green!80!white, fontupper=\ttfamily\small]
+>>> a = \{1, 2, 3, 4\}\\
+>>> b = \{3, 4, 5, 6\}\\
+>>> a | b\ \ \ \ \ \ \ \ \ \ \# Unione\\
+\{1, 2, 3, 4, 5, 6\}\\
+>>> a \& b\ \ \ \ \ \ \ \ \ \ \# Intersezione\\
+\{3, 4\}\\
+>>> a - b\ \ \ \ \ \ \ \ \ \ \# Differenza\\
+\{1, 2\}\\
+>>> a \^{} b\ \ \ \ \ \ \ \ \ \ \# Differenza simmetrica\\
+\{1, 2, 5, 6\}\\
+>>> a.add(5)\\
+>>> a\\
+\{1, 2, 3, 4, 5\}\\
+>>> a.discard(2)\\
+>>> a\\
+\{1, 3, 4, 5\}\\
+>>> 3 in a\\
+True
 \end{tcolorbox}

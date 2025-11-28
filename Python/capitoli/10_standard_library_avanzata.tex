@@ -144,6 +144,73 @@ coord = getCoordinates()
 print(f"X: {coord.x}, Y: {coord.y}")
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Tabella di Confronto Collections}
+
+\begin{center}
+\begin{tabular}{|l|p{4cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{Tipo} & \textbf{Scopo} & \textbf{Complessità} & \textbf{Caso d'uso} \\
+\hline
+\texttt{Counter} & Contare elementi & O(1) lookup & Frequenze, statistiche \\
+\hline
+\texttt{defaultdict} & Dict con valori default & O(1) lookup & Raggruppamento, accumulo \\
+\hline
+\texttt{deque} & Coda bidirezionale & O(1) append/pop & Queue, buffer circolari \\
+\hline
+\texttt{namedtuple} & Tuple con nomi & O(1) accesso & Strutture immutabili \\
+\hline
+\texttt{OrderedDict} & Dict con ordine & O(1) lookup & Ordine di inserimento \\
+\hline
+\texttt{ChainMap} & Unione di dict & O(1) lookup & Scope multipli \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempi di Counter}
+
+\begin{tcolorbox}[title=Output Terminal - Counter Operations]
+\begin{verbatim}
+>>> from collections import Counter
+>>> words = ["apple", "banana", "apple", "cherry"]
+>>> c = Counter(words)
+>>> c
+Counter({'apple': 2, 'banana': 1, 'cherry': 1})
+
+>>> c.most_common(2)
+[('apple', 2), ('banana', 1)]
+
+>>> c1 = Counter(a=3, b=1)
+>>> c2 = Counter(a=1, b=2)
+>>> c1 + c2
+Counter({'a': 4, 'b': 3})
+
+>>> c1 - c2
+Counter({'a': 2})
+\end{verbatim}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Esempi di Deque}
+
+\begin{tcolorbox}[title=Output Terminal - Deque Operations]
+\begin{verbatim}
+>>> from collections import deque
+>>> d = deque([1, 2, 3])
+
+>>> d.append(4)        # [1, 2, 3, 4]
+>>> d.appendleft(0)    # [0, 1, 2, 3, 4]
+>>> d.pop()            # 4, deque: [0, 1, 2, 3]
+>>> d.popleft()        # 0, deque: [1, 2, 3]
+
+>>> d.rotate(1)        # [3, 1, 2]
+>>> d.rotate(-1)       # [1, 2, 3]
+
+>>> buffer = deque(maxlen=3)
+>>> buffer.extend([1, 2, 3, 4, 5])
+>>> buffer
+deque([3, 4, 5], maxlen=3)
+\end{verbatim}
+\end{tcolorbox}
+
 \section{Itertools}
 
 \subsection{Combinazioni e Permutazioni}
@@ -228,6 +295,79 @@ import operator
 print(list(itertools.accumulate(numbers, operator.mul)))  # [1, 2, 6, 24, 120]
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Diagramma Funzioni Itertools}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw, fill=blue!10, text width=3cm, align=center, rounded corners, minimum height=1cm},
+    category/.style={rectangle, draw, fill=green!20, text width=4cm, align=center, font=\bfseries}
+]
+
+% Categories
+\node[category] (infinite) at (0,0) {Infinite Iterators};
+\node[category] (combinatoric) at (5,0) {Combinatoric};
+\node[category] (terminating) at (10,0) {Terminating};
+
+% Infinite
+\node[box, below=of infinite] (count) {count(start, step)};
+\node[box, below=of count] (cycle) {cycle(iterable)};
+\node[box, below=of cycle] (repeat) {repeat(elem, n)};
+
+% Combinatoric
+\node[box, below=of combinatoric] (product) {product(iter1, iter2)};
+\node[box, below=of product] (permutations) {permutations(iter, r)};
+\node[box, below=of permutations] (combinations) {combinations(iter, r)};
+
+% Terminating
+\node[box, below=of terminating] (chain) {chain(*iterables)};
+\node[box, below=of chain] (groupby) {groupby(iter, key)};
+\node[box, below=of groupby] (islice) {islice(iter, start, stop)};
+
+% Connections
+\draw[->, thick] (infinite) -- (count);
+\draw[->, thick] (infinite) -- (cycle);
+\draw[->, thick] (infinite) -- (repeat);
+
+\draw[->, thick] (combinatoric) -- (product);
+\draw[->, thick] (combinatoric) -- (permutations);
+\draw[->, thick] (combinatoric) -- (combinations);
+
+\draw[->, thick] (terminating) -- (chain);
+\draw[->, thick] (terminating) -- (groupby);
+\draw[->, thick] (terminating) -- (islice);
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempi Itertools}
+
+\begin{tcolorbox}[title=Output Terminal - Itertools Examples]
+\begin{verbatim}
+>>> import itertools
+
+# Combinations (ordine non conta)
+>>> list(itertools.combinations(['A', 'B', 'C'], 2))
+[('A', 'B'), ('A', 'C'), ('B', 'C')]
+
+# Permutations (ordine conta)
+>>> list(itertools.permutations(['A', 'B'], 2))
+[('A', 'B'), ('B', 'A')]
+
+# Product (prodotto cartesiano)
+>>> list(itertools.product(['X', 'Y'], [1, 2]))
+[('X', 1), ('X', 2), ('Y', 1), ('Y', 2)]
+
+# Chain (concatena iterabili)
+>>> list(itertools.chain([1, 2], [3, 4]))
+[1, 2, 3, 4]
+
+# Accumulate (totali parziali)
+>>> list(itertools.accumulate([1, 2, 3, 4]))
+[1, 3, 6, 10]
+\end{verbatim}
+\end{tcolorbox}
+
 \section{Functools}
 
 \subsection{lru\_cache (Memoization)}
@@ -310,6 +450,77 @@ words = ["Hello", "World", "!"]
 sentence = reduce(lambda a, b: a + " " + b, words)
 print(sentence)  # "Hello World !"
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Diagramma Composizione Decorator Functools}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    func/.style={rectangle, draw, fill=orange!20, text width=3.5cm, align=center, rounded corners, minimum height=1cm},
+    decorator/.style={rectangle, draw, fill=purple!20, text width=3.5cm, align=center, rounded corners, minimum height=1cm},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% Original function
+\node[func] (original) {Funzione Originale\\{\small \texttt{def fibonacci(n)}}};
+
+% Decorators
+\node[decorator, below=of original] (lru) {\texttt{@lru\_cache}\\Memorizza risultati};
+\node[decorator, below=of lru] (cached) {Funzione Cached\\{\small chiamate ripetute = O(1)}};
+
+% Effect box
+\node[func, right=3cm of lru, fill=green!20] (effect) {
+    \textbf{Effetto:}\\
+    fibonacci(30): 0.001s\\
+    fibonacci(30): 0.0001s\\
+    {\small (da cache)}
+};
+
+% Arrows
+\draw[arrow] (original) -- (lru) node[midway, right] {decora};
+\draw[arrow] (lru) -- (cached) node[midway, right] {trasforma};
+\draw[arrow, dashed] (lru) -- (effect) node[midway, above] {risultato};
+
+% Other decorators on the left
+\node[decorator, left=3cm of lru] (partial) {
+    \texttt{partial}\\
+    Pre-imposta parametri
+};
+
+\node[decorator, below=of partial] (reduce) {
+    \texttt{reduce}\\
+    Applica cumulativamente
+};
+
+\node[decorator, below=of reduce] (wraps) {
+    \texttt{wraps}\\
+    Preserva metadata
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Tabella Riferimento Functools}
+
+\begin{center}
+\begin{tabular}{|l|p{5cm}|p{4cm}|}
+\hline
+\textbf{Funzione} & \textbf{Scopo} & \textbf{Esempio d'uso} \\
+\hline
+\texttt{lru\_cache} & Memorizza risultati per input identici & Fibonacci, calcoli costosi \\
+\hline
+\texttt{partial} & Crea funzione con parametri pre-impostati & Callback, specializzazione \\
+\hline
+\texttt{reduce} & Applica funzione cumulativamente a sequenza & Somma, prodotto, aggregazione \\
+\hline
+\texttt{wraps} & Preserva \_\_name\_\_, \_\_doc\_\_ in decoratori & Decoratori custom \\
+\hline
+\texttt{singledispatch} & Overloading basato su tipo primo argomento & Dispatch dinamico \\
+\hline
+\texttt{total\_ordering} & Genera metodi confronto da \_\_eq\_\_ e uno altro & Classi ordinabili \\
+\hline
+\end{tabular}
+\end{center}
 
 \section{Datetime}
 
@@ -555,6 +766,104 @@ if email_pattern.search("Contact: test@mail.com"):
     print("Email found")
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Tabella Pattern Regex Comuni}
+
+\begin{center}
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Pattern} & \textbf{Regex} & \textbf{Esempio Match} \\
+\hline
+Email & \verb|^\w+@\w+\.\w+$| & john@example.com \\
+\hline
+URL & \verb|https?://[\w.-]+| & https://python.org \\
+\hline
+Telefono IT & \verb|\+?39[ -]?\d{2,4}[ -]?\d{6,7}| & +39 02 12345678 \\
+\hline
+Data IT & \verb|\d{2}/\d{2}/\d{4}| & 15/01/2024 \\
+\hline
+Codice Fiscale & \verb|[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]| & RSSMRA80A01H501U \\
+\hline
+IP Address & \verb|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}| & 192.168.1.1 \\
+\hline
+Hex Color & \verb|#[0-9A-Fa-f]{6}| & \#FF5733 \\
+\hline
+Username & \verb|^[a-zA-Z0-9_]{3,16}$| & user\_123 \\
+\hline
+Password forte & \verb|^(?=.*[A-Z])(?=.*\d).{8,}$| & Pass123word \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Visualizzazione: Caratteri Speciali Regex}
+
+\begin{center}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Simbolo} & \textbf{Nome} & \textbf{Significato} \\
+\hline
+\verb|.| & Dot & Qualsiasi carattere (tranne newline) \\
+\hline
+\verb|^| & Caret & Inizio stringa \\
+\hline
+\verb|$| & Dollar & Fine stringa \\
+\hline
+\verb|*| & Asterisco & 0 o più ripetizioni \\
+\hline
+\verb|+| & Plus & 1 o più ripetizioni \\
+\hline
+\verb|?| & Question & 0 o 1 ripetizione (opzionale) \\
+\hline
+\verb|{n,m}| & Braces & Da n a m ripetizioni \\
+\hline
+\verb|[]| & Square brackets & Set di caratteri \\
+\hline
+\verb|\d| & Digit & Cifra [0-9] \\
+\hline
+\verb|\w| & Word & Carattere alfanumerico [a-zA-Z0-9\_] \\
+\hline
+\verb|\s| & Space & Whitespace (spazio, tab, newline) \\
+\hline
+\verb|(...)| & Group & Gruppo di cattura \\
+\hline
+\verb|(?:...)| & Non-capturing & Gruppo non catturato \\
+\hline
+\verb|(?P<name>...)| & Named group & Gruppo nominato \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempi Regex Matches}
+
+\begin{tcolorbox}[title=Output Terminal - Regex Examples]
+\begin{verbatim}
+>>> import re
+
+# Email extraction
+>>> text = "Contacts: alice@test.com, bob@demo.org"
+>>> re.findall(r'\w+@\w+\.\w+', text)
+['alice@test.com', 'bob@demo.org']
+
+# Groups
+>>> pattern = r'(\w+)@(\w+)\.(\w+)'
+>>> match = re.search(pattern, "user@example.com")
+>>> match.groups()
+('user', 'example', 'com')
+
+# Named groups
+>>> pattern = r'(?P<user>\w+)@(?P<domain>\w+\.\w+)'
+>>> match = re.search(pattern, "alice@example.com")
+>>> match.group('user')
+'alice'
+>>> match.group('domain')
+'example.com'
+
+# Substitution
+>>> text = "Phone: 123-456-7890"
+>>> re.sub(r'[\s-]', '', text)
+'Phone:1234567890'
+\end{verbatim}
+\end{tcolorbox}
+
 \section{JSON e Pickle}
 
 \subsection{JSON}
@@ -680,6 +989,86 @@ def multiplyMatrix(m: Matrix) -> Matrix:
     # ... matrix multiplication ...
     pass
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Tabella Sintassi Type Hints}
+
+\begin{center}
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Type Hint} & \textbf{Sintassi} & \textbf{Descrizione} \\
+\hline
+Basic types & \verb|str, int, float, bool| & Tipi primitivi \\
+\hline
+List & \verb|List[int]| & Lista di interi \\
+\hline
+Dict & \verb|Dict[str, int]| & Dizionario str → int \\
+\hline
+Tuple (fixed) & \verb|Tuple[int, str]| & Tupla (int, str) \\
+\hline
+Tuple (variable) & \verb|Tuple[int, ...]| & Tupla di N interi \\
+\hline
+Optional & \verb|Optional[str]| & str o None \\
+\hline
+Union & \verb|Union[int, str]| & int oppure str \\
+\hline
+Callable & \verb|Callable[[int], str]| & Funzione int → str \\
+\hline
+Any & \verb|Any| & Qualsiasi tipo \\
+\hline
+Type alias & \verb|Vector = List[float]| & Alias per tipo complesso \\
+\hline
+Generic & \verb|TypeVar('T')| & Tipo generico \\
+\hline
+Literal & \verb|Literal['a', 'b']| & Valori letterali specifici \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Visualizzazione: Diagramma Type Hints Evolution}
+
+\begin{center}
+\begin{tikzpicture}[
+    node distance=2cm,
+    version/.style={rectangle, draw, fill=blue!20, text width=3cm, align=center, rounded corners, minimum height=1.2cm},
+    feature/.style={rectangle, draw, fill=yellow!20, text width=4.5cm, align=left, rounded corners},
+    arrow/.style={->, thick, >=stealth}
+]
+
+% Python versions
+\node[version] (py35) {Python 3.5\\{\small 2015}};
+\node[version, below=of py35] (py36) {Python 3.6\\{\small 2016}};
+\node[version, below=of py36] (py39) {Python 3.9\\{\small 2020}};
+\node[version, below=of py39] (py310) {Python 3.10\\{\small 2021}};
+
+% Features
+\node[feature, right=of py35] (f35) {
+    \textbullet\ Type hints base\\
+    \textbullet\ \texttt{typing.List, Dict, Tuple}
+};
+
+\node[feature, right=of py36] (f36) {
+    \textbullet\ Syntax improvements\\
+    \textbullet\ Variable annotations
+};
+
+\node[feature, right=of py39] (f39) {
+    \textbullet\ \texttt{list[int]} invece di \texttt{List[int]}\\
+    \textbullet\ Built-in generics
+};
+
+\node[feature, right=of py310] (f310) {
+    \textbullet\ Union types: \texttt{int | str}\\
+    \textbullet\ Simplified syntax
+};
+
+% Arrows
+\draw[arrow] (py35) -- (f35);
+\draw[arrow] (py36) -- (f36);
+\draw[arrow] (py39) -- (f39);
+\draw[arrow] (py310) -- (f310);
+
+\end{tikzpicture}
+\end{center}
 
 \section{Progetto: Log Analyzer}
 

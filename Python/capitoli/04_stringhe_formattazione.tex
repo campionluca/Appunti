@@ -24,6 +24,49 @@ Numeri: \texttt{:.2f} per due decimali, \texttt{:08d} per zero-padding; Testo: \
 \end{tcolorbox}
 
 \section{Esempi Pratici}
+
+\subsubsection{Visualizzazione: Confronto Metodi di Formattazione}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=2.5cm,
+  every node/.style={font=\small},
+  method/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=3cm, minimum height=1.2cm, align=center},
+  feature/.style={rectangle, draw=green!60, fill=green!5, minimum width=2.5cm, minimum height=0.8cm, align=center, font=\footnotesize}
+]
+
+% Metodi di formattazione
+\node[method] (fstring) {F-string\\[2pt]\texttt{f"\{var\}"}};
+\node[method, right=of fstring] (format) {.format()\\[2pt]\texttt{"\{\}".format()}};
+\node[method, right=of format] (percent) {\% operator\\[2pt]\texttt{"\%s" \% var}};
+
+% Caratteristiche
+\node[feature, below=1cm of fstring] (f1) {Leggibile};
+\node[feature, below=0.3cm of f1] (f2) {Veloce};
+\node[feature, below=0.3cm of f2] (f3) {Espressioni\\inline};
+
+\node[feature, below=1cm of format] (m1) {Template\\riutilizzabili};
+\node[feature, below=0.3cm of m1] (m2) {Compatibile\\vecchie versioni};
+
+\node[feature, below=1cm of percent] (p1) {Stile legacy};
+\node[feature, below=0.3cm of p1] (p2) {Evitare in\\codice nuovo};
+
+% Connessioni
+\draw[->, thick, blue!60] (fstring) -- (f1);
+\draw[->, thick, blue!60] (fstring) -- (f2);
+\draw[->, thick, blue!60] (fstring) -- (f3);
+
+\draw[->, thick, green!60] (format) -- (m1);
+\draw[->, thick, green!60] (format) -- (m2);
+
+\draw[->, thick, red!60] (percent) -- (p1);
+\draw[->, thick, red!60] (percent) -- (p2);
+
+% Raccomandazione
+\node[draw=orange!80, fill=orange!10, thick, rounded corners, minimum width=10cm, minimum height=0.8cm, align=center, below=4.8cm of format] (rec) {\textbf{Raccomandazione:} Usa F-string per codice moderno (Python 3.6+)};
+
+\end{tikzpicture}
+\end{center}
+
 \subsection{Metodi principali}
 \begin{lstlisting}
 s = "  Python e' fantastico  "
@@ -36,6 +79,28 @@ print(s.strip().replace("fantastico", "potente"))
   \item \textbf{Pipeline}: concatenare metodi rende leggibile la trasformazione testuale.
 \end{itemize}
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Esempi di Metodi su Stringhe}
+\begin{center}
+\begin{tcolorbox}[title={Esempi Terminal: Metodi delle Stringhe}, colback=black!5, colframe=blue!60, width=0.95\textwidth, fontupper=\ttfamily\small]
+\textcolor{green!60!black}{\$ python3}\\
+\textcolor{blue!80}{>>> s = "  Python Programming  "}\\
+\textcolor{blue!80}{>>> s.strip()}\\
+'Python Programming'\\[4pt]
+\textcolor{blue!80}{>>> s.strip().lower()}\\
+'python programming'\\[4pt]
+\textcolor{blue!80}{>>> s.strip().replace("Programming", "Language")}\\
+'Python Language'\\[4pt]
+\textcolor{blue!80}{>>> "hello".upper()}\\
+'HELLO'\\[4pt]
+\textcolor{blue!80}{>>> "Python".startswith("Py")}\\
+True\\[4pt]
+\textcolor{blue!80}{>>> "test123".isalnum()}\\
+True\\[4pt]
+\textcolor{blue!80}{>>> "  spaces  ".strip()}\\
+'spaces'
+\end{tcolorbox}
+\end{center}
 
 \subsection{Split/Join}
 \begin{lstlisting}
@@ -52,6 +117,26 @@ print(joined)
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Esempi Terminal Split/Join}
+\begin{center}
+\begin{tcolorbox}[title={Esempi Terminal: Split e Join}, colback=black!5, colframe=blue!60, width=0.95\textwidth, fontupper=\ttfamily\small]
+\textcolor{green!60!black}{\$ python3}\\
+\textcolor{blue!80}{>>> frase = "uno,due,tre,quattro"}\\
+\textcolor{blue!80}{>>> frase.split(",")}\\
+['uno', 'due', 'tre', 'quattro']\\[4pt]
+\textcolor{blue!80}{>>> parts = frase.split(",")}\\
+\textcolor{blue!80}{>>> ";".join(parts)}\\
+'uno;due;tre;quattro'\\[4pt]
+\textcolor{blue!80}{>>> " - ".join(parts)}\\
+'uno - due - tre - quattro'\\[4pt]
+\textcolor{blue!80}{>>> testo = "prima riga\textbackslash nseconda riga\textbackslash nterza"}\\
+\textcolor{blue!80}{>>> testo.split("\textbackslash n")}\\
+['prima riga', 'seconda riga', 'terza']\\[4pt]
+\textcolor{blue!80}{>>> " ".join(["Python", "is", "great"])}\\
+'Python is great'
+\end{tcolorbox}
+\end{center}
+
 \subsection{Formattazione}
 \begin{lstlisting}
 user = "Ada"; score = 99.5
@@ -65,6 +150,68 @@ print("{} ha punteggio {}".format(user, score))
   \item \textbf{Separazione}: tenere formattazione vicino all'output, logica separata.
 \end{itemize}
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Sintassi F-string Dettagliata}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.3cm,
+  every node/.style={font=\small}
+]
+
+% Struttura principale f-string
+\node[draw=blue!70, fill=blue!10, thick, minimum width=12cm, minimum height=1.2cm, align=center, font=\ttfamily\large] (fstring) {f"\{variabile:specifica\_formato\}"};
+
+% Parti componenti
+\node[draw=green!70, fill=green!10, thick, rounded corners, text width=2cm, align=center, minimum height=0.8cm, below=1.5cm of fstring, xshift=-5cm] (prefix) {Prefisso\\[2pt]\texttt{f}};
+
+\node[draw=orange!70, fill=orange!10, thick, rounded corners, text width=3cm, align=center, minimum height=0.8cm, below=1.5cm of fstring, xshift=-1.5cm] (var) {Variabile\\[2pt]\texttt{\{nome\}}};
+
+\node[draw=red!70, fill=red!10, thick, rounded corners, text width=3.5cm, align=center, minimum height=0.8cm, below=1.5cm of fstring, xshift=2.5cm] (spec) {Specifica\\[2pt]\texttt{:formato}};
+
+% Esempi di specifiche
+\node[draw=purple!60, fill=purple!5, minimum width=10cm, minimum height=3.5cm, align=left, font=\footnotesize\ttfamily, below=3.2cm of fstring] (examples) {
+\textbf{Esempi di specifiche:}\\[4pt]
+\texttt{\{x:.2f\}} \hspace{1cm} $\rightarrow$ 2 decimali\\
+\texttt{\{x:>10\}} \hspace{0.9cm} $\rightarrow$ allinea destra, larghezza 10\\
+\texttt{\{x:<10\}} \hspace{0.9cm} $\rightarrow$ allinea sinistra, larghezza 10\\
+\texttt{\{x:\textasciicircum10\}} \hspace{0.85cm} $\rightarrow$ centra, larghezza 10\\
+\texttt{\{x:,\}} \hspace{1.35cm} $\rightarrow$ separatore migliaia\\
+\texttt{\{x:08d\}} \hspace{0.9cm} $\rightarrow$ zero-padding, 8 cifre\\
+\texttt{\{x:\%.2f\}} \hspace{0.8cm} $\rightarrow$ percentuale con 2 decimali
+};
+
+% Frecce di collegamento
+\draw[->, thick, green!70] (prefix.north) -- ([xshift=-5cm]fstring.south);
+\draw[->, thick, orange!70] (var.north) -- ([xshift=-1.5cm]fstring.south);
+\draw[->, thick, red!70] (spec.north) -- ([xshift=2.5cm]fstring.south);
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempi Terminal F-string}
+\begin{center}
+\begin{tcolorbox}[title={Esempi Terminal: Formattazione F-string}, colback=black!5, colframe=blue!60, width=0.95\textwidth, fontupper=\ttfamily\small]
+\textcolor{green!60!black}{\$ python3}\\
+\textcolor{blue!80}{>>> nome = "Ada"; eta = 28; altezza = 1.67}\\
+\textcolor{blue!80}{>>> f"\{nome\} ha \{eta\} anni"}\\
+'Ada ha 28 anni'\\[4pt]
+\textcolor{blue!80}{>>> f"\{altezza:.1f\} metri"}\\
+'1.7 metri'\\[4pt]
+\textcolor{blue!80}{>>> prezzo = 1234.5678}\\
+\textcolor{blue!80}{>>> f"Prezzo: \{prezzo:,.2f\} EUR"}\\
+'Prezzo: 1,234.57 EUR'\\[4pt]
+\textcolor{blue!80}{>>> num = 42}\\
+\textcolor{blue!80}{>>> f"\{num:>10\}"}\\
+'        42'\\[4pt]
+\textcolor{blue!80}{>>> f"\{num:<10\}"}\\
+'42        '\\[4pt]
+\textcolor{blue!80}{>>> f"\{num:08d\}"}\\
+'00000042'\\[4pt]
+\textcolor{blue!80}{>>> x = 0.875}\\
+\textcolor{blue!80}{>>> f"\{x:.1\%\}"}\\
+'87.5\%'
+\end{tcolorbox}
+\end{center}
 
 \begin{tcolorbox}[title=Casi d'uso]
 \begin{itemize}
@@ -110,10 +257,44 @@ Infine, \textbf{Unicode ed encoding} sono considerazioni essenziali nel moderno 
 \end{tcolorbox}
 
 \begin{tcolorbox}[title={Per chi viene da C/Java/JS: stringhe, bytes ed encoding}]
-\textbf{Stringhe}: sono immutabili e Unicode; operazioni come `replace`, `split`, `join` sono metodi sul tipo `str`.  
-\textbf{Formattazione}: preferisci f-string (`f"{x:.2f}"`) per chiarezza; `format` utile per template generici.  
-\textbf{Bytes}: `bytes`/`bytearray` rappresentano dati binari; conversione via `s.encode("utf-8")` e `b.decode("utf-8")`.  
+\textbf{Stringhe}: sono immutabili e Unicode; operazioni come `replace`, `split`, `join` sono metodi sul tipo `str`.
+\textbf{Formattazione}: preferisci f-string (`f"{x:.2f}"`) per chiarezza; `format` utile per template generici.
+\textbf{Bytes}: `bytes`/`bytearray` rappresentano dati binari; conversione via `s.encode("utf-8")` e `b.decode("utf-8")`.
 \textbf{Regex}: usa `re` per parsing robusto; separa regole dai messaggi di output.
+
+\subsubsection{Visualizzazione: Flusso Encoding/Decoding}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=2.5cm,
+  every node/.style={font=\small},
+  box/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=3cm, minimum height=1.2cm, align=center, rounded corners},
+  process/.style={rectangle, draw=green!60, fill=green!10, thick, minimum width=2.5cm, minimum height=0.8cm, align=center}
+]
+
+% Nodi principali
+\node[box] (str) {\textbf{String (str)}\\[2pt]Unicode\\[2pt]\texttt{"ciao"}};
+\node[box, right=of str] (bytes) {\textbf{Bytes}\\[2pt]Binario\\[2pt]\texttt{b'ciao'}};
+\node[box, right=of bytes] (file) {\textbf{File/Network}\\[2pt]Dati binari\\[2pt]su disco/rete};
+
+% Processi
+\node[process, below=0.8cm of str, xshift=1.8cm] (encode) {\texttt{.encode()}\\[2pt]\small "utf-8"};
+\node[process, above=0.8cm of bytes, xshift=-1.8cm] (decode) {\texttt{.decode()}\\[2pt]\small "utf-8"};
+
+% Frecce
+\draw[->, thick, red!70, line width=1.5pt] (str) -- node[above, font=\footnotesize\ttfamily] {encode("utf-8")} (bytes);
+\draw[->, thick, blue!70, line width=1.5pt] (bytes) -- node[below, font=\footnotesize\ttfamily] {decode("utf-8")} (str);
+
+\draw[->, thick, purple!70, line width=1.2pt] (bytes) -- node[above, font=\footnotesize] {write} (file);
+\draw[->, thick, purple!70, line width=1.2pt] (file) -- node[below, font=\footnotesize] {read} (bytes);
+
+% Note
+\node[draw=orange!70, fill=orange!5, rounded corners, minimum width=11cm, minimum height=1cm, align=left, font=\footnotesize, below=2.5cm of bytes, xshift=-2.5cm] (note) {
+\textbf{Note:} str (Unicode) $\rightarrow$ bytes (binario) $\rightarrow$ File/Network\\
+Sempre specificare encoding esplicito (default: UTF-8)
+};
+
+\end{tikzpicture}
+\end{center}
 
 Esempi commentati:
 \begin{lstlisting}
@@ -143,15 +324,61 @@ print(bool(pat.match("ada@example.com")))
   \item \textbf{Regex}: pattern minimo per email; preferire librerie se requisiti complessi.
 \end{itemize}
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Pattern Regex Comuni}
+\begin{center}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\rowcolor{blue!20}
+\textbf{Pattern} & \textbf{Descrizione} & \textbf{Esempio} \\ \hline
+\texttt{\textbackslash d} & Cifra (0-9) & \texttt{r"\textbackslash d\{3\}"} $\rightarrow$ "123" \\ \hline
+\texttt{\textbackslash w} & Carattere alfanumerico & \texttt{r"\textbackslash w+"} $\rightarrow$ "hello123" \\ \hline
+\texttt{\textbackslash s} & Spazio bianco & \texttt{r"\textbackslash s+"} $\rightarrow$ " \textbackslash t\textbackslash n" \\ \hline
+\texttt{.} & Qualsiasi carattere & \texttt{r"a.c"} $\rightarrow$ "abc", "a1c" \\ \hline
+\texttt{\textasciicircum} & Inizio stringa & \texttt{r"\textasciicircum start"} $\rightarrow$ "start..." \\ \hline
+\texttt{\$} & Fine stringa & \texttt{r"end\$"} $\rightarrow$ "...end" \\ \hline
+\texttt{*} & 0 o più occorrenze & \texttt{r"ab*"} $\rightarrow$ "a", "ab", "abbb" \\ \hline
+\texttt{+} & 1 o più occorrenze & \texttt{r"ab+"} $\rightarrow$ "ab", "abbb" \\ \hline
+\texttt{?} & 0 o 1 occorrenza & \texttt{r"ab?"} $\rightarrow$ "a", "ab" \\ \hline
+\texttt{\{n,m\}} & Da n a m occorrenze & \texttt{r"\textbackslash d\{2,4\}"} $\rightarrow$ "12", "1234" \\ \hline
+\texttt{[abc]} & Uno tra a, b, c & \texttt{r"[aeiou]"} $\rightarrow$ vocali \\ \hline
+\texttt{[\textasciicircum abc]} & Nessuno tra a, b, c & \texttt{r"[\textasciicircum 0-9]"} $\rightarrow$ non cifre \\ \hline
+\texttt{()} & Gruppo di cattura & \texttt{r"(\textbackslash d+)-(\textbackslash d+)"} $\rightarrow$ "123-456" \\ \hline
+\texttt{|} & OR logico & \texttt{r"cat|dog"} $\rightarrow$ "cat" o "dog" \\ \hline
+\rowcolor{green!10}
+\multicolumn{3}{|l|}{\textbf{Pattern Pratici Comuni:}} \\ \hline
+Email & Base & \texttt{r"[\textasciicircum @\textbackslash s]+@[\textasciicircum @\textbackslash s]+\textbackslash .[\textasciicircum @\textbackslash s]+"} \\ \hline
+URL & HTTP/HTTPS & \texttt{r"https?://[\textbackslash w.-]+(:\textbackslash d+)?(/.*)?") \\ \hline
+IP & IPv4 & \texttt{r"\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}"} \\ \hline
+Telefono (IT) & Mobile & \texttt{r"\textbackslash +39\textbackslash s?3\textbackslash d\{2\}\textbackslash s?\textbackslash d\{6,7\}"} \\ \hline
+Data & YYYY-MM-DD & \texttt{r"\textbackslash d\{4\}-\textbackslash d\{2\}-\textbackslash d\{2\}"} \\ \hline
+\end{tabular}
+\caption{Riferimento Pattern Regex Comuni}
+\end{table}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempi Terminal Regex}
+\begin{center}
+\begin{tcolorbox}[title={Esempi Terminal: Pattern Matching con Regex}, colback=black!5, colframe=blue!60, width=0.95\textwidth, fontupper=\ttfamily\small]
+\textcolor{green!60!black}{\$ python3}\\
+\textcolor{blue!80}{>>> import re}\\
+\textcolor{blue!80}{>>> pattern = r"\textbackslash d\{3\}-\textbackslash d\{4\}"}\\
+\textcolor{blue!80}{>>> re.search(pattern, "Telefono: 123-4567")}\\
+<re.Match object; span=(10, 18), match='123-4567'>\\[4pt]
+\textcolor{blue!80}{>>> email\_pattern = r"[\textasciicircum @]+@[\textasciicircum @]+\textbackslash .[\textasciicircum @]+"}\\
+\textcolor{blue!80}{>>> re.findall(email\_pattern, "Email: ada@py.org, bob@test.com")}\\
+['ada@py.org', 'bob@test.com']\\[4pt]
+\textcolor{blue!80}{>>> text = "Prezzi: 10.50, 20.99, 5.00"}\\
+\textcolor{blue!80}{>>> re.findall(r"\textbackslash d+\textbackslash .\textbackslash d\{2\}", text)}\\
+['10.50', '20.99', '5.00']\\[4pt]
+\textcolor{blue!80}{>>> re.sub(r"\textbackslash s+", "\_", "hello   world")}\\
+'hello\_world'\\[4pt]
+\textcolor{blue!80}{>>> match = re.match(r"(\textbackslash w+):(\textbackslash d+)", "port:8080")}\\
+\textcolor{blue!80}{>>> match.groups()}\\
+('port', '8080')
 \end{tcolorbox}
+\end{center}
 
-\begin{tcolorbox}[title={Idiomi: split/join, f-string, template}]
-Le operazioni \textbf{split/join} sono il modo idiomatico per tokenizzare e ricombinare stringhe. L'uso di `";".join(parts)` per unire elementi è preferito a concatenazioni ripetute con `+`, che è meno efficiente. Similmente, `s.split(",")` è il pattern standard per il parsing di dati delimitati in semplici case.
-
-Le \textbf{f-string} permettono di includere espressioni inline e specifiche di formato direttamente nel testo, rendendo il codice più leggibile e conciso. Dovrebbero essere preferite alle concatenazioni con l'operatore `+`, che risultano prolisse e meno eleganti.
-
-L'uso di \textbf{template} per centralizzare formattazioni e messaggi è una buona pratica che facilita manutenzione e localizzazione. Separare la logica dai testi crea una chiara distinzione di responsabilità e riduce il rischio di errori.
 \end{tcolorbox}
-
-\paragraph{Suggerimenti} Per testo lungo in codice, valutare \verb|\lstinline| per parti inline e spezzare stringhe multi-linea con triple quotes mantenendo indentazione chiara.
-Consulta: \url{https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str}.

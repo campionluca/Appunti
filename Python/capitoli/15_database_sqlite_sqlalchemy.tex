@@ -114,6 +114,45 @@ conn.commit()
 conn.close()
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Schema Database Blog}
+
+\begin{center}
+\begin{tikzpicture}[
+  table/.style={rectangle, draw=blue!60, fill=blue!5, thick, minimum width=3.5cm, minimum height=0.8cm},
+  field/.style={rectangle, draw=gray!60, fill=white, minimum width=3.5cm, minimum height=0.6cm, font=\small},
+  pk/.style={fill=yellow!20},
+  fk/.style={fill=green!10}
+]
+
+% Users table
+\node[table] (users_table) at (0, 0) {\textbf{users}};
+\node[field, pk, below=0cm of users_table] (users_id) {\texttt{id} INTEGER PK};
+\node[field, below=0cm of users_id] (users_username) {\texttt{username} TEXT UNIQUE};
+\node[field, below=0cm of users_username] (users_email) {\texttt{email} TEXT UNIQUE};
+\node[field, below=0cm of users_email] (users_password) {\texttt{password\_hash} TEXT};
+\node[field, below=0cm of users_password] (users_created) {\texttt{created\_at} TIMESTAMP};
+
+% Posts table
+\node[table] (posts_table) at (6, 0) {\textbf{posts}};
+\node[field, pk, below=0cm of posts_table] (posts_id) {\texttt{id} INTEGER PK};
+\node[field, fk, below=0cm of posts_id] (posts_user_id) {\texttt{user\_id} INTEGER FK};
+\node[field, below=0cm of posts_user_id] (posts_title) {\texttt{title} TEXT};
+\node[field, below=0cm of posts_title] (posts_content) {\texttt{content} TEXT};
+\node[field, below=0cm of posts_content] (posts_created) {\texttt{created\_at} TIMESTAMP};
+
+% Relationship
+\draw[->, thick, blue!70] (posts_user_id.west) -- node[above, font=\small] {N:1} (users_id.east);
+
+% Legend
+\node[draw, fill=yellow!20, minimum width=0.5cm, minimum height=0.3cm] at (-2, -5) {};
+\node[right, font=\small] at (-1.5, -5) {Primary Key (PK)};
+
+\node[draw, fill=green!10, minimum width=0.5cm, minimum height=0.3cm] at (-2, -5.7) {};
+\node[right, font=\small] at (-1.5, -5.7) {Foreign Key (FK)};
+
+\end{tikzpicture}
+\end{center}
+
 \subsection{INSERT: Prepared Statements}
 
 \begin{lstlisting}
@@ -155,6 +194,24 @@ cursor.executemany(
 conn.commit()
 conn.close()
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Output Terminale INSERT}
+
+\begin{tcolorbox}[colback=black!5!white, colframe=black!75!black, title=Esecuzione INSERT con SQLite3, fonttitle=\bfseries\ttfamily]
+\begin{verbatim}
+$ python insert_users.py
+Inserted user with ID: 1
+
+$ sqlite3 blog.db
+SQLite version 3.39.5
+sqlite> SELECT * FROM users;
+id|username|email|password_hash|created_at
+1|alice|alice@example.com|hashed_password|2024-01-15 10:30:45
+2|bob|bob@example.com|hash1|2024-01-15 10:30:45
+3|charlie|charlie@example.com|hash2|2024-01-15 10:30:45
+4|diana|diana@example.com|hash3|2024-01-15 10:30:45
+\end{verbatim}
+\end{tcolorbox}
 
 \subsection{SELECT: Query dati}
 
@@ -210,6 +267,114 @@ for stat in stats:
 conn.close()
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Tipi di JOIN in SQL}
+
+\begin{center}
+\begin{tikzpicture}[
+  circle/.style={draw, circle, minimum size=2cm, thick},
+  label/.style={font=\small\bfseries}
+]
+
+% INNER JOIN
+\begin{scope}[shift={(0,0)}]
+  \draw[fill=blue!30, draw=blue!60, thick] (0.5,0) circle (1cm);
+  \draw[fill=red!30, draw=red!60, thick] (-0.5,0) circle (1cm);
+  \begin{scope}
+    \clip (0.5,0) circle (1cm);
+    \fill[purple!50] (-0.5,0) circle (1cm);
+  \end{scope}
+  \node[label] at (0, -1.8) {INNER JOIN};
+  \node[font=\tiny] at (-1.2, 0) {A};
+  \node[font=\tiny] at (1.2, 0) {B};
+  \node[font=\tiny] at (0, 0.5) {A $\cap$ B};
+\end{scope}
+
+% LEFT JOIN
+\begin{scope}[shift={(5,0)}]
+  \draw[fill=blue!50, draw=blue!60, thick] (0.5,0) circle (1cm);
+  \draw[fill=red!30, draw=red!60, thick] (-0.5,0) circle (1cm);
+  \begin{scope}
+    \clip (0.5,0) circle (1cm);
+    \fill[purple!50] (-0.5,0) circle (1cm);
+  \end{scope}
+  \node[label] at (0, -1.8) {LEFT JOIN};
+  \node[font=\tiny] at (-1.2, 0) {A};
+  \node[font=\tiny] at (1.2, 0) {B};
+  \node[font=\tiny] at (-0.5, 0.5) {Tutti A};
+\end{scope}
+
+% RIGHT JOIN
+\begin{scope}[shift={(10,0)}]
+  \draw[fill=blue!30, draw=blue!60, thick] (0.5,0) circle (1cm);
+  \draw[fill=red!50, draw=red!60, thick] (-0.5,0) circle (1cm);
+  \begin{scope}
+    \clip (0.5,0) circle (1cm);
+    \fill[purple!50] (-0.5,0) circle (1cm);
+  \end{scope}
+  \node[label] at (0, -1.8) {RIGHT JOIN};
+  \node[font=\tiny] at (-1.2, 0) {A};
+  \node[font=\tiny] at (1.2, 0) {B};
+  \node[font=\tiny] at (0.5, 0.5) {Tutti B};
+\end{scope}
+
+\end{tikzpicture}
+
+\vspace{0.5cm}
+
+\begin{tikzpicture}[
+  box/.style={rectangle, draw, minimum width=4cm, minimum height=1cm, font=\small}
+]
+
+% Examples
+\node[box, fill=purple!20] (inner) at (0, 0) {
+  \begin{minipage}{3.8cm}
+  \textbf{INNER JOIN}\\
+  Solo righe con match in entrambe le tabelle
+  \end{minipage}
+};
+
+\node[box, fill=blue!20, below=0.3cm of inner] (left) {
+  \begin{minipage}{3.8cm}
+  \textbf{LEFT JOIN}\\
+  Tutte le righe da A + match da B (NULL se no match)
+  \end{minipage}
+};
+
+\node[box, fill=red!20, below=0.3cm of left] (right) {
+  \begin{minipage}{3.8cm}
+  \textbf{RIGHT JOIN}\\
+  Tutte le righe da B + match da A (NULL se no match)
+  \end{minipage}
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio Query con JOIN}
+
+\begin{tcolorbox}[colback=black!5!white, colframe=black!75!black, title=Query SELECT con JOIN e risultati, fonttitle=\bfseries\ttfamily]
+\begin{verbatim}
+sqlite> SELECT users.username, posts.title
+        FROM posts
+        INNER JOIN users ON posts.user_id = users.id;
+username|title
+alice|My First Post
+alice|Python Tutorial
+bob|Database Guide
+charlie|Web Development
+
+sqlite> SELECT users.username, COUNT(posts.id) as post_count
+        FROM users
+        LEFT JOIN posts ON users.id = posts.user_id
+        GROUP BY users.id;
+username|post_count
+alice|2
+bob|1
+charlie|1
+diana|0
+\end{verbatim}
+\end{tcolorbox}
+
 \subsection{UPDATE e DELETE}
 
 \begin{lstlisting}
@@ -238,6 +403,23 @@ else:
 conn.commit()
 conn.close()
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Operazioni CRUD in SQLite}
+
+\begin{tcolorbox}[colback=black!5!white, colframe=black!75!black, title=Esempi UPDATE e DELETE, fonttitle=\bfseries\ttfamily]
+\begin{verbatim}
+$ python update_delete.py
+Updated 1 row(s)
+Post deleted
+
+sqlite> SELECT * FROM users WHERE username = 'alice';
+id|username|email|password_hash|created_at
+1|alice|newemail@example.com|hashed_password|2024-01-15 10:30:45
+
+sqlite> SELECT COUNT(*) FROM posts;
+3
+\end{verbatim}
+\end{tcolorbox}
 
 \subsection{Transazioni}
 
@@ -332,6 +514,59 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Entity-Relationship Diagram Completo}
+
+\begin{center}
+\begin{tikzpicture}[
+  entity/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=4cm, minimum height=1cm, font=\bfseries},
+  attribute/.style={rectangle, draw=gray!60, fill=white, minimum width=4cm, minimum height=0.5cm, font=\small},
+  pk/.style={fill=yellow!20},
+  fk/.style={fill=green!10},
+  rel/.style={diamond, draw=purple!60, fill=purple!10, thick, font=\small}
+]
+
+% User Entity
+\node[entity] (user) at (0, 0) {User};
+\node[attribute, pk, below=0cm of user] (user_id) {\texttt{id}: Integer (PK)};
+\node[attribute, below=0cm of user_id] (user_username) {\texttt{username}: String};
+\node[attribute, below=0cm of user_username] (user_email) {\texttt{email}: String};
+\node[attribute, below=0cm of user_email] (user_pass) {\texttt{password\_hash}: String};
+\node[attribute, below=0cm of user_pass] (user_created) {\texttt{created\_at}: DateTime};
+
+% Post Entity
+\node[entity] (post) at (8, 0) {Post};
+\node[attribute, pk, below=0cm of post] (post_id) {\texttt{id}: Integer (PK)};
+\node[attribute, fk, below=0cm of post_id] (post_user) {\texttt{user\_id}: Integer (FK)};
+\node[attribute, below=0cm of post_user] (post_title) {\texttt{title}: String};
+\node[attribute, below=0cm of post_title] (post_content) {\texttt{content}: Text};
+\node[attribute, below=0cm of post_content] (post_created) {\texttt{created\_at}: DateTime};
+
+% Relationship
+\node[rel] (writes) at (4, -2) {scrive};
+\draw[->, thick] (user_created.east) -| (writes);
+\draw[->, thick] (writes) |- (post_user.west);
+\node[above, font=\tiny] at (2, -2) {1};
+\node[above, font=\tiny] at (6, -2) {N};
+
+% Tag Entity (for Many-to-Many)
+\node[entity] (tag) at (8, -6.5) {Tag};
+\node[attribute, pk, below=0cm of tag] (tag_id) {\texttt{id}: Integer (PK)};
+\node[attribute, below=0cm of tag_id] (tag_name) {\texttt{name}: String};
+
+% Association table
+\node[entity, fill=orange!10] (post_tag) at (4, -6.5) {post\_tags};
+\node[attribute, fk, below=0cm of post_tag] (pt_post) {\texttt{post\_id}: Integer (FK)};
+\node[attribute, fk, below=0cm of pt_post] (pt_tag) {\texttt{tag\_id}: Integer (FK)};
+
+% Many-to-Many relationships
+\draw[->, thick] (post_created.south) -- ++(0,-1) -| (pt_post.north);
+\draw[->, thick] (pt_tag.east) -- (tag_id.west);
+\node[left, font=\tiny] at (7.5, -6) {N};
+\node[right, font=\tiny] at (5, -6) {N};
+
+\end{tikzpicture}
+\end{center}
+
 \subsection{CRUD Operations con SQLAlchemy}
 
 \begin{lstlisting}
@@ -394,6 +629,92 @@ if post:
 
 session.close()
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: SQLAlchemy ORM Query Flow}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.2cm,
+  box/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=3cm, minimum height=0.8cm, font=\small, align=center},
+  process/.style={rectangle, draw=green!60, fill=green!10, thick, minimum width=3cm, minimum height=0.8cm, font=\small, align=center},
+  db/.style={cylinder, shape border rotate=90, draw=red!60, fill=red!10, thick, minimum width=2cm, minimum height=1cm, font=\small, align=center},
+  arrow/.style={->, thick, >=stealth}
+]
+
+% User code
+\node[box] (code) {Codice Python\\session.query(User)};
+
+% SQLAlchemy ORM
+\node[process, below=of code] (orm) {SQLAlchemy ORM\\Costruisce query};
+
+% SQL Generation
+\node[process, below=of orm] (sql) {Genera SQL\\SELECT * FROM users};
+
+% Database Engine
+\node[db, below=of sql] (engine) {SQLite\\Engine};
+
+% Execute
+\node[process, below=of engine] (exec) {Esegue Query\\Ritorna righe};
+
+% Map to Objects
+\node[process, below=of exec] (map) {Mappa a Oggetti\\User instances};
+
+% Return
+\node[box, below=of map] (result) {Risultato\\Lista di User};
+
+% Arrows
+\draw[arrow, blue!70] (code) -- (orm);
+\draw[arrow, green!70] (orm) -- (sql);
+\draw[arrow, green!70] (sql) -- (engine);
+\draw[arrow, red!70] (engine) -- (exec);
+\draw[arrow, green!70] (exec) -- (map);
+\draw[arrow, blue!70] (map) -- (result);
+
+% Side annotations
+\node[right=1.5cm of orm, font=\tiny, text width=3cm] {
+  \textbf{Layer ORM}\\
+  Trasforma chiamate\\
+  Pythonic in SQL
+};
+
+\node[right=1.5cm of engine, font=\tiny, text width=3cm] {
+  \textbf{Database}\\
+  Esegue query\\
+  e ritorna dati raw
+};
+
+\node[right=1.5cm of map, font=\tiny, text width=3cm] {
+  \textbf{Mapping}\\
+  Righe SQL $\rightarrow$\\
+  Oggetti Python
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio Output SQLAlchemy}
+
+\begin{tcolorbox}[colback=black!5!white, colframe=black!75!black, title=SQLAlchemy ORM con echo=True, fonttitle=\bfseries\ttfamily]
+\begin{verbatim}
+$ python sqlalchemy_demo.py
+INFO:sqlalchemy.engine.Engine:BEGIN
+INFO:sqlalchemy.engine.Engine:INSERT INTO users
+  (username, email, password_hash, created_at)
+  VALUES (?, ?, ?, ?)
+INFO:sqlalchemy.engine.Engine:('alice', 'alice@example.com',
+  'hashed_password', '2024-01-15 10:30:45.123456')
+INFO:sqlalchemy.engine.Engine:COMMIT
+
+Created user: 1
+
+INFO:sqlalchemy.engine.Engine:SELECT users.id, users.username,
+  users.email, users.password_hash, users.created_at
+  FROM users WHERE users.username = ?
+INFO:sqlalchemy.engine.Engine:('alice',)
+
+<User(id=1, username='alice')>
+\end{verbatim}
+\end{tcolorbox}
 
 \subsection{Query avanzate}
 
@@ -508,6 +829,48 @@ session.close()
 
 \subsection{Evitare N+1 Query Problem}
 
+\subsubsection{Visualizzazione: N+1 Query Problem}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.8cm and 2cm,
+  query/.style={rectangle, draw=red!60, fill=red!10, thick, minimum width=4cm, minimum height=0.6cm, font=\footnotesize},
+  queryopt/.style={rectangle, draw=green!60, fill=green!10, thick, minimum width=4cm, minimum height=0.6cm, font=\footnotesize},
+  label/.style={font=\small\bfseries}
+]
+
+% Problem: N+1 queries
+\node[label] (prob_title) at (0, 0) {PROBLEMA: N+1 Queries};
+
+\node[query, below=0.3cm of prob_title] (q1) {Query 1: SELECT * FROM users};
+\node[query, below=0.2cm of q1] (q2) {Query 2: SELECT * FROM posts WHERE user\_id=1};
+\node[query, below=0.2cm of q2] (q3) {Query 3: SELECT * FROM posts WHERE user\_id=2};
+\node[query, below=0.2cm of q3] (q4) {Query 4: SELECT * FROM posts WHERE user\_id=3};
+\node[below=0.2cm of q4, font=\footnotesize] (dots1) {...};
+\node[query, below=0.2cm of dots1] (qn) {Query N+1: SELECT * FROM posts WHERE user\_id=N};
+
+\node[below=0.3cm of qn, font=\small, text width=4cm, align=center] (prob_desc) {
+  \textbf{1 + N queries}\\
+  Molto lento con molti utenti!
+};
+
+% Solution: Eager loading
+\node[label, right=3cm of prob_title] (sol_title) {SOLUZIONE: Eager Loading};
+
+\node[queryopt, below=0.3cm of sol_title] (sq1) {Query 1: SELECT * FROM users};
+\node[queryopt, below=0.2cm of sq1] (sq2) {Query 2: SELECT * FROM posts\\WHERE user\_id IN (1,2,3,...,N)};
+
+\node[below=1.8cm of sq2, font=\small, text width=4cm, align=center] (sol_desc) {
+  \textbf{Solo 2 queries}\\
+  joinedload() o selectinload()
+};
+
+% Arrow showing improvement
+\draw[->, thick, blue!70, dashed] (prob_desc.east) to[bend right=20] node[below, font=\tiny] {Ottimizzazione} (sol_desc.west);
+
+\end{tikzpicture}
+\end{center}
+
 \begin{lstlisting}
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -582,6 +945,60 @@ with Session() as session:
         # Auto-commit se no eccezioni, auto-rollback se errore
 \end{lstlisting}
 
+\subsubsection{Visualizzazione: Flusso Transazioni Database}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1cm,
+  start/.style={circle, draw=green!60, fill=green!20, thick, minimum size=1cm, font=\small},
+  end/.style={circle, draw=blue!60, fill=blue!20, thick, minimum size=1cm, font=\small},
+  error/.style={circle, draw=red!60, fill=red!20, thick, minimum size=1cm, font=\small},
+  operation/.style={rectangle, draw=purple!60, fill=purple!10, thick, minimum width=2.5cm, minimum height=0.8cm, font=\footnotesize, align=center},
+  decision/.style={diamond, draw=orange!60, fill=orange!10, thick, minimum size=1.5cm, font=\footnotesize, align=center, aspect=2},
+  arrow/.style={->, thick, >=stealth}
+]
+
+% Start
+\node[start] (begin) at (0, 0) {BEGIN};
+
+% Operations
+\node[operation, below=of begin] (op1) {INSERT INTO users};
+\node[operation, below=of op1] (op2) {INSERT INTO posts};
+\node[operation, below=of op2] (op3) {UPDATE users};
+
+% Decision
+\node[decision, below=of op3] (check) {Errori?};
+
+% Commit
+\node[end, below left=1.5cm and 2cm of check] (commit) {COMMIT};
+
+% Rollback
+\node[error, below right=1.5cm and 2cm of check] (rollback) {ROLLBACK};
+
+% Success path
+\draw[arrow, green!70] (begin) -- (op1);
+\draw[arrow, green!70] (op1) -- (op2);
+\draw[arrow, green!70] (op2) -- (op3);
+\draw[arrow, orange!70] (op3) -- (check);
+
+% Decision branches
+\draw[arrow, green!70] (check) -- node[left, font=\tiny] {NO} (commit);
+\draw[arrow, red!70] (check) -- node[right, font=\tiny] {SI} (rollback);
+
+% Annotations
+\node[below=0.3cm of commit, font=\tiny, text width=2.5cm, align=center] {
+  Tutte le modifiche\\
+  vengono salvate
+};
+
+\node[below=0.3cm of rollback, font=\tiny, text width=2.5cm, align=center] {
+  Tutte le modifiche\\
+  vengono annullate
+};
+
+\end{tikzpicture}
+\end{center}
+
 \section{Migrazioni con Alembic}
 
 \subsection{Setup Alembic}
@@ -615,6 +1032,77 @@ alembic downgrade -1
 # Storia migrazioni
 alembic history
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Workflow Alembic Migrations}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.2cm,
+  step/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=4cm, minimum height=0.8cm, font=\small, align=center},
+  file/.style={rectangle, draw=green!60, fill=green!10, thick, minimum width=3cm, minimum height=0.6cm, font=\footnotesize, align=center},
+  db/.style={cylinder, shape border rotate=90, draw=red!60, fill=red!10, thick, minimum width=2cm, minimum height=0.8cm, font=\small, align=center},
+  arrow/.style={->, thick, >=stealth}
+]
+
+% Steps
+\node[step] (init) at (0, 0) {1. alembic init alembic};
+\node[step, below=of init] (modify) {2. Modifica modelli\\SQLAlchemy};
+\node[step, below=of modify] (autogen) {3. alembic revision\\--autogenerate};
+\node[file, below=of autogen] (migration) {Migration file\\xxx\_add\_table.py};
+\node[step, below=of migration] (review) {4. Revisiona migration\\(upgrade/downgrade)};
+\node[step, below=of review] (upgrade) {5. alembic upgrade head};
+\node[db, below=of upgrade] (database) {Database\\Aggiornato};
+
+% Arrows
+\draw[arrow, blue!70] (init) -- (modify);
+\draw[arrow, blue!70] (modify) -- (autogen);
+\draw[arrow, green!70] (autogen) -- (migration);
+\draw[arrow, orange!70] (migration) -- (review);
+\draw[arrow, blue!70] (review) -- (upgrade);
+\draw[arrow, red!70] (upgrade) -- (database);
+
+% Side annotations
+\node[right=1cm of autogen, font=\tiny, text width=3cm, align=left] {
+  Alembic confronta\\
+  modelli con schema\\
+  DB e genera migration
+};
+
+\node[right=1cm of upgrade, font=\tiny, text width=3cm, align=left] {
+  Applica le modifiche\\
+  allo schema database\\
+  in modo controllato
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio Alembic Commands}
+
+\begin{tcolorbox}[colback=black!5!white, colframe=black!75!black, title=Comandi Alembic, fonttitle=\bfseries\ttfamily]
+\begin{verbatim}
+$ alembic init alembic
+Creating directory /project/alembic ... done
+Creating directory /project/alembic/versions ... done
+Generating /project/alembic.ini ... done
+Generating /project/alembic/env.py ... done
+
+$ alembic revision --autogenerate -m "Add users table"
+INFO [alembic.runtime.migration] Context impl SQLiteImpl.
+INFO [alembic.autogenerate.compare] Detected added table 'users'
+Generating /project/alembic/versions/001_add_users_table.py
+
+$ alembic upgrade head
+INFO [alembic.runtime.migration] Running upgrade  -> 001
+INFO [alembic.runtime.migration] Running upgrade 001 -> head
+
+$ alembic current
+001 (head)
+
+$ alembic downgrade -1
+INFO [alembic.runtime.migration] Running downgrade 001 ->
+\end{verbatim}
+\end{tcolorbox}
 
 \subsection{Migration manuale}
 
@@ -686,6 +1174,42 @@ Infine, esporre oggetti SQLAlchemy direttamente come risposta API crea problemi 
 \section{Pattern e Best Practices}
 
 \subsection{Repository Pattern}
+
+\subsubsection{Visualizzazione: Architecture Pattern Repository}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  layer/.style={rectangle, draw, thick, minimum width=6cm, minimum height=1.2cm, font=\small, align=center},
+  app/.style={fill=blue!20, draw=blue!60},
+  repo/.style={fill=green!20, draw=green!60},
+  orm/.style={fill=orange!20, draw=orange!60},
+  db/.style={fill=red!20, draw=red!60},
+  arrow/.style={<->, thick, >=stealth}
+]
+
+% Layers
+\node[layer, app] (application) at (0, 0) {\textbf{Application Layer}\\Controllers, Services};
+\node[layer, repo, below=of application] (repository) {\textbf{Repository Layer}\\UserRepository, PostRepository};
+\node[layer, orm, below=of repository] (sqlalchemy) {\textbf{ORM Layer}\\SQLAlchemy Session, Models};
+\node[layer, db, below=of sqlalchemy] (database) {\textbf{Database}\\SQLite / PostgreSQL};
+
+% Arrows
+\draw[arrow, blue!70] (application) -- (repository);
+\draw[arrow, green!70] (repository) -- (sqlalchemy);
+\draw[arrow, red!70] (sqlalchemy) -- (database);
+
+% Annotations
+\node[right=0.5cm of repository, font=\tiny, text width=3.5cm, align=left] {
+  \textbf{Vantaggi:}\\
+  - Separa logica business da DB\\
+  - Facilita testing (mock repo)\\
+  - Centralizza query DB\\
+  - Riduce codice duplicato
+};
+
+\end{tikzpicture}
+\end{center}
 
 \begin{lstlisting}
 from typing import Optional, List

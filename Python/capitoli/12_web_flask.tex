@@ -26,7 +26,92 @@ Il \textbf{routing} e i \textbf{metodi HTTP} sono il cuore di qualsiasi app web.
 L'uso di \textbf{template Jinja2} consente una chiara separazione tra presentazione e logica. Anziché concatenare HTML in Python, Jinja2 permette di definire template che ricevono dati e generano HTML dinamico.
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Ciclo Richiesta-Risposta Flask}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  box/.style={rectangle, draw, fill=blue!10, text width=3cm, align=center, minimum height=1cm},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Nodes
+\node[box] (client) {Client\\(Browser)};
+\node[box, right=of client] (wsgi) {WSGI Server\\(Werkzeug)};
+\node[box, right=of wsgi] (flask) {Flask App\\(Router)};
+\node[box, below=of flask] (view) {View Function};
+\node[box, left=of view] (template) {Template\\(Jinja2)};
+
+% Request flow (top)
+\draw[arrow, red!70] (client) -- node[above] {HTTP Request} (wsgi);
+\draw[arrow, red!70] (wsgi) -- node[above] {environ} (flask);
+\draw[arrow, red!70] (flask) -- node[right] {route match} (view);
+
+% Response flow (bottom)
+\draw[arrow, green!70] (view) -- node[left] {context} (template);
+\draw[arrow, green!70] (template) -- node[below] {HTML} (wsgi);
+\draw[arrow, green!70] (wsgi) -- node[below] {HTTP Response} (client);
+
+% Labels
+\node[above=0.5cm of client, text=red!70] {1. Richiesta};
+\node[above=0.5cm of wsgi, text=red!70] {2. Parsing};
+\node[above=0.5cm of flask, text=red!70] {3. Routing};
+\node[below=1.8cm of client, text=green!70] {6. Risposta};
+\node[below=1.8cm of wsgi, text=green!70] {5. Rendering};
+\node[below=1.8cm of template, text=green!70] {4. Processing};
+
+\end{tikzpicture}
+\end{center}
+
 \section{Esempi Pratici}
+
+\subsubsection{Visualizzazione: Struttura Applicazione Flask}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.8cm,
+  folder/.style={rectangle, draw, fill=yellow!20, text width=3.5cm, align=left, minimum height=0.7cm},
+  file/.style={rectangle, draw, fill=green!10, text width=3.5cm, align=left, minimum height=0.6cm}
+]
+
+% Root
+\node[folder] (root) {\texttt{myapp/}};
+
+% First level
+\node[file, below=of root, xshift=-2cm] (init) {\texttt{\_\_init\_\_.py}\\ {\footnotesize (create\_app)}};
+\node[file, below=of root, xshift=2cm] (config) {\texttt{config.py}};
+
+% Second level
+\node[folder, below=of init, yshift=-0.3cm] (routes) {\texttt{routes/}};
+\node[folder, below=of config, yshift=-0.3cm] (templates) {\texttt{templates/}};
+
+% Third level
+\node[file, below=of routes, xshift=-1.5cm, yshift=-0.3cm] (main_bp) {\texttt{main.py}\\ {\footnotesize (blueprint)}};
+\node[file, below=of routes, xshift=1.5cm, yshift=-0.3cm] (api_bp) {\texttt{api.py}\\ {\footnotesize (blueprint)}};
+
+\node[file, below=of templates, xshift=-1.5cm, yshift=-0.3cm] (base) {\texttt{base.html}};
+\node[file, below=of templates, xshift=1.5cm, yshift=-0.3cm] (index) {\texttt{index.html}};
+
+% Arrows
+\draw[->, thick] (root) -- (init);
+\draw[->, thick] (root) -- (config);
+\draw[->, thick] (init) -- (routes);
+\draw[->, thick] (config) -- (templates);
+\draw[->, thick] (routes) -- (main_bp);
+\draw[->, thick] (routes) -- (api_bp);
+\draw[->, thick] (templates) -- (base);
+\draw[->, thick] (templates) -- (index);
+
+% Annotations
+\node[right=3cm of root, text width=4cm, align=left] {
+  \textbf{Struttura modulare:}\\
+  - App factory in \_\_init\_\_.py\\
+  - Blueprint per routing\\
+  - Template per viste\\
+  - Config centralizzata
+};
+
+\end{tikzpicture}
+\end{center}
+
 \subsection{App base}
 \begin{lstlisting}
 from flask import Flask
@@ -47,6 +132,19 @@ def home():
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Avvio Applicazione Flask}
+\begin{tcolorbox}[title=Output Terminale: Avvio Flask, colback=black, coltext=green!80, fontupper=\ttfamily\small]
+\$ flask --app app run\\
+* Serving Flask app 'app'\\
+* Debug mode: off\\
+WARNING: This is a development server.\\
+* Running on http://127.0.0.1:5000\\
+Press CTRL+C to quit\\
+\\
+127.0.0.1 - - [26/Nov/2025 10:30:15] "GET / HTTP/1.1" 200 -\\
+127.0.0.1 - - [26/Nov/2025 10:30:16] "GET /favicon.ico HTTP/1.1" 404 -
+\end{tcolorbox}
+
 \subsection{Parametri}
 \begin{lstlisting}
 from flask import request
@@ -64,6 +162,90 @@ def echo():
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Sintassi Route Decorator}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.5cm,
+  part/.style={rectangle, draw, minimum height=0.8cm, align=center}
+]
+
+% Main decorator breakdown
+\node[part, fill=red!20, text width=2cm] (at) {@app.route};
+\node[part, fill=blue!20, text width=1.5cm, right=0cm of at] (path) {"/users"};
+\node[part, fill=green!20, text width=2.5cm, right=0cm of path] (methods) {methods=["GET"]};
+
+% Annotations above
+\node[above=0.3cm of at, text=red!70] {\footnotesize Decorator};
+\node[above=0.3cm of path, text=blue!70] {\footnotesize URL Path};
+\node[above=0.3cm of methods, text=green!70] {\footnotesize HTTP Methods};
+
+% Additional examples below
+\node[below=1.5cm of at, text width=6cm, align=left] (examples) {
+  \textbf{Esempi comuni:}\\
+  \texttt{@app.route("/", methods=["GET"])}\\
+  \texttt{@app.route("/user/<int:id>")}\\
+  \texttt{@app.route("/api/data", methods=["POST"])}\\
+  \texttt{@app.route("/page/<string:slug>")}
+};
+
+% Variable routes
+\node[below=3.5cm of at, part, fill=orange!20, text width=2.5cm] (var1) {<int:user\_id>};
+\node[part, fill=purple!20, text width=2cm, right=0cm of var1] (var2) {<string:name>};
+\node[part, fill=teal!20, text width=2cm, right=0cm of var2] (var3) {<path:file>};
+
+\node[above=0.3cm of var1, text=orange!70] {\footnotesize Integer};
+\node[above=0.3cm of var2, text=purple!70] {\footnotesize String};
+\node[above=0.3cm of var3, text=teal!70] {\footnotesize Path};
+
+\node[below=0.3cm of var2, align=center] {\footnotesize Tipi di variabili route};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Richieste HTTP con curl}
+\begin{tcolorbox}[title=Output Terminale: Richieste curl, colback=black, coltext=green!80, fontupper=\ttfamily\small]
+\# GET richiesta semplice\\
+\$ curl http://localhost:5000/\\
+Hello Flask\\
+\\
+\# GET con parametri query\\
+\$ curl "http://localhost:5000/echo?msg=Ciao"\\
+Ciao\\
+\\
+\# POST con dati JSON\\
+\$ curl -X POST http://localhost:5000/api/user \textbackslash\\
+\ \ -H "Content-Type: application/json" \textbackslash\\
+\ \ -d '\{"name":"Mario","age":30\}'\\
+\{"status":"created","id":123\}\\
+\\
+\# GET con path parameter\\
+\$ curl http://localhost:5000/user/42\\
+\{"id":42,"name":"User 42"\}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Tabella Metodi HTTP}
+\begin{center}
+\begin{tabular}{|l|p{6cm}|p{4cm}|}
+\hline
+\textbf{Metodo} & \textbf{Utilizzo} & \textbf{Esempio Flask} \\
+\hline
+GET & Recuperare risorse, non modifica stato & \texttt{@app.route("/users")} \\
+\hline
+POST & Creare nuove risorse & \texttt{@app.route("/users", methods=["POST"])} \\
+\hline
+PUT & Aggiornare risorsa esistente (completa) & \texttt{@app.route("/users/<id>", methods=["PUT"])} \\
+\hline
+PATCH & Aggiornare risorsa esistente (parziale) & \texttt{@app.route("/users/<id>", methods=["PATCH"])} \\
+\hline
+DELETE & Eliminare risorse & \texttt{@app.route("/users/<id>", methods=["DELETE"])} \\
+\hline
+HEAD & Come GET ma solo header (no body) & Automatico per route GET \\
+\hline
+OPTIONS & Verificare metodi supportati & Automatico (CORS) \\
+\hline
+\end{tabular}
+\end{center}
+
 \subsection{Template}
 \begin{lstlisting}
 from flask import render_template
@@ -78,6 +260,82 @@ def page():
   \item Passare variabili al template e evitare concatenazioni manuali di HTML.
   \item Proteggere da XSS/CSRF; usare form e token sicuri.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Gerarchia Template Inheritance}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  template/.style={rectangle, draw, rounded corners, text width=3cm, align=center, minimum height=1.2cm},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Base template
+\node[template, fill=blue!20] (base) {
+  \textbf{base.html}\\
+  \footnotesize Layout principale\\
+  \footnotesize \texttt{\{% block ... \%\}}
+};
+
+% Child templates
+\node[template, fill=green!20, below left=of base, xshift=-1cm] (index) {
+  \textbf{index.html}\\
+  \footnotesize \texttt{\{% extends base \%\}}\\
+  \footnotesize Home page
+};
+
+\node[template, fill=green!20, below=of base] (about) {
+  \textbf{about.html}\\
+  \footnotesize \texttt{\{% extends base \%\}}\\
+  \footnotesize Pagina info
+};
+
+\node[template, fill=green!20, below right=of base, xshift=1cm] (contact) {
+  \textbf{contact.html}\\
+  \footnotesize \texttt{\{% extends base \%\}}\\
+  \footnotesize Contatti
+};
+
+% Arrows
+\draw[arrow, blue!70] (base) -- (index);
+\draw[arrow, blue!70] (base) -- (about);
+\draw[arrow, blue!70] (base) -- (contact);
+
+% Block inheritance example
+\node[below=3cm of base, text width=8cm, align=left, draw, fill=yellow!10, rounded corners] (blocks) {
+  \textbf{base.html:}\\
+  \texttt{\{% block title \%\}Default\{% endblock \%\}}\\
+  \texttt{\{% block content \%\}...\{% endblock \%\}}\\
+  \texttt{\{% block scripts \%\}...\{% endblock \%\}}\\
+  \\
+  \textbf{index.html:}\\
+  \texttt{\{% extends "base.html" \%\}}\\
+  \texttt{\{% block title \%\}Home\{% endblock \%\}}\\
+  \texttt{\{% block content \%\}...\{% endblock \%\}}
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Rendering Template}
+\begin{tcolorbox}[title=Output Terminale: Template Rendering, colback=black, coltext=green!80, fontupper=\ttfamily\small]
+\# Flask con debug mode\\
+\$ export FLASK\_ENV=development\\
+\$ flask --app app run --debug\\
+* Serving Flask app 'app'\\
+* Debug mode: on\\
+* Running on http://127.0.0.1:5000\\
+* Restarting with stat\\
+\\
+\# Richiesta che causa rendering\\
+127.0.0.1 - - [26/Nov/2025 10:45:20] "GET /page HTTP/1.1" 200 -\\
+\\
+\# Template not found error\\
+jinja2.exceptions.TemplateNotFound: page.html\\
+\ \ File "flask/app.py", line 1234, in dispatch\_request\\
+\ \ \ \ return self.view\_functions[rule.endpoint](**req.view\_args)\\
+\ \ File "app.py", line 15, in page\\
+\ \ \ \ return render\_template("page.html", title="Demo")
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -122,6 +380,104 @@ La gestione del \textbf{contesto di richiesta} è fondamentale in Flask. L'ogget
 Quando si usano \textbf{template Jinja2}, è importante separare chiaramente la presentazione dalla logica. Inoltre, Jinja2 fornisce escape automatico di default per proteggere da XSS; tuttavia, è necessario implementare protezioni CSRF e validare l'input lato server.
 
 Il \textbf{testing} di applicazioni Flask dovrebbe usare il test client fornito da Flask per verificare percorsi, metodi HTTP e stati. Integrare test nel processo CI garantisce che regressioni siano rilevate immediatamente.
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Blueprint Registration Flow}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.2cm,
+  box/.style={rectangle, draw, rounded corners, text width=3.5cm, align=center, minimum height=1cm},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Main app
+\node[box, fill=blue!20] (app) {
+  \textbf{Flask App}\\
+  \footnotesize create\_app()
+};
+
+% Blueprints
+\node[box, fill=green!20, below left=of app, xshift=-1.5cm] (bp1) {
+  \textbf{main\_bp}\\
+  \footnotesize url\_prefix='/'\\
+  \footnotesize @main\_bp.route
+};
+
+\node[box, fill=green!20, below=of app] (bp2) {
+  \textbf{api\_bp}\\
+  \footnotesize url\_prefix='/api'\\
+  \footnotesize @api\_bp.route
+};
+
+\node[box, fill=green!20, below right=of app, xshift=1.5cm] (bp3) {
+  \textbf{auth\_bp}\\
+  \footnotesize url\_prefix='/auth'\\
+  \footnotesize @auth\_bp.route
+};
+
+% Registration
+\draw[arrow, blue!70] (app) -- node[left, text width=2.5cm, align=right] {\footnotesize app.register\_blueprint} (bp1);
+\draw[arrow, blue!70] (app) -- node[above right] {\footnotesize register} (bp2);
+\draw[arrow, blue!70] (app) -- node[right, text width=2.5cm] {\footnotesize register\_blueprint} (bp3);
+
+% Routes
+\node[box, fill=orange!15, below=of bp1, minimum height=0.7cm] (r1) {
+  \footnotesize /\\
+  \footnotesize /about
+};
+
+\node[box, fill=orange!15, below=of bp2, minimum height=0.7cm] (r2) {
+  \footnotesize /api/users\\
+  \footnotesize /api/data
+};
+
+\node[box, fill=orange!15, below=of bp3, minimum height=0.7cm] (r3) {
+  \footnotesize /auth/login\\
+  \footnotesize /auth/logout
+};
+
+\draw[arrow, dashed] (bp1) -- (r1);
+\draw[arrow, dashed] (bp2) -- (r2);
+\draw[arrow, dashed] (bp3) -- (r3);
+
+% Code example
+\node[below=3.5cm of app, text width=10cm, align=left, draw, fill=yellow!10, rounded corners] (code) {
+  \textbf{Esempio codice:}\\
+  \texttt{from flask import Blueprint}\\
+  \texttt{api\_bp = Blueprint('api', \_\_name\_\_, url\_prefix='/api')}\\
+  \\
+  \texttt{@api\_bp.route('/users')}\\
+  \texttt{def get\_users(): ...}\\
+  \\
+  \texttt{\# In \_\_init\_\_.py}\\
+  \texttt{app.register\_blueprint(api\_bp)}
+};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Gestione Errori HTTP}
+\begin{tcolorbox}[title=Output Terminale: Errori HTTP, colback=black, coltext=green!80, fontupper=\ttfamily\small]
+\# 404 Not Found\\
+\$ curl -i http://localhost:5000/nonexistent\\
+HTTP/1.1 404 NOT FOUND\\
+Content-Type: text/html; charset=utf-8\\
+\\
+<!DOCTYPE html>\\
+<html><head><title>404 Not Found</title></head>\\
+<body><h1>Not Found</h1></body></html>\\
+\\
+\# 500 Internal Server Error\\
+127.0.0.1 - - [26/Nov/2025 11:00:30] "GET /broken HTTP/1.1" 500 -\\
+Traceback (most recent call last):\\
+\ \ File "app.py", line 20, in broken\_route\\
+\ \ \ \ result = 1 / 0\\
+ZeroDivisionError: division by zero\\
+\\
+\# Custom error handler\\
+@app.errorhandler(404)\\
+def not\_found(error):\\
+\ \ \ \ return render\_template('404.html'), 404
 \end{tcolorbox}
 
 \paragraph{Deployment} Differenziare configurazione sviluppo/produzione, log, e gestione errori; preferire server WSGI adeguati e reverse proxy.

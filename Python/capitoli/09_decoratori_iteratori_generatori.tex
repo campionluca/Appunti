@@ -93,7 +93,7 @@ Ecco come funziona un decoratore visivamente:
     \draw[arrow] (call_hello) -- (call_post);
 
     % Output
-    \node[box, fill=yellow!20, text width=4cm, right=1cm of call_pre] (output) {
+    \node[box, fill=yellow!20, text width=4cm] (output) at (2.5,0) {
         \textbf{Output:}\\
         \texttt{chiamata hello}\\
         \texttt{hello}
@@ -145,10 +145,10 @@ greet("Mario")  # Stampa 3 volte
     \draw[arrow] (decorator) -- (wrapper);
     \draw[arrow] (wrapper) -- (greet);
 
-    \node[right=0.5cm of repeat, font=\footnotesize, align=left] {Livello 1: Parametri decorator};
-    \node[right=0.5cm of decorator, font=\footnotesize, align=left] {Livello 2: Decorator vero};
-    \node[right=0.5cm of wrapper, font=\footnotesize, align=left] {Livello 3: Wrapper};
-    \node[right=0.5cm of greet, font=\footnotesize, align=left] {Funzione originale};
+    \node[font=\footnotesize, align=left] at (4.5,4) {Livello 1: Parametri decorator};
+    \node[font=\footnotesize, align=left] at (4.5,3) {Livello 2: Decorator vero};
+    \node[font=\footnotesize, align=left] at (4.5,2) {Livello 3: Wrapper};
+    \node[font=\footnotesize, align=left] at (4.5,1) {Funzione originale};
 \end{tikzpicture}
 \end{center}
 

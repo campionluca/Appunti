@@ -50,6 +50,47 @@ class Punto:
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Struttura di una Classe}
+\begin{center}
+\begin{tikzpicture}[
+    classbox/.style={rectangle, draw=blue!60, fill=blue!5, thick, minimum width=4cm, align=center},
+    sectionbox/.style={rectangle, draw=blue!60, fill=blue!15, thick, minimum width=4cm, align=left, font=\small},
+]
+    % Class name
+    \node[classbox] (name) at (0,0) {\textbf{\large Punto}};
+
+    % Attributes section
+    \node[sectionbox, below=0 of name, minimum height=1.2cm] (attrs) {
+        \textbf{Attributi:}\\
+        \texttt{+ x: float}\\
+        \texttt{+ y: float}
+    };
+
+    % Methods section
+    \node[sectionbox, below=0 of attrs, minimum height=1.5cm] (methods) {
+        \textbf{Metodi:}\\
+        \texttt{+ \_\_init\_\_(x, y)}\\
+        \texttt{+ \_\_repr\_\_() -> str}
+    };
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio di Istanziazione}
+\begin{tcolorbox}[title=Output Terminale, colback=black!5, colframe=gray!50]
+\begin{verbatim}
+>>> p1 = Punto(3, 4)
+>>> p2 = Punto(0, 0)
+>>> print(p1)
+Punto(3, 4)
+>>> print(p2)
+Punto(0, 0)
+>>> p1.x
+3
+>>> p1.y
+4
+\end{verbatim}
+\end{tcolorbox}
+
 \subsection{Ereditarietà}
 \begin{lstlisting}
 class Veicolo:
@@ -67,6 +108,59 @@ class Auto(Veicolo):
   \item Applicare LSP: la sottoclasse deve rispettare l'interfaccia/contratto della base.
   \item Preferire composizione quando l'ereditarietà non rappresenta una relazione "è un".
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Gerarchia di Ereditarietà}
+\begin{center}
+\begin{tikzpicture}[
+    classnode/.style={rectangle, draw=blue!60, fill=blue!10, thick, minimum width=3cm, minimum height=1cm, align=center, rounded corners},
+    inheritarrow/.style={-{Stealth[length=3mm]}, thick, blue!60},
+]
+    % Base class
+    \node[classnode, fill=green!15] (veicolo) at (0,0) {
+        \textbf{Veicolo}\\
+        \small\texttt{+ muovi()}
+    };
+
+    % Derived classes
+    \node[classnode] (auto) at (-2.5,-2.5) {
+        \textbf{Auto}\\
+        \small\texttt{+ muovi()} \textit{(override)}
+    };
+
+    \node[classnode] (moto) at (2.5,-2.5) {
+        \textbf{Moto}\\
+        \small\texttt{+ muovi()} \textit{(override)}
+    };
+
+    % Inheritance arrows
+    \draw[inheritarrow] (auto.north) -- (veicolo.south west);
+    \draw[inheritarrow] (moto.north) -- (veicolo.south east);
+
+    % Legend
+    \node[anchor=west, font=\small] at (-4,-4) {Freccia indica: "eredita da"};
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio di Ereditarietà e Override}
+\begin{tcolorbox}[title=Output Terminale, colback=black!5, colframe=gray!50]
+\begin{verbatim}
+>>> v = Veicolo()
+>>> v.muovi()
+Mi muovo
+
+>>> a = Auto()
+>>> a.muovi()
+Guido
+
+>>> isinstance(a, Veicolo)
+True
+>>> isinstance(a, Auto)
+True
+
+>>> type(a).__name__
+'Auto'
+\end{verbatim}
 \end{tcolorbox}
 
 \subsection{Proprietà}
@@ -87,6 +181,53 @@ class User:
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Proprietà e Incapsulamento}
+\begin{center}
+\begin{tikzpicture}[
+    classbox/.style={rectangle, draw=purple!60, fill=purple!5, thick, minimum width=4.5cm, align=center},
+    sectionbox/.style={rectangle, draw=purple!60, fill=purple!15, thick, minimum width=4.5cm, align=left, font=\small},
+]
+    % Class name
+    \node[classbox] (name) at (0,0) {\textbf{\large User}};
+
+    % Private attributes
+    \node[sectionbox, below=0 of name, minimum height=1cm] (attrs) {
+        \textbf{Attributi privati:}\\
+        \texttt{- \_name: str} \textit{(interno)}
+    };
+
+    % Public properties
+    \node[sectionbox, below=0 of attrs, minimum height=1.5cm] (props) {
+        \textbf{Proprietà pubbliche:}\\
+        \texttt{+ name: property}\\
+        \small\textit{(accesso controllato)}
+    };
+
+    % Methods
+    \node[sectionbox, below=0 of props, minimum height=1cm] (methods) {
+        \textbf{Metodi:}\\
+        \texttt{+ \_\_init\_\_(name)}
+    };
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio di Proprietà}
+\begin{tcolorbox}[title=Output Terminale, colback=black!5, colframe=gray!50]
+\begin{verbatim}
+>>> u = User("Alice")
+>>> u.name
+'Alice'
+
+>>> # Accesso diretto all'attributo interno (sconsigliato)
+>>> u._name
+'Alice'
+
+>>> # La property protegge l'accesso
+>>> u.name = "Bob"  # Se non c'è setter, solleva AttributeError
+AttributeError: can't set attribute
+\end{verbatim}
+\end{tcolorbox}
+
 \begin{tcolorbox}[title=Casi d'uso]
 La programmazione a oggetti è particolarmente efficace per modellare entità di dominio come \texttt{Ordine}, \texttt{Prodotto} e \texttt{Utente}, permettendo di rappresentare la logica di business in modo naturale e intuitivo attraverso classi che incapsulano dati e comportamenti.
 
@@ -95,6 +236,103 @@ I pattern come Adapter e Strategy sfruttano il polimorfismo per variare il compo
 L'uso di Value Object immutabili migliora la sicurezza e la testabilità del codice, eliminando effetti collaterali indesiderati e semplificando il ragionamento sul flusso dei dati.
 
 Le astrazioni per driver di database o API permettono di definire interfacce stabili con implementazioni intercambiabili, facilitando testing con mock e permettendo di sostituire provider esterni senza impatto sul resto del sistema.
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Diagramma UML delle Relazioni tra Classi}
+\begin{center}
+\begin{tikzpicture}[
+    umlclass/.style={rectangle split, rectangle split parts=3, draw=blue!60, fill=blue!5, thick, minimum width=3.5cm, text width=3.2cm, align=center, font=\small},
+    inheritance/.style={-{Stealth[length=3mm]}, thick, blue!60},
+    composition/.style={-{Diamond[length=3mm]}, thick, red!60},
+    aggregation/.style={-{Diamond[length=3mm, open]}, thick, orange!60},
+]
+    % Base class: Animale
+    \node[umlclass] (animale) at (0,0) {
+        \textbf{Animale}
+        \nodepart{second}
+        \texttt{+ nome: str}\\
+        \texttt{+ età: int}
+        \nodepart{third}
+        \texttt{+ mangia()}\\
+        \texttt{+ dormi()}
+    };
+
+    % Derived class: Cane
+    \node[umlclass] (cane) at (-3,-4) {
+        \textbf{Cane}
+        \nodepart{second}
+        \texttt{+ razza: str}
+        \nodepart{third}
+        \texttt{+ abbaia()}\\
+        \texttt{+ mangia()} \textit{(ovr)}
+    };
+
+    % Derived class: Gatto
+    \node[umlclass] (gatto) at (3,-4) {
+        \textbf{Gatto}
+        \nodepart{second}
+        \texttt{+ colore: str}
+        \nodepart{third}
+        \texttt{+ miagola()}\\
+        \texttt{+ mangia()} \textit{(ovr)}
+    };
+
+    % Composition class: Proprietario
+    \node[umlclass] (proprietario) at (0,-8) {
+        \textbf{Proprietario}
+        \nodepart{second}
+        \texttt{+ nome: str}\\
+        \texttt{+ animali: List}
+        \nodepart{third}
+        \texttt{+ aggiungi\_animale()}\\
+        \texttt{+ rimuovi\_animale()}
+    };
+
+    % Inheritance arrows
+    \draw[inheritance] (cane.north) -- (animale.south west);
+    \draw[inheritance] (gatto.north) -- (animale.south east);
+
+    % Aggregation (Proprietario ha Animali)
+    \draw[aggregation] (proprietario.north) -- (0,-5.5) node[midway, right, font=\tiny] {ha} -- (0,-4);
+
+    % Legend
+    \node[anchor=west, font=\footnotesize] at (-6,-9.5) {
+        \begin{tabular}{ll}
+            \tikz\draw[inheritance] (0,0) -- (0.5,0); & Ereditarietà \\
+            \tikz\draw[aggregation] (0,0) -- (0.5,0); & Aggregazione \\
+            \tikz\draw[composition] (0,0) -- (0.5,0); & Composizione \\
+        \end{tabular}
+    };
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Esempio Completo di OOP}
+\begin{tcolorbox}[title=Output Terminale, colback=black!5, colframe=gray!50]
+\begin{verbatim}
+>>> # Creazione di oggetti
+>>> rex = Cane("Rex", 5, "Labrador")
+>>> micio = Gatto("Micio", 3, "Bianco")
+
+>>> # Polimorfismo
+>>> animali = [rex, micio]
+>>> for animale in animali:
+...     animale.mangia()
+Il cane mangia croccantini
+Il gatto mangia pesce
+
+>>> # Composizione
+>>> proprietario = Proprietario("Mario")
+>>> proprietario.aggiungi_animale(rex)
+>>> proprietario.aggiungi_animale(micio)
+>>> len(proprietario.animali)
+2
+
+>>> # Metodi specifici
+>>> rex.abbaia()
+Bau bau!
+>>> micio.miagola()
+Miao!
+\end{verbatim}
 \end{tcolorbox}
 
 \section{Esercizi}

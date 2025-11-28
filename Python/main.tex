@@ -6,6 +6,10 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 
+% Matematica e simboli
+\usepackage{amsmath}
+\usepackage{amssymb}
+
 % Layout
 \usepackage{geometry}
 \geometry{margin=2.5cm}
@@ -58,6 +62,7 @@
 
 % Grafica
 \usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shapes.multipart}
 
 % Tipografia e micro-ottimizzazioni
 \usepackage[protrusion=true,expansion=true]{microtype}
@@ -65,40 +70,40 @@
 
 % Metadati documento
 \title{Appunti di Programmazione Python}
-\author{}
+\author{Luca Campion}
 \date{\today}
 
 \begin{document}
-%\maketitle
-%\tableofcontents
+\maketitle
+\tableofcontents
 
-%\mainmatter
+\mainmatter
 
 % Inclusione dei capitoli
-%\include{capitoli/00_fondamenti_python}
-%\include{capitoli/01_controllo_flusso}
+\include{capitoli/00_fondamenti_python}
+\include{capitoli/01_controllo_flusso}
 \include{capitoli/02_funzioni}
 \include{capitoli/03_strutture_dati}
 \include{capitoli/04_stringhe_formattazione}
 \include{capitoli/05_file_io}
 \include{capitoli/06_gestione_errori}
-% \include{capitoli/07_moduli_package}
-% \include{capitoli/08_programmazione_oggetti}
-% \include{capitoli/09_decoratori_iteratori_generatori}
-% \include{capitoli/10_standard_library_avanzata}
-% \include{capitoli/11_gui_tkinter}
-% \include{capitoli/12_web_flask}
-% \include{capitoli/13_automazione_web_scraping}
-% \include{capitoli/14_testing_debugging}
-% \include{capitoli/15_database_sqlite_sqlalchemy}
+ \include{capitoli/07_moduli_package}
+ \include{capitoli/08_programmazione_oggetti}
+ \include{capitoli/09_decoratori_iteratori_generatori}
+ \include{capitoli/10_standard_library_avanzata}
+ \include{capitoli/11_gui_tkinter}
+\include{capitoli/12_web_flask}
+\include{capitoli/13_automazione_web_scraping}
+\include{capitoli/14_testing_debugging}
+\include{capitoli/15_database_sqlite_sqlalchemy}
 
 % Robot NAO (V6)
-% \include{capitoli/16_robot_nao_intro}
-% \input{capitoli/_guida_non_python}
-% \include{capitoli/17_robot_nao_setup_api}
-% \input{capitoli/_guida_non_python}
-% \include{capitoli/18_robot_nao_motion_vision}
-% \input{capitoli/_guida_non_python}
+\include{capitoli/16_robot_nao_intro}
+\input{capitoli/_guida_non_python}
+\include{capitoli/17_robot_nao_setup_api}
+\input{capitoli/_guida_non_python}
+\include{capitoli/18_robot_nao_motion_vision}
+\input{capitoli/_guida_non_python}
 
 % Appendici e soluzioni
 %\appendix

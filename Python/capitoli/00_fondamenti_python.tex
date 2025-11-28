@@ -45,11 +45,52 @@ print("Hello, World!")  # Output: Hello, World!
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
-		\item \textbf{Stampa}: `print` scrive su stdout e aggiunge newline finale per default.  
-		\item \textbf{Stringhe}: le virgolette doppie delimitano un `str` Unicode; immutabile.  
+		\item \textbf{Stampa}: `print` scrive su stdout e aggiunge newline finale per default.
+		\item \textbf{Stringhe}: le virgolette doppie delimitano un `str` Unicode; immutabile.
 		\item \textbf{Side-effect}: questo è I/O; separare la logica dai side‑effect facilita i test.
 	\end{itemize}
 \end{tcolorbox}
+
+\subsubsection{Visualizzazione: Esecuzione nel Terminal}
+\begin{tcolorbox}[title=Terminal Output]
+\texttt{\$ python hello.py}\\
+\texttt{Hello, World!}\\
+\\
+\texttt{\$ python}\\
+\texttt{>>> print("Hello, World!")}\\
+\texttt{Hello, World!}\\
+\texttt{>>> }
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Flusso di Esecuzione Python}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    box/.style={rectangle, draw, fill=blue!10, text width=4cm, text centered, rounded corners, minimum height=1cm},
+    decision/.style={diamond, draw, fill=yellow!10, text width=2.5cm, text centered, minimum height=1cm},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% Nodi
+\node[box] (start) {Avvio Python};
+\node[decision, below of=start] (mode) {Modalità?};
+\node[box, below left=of mode, xshift=-2cm] (interpreter) {Interprete Interattivo\\(REPL)};
+\node[box, below right=of mode, xshift=2cm] (script) {Esecuzione Script\\(\texttt{python file.py})};
+\node[box, below of=interpreter, yshift=-0.5cm] (repl_loop) {Leggi-Valuta-Stampa\\Loop infinito};
+\node[box, below of=script, yshift=-0.5cm] (exec) {Esegui dall'alto\\al basso};
+\node[box, below of=exec] (end) {Terminazione};
+
+% Frecce
+\draw[arrow] (start) -- (mode);
+\draw[arrow] (mode) -- node[left, xshift=-0.3cm] {REPL} (interpreter);
+\draw[arrow] (mode) -- node[right, xshift=0.3cm] {Script} (script);
+\draw[arrow] (interpreter) -- (repl_loop);
+\draw[arrow] (script) -- (exec);
+\draw[arrow] (exec) -- (end);
+\draw[arrow] (repl_loop.west) -- ++(-1.5,0) |- (repl_loop.north);
+
+\end{tikzpicture}
+\end{center}
 
 \subsection{Variabili e Tipi}
 \label{subsec:fond-variabili-tipi}
@@ -64,9 +105,81 @@ print(type(nome), type(anni), type(altezza), type(studente))  # Output: <class '
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
 		\item \textbf{Binding}: variabili assegnano riferimenti a oggetti; il tipo è dell'oggetto.
-		\item \textbf{Tipi}: `str`, `int`, `float`, `bool` sono built‑in fondamentali.  
+		\item \textbf{Tipi}: `str`, `int`, `float`, `bool` sono built‑in fondamentali.
 		\item \textbf{Ispezione}: `type(obj)` mostra la classe dell'oggetto; utile per debug rapido.
 	\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Gerarchia dei Tipi Python}
+\begin{center}
+\begin{tikzpicture}[
+    level 1/.style={sibling distance=5cm, level distance=2cm},
+    level 2/.style={sibling distance=2.5cm, level distance=2cm},
+    every node/.style={rectangle, draw, rounded corners, fill=blue!10, text centered, minimum width=2.5cm, minimum height=0.8cm},
+    edge from parent/.style={draw, ->, >=stealth, thick}
+]
+
+\node {\texttt{object}}
+    child {node {\texttt{Number}}
+        child {node {\texttt{int}}}
+        child {node {\texttt{float}}}
+        child {node {\texttt{bool}}}
+    }
+    child {node {\texttt{Sequence}}
+        child {node {\texttt{str}}}
+        child {node {\texttt{list}}}
+        child {node {\texttt{tuple}}}
+    }
+    child {node {\texttt{Collection}}
+        child {node {\texttt{dict}}}
+        child {node {\texttt{set}}}
+    };
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Binding delle Variabili}
+\begin{center}
+\begin{tikzpicture}[
+    varbox/.style={rectangle, draw, fill=green!10, minimum width=2cm, minimum height=0.8cm},
+    objbox/.style={rectangle, draw, fill=orange!20, text width=2.5cm, minimum height=1.2cm, align=center},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% Variabili
+\node[varbox] (var_nome) at (0,4) {\texttt{nome}};
+\node[varbox] (var_anni) at (0,2) {\texttt{anni}};
+\node[varbox] (var_altezza) at (0,0) {\texttt{altezza}};
+
+% Oggetti
+\node[objbox] (obj_str) at (5,4) {\texttt{"Ada"}\\ tipo: \texttt{str}};
+\node[objbox] (obj_int) at (5,2) {\texttt{27}\\ tipo: \texttt{int}};
+\node[objbox] (obj_float) at (5,0) {\texttt{1.68}\\ tipo: \texttt{float}};
+
+% Frecce (riferimenti)
+\draw[arrow] (var_nome) -- (obj_str) node[midway, above] {riferimento};
+\draw[arrow] (var_anni) -- (obj_int);
+\draw[arrow] (var_altezza) -- (obj_float);
+
+% Etichette
+\node[above of=var_nome, yshift=0.3cm] {\textbf{Variabili (nomi)}};
+\node[above of=obj_str, yshift=0.3cm] {\textbf{Oggetti (valori + tipo)}};
+
+\end{tikzpicture}
+\end{center}
+
+\subsubsection{Visualizzazione: Output di type()}
+\begin{tcolorbox}[title=Terminal Output]
+\texttt{>>> nome = "Ada"}\\
+\texttt{>>> anni = 27}\\
+\texttt{>>> type(nome)}\\
+\texttt{<class 'str'>}\\
+\texttt{>>> type(anni)}\\
+\texttt{<class 'int'>}\\
+\texttt{>>> type(1.68)}\\
+\texttt{<class 'float'>}\\
+\texttt{>>> type(True)}\\
+\texttt{<class 'bool'>}
 \end{tcolorbox}
 
 \subsection{Input e Output Formattato}
@@ -77,10 +190,36 @@ print(f"Tra 5 anni avrai {eta + 5} anni.")  # Output (esempio con eta=20): Tra 5
 \end{lstlisting}
 \begin{tcolorbox}[title=Spiegazione del codice]
 	\begin{itemize}
-		\item \textbf{Input}: `input()` legge una riga da stdin e ritorna `str`.  
-		\item \textbf{Conversione}: `int(...)` traduce `str` a intero; solleva `ValueError` se non numerico.  
+		\item \textbf{Input}: `input()` legge una riga da stdin e ritorna `str`.
+		\item \textbf{Conversione}: `int(...)` traduce `str` a intero; solleva `ValueError` se non numerico.
 		\item \textbf{f-string}: interpolazione e formato inline (`{...}`); qui espressione aritmetica.
 	\end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Interazione Input/Output}
+\begin{tcolorbox}[title=Terminal Output - Esempio Input]
+\texttt{\$ python age.py}\\
+\texttt{Quanti anni hai? 20}\\
+\texttt{Tra 5 anni avrai 25 anni.}\\
+\\
+\texttt{\$ python age.py}\\
+\texttt{Quanti anni hai? 18}\\
+\texttt{Tra 5 anni avrai 23 anni.}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: F-String Formattazione}
+\begin{tcolorbox}[title=Terminal Output - F-String Examples]
+\texttt{>>> nome = "Ada"}\\
+\texttt{>>> eta = 27}\\
+\texttt{>>> print(f"Mi chiamo \{nome\} e ho \{eta\} anni.")}\\
+\texttt{Mi chiamo Ada e ho 27 anni.}\\
+\\
+\texttt{>>> prezzo = 19.99}\\
+\texttt{>>> print(f"Il prezzo è \{prezzo:.2f\} euro")}\\
+\texttt{Il prezzo è 19.99 euro}\\
+\\
+\texttt{>>> print(f"Risultato: \{10 + 5\}")}\\
+\texttt{Risultato: 15}
 \end{tcolorbox}
 
 \section{Esercizi}

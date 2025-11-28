@@ -29,6 +29,42 @@ Gli operatori logici valutano da sinistra a destra e possono interrompere la val
 Usa parentesi per evitare ambiguità e preferisci condizioni semplici con guard clauses ed \emph{early return} per migliorare leggibilità.
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Short-circuit evaluation}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    decision/.style={diamond, draw, fill=yellow!20, text width=2.5cm, text centered, inner sep=2pt},
+    block/.style={rectangle, draw, fill=blue!20, text width=2.5cm, text centered, rounded corners, minimum height=0.8cm},
+    result/.style={rectangle, draw, fill=green!20, text width=2.5cm, text centered, rounded corners, minimum height=0.8cm},
+    shortcircuit/.style={rectangle, draw, fill=red!20, text width=2.5cm, text centered, rounded corners, minimum height=0.8cm},
+    arrow/.style={thick,->,>=stealth}
+]
+
+% AND operator
+\node (and_title) [above] at (0,0) {\textbf{Operatore AND}};
+\node (and_cond1) [decision, below of=and_title, yshift=-0.5cm] {Condizione 1};
+\node (and_short) [shortcircuit, below of=and_cond1, yshift=-0.5cm] {Risultato: False (short-circuit)};
+\node (and_cond2) [decision, right of=and_cond1, xshift=3cm] {Condizione 2};
+\node (and_result) [result, below of=and_cond2, yshift=-0.5cm] {Risultato finale};
+
+\draw [arrow] (and_cond1) -- node[right] {False} (and_short);
+\draw [arrow] (and_cond1) -- node[above] {True} (and_cond2);
+\draw [arrow] (and_cond2) -- (and_result);
+
+% OR operator
+\node (or_title) [above] at (10,0) {\textbf{Operatore OR}};
+\node (or_cond1) [decision, below of=or_title, yshift=-0.5cm] {Condizione 1};
+\node (or_short) [shortcircuit, below of=or_cond1, yshift=-0.5cm] {Risultato: True (short-circuit)};
+\node (or_cond2) [decision, right of=or_cond1, xshift=3cm] {Condizione 2};
+\node (or_result) [result, below of=or_cond2, yshift=-0.5cm] {Risultato finale};
+
+\draw [arrow] (or_cond1) -- node[right] {True} (or_short);
+\draw [arrow] (or_cond1) -- node[above] {False} (or_cond2);
+\draw [arrow] (or_cond2) -- (or_result);
+
+\end{tikzpicture}
+\end{center}
+
 \begin{tcolorbox}[
     title=Confronto: Short-circuit in azione,
     colback=gray!5,
@@ -111,6 +147,46 @@ elif eta == 18:
 else:
     print("Maggiorenne")
 \end{lstlisting}
+
+\subsubsection{Visualizzazione: Flusso di controllo if/elif/else}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    decision/.style={diamond, draw, fill=yellow!20, text width=3cm, text centered, inner sep=2pt},
+    block/.style={rectangle, draw, fill=green!20, text width=3cm, text centered, rounded corners, minimum height=1cm},
+    output/.style={rectangle, draw, fill=blue!20, text width=3cm, text centered, rounded corners, minimum height=0.8cm},
+    arrow/.style={thick,->,>=stealth}
+]
+
+% Nodi
+\node (start) [block] {Leggi \texttt{eta = 18}};
+\node (if) [decision, below of=start] {$eta < 18$?};
+\node (elif) [decision, below of=if, yshift=-0.5cm] {$eta == 18$?};
+\node (else) [output, below of=elif, yshift=-0.5cm] {"Maggiorenne"};
+\node (output1) [output, right of=if, xshift=3cm] {"Minorenne"};
+\node (output2) [output, right of=elif, xshift=3cm] {"Appena maggiorenne"};
+\node (end) [block, below of=else] {Fine};
+
+% Frecce
+\draw [arrow] (start) -- (if);
+\draw [arrow] (if) -- node[right] {No} (elif);
+\draw [arrow] (if) -- node[above] {Sì} (output1);
+\draw [arrow] (elif) -- node[above] {Sì} (output2);
+\draw [arrow] (elif) -- node[right] {No} (else);
+\draw [arrow] (output1) |- (end);
+\draw [arrow] (output2) |- (end);
+\draw [arrow] (else) -- (end);
+
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[title=Terminal Output]
+\begin{verbatim}
+$ python condizioni.py
+Appena maggiorenne
+\end{verbatim}
+\end{tcolorbox}
+
 \begin{tcolorbox}[title=Spiegazione del codice]
 \begin{itemize}
   \item \textbf{Branching (ramificazione)}: Le catene \texttt{if/elif/else} gestiscono casi mutuamente esclusivi. Quando una condizione è vera, Python esegue quel blocco e salta tutti gli altri. Nel nostro esempio, se \texttt{eta < 18}, Python stampa "Minorenne" e ignora \texttt{elif} ed \texttt{else}.
@@ -246,6 +322,39 @@ for i in range(5, 0, -1):
 \textbf{Importante}: Il valore \texttt{stop} è sempre escluso dalla sequenza.
 \end{tcolorbox}
 
+\begin{tcolorbox}[title=Terminal Output - Esempi range()]
+\begin{verbatim}
+$ python range_examples.py
+
+# range(5)
+0
+1
+2
+3
+4
+
+# range(2, 6)
+2
+3
+4
+5
+
+# range(0, 10, 2)
+0
+2
+4
+6
+8
+
+# range(5, 0, -1)
+5
+4
+3
+2
+1
+\end{verbatim}
+\end{tcolorbox}
+
 \subsubsection{enumerate() per collezioni}
 \label{subsubsec:cf-enumerate}
 \begin{lstlisting}
@@ -277,6 +386,22 @@ for num, nome in enumerate(nomi, start=1):
 \end{itemize}
 \end{tcolorbox}
 
+\begin{tcolorbox}[title=Terminal Output - enumerate()]
+\begin{verbatim}
+$ python enumerate_example.py
+
+# Con enumerate(nomi)
+0: Alice
+1: Bob
+2: Charlie
+
+# Con enumerate(nomi, start=1)
+1. Alice
+2. Bob
+3. Charlie
+\end{verbatim}
+\end{tcolorbox}
+
 \subsubsection{Ciclo while}
 \label{subsubsec:cf-while}
 \begin{lstlisting}
@@ -293,6 +418,63 @@ while count < 3:
   \item \textbf{while}: quando non sai in anticipo quante iterazioni servono (es: input utente, condizioni complesse)
   \item \textbf{Evita}: \texttt{while True} con break se puoi usare una condizione esplicita
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Confronto for vs while}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.5cm,
+    decision/.style={diamond, draw, fill=yellow!20, text width=2.5cm, text centered, inner sep=2pt},
+    block/.style={rectangle, draw, fill=blue!20, text width=3cm, text centered, rounded corners, minimum height=0.8cm},
+    process/.style={rectangle, draw, fill=green!20, text width=3cm, text centered, rounded corners, minimum height=0.8cm},
+    arrow/.style={thick,->,>=stealth}
+]
+
+% FOR LOOP
+\node (for_title) [above] at (0,0) {\textbf{Ciclo FOR}};
+\node (for_init) [block, below of=for_title, yshift=-0.5cm] {Inizializza iteratore su collezione};
+\node (for_check) [decision, below of=for_init] {Elementi rimanenti?};
+\node (for_body) [process, below of=for_check, yshift=-0.5cm] {Esegui corpo del ciclo};
+\node (for_next) [block, below of=for_body] {Elemento successivo};
+\node (for_end) [block, below of=for_check, xshift=-3.5cm, yshift=-2cm] {Fine};
+
+\draw [arrow] (for_init) -- (for_check);
+\draw [arrow] (for_check) -- node[right] {Sì} (for_body);
+\draw [arrow] (for_check) -- node[above] {No} (for_end);
+\draw [arrow] (for_body) -- (for_next);
+\draw [arrow] (for_next) -| (for_check);
+
+% WHILE LOOP
+\node (while_title) [above] at (9,0) {\textbf{Ciclo WHILE}};
+\node (while_init) [block, below of=while_title, yshift=-0.5cm] {Inizializza variabili};
+\node (while_check) [decision, below of=while_init] {Condizione vera?};
+\node (while_body) [process, below of=while_check, yshift=-0.5cm] {Esegui corpo del ciclo};
+\node (while_update) [block, below of=while_body] {Aggiorna variabili};
+\node (while_end) [block, below of=while_check, xshift=-3.5cm, yshift=-2cm] {Fine};
+
+\draw [arrow] (while_init) -- (while_check);
+\draw [arrow] (while_check) -- node[right] {Sì} (while_body);
+\draw [arrow] (while_check) -- node[above] {No} (while_end);
+\draw [arrow] (while_body) -- (while_update);
+\draw [arrow] (while_update) -| (while_check);
+
+\end{tikzpicture}
+\end{center}
+
+\begin{tcolorbox}[title=Terminal Output - Confronto for vs while]
+\begin{verbatim}
+$ python loop_comparison.py
+
+# FOR loop con range(3)
+Iterazione for: 0
+Iterazione for: 1
+Iterazione for: 2
+
+# WHILE loop equivalente
+Iterazione while: 0
+Iterazione while: 1
+Iterazione while: 2
+\end{verbatim}
 \end{tcolorbox}
 
 \subsection{break e continue}

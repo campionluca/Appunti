@@ -23,6 +23,72 @@ Esempio: \texttt{raise ValueError("messaggio")}
 Usa messaggi informativi, intercetta eccezioni specifiche, evita \texttt{except:} generici. Logga l'errore dove ha senso e decidi se propagare o tradurre in un fallback chiaro; pulisci risorse con \texttt{finally}.
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Gerarchia delle Eccezioni}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm and 2cm,
+  every node/.style={draw, rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm, align=center, fill=blue!10},
+  level1/.style={fill=green!10},
+  level2/.style={fill=yellow!10},
+  level3/.style={fill=orange!10},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Root
+\node (base) at (0,0) {BaseException};
+
+% First level
+\node[level1] (exception) [below left=of base, xshift=-1cm] {Exception};
+\node[level1] (sysexit) [below=of base] {SystemExit};
+\node[level1] (keyboard) [below right=of base, xshift=1cm] {KeyboardInterrupt};
+
+% Second level - Common exceptions
+\node[level2] (value) [below left=of exception, xshift=-2cm] {ValueError};
+\node[level2] (type) [below left=of exception, xshift=-0.5cm] {TypeError};
+\node[level2] (attr) [below=of exception, xshift=0.5cm] {AttributeError};
+\node[level2] (key) [below right=of exception, xshift=0.5cm] {KeyError};
+\node[level2] (index) [below right=of exception, xshift=2cm] {IndexError};
+
+% Third level - File exceptions
+\node[level3] (oserror) [below=of attr, yshift=-0.5cm] {OSError};
+\node[level3] (filenotfound) [below left=of oserror, xshift=-1cm, yshift=0.3cm] {FileNotFoundError};
+\node[level3] (permissionerror) [below right=of oserror, xshift=1cm, yshift=0.3cm] {PermissionError};
+
+% Arrows
+\draw[arrow] (base) -- (exception);
+\draw[arrow] (base) -- (sysexit);
+\draw[arrow] (base) -- (keyboard);
+\draw[arrow] (exception) -- (value);
+\draw[arrow] (exception) -- (type);
+\draw[arrow] (exception) -- (attr);
+\draw[arrow] (exception) -- (key);
+\draw[arrow] (exception) -- (index);
+\draw[arrow] (attr) -- (oserror);
+\draw[arrow] (oserror) -- (filenotfound);
+\draw[arrow] (oserror) -- (permissionerror);
+
+% Legend
+\node[draw=none, fill=none, align=left, font=\small] at (8, -2) {
+  \textbf{Legenda:}\\
+  \tikz\node[draw, fill=blue!10, minimum width=0.5cm, minimum height=0.3cm] {};\ BaseException\\
+  \tikz\node[draw, fill=green!10, minimum width=0.5cm, minimum height=0.3cm] {};\ Livello 1\\
+  \tikz\node[draw, fill=yellow!10, minimum width=0.5cm, minimum height=0.3cm] {};\ Livello 2\\
+  \tikz\node[draw, fill=orange!10, minimum width=0.5cm, minimum height=0.3cm] {};\ Livello 3
+};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+\begin{tcolorbox}[title=Note sulla Gerarchia]
+\begin{itemize}
+  \item \textbf{BaseException}: Classe base per tutte le eccezioni
+  \item \textbf{Exception}: Usata per errori dell'applicazione (eredita da questa per custom exceptions)
+  \item \textbf{SystemExit/KeyboardInterrupt}: Eccezioni di sistema, non da intercettare generalmente
+  \item \textbf{OSError}: Base per errori di sistema operativo e I/O
+\end{itemize}
+\end{tcolorbox}
+
 \section{Esempi Pratici}
 \subsection{Try/Except}
 \begin{lstlisting}
@@ -37,6 +103,83 @@ except ValueError:
   \item \textbf{Messaggio}: fornisce feedback chiaro; separare validazione da logica di parsing.
   \item \textbf{Propagazione}: se l'errore non è atteso, lasciare propagare.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Esempio Terminal - Exception Catching}
+\begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal, fonttitle=\bfseries\color{white}, coltitle=black]
+\begin{verbatim}
+$ python3
+>>> try:
+...     x = int("12a")
+... except ValueError:
+...     print("Input non valido")
+...
+Input non valido
+>>>
+>>> # Senza try/except - mostra il traceback
+>>> y = int("12a")
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: invalid literal for int() with base 10: '12a'
+\end{verbatim}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Flusso try/except/else/finally}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.2cm,
+  startstop/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=red!20, thick},
+  process/.style={rectangle, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=blue!20, thick},
+  decision/.style={diamond, aspect=2, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=yellow!20, thick},
+  block/.style={rectangle, minimum width=3.5cm, minimum height=1cm, text centered, draw=black, fill=green!20, thick},
+  arrow/.style={->, >=stealth, thick}
+]
+
+% Nodes
+\node (start) [startstop] {Inizio};
+\node (try) [process, below=of start] {Blocco TRY\\esegui codice};
+\node (exception) [decision, below=of try, yshift=-0.5cm] {Eccezione\\sollevata?};
+\node (except) [process, right=of exception, xshift=2cm] {Blocco EXCEPT\\gestisci errore};
+\node (else) [block, left=of exception, xshift=-2cm] {Blocco ELSE\\(opzionale)};
+\node (finally) [block, below=of exception, yshift=-1cm] {Blocco FINALLY\\(sempre eseguito)};
+\node (end) [startstop, below=of finally] {Fine};
+
+% Arrows
+\draw[arrow] (start) -- (try);
+\draw[arrow] (try) -- (exception);
+\draw[arrow] (exception) -- node[anchor=south] {Sì} (except);
+\draw[arrow] (exception) -- node[anchor=south] {No} (else);
+\draw[arrow] (except) -- (finally);
+\draw[arrow] (else) -- (finally);
+\draw[arrow] (finally) -- (end);
+
+% Annotations
+\node[draw=none, fill=none, align=left, font=\footnotesize] at (7, -2) {
+  \textbf{Note:}\\
+  • ELSE: solo se no eccezioni\\
+  • FINALLY: sempre eseguito\\
+  • EXCEPT: solo con eccezioni
+};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+\begin{tcolorbox}[title=Esempio Completo try/except/else/finally]
+\begin{lstlisting}
+try:
+    file = open("data.txt")
+    data = file.read()
+    value = int(data)
+except FileNotFoundError:
+    print("File non trovato")
+except ValueError:
+    print("Valore non numerico")
+else:
+    print(f"Valore letto: {value}")
+finally:
+    print("Cleanup eseguito")
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Finally}
@@ -57,6 +200,24 @@ finally:
 \end{itemize}
 \end{tcolorbox}
 
+\subsubsection{Visualizzazione: Esempio Terminal - Stack Trace}
+\begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal - Stack Trace Completo, fonttitle=\bfseries\color{white}, coltitle=black]
+\begin{verbatim}
+$ python3 script.py
+Traceback (most recent call last):
+  File "script.py", line 15, in <module>
+    main()
+  File "script.py", line 12, in main
+    process_data(data)
+  File "script.py", line 8, in process_data
+    value = int(data['key'])
+KeyError: 'key'
+
+$ # Stack trace mostra la catena di chiamate
+$ # Utile per debugging: dall'alto (punto di errore) al basso (root)
+\end{verbatim}
+\end{tcolorbox}
+
 \subsection{Custom Exception}
 \begin{lstlisting}
 class NegativeError(Exception):
@@ -73,6 +234,144 @@ def sqrt(x):
   \item \textbf{Contratto}: precondizione `x >= 0`; documentarla nel docstring e nelle annotazioni.
   \item \textbf{Segnalazione}: usare messaggi informativi per diagnosi e UX.
 \end{itemize}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Esempio Terminal - Custom Exceptions}
+\begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal - Eccezioni Personalizzate, fonttitle=\bfseries\color{white}, coltitle=black]
+\begin{verbatim}
+$ python3
+>>> class NegativeError(Exception):
+...     pass
+...
+>>> def sqrt(x):
+...     if x < 0:
+...         raise NegativeError("Valore negativo")
+...     return x ** 0.5
+...
+>>> sqrt(9)
+3.0
+>>> sqrt(-4)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 3, in sqrt
+NegativeError: Valore negativo
+>>>
+>>> # Cattura dell'eccezione custom
+>>> try:
+...     sqrt(-4)
+... except NegativeError as e:
+...     print(f"Errore: {e}")
+...
+Errore: Valore negativo
+\end{verbatim}
+\end{tcolorbox}
+
+\subsubsection{Visualizzazione: Strategie di Gestione Errori}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=0.3cm,
+  strategy/.style={rectangle, rounded corners, minimum width=12cm, minimum height=0.8cm, align=left, draw=black, thick, font=\small},
+  header/.style={rectangle, minimum width=12cm, minimum height=0.6cm, align=center, draw=black, fill=blue!30, thick, font=\bfseries}
+]
+
+% Table header
+\node (header) [header] {Confronto Strategie di Gestione Errori};
+
+% Strategy 1: Fail Fast
+\node (s1title) [strategy, fill=red!10, below=of header] {
+  \textbf{1. FAIL FAST} — Fallire immediatamente quando si verifica un errore
+};
+\node (s1pro) [strategy, fill=green!5, below=of s1title] {
+  \textcolor{green!50!black}{✓} Pro: Debugging più facile, errori evidenti subito
+};
+\node (s1con) [strategy, fill=red!5, below=of s1pro] {
+  \textcolor{red}{✗} Contro: Meno resiliente, può interrompere operazioni batch
+};
+\node (s1use) [strategy, fill=blue!5, below=of s1con] {
+  Quando usare: Sviluppo, validazione input, operazioni critiche
+};
+
+% Strategy 2: Graceful Degradation
+\node (s2title) [strategy, fill=yellow!10, below=of s1use, yshift=-0.3cm] {
+  \textbf{2. GRACEFUL DEGRADATION} — Continuare con funzionalità ridotte
+};
+\node (s2pro) [strategy, fill=green!5, below=of s2title] {
+  \textcolor{green!50!black}{✓} Pro: Servizio continua, UX migliore
+};
+\node (s2con) [strategy, fill=red!5, below=of s2pro] {
+  \textcolor{red}{✗} Contro: Errori possono accumularsi silenziosamente
+};
+\node (s2use) [strategy, fill=blue!5, below=of s2con] {
+  Quando usare: Web services, applicazioni utente, batch processing
+};
+
+% Strategy 3: Retry with Backoff
+\node (s3title) [strategy, fill=orange!10, below=of s2use, yshift=-0.3cm] {
+  \textbf{3. RETRY WITH BACKOFF} — Ritentare con pause crescenti
+};
+\node (s3pro) [strategy, fill=green!5, below=of s3title] {
+  \textcolor{green!50!black}{✓} Pro: Gestisce errori temporanei, migliora affidabilità
+};
+\node (s3con) [strategy, fill=red!5, below=of s3pro] {
+  \textcolor{red}{✗} Contro: Aumenta latenza, richiede configurazione
+};
+\node (s3use) [strategy, fill=blue!5, below=of s3con] {
+  Quando usare: Chiamate di rete, accesso database, servizi esterni
+};
+
+% Strategy 4: Log and Continue
+\node (s4title) [strategy, fill=purple!10, below=of s3use, yshift=-0.3cm] {
+  \textbf{4. LOG AND CONTINUE} — Registrare l'errore e proseguire
+};
+\node (s4pro) [strategy, fill=green!5, below=of s4title] {
+  \textcolor{green!50!black}{✓} Pro: Non blocca, traccia problemi per analisi
+};
+\node (s4con) [strategy, fill=red!5, below=of s4pro] {
+  \textcolor{red}{✗} Contro: Errori possono propagarsi, dati incompleti
+};
+\node (s4use) [strategy, fill=blue!5, below=of s4con] {
+  Quando usare: ETL, data processing, operazioni non critiche
+};
+
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+\begin{tcolorbox}[title=Esempio Comparativo delle Strategie]
+\begin{lstlisting}
+# 1. Fail Fast
+def process_strict(items):
+    for item in items:
+        validate(item)  # Solleva eccezione se invalido
+        process(item)
+
+# 2. Graceful Degradation
+def process_graceful(items):
+    try:
+        return process_all(items)
+    except Exception as e:
+        log.warning(f"Fallback: {e}")
+        return process_safe_mode(items)
+
+# 3. Retry with Backoff
+def process_retry(fn, max_attempts=3):
+    for attempt in range(max_attempts):
+        try:
+            return fn()
+        except TimeoutError:
+            time.sleep(2 ** attempt)
+    raise RuntimeError("Max retry raggiunto")
+
+# 4. Log and Continue
+def process_forgiving(items):
+    results = []
+    for item in items:
+        try:
+            results.append(process(item))
+        except Exception as e:
+            log.error(f"Errore item {item}: {e}")
+    return results
+\end{lstlisting}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
