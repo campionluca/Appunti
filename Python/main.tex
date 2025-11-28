@@ -16,6 +16,7 @@
 
 % Hyperlink e colori
 \usepackage{xcolor}
+\usepackage{colortbl}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
@@ -63,6 +64,13 @@
 % Grafica
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shapes.multipart}
+
+% Stili TikZ globali per diagrammi
+\tikzset{
+  arrow/.style={->, >=stealth, thick},
+  box/.style={rectangle, draw, fill=blue!10, text width=3cm, align=center, minimum height=1cm},
+  template/.style={rectangle, draw, rounded corners, text width=3cm, align=center, minimum height=1.2cm}
+}
 
 % Tipografia e micro-ottimizzazioni
 \usepackage[protrusion=true,expansion=true]{microtype}
