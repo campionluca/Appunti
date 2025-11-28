@@ -350,7 +350,7 @@ print(bool(pat.match("ada@example.com")))
 \rowcolor{green!10}
 \multicolumn{3}{|l|}{\textbf{Pattern Pratici Comuni:}} \\ \hline
 Email & Base & \texttt{r"[\textasciicircum @\textbackslash s]+@[\textasciicircum @\textbackslash s]+\textbackslash .[\textasciicircum @\textbackslash s]+"} \\ \hline
-URL & HTTP/HTTPS & \texttt{r"https?://[\textbackslash w.-]+(:\textbackslash d+)?(/.*)?") \\ \hline
+URL & HTTP/HTTPS & \texttt{r"https?://[\textbackslash w.-]+(:\textbackslash d+)?(/.*)?"} \\ \hline
 IP & IPv4 & \texttt{r"\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}\textbackslash .\textbackslash d\{1,3\}"} \\ \hline
 Telefono (IT) & Mobile & \texttt{r"\textbackslash +39\textbackslash s?3\textbackslash d\{2\}\textbackslash s?\textbackslash d\{6,7\}"} \\ \hline
 Data & YYYY-MM-DD & \texttt{r"\textbackslash d\{4\}-\textbackslash d\{2\}-\textbackslash d\{2\}"} \\ \hline

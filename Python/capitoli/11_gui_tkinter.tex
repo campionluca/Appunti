@@ -577,7 +577,7 @@ root.mainloop()
 \node[event] (user) {Azione Utente};
 \node[event, below=of user] (os) {Sistema Operativo};
 \node[event, below=of os] (tkinter) {Tkinter mainloop()};
-\node[decision, below=of tkinter] (bound) {Evento\\bound?};
+\node[decision, below=of tkinter] (bound) {Evento\\ bound?};
 \node[action, below left=of bound, xshift=-1cm] (ignore) {Ignora};
 \node[action, below right=of bound, xshift=1cm] (callback) {Chiama callback};
 \node[action, below=of callback] (update) {Aggiorna UI};

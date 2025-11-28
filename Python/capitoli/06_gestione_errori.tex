@@ -137,11 +137,11 @@ ValueError: invalid literal for int() with base 10: '12a'
 
 % Nodes
 \node (start) [startstop] {Inizio};
-\node (try) [process, below=of start] {Blocco TRY\\esegui codice};
-\node (exception) [decision, below=of try, yshift=-0.5cm] {Eccezione\\sollevata?};
-\node (except) [process, right=of exception, xshift=2cm] {Blocco EXCEPT\\gestisci errore};
-\node (else) [block, left=of exception, xshift=-2cm] {Blocco ELSE\\(opzionale)};
-\node (finally) [block, below=of exception, yshift=-1cm] {Blocco FINALLY\\(sempre eseguito)};
+\node (try) [process, below=of start] {Blocco TRY\\ esegui codice};
+\node (exception) [decision, below=of try, yshift=-0.5cm] {Eccezione\\ sollevata?};
+\node (except) [process, right=of exception, xshift=2cm] {Blocco EXCEPT\\ gestisci errore};
+\node (else) [block, left=of exception, xshift=-2cm] {Blocco ELSE\\ (opzionale)};
+\node (finally) [block, below=of exception, yshift=-1cm] {Blocco FINALLY\\ (sempre eseguito)};
 \node (end) [startstop, below=of finally] {Fine};
 
 % Arrows
