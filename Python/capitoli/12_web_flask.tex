@@ -76,7 +76,7 @@ L'uso di \textbf{template Jinja2} consente una chiara separazione tra presentazi
 \node[folder] (root) {\texttt{myapp/}};
 
 % First level
-\node[file, below=of root, xshift=-2cm] (init) {\texttt{\_\_init\_\_.py}\\ {\footnotesize (create\_app)}};
+\node[file, below=of root, xshift=-2cm] (init) {\texttt{\_\_init\_\_.py}\\{\footnotesize (create\_app)}};
 \node[file, below=of root, xshift=2cm] (config) {\texttt{config.py}};
 
 % Second level
@@ -84,8 +84,8 @@ L'uso di \textbf{template Jinja2} consente una chiara separazione tra presentazi
 \node[folder, below=of config, yshift=-0.3cm] (templates) {\texttt{templates/}};
 
 % Third level
-\node[file, below=of routes, xshift=-1.5cm, yshift=-0.3cm] (main_bp) {\texttt{main.py}\\ {\footnotesize (blueprint)}};
-\node[file, below=of routes, xshift=1.5cm, yshift=-0.3cm] (api_bp) {\texttt{api.py}\\ {\footnotesize (blueprint)}};
+\node[file, below=of routes, xshift=-1.5cm, yshift=-0.3cm] (main_bp) {\texttt{main.py}\\{\footnotesize (blueprint)}};
+\node[file, below=of routes, xshift=1.5cm, yshift=-0.3cm] (api_bp) {\texttt{api.py}\\{\footnotesize (blueprint)}};
 
 \node[file, below=of templates, xshift=-1.5cm, yshift=-0.3cm] (base) {\texttt{base.html}};
 \node[file, below=of templates, xshift=1.5cm, yshift=-0.3cm] (index) {\texttt{index.html}};
@@ -102,10 +102,10 @@ L'uso di \textbf{template Jinja2} consente una chiara separazione tra presentazi
 
 % Annotations
 \node[right=3cm of root, text width=4cm, align=left] {
-  \textbf{Struttura modulare:}\\
-  - App factory in \_\_init\_\_.py\\
-  - Blueprint per routing\\
-  - Template per viste\\
+  \textbf{Struttura modulare:}\\[2pt]
+  - App factory in \_\_init\_\_.py\\[2pt]
+  - Blueprint per routing\\[2pt]
+  - Template per viste\\[2pt]
   - Config centralizzata
 };
 
@@ -270,27 +270,27 @@ def page():
 
 % Base template
 \node[template, fill=blue!20] (base) {
-  \textbf{base.html}\\
-  \footnotesize Layout principale\\
-  \footnotesize \texttt{\{% block ... \%\}}
+  \textbf{base.html}\\[2pt]
+  \footnotesize Layout principale\\[2pt]
+  \footnotesize (block templates)
 };
 
 % Child templates
 \node[template, fill=green!20, below left=of base, xshift=-1cm] (index) {
-  \textbf{index.html}\\
-  \footnotesize \texttt{\{% extends base \%\}}\\
+  \textbf{index.html}\\[2pt]
+  \footnotesize (extends base)\\[2pt]
   \footnotesize Home page
 };
 
 \node[template, fill=green!20, below=of base] (about) {
-  \textbf{about.html}\\
-  \footnotesize \texttt{\{% extends base \%\}}\\
+  \textbf{about.html}\\[2pt]
+  \footnotesize (extends base)\\[2pt]
   \footnotesize Pagina info
 };
 
 \node[template, fill=green!20, below right=of base, xshift=1cm] (contact) {
-  \textbf{contact.html}\\
-  \footnotesize \texttt{\{% extends base \%\}}\\
+  \textbf{contact.html}\\[2pt]
+  \footnotesize (extends base)\\[2pt]
   \footnotesize Contatti
 };
 
@@ -301,15 +301,14 @@ def page():
 
 % Block inheritance example
 \node[below=3cm of base, text width=8cm, align=left, draw, fill=yellow!10, rounded corners] (blocks) {
-  \textbf{base.html:}\\
-  \texttt{\{% block title \%\}Default\{% endblock \%\}}\\
-  \texttt{\{% block content \%\}...\{% endblock \%\}}\\
-  \texttt{\{% block scripts \%\}...\{% endblock \%\}}\\
-
-  \textbf{index.html:}\\
-  \texttt{\{% extends "base.html" \%\}}\\
-  \texttt{\{% block title \%\}Home\{% endblock \%\}}\\
-  \texttt{\{% block content \%\}...\{% endblock \%\}}
+  \textbf{base.html:}\\[2pt]
+  - block title: Default\\[2pt]
+  - block content: ...\\[2pt]
+  - block scripts: ...\\[4pt]
+  \textbf{index.html:}\\[2pt]
+  - extends base.html\\[2pt]
+  - block title: Home\\[2pt]
+  - block content: ...
 };
 
 \end{tikzpicture}
