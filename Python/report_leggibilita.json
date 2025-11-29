@@ -1,0 +1,106 @@
+{
+  "schemi_verificati": 9,
+  "schemi_leggibili": 9,
+  "schemi_illeggibili": [],
+  "dettagli": [
+    {
+      "path": "immagini/screenshots/terminal_01_hello_world.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 11,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_02_variabili.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 27,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_03_if_else.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 10,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_04_comprehension.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 17,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_05_dizionari.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 21,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_06_fstrings.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 18,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_07_json.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 22,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_08_try_except.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 20,
+      "is_readable": true,
+      "issues": []
+    },
+    {
+      "path": "immagini/screenshots/terminal_09_oop.png",
+      "width": 800,
+      "height": 600,
+      "aspect_ratio": 1.33,
+      "contrast": 156,
+      "text_detected": true,
+      "word_count": 18,
+      "is_readable": true,
+      "issues": []
+    }
+  ]
+}
