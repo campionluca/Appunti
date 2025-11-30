@@ -107,7 +107,7 @@ except ValueError:
 
 \subsubsection{Visualizzazione: Esempio Terminal - Exception Catching}
 \begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal, fonttitle=\bfseries\color{white}, coltitle=black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> try:
 ...     x = int("12a")
@@ -121,7 +121,7 @@ Input non valido
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 ValueError: invalid literal for int() with base 10: '12a'
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsubsection{Visualizzazione: Flusso try/except/else/finally}
@@ -202,7 +202,7 @@ finally:
 
 \subsubsection{Visualizzazione: Esempio Terminal - Stack Trace}
 \begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal - Stack Trace Completo, fonttitle=\bfseries\color{white}, coltitle=black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3 script.py
 Traceback (most recent call last):
   File "script.py", line 15, in <module>
@@ -215,7 +215,7 @@ KeyError: 'key'
 
 $ # Stack trace mostra la catena di chiamate
 $ # Utile per debugging: dall'alto (punto di errore) al basso (root)
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Custom Exception}
@@ -238,7 +238,7 @@ def sqrt(x):
 
 \subsubsection{Visualizzazione: Esempio Terminal - Custom Exceptions}
 \begin{tcolorbox}[colback=black!5, colframe=black!70, title=Output Terminal - Eccezioni Personalizzate, fonttitle=\bfseries\color{white}, coltitle=black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> class NegativeError(Exception):
 ...     pass
@@ -263,7 +263,7 @@ NegativeError: Valore negativo
 ...     print(f"Errore: {e}")
 ...
 Errore: Valore negativo
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsubsection{Visualizzazione: Strategie di Gestione Errori}

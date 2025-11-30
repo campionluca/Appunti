@@ -108,7 +108,7 @@ with open("dati.txt", "r", encoding="utf-8") as f:
 
 \subsubsection{Esempio Terminale: Lettura File}
 \begin{tcolorbox}[title={\faTerminal\ Output}, colback=black!5, colframe=black!70]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python
 >>> with open("dati.txt", "r", encoding="utf-8") as f:
 ...     for line in f:
@@ -118,7 +118,7 @@ Prima riga del file
 Seconda riga del file
 Terza riga del file
 >>> # File automaticamente chiuso qui
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Scrittura file}
@@ -136,7 +136,7 @@ with open("out.txt", "w", encoding="utf-8") as f:
 
 \subsubsection{Esempio Terminale: Scrittura File}
 \begin{tcolorbox}[title={\faTerminal\ Output}, colback=black!5, colframe=black!70]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python
 >>> with open("out.txt", "w", encoding="utf-8") as f:
 ...     f.write("Hello\n")
@@ -150,7 +150,7 @@ $ python
 ...
 Hello
 World
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsubsection{Visualizzazione: Modalità di Accesso ai File}
@@ -209,7 +209,7 @@ with open("people.csv", "w", newline="", encoding="utf-8") as f:
 
 \subsubsection{Esempio Terminale: Scrittura e Lettura CSV}
 \begin{tcolorbox}[title={\faTerminal\ Output}, colback=black!5, colframe=black!70]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python
 >>> import csv
 >>> # Scrittura CSV
@@ -226,7 +226,7 @@ $ python
 ...
 Ada: 27 anni
 Bob: 32 anni
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \begin{tcolorbox}[title=Casi d'uso]
@@ -269,7 +269,7 @@ La gestione dell'\textbf{encoding} è critica per evitare errori di decodifica. 
 
 \subsubsection{Esempio Terminale: Gestione Encoding}
 \begin{tcolorbox}[title={\faTerminal\ Output}, colback=black!5, colframe=black!70]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python
 >>> # Scrittura con encoding UTF-8
 >>> with open("unicode.txt", "w", encoding="utf-8") as f:
@@ -289,7 +289,7 @@ Prezzo: €3.50
 >>> with open("file.txt", "r", encoding="utf-8",
 ...           errors="replace") as f:
 ...     content = f.read()  # caratteri invalidi → �
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 Il \textbf{buffering e newline} controllano come i dati vengono trattenuti in memoria prima della scrittura su disco e come vengono interpretati i terminatori di linea. Gestire newlines correttamente è essenziale, specialmente quando si lavora con file CSV o su piattaforme diverse.
@@ -374,7 +374,7 @@ with (base / "people.csv").open("r", newline="", encoding="utf-8") as f:
 
 \subsubsection{Esempio Terminale: Operazioni pathlib}
 \begin{tcolorbox}[title={\faTerminal\ Output}, colback=black!5, colframe=black!70]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python
 >>> from pathlib import Path
 >>> # Composizione percorsi
@@ -404,7 +404,7 @@ Nome: test.txt
 Parent: data
 >>> print(f"Suffix: {file_path.suffix}")
 Suffix: .txt
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 \end{tcolorbox}
 

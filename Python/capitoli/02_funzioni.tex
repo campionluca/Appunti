@@ -96,7 +96,7 @@ print(add(2, 3))  # Output: 5
 \subsubsection{Visualizzazione: Output Terminale}
 \label{subsubsec:fun-semplice-terminal}
 \begin{tcolorbox}[title=Esempio di Esecuzione nel Terminale, colback=black!5, colframe=blue!50!black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> def add(a, b):
 ...     """Ritorna la somma di a e b."""
@@ -109,7 +109,7 @@ $ python3
 >>> result = add(100, 200)
 >>> print(f"Il risultato è: {result}")
 Il risultato è: 300
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Default, *args e **kwargs}
@@ -142,7 +142,7 @@ print(describe(lang="Python", version=3.11))  # Output: lang=Python, version=3.1
 \subsubsection{Visualizzazione: Output Terminale *args e **kwargs}
 \label{subsubsec:fun-args-kwargs-terminal}
 \begin{tcolorbox}[title=Dimostrazione *args e **kwargs nel Terminale, colback=black!5, colframe=blue!50!black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> def total(*args):
 ...     print(f"args è di tipo: {type(args)}")
@@ -165,7 +165,7 @@ kwargs è di tipo: <class 'dict'>
 Contenuto di kwargs: {'lang': 'Python', 'version': 3.11, 'year': 2024}
 >>> print(result)
 lang=Python, version=3.11, year=2024
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Combinare parametri, *args e **kwargs}
@@ -235,7 +235,7 @@ risultato = funzione_completa(1, 2, 3, 4, nome="Test", valore=100)
 \subsubsection{Visualizzazione: Output Terminale Parametri Combinati}
 \label{subsubsec:fun-combinazione-terminal}
 \begin{tcolorbox}[title=Esecuzione con Parametri Combinati, colback=black!5, colframe=blue!50!black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> def funzione_completa(a, b, *args, **kwargs):
 ...     print(f"Parametri obbligatori: a={a}, b={b}")
@@ -266,7 +266,7 @@ Argomenti aggiuntivi (*args): (3, 4)
 Argomenti nominati (**kwargs): {'nome': 'Test', 'valore': 100}
 >>> print(f"Risultato: {risultato}")
 Risultato: 10
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsection{Scope e lambda}
@@ -331,7 +331,7 @@ print(mul(5), double(5))  # Output: 10 10
 \subsubsection{Visualizzazione: Output Terminale Scope LEGB}
 \label{subsubsec:fun-scope-terminal}
 \begin{tcolorbox}[title=Dimostrazione Scope LEGB nel Terminale, colback=black!5, colframe=blue!50!black]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python3
 >>> # Global scope
 >>> factor = 2
@@ -369,5 +369,5 @@ Accesso a Built-in: len('Python') = 6
 Dentro la funzione: x = locale
 >>> print(f"Fuori dalla funzione: x = {x}")
 Fuori dalla funzione: x = globale
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}

@@ -81,13 +81,13 @@ util.say("Ciao")
 \subsubsection{Visualizzazione: Esempio terminale}
 \begin{center}
 \begin{tcolorbox}[colback=black!5, colframe=black!75, title=Terminal Output, fonttitle=\ttfamily\bfseries]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python app.py
 Ciao
 
 $ python -c "from util import say; say('Hello World')"
 Hello World
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 \end{center}
 
@@ -141,7 +141,7 @@ print(add(2, 3))
 \subsubsection{Visualizzazione: Creazione package terminale}
 \begin{center}
 \begin{tcolorbox}[colback=black!5, colframe=black!75, title=Terminal Output, fonttitle=\ttfamily\bfseries]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ mkdir -p myproject/pkg/subpkg
 $ cd myproject
 $ touch pkg/__init__.py pkg/tools.py
@@ -158,7 +158,7 @@ $ tree
 
 $ python main.py
 5
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 \end{center}
 
@@ -203,7 +203,7 @@ print(sys.path)
 \subsubsection{Visualizzazione: Esplorazione sys.path terminale}
 \begin{center}
 \begin{tcolorbox}[colback=black!5, colframe=black!75, title=Terminal Output, fonttitle=\ttfamily\bfseries]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ python -c "import sys; print('\n'.join(sys.path))"
 
 /usr/local/lib/python3.11.zip
@@ -216,7 +216,7 @@ $ python
 >>> sys.path.append('/custom/path')
 >>> sys.path[-1]
 '/custom/path'
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 \end{center}
 
@@ -328,7 +328,7 @@ Infine, \textbf{ambienti e dipendenze} dovrebbero essere gestiti attentamente. C
 \subsubsection{Visualizzazione: Esempio \_\_all\_\_ terminale}
 \begin{center}
 \begin{tcolorbox}[colback=black!5, colframe=black!75, title=Terminal Output, fonttitle=\ttfamily\bfseries]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 $ cat pkg/__init__.py
 __all__ = ['public_func']
 
@@ -347,7 +347,7 @@ NameError: name '_internal_func' is not defined
 >>> from pkg import _internal_func  # Accesso esplicito
 >>> _internal_func()
 'Internal'
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 \end{center}
 

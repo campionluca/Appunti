@@ -36,10 +36,28 @@
   stringstyle=\color{red!60!black},
   showstringspaces=false,
   numbers=left,
-  numberstyle=\tiny, 
+  numberstyle=\tiny,
   stepnumber=1,
   frame=single,
-  breaklines=true
+  breaklines=true,
+  mathescape=false,
+  escapechar=
+}
+% Stile per terminal output in tcolorbox (no frame, no numbers)
+\lstdefinestyle{pythonterm}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!70!black},
+  commentstyle=\color{gray!70!black},
+  stringstyle=\color{red!60!black},
+  showstringspaces=false,
+  numbers=none,
+  frame=none,
+  breaklines=true,
+  mathescape=false,
+  escapechar=,
+  xleftmargin=0pt,
+  xrightmargin=0pt
 }
 % Supporto UTF-8 nei listati e mappatura caratteri accentati
 \lstset{style=python, inputencoding=utf8,

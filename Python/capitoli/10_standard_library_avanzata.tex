@@ -169,7 +169,7 @@ print(f"X: {coord.x}, Y: {coord.y}")
 \subsubsection{Visualizzazione: Esempi di Counter}
 
 \begin{tcolorbox}[title=Output Terminal - Counter Operations]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 >>> from collections import Counter
 >>> words = ["apple", "banana", "apple", "cherry"]
 >>> c = Counter(words)
@@ -186,13 +186,13 @@ Counter({'a': 4, 'b': 3})
 
 >>> c1 - c2
 Counter({'a': 2})
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \subsubsection{Visualizzazione: Esempi di Deque}
 
 \begin{tcolorbox}[title=Output Terminal - Deque Operations]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 >>> from collections import deque
 >>> d = deque([1, 2, 3])
 
@@ -208,7 +208,7 @@ Counter({'a': 2})
 >>> buffer.extend([1, 2, 3, 4, 5])
 >>> buffer
 deque([3, 4, 5], maxlen=3)
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \section{Itertools}
@@ -343,7 +343,7 @@ print(list(itertools.accumulate(numbers, operator.mul)))  # [1, 2, 6, 24, 120]
 \subsubsection{Visualizzazione: Esempi Itertools}
 
 \begin{tcolorbox}[title=Output Terminal - Itertools Examples]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 >>> import itertools
 
 # Combinations (ordine non conta)
@@ -365,7 +365,7 @@ print(list(itertools.accumulate(numbers, operator.mul)))  # [1, 2, 6, 24, 120]
 # Accumulate (totali parziali)
 >>> list(itertools.accumulate([1, 2, 3, 4]))
 [1, 3, 6, 10]
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \section{Functools}
@@ -835,7 +835,7 @@ Password forte & \verb|^(?=.*[A-Z])(?=.*\d).{8,}$| & Pass123word \\
 \subsubsection{Visualizzazione: Esempi Regex Matches}
 
 \begin{tcolorbox}[title=Output Terminal - Regex Examples]
-\begin{verbatim}
+\begin{lstlisting}[style=python]
 >>> import re
 
 # Email extraction
@@ -861,7 +861,7 @@ Password forte & \verb|^(?=.*[A-Z])(?=.*\d).{8,}$| & Pass123word \\
 >>> text = "Phone: 123-456-7890"
 >>> re.sub(r'[\s-]', '', text)
 'Phone:1234567890'
-\end{verbatim}
+\end{lstlisting}
 \end{tcolorbox}
 
 \section{JSON e Pickle}
